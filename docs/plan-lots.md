@@ -33,7 +33,7 @@ Les dimensions réelles de chaque équipement sont dans `docs/equipements-reseau
 | Lot | Thème | Ce qui marche à la fin |
 |---|---|---|
 | 0 | Postes | Deux postes posables (fait, portable à tester en jeu) |
-| 1a | Câble et branchement | Deux postes reliés par un câble affichent « connecté » (fait, redémarrage à confirmer) |
+| 1a | Câble et branchement | Deux postes reliés par un câble affichent « connecté » (fait, survie à confirmer) |
 | 1b | La box attribue les adresses | Chaque poste branché à la box reçoit une adresse |
 | 1c | Écran et commande ping | Depuis un poste, `ping` vers l'autre poste, qui répond |
 | 1d | Switch de bureau | Plus de postes que la box n'a de ports |
@@ -97,7 +97,7 @@ Contrainte technique à tenir dès ce sous-lot : un lien doit continuer d'existe
 
 #### État du lot 1a
 
-Codé le 2026-11-17 sur la branche `developement`. Build et 34 tests unitaires au vert jusqu'au rendu du câble (commit `0de7d6a`). Essais en jeu jugés bons par Max le même jour sur le branchement et le câble visible. Restent à confirmer : le panneau d'état en haut au centre (commit suivant, pas encore compilé), le lien après une sauvegarde et un redémarrage (étape 6), la consommation et la restitution du cordon en survie (étape 9).
+Codé le 2026-11-17 sur la branche `developement`. Build et 34 tests unitaires au vert, panneau d'état compris. Essais en jeu du même jour : branchement et câble visible jugés bons par Max ; d'après le log, le lien posé avant le redémarrage est toujours listé par `/netcraft liens` après relance du jeu, et encore listé depuis x ≈ 380, zone non chargée. Restent à confirmer par Max : l'aspect du panneau d'état en haut au centre et la consommation et la restitution du cordon en survie (étape 9).
 
 | Type | Équipement | État |
 |---|---|---|
