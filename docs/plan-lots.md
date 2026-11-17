@@ -24,6 +24,7 @@
 | Batterie du portable | É | Le portable fonctionne sur batterie quand il n'est pas branché et se recharge sur une prise | À valider |
 | Électricité obligatoire ou non | É | Option de configuration « alimentation requise », activée par défaut ; désactivée, tous les appareils fonctionnent sans courant | À valider |
 | Échelle des équipements en baie | 6a | Échelle par famille : baies à l'échelle du joueur, petits équipements agrandis. Avec le facteur 2,4 de la tour PC, une baie 42U ferait environ 4,8 blocs de haut | À valider |
+| Cordon posé au sol séparé par un mur | F | Aucune proposition pour l'instant : que faire quand un mur sépare les deux appareils d'un cordon rendu au sol (voir le lot F) | À trancher |
 
 Les dimensions réelles de chaque équipement sont dans `docs/equipements-reseau.md`.
 
@@ -491,6 +492,14 @@ Jouable à la fin : tout le mod est accessible sans le mode créatif.
 | Textures | Écrans et façades allumés ou éteints selon l'état |
 | Sons | Ventilateurs, clics de branchement, bips |
 | Modèles | Reprise des modèles et textures provisoires |
+| Cordon au sol | Le cordon est rendu posé au sol au lieu d'une ligne tendue (idée notée le 2026-11-17, non validée) |
+
+Cordon au sol, idée à préciser en arrivant au lot :
+
+- Pas de simulation physique : le tracé est calculé une fois. Le câble suit le relief entre les deux appareils, avec un léger affaissement entre deux appuis.
+- Le tracé n'est recalculé que lorsqu'un bloc change sur le trajet.
+- Point à trancher à ce moment-là : que faire si un mur sépare les deux appareils (voir « Décisions à trancher »).
+- Le passage le long des murs et sur les chemins de câbles reste prévu aux lots 2b (goulottes) et 8a (chemins de câbles).
 
 ## Dépendances
 
