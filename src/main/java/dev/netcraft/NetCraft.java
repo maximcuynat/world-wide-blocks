@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 
 import dev.netcraft.command.NetCraftCommands;
+import dev.netcraft.network.sync.NetworkSync;
 import dev.netcraft.registry.ModBlocks;
 import dev.netcraft.registry.ModCreativeTabs;
 import dev.netcraft.registry.ModDataComponents;
@@ -26,7 +27,12 @@ public class NetCraft {
         ModDataComponents.DATA_COMPONENTS.register(modEventBus);
         ModCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
 
+        modEventBus.addListener(NetworkSync::registerPayloads);
+
         NeoForge.EVENT_BUS.addListener(NetCraftCommands::register);
+        NeoForge.EVENT_BUS.addListener(NetworkSync::onPlayerLoggedIn);
+        NeoForge.EVENT_BUS.addListener(NetworkSync::onPlayerChangedDimension);
+        NeoForge.EVENT_BUS.addListener(NetworkSync::onPlayerRespawn);
         LOGGER.info("NetCraft chargé");
     }
 }

@@ -22,5 +22,7 @@
   "message.netcraft.cable.result.other_dimension": "Les deux appareils doivent être dans la même dimension.",
   "message.netcraft.cable.result.too_far": "Trop loin : %s blocs, %s au maximum.",
   "message.netcraft.cable.result.port_in_use": "Aucun port libre sur cet appareil.",
-  "message.netcraft.cable.result.ok": "Connecté."
+  "message.netcraft.cable.result.ok": "Connecté.",
+  "hud.netcraft.port.connected": "Port %s : connecté",
+  "hud.netcraft.port.free": "Port %s : libre"
 }

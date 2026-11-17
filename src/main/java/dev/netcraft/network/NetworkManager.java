@@ -4,25 +4,28 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import dev.netcraft.network.sync.NetworkSync;
 import net.minecraft.server.MinecraftServer;
 
 /**
  * Point d'entrée unique du moteur réseau côté serveur. Toute modification du réseau passe par ici,
- * pour que la sauvegarde soit marquée à jour (et, plus tard, que les clients soient prévenus).
+ * pour que la sauvegarde soit marquée à jour et que les clients soient prévenus.
  *
  * <p>Aucun état statique : l'objet est une façade légère sur les données du serveur en cours,
  * obtenue par {@link #of(MinecraftServer)}. Les données disparaissent avec le serveur, si bien
  * qu'en solo deux mondes ne se mélangent jamais.
  */
 public final class NetworkManager {
+    private final MinecraftServer server;
     private final NetworkSavedData data;
 
-    private NetworkManager(NetworkSavedData data) {
+    private NetworkManager(MinecraftServer server, NetworkSavedData data) {
+        this.server = server;
         this.data = data;
     }
 
     public static NetworkManager of(MinecraftServer server) {
-        return new NetworkManager(server.getDataStorage().computeIfAbsent(NetworkSavedData.TYPE));
+        return new NetworkManager(server, server.getDataStorage().computeIfAbsent(NetworkSavedData.TYPE));
     }
 
     // ---- Lecture ----
@@ -56,22 +59,25 @@ public final class NetworkManager {
         }
         List<Link> removed = this.graph().putNode(node);
         this.data.setDirty();
+        NetworkSync.linksRemoved(this.server, removed);
         return removed;
     }
 
     public ConnectOutcome connect(PortRef a, PortRef b, LinkMedium medium, boolean cableConsumed) {
         ConnectOutcome outcome = this.graph().connect(a, b, medium, cableConsumed);
-        if (outcome.isSuccess()) {
+        outcome.link().ifPresent(link -> {
             this.data.setDirty();
-        }
+            NetworkSync.linkAdded(this.server, link);
+        });
         return outcome;
     }
 
     public Optional<Link> disconnect(PortRef port) {
         Optional<Link> removed = this.graph().disconnect(port);
-        if (removed.isPresent()) {
+        removed.ifPresent(link -> {
             this.data.setDirty();
-        }
+            NetworkSync.linksRemoved(this.server, List.of(link));
+        });
         return removed;
     }
 
@@ -82,6 +88,7 @@ public final class NetworkManager {
         if (known || !removed.isEmpty()) {
             this.data.setDirty();
         }
+        NetworkSync.linksRemoved(this.server, removed);
         return removed;
     }
 
