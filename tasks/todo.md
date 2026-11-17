@@ -44,7 +44,14 @@ Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
     - [x] Test automatique du refus hors d'un monde « Essais » (règle du nom et vraie commande), second poste sur la box de droite du décor « chaine » (2 MAC sur le port 1)
   - [x] Procédure de test en jeu (ce qui demande des yeux) et état du lot dans `docs/plan-lots.md`
   - [ ] À la prochaine vérification à l'œil (jeu en français) : portable au bout des 99 blocs, 2 MAC sur le port 1 du décor « chaine » (pendant le module des messages), textes du panneau et des messages
-  - [ ] Module des messages (prompt séparé de Max), avant le 1b-2 : prévoir dès la conception un moyen pour les tests de capter les messages envoyés
+  - [ ] Module des messages, avant le 1b-2 : audit et conception validés par Max le 2026-11-18 (`docs/messages.md`). Un commit par étape, seulement après un build vert :
+    - [x] 1. Noyau en Java pur (`message/`) : niveaux, usages, canaux, valeurs, routage, anti-répétition, message envoyé et écouteur ; tests unitaires du routage et de l'anti-répétition. Aucun changement visible.
+    - [ ] 2. Transport et affichage : `MessagePayload` (canal, niveau, clé, valeurs), `MessageCenter` porté par les données du serveur, affichage décidé par le client (symbole ou mot selon le réglage `messageSymbols`), messages du cordon migrés, tests en jeu du cordon par l'écouteur (`TestPlayer` ne capte plus).
+    - [ ] 3. Textes : vouvoiement, distances entières, doublon et `result.ok` retirés, format commun d'un appareil, infobulle du cordon, test des fichiers de langue (mêmes clés, longueurs maximales).
+    - [ ] 4. Boucle et saturation : un événement par réseau et par tick, limite par minute dans le module, oubli au changement du réseau, message à l'appareil le plus proche du joueur, saturation aux opérateurs et au propriétaire en solo ; tests du moteur, du module et en jeu (une seule série de messages pour deux box).
+    - [ ] 5. Log en anglais et nettoyage : traces utiles passées par le module (DEBUG, anglais), `TrialLog` et `graphForTrial` retirés, exceptions en anglais.
+    - [ ] 6. Panneau d'état : lignes construites en Java pur (compact, détaillé accroupi, ligne « Accroupi : détails »), le client ne fait que dessiner ; tests unitaires.
+    - [ ] 7. Documents : `CLAUDE.md` (log en anglais, règles du module, données séparées du dessin), état dans `docs/plan-lots.md`, procédure de vérification à l'œil.
 - [ ] Lot 1b-2 (DHCP) : architecture validée avec le 1b-1, pas commencé. Ne pas oublier l'état INIT-REBOOT (bail du poste sauvegardé).
 
 ## Tests multijoueur (à faire plus tard, non prioritaire)
