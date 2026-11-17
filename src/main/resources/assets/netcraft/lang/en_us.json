@@ -2,6 +2,7 @@
   "itemGroup.netcraft": "NetCraft",
   "block.netcraft.pc_tower": "PC Tower",
   "block.netcraft.laptop": "Laptop",
+  "block.netcraft.internet_box": "Internet Box",
   "commands.netcraft.links.none": "No network link.",
   "commands.netcraft.links.header": "%s network link(s):",
   "commands.netcraft.links.entry": "%s port %s ↔ %s port %s: %s blocks, %s",
@@ -27,5 +28,6 @@
   "hud.netcraft.port.connected": "Port %s: connected",
   "hud.netcraft.port.free": "Port %s: free",
   "message.netcraft.cable.end_taken": "%s: end unplugged, the other one stays on %s port %s. Right-click a device to plug it back, sneak + click in the air to put it away.",
-  "message.netcraft.cable.retracted": "%s: cable unplugged, the cord is free in your hand."
+  "message.netcraft.cable.retracted": "%s: cable unplugged, the cord is free in your hand.",
+  "message.netcraft.network.loop": "Network loop: a broadcast frame came back to %s [%s, %s, %s] through port %s. It was dropped; remove one of the cables in the loop."
 }

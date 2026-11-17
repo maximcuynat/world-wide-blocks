@@ -5,11 +5,9 @@ import java.util.UUID;
 
 import dev.netcraft.network.ChunkKey;
 import dev.netcraft.network.Link;
+import dev.netcraft.network.NetworkDevices;
 import dev.netcraft.network.NetworkManager;
 import dev.netcraft.registry.ModAttachments;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -99,6 +97,6 @@ public final class NetworkSync {
 
     /** Niveau où se trouve le câble ; ses deux extrémités sont toujours dans la même dimension. */
     private static ServerLevel levelOf(MinecraftServer server, Link link) {
-        return server.getLevel(ResourceKey.create(Registries.DIMENSION, Identifier.parse(link.a().device().dimension())));
+        return NetworkDevices.levelOf(server, link.a().device()).orElse(null);
     }
 }

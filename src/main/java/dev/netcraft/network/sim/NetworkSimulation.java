@@ -81,6 +81,10 @@ public final class NetworkSimulation {
 
     // ---- Lecture ----
 
+    public SimulationLimits limits() {
+        return this.limits;
+    }
+
     public Optional<DeviceLogic> logic(DeviceId device) {
         return Optional.ofNullable(this.logics.get(device));
     }

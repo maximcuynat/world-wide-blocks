@@ -2,6 +2,7 @@
   "itemGroup.netcraft": "NetCraft",
   "block.netcraft.pc_tower": "Tour PC",
   "block.netcraft.laptop": "PC portable",
+  "block.netcraft.internet_box": "Box internet",
   "commands.netcraft.links.none": "Aucun lien réseau.",
   "commands.netcraft.links.header": "%s lien(s) réseau :",
   "commands.netcraft.links.entry": "%s port %s ↔ %s port %s : %s blocs, %s",
@@ -27,5 +28,6 @@
   "hud.netcraft.port.connected": "Port %s : connecté",
   "hud.netcraft.port.free": "Port %s : libre",
   "message.netcraft.cable.end_taken": "%s : bout débranché, l'autre reste sur %s port %s. Clic droit sur un appareil pour le rebrancher, accroupi + clic dans le vide pour le ranger.",
-  "message.netcraft.cable.retracted": "%s : câble débranché, le cordon est libre dans ta main."
+  "message.netcraft.cable.retracted": "%s : câble débranché, le cordon est libre dans ta main.",
+  "message.netcraft.network.loop": "Boucle réseau : une trame diffusée revient à %s [%s, %s, %s] par le port %s. Elle a été supprimée ; retirez un des câbles de la boucle."
 }

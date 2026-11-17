@@ -6,7 +6,11 @@ import java.util.Optional;
 import dev.netcraft.registry.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -28,6 +32,11 @@ public final class NetworkDevices {
 
     public static BlockPos posOf(DeviceId id) {
         return new BlockPos(id.x(), id.y(), id.z());
+    }
+
+    /** Niveau (dimension) où se trouve l'appareil, s'il existe sur ce serveur. */
+    public static Optional<ServerLevel> levelOf(MinecraftServer server, DeviceId id) {
+        return Optional.ofNullable(server.getLevel(ResourceKey.create(Registries.DIMENSION, Identifier.parse(id.dimension()))));
     }
 
     /** L'appareil décrit par le bloc présent à cette position, si c'est un appareil réseau. */

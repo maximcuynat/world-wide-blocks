@@ -6,6 +6,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import dev.netcraft.NetCraft;
+import dev.netcraft.network.sim.NetworkSimulation;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
@@ -16,6 +17,9 @@ import net.minecraft.world.level.saveddata.SavedDataType;
  *
  * <p>Ce stockage ne dépend d'aucun chunk : un lien existe même quand ses deux extrémités sont
  * déchargées. Il appartient à l'instance du serveur : en solo, chaque monde ouvert a le sien.
+ *
+ * <p>Il porte aussi la simulation, qui n'est pas sauvegardée : elle vit et meurt avec le serveur,
+ * sans aucun état statique.
  */
 public final class NetworkSavedData extends SavedData {
     private static final Codec<NetworkSavedData> CODEC = RecordCodecBuilder.create(i -> i.group(
@@ -27,6 +31,7 @@ public final class NetworkSavedData extends SavedData {
             Identifier.fromNamespaceAndPath(NetCraft.MODID, "network"), () -> new NetworkSavedData(), CODEC);
 
     private final NetworkGraph graph = new NetworkGraph();
+    private final NetworkSimulation simulation = new NetworkSimulation(this.graph);
 
     private NetworkSavedData() {
     }
@@ -55,5 +60,9 @@ public final class NetworkSavedData extends SavedData {
 
     NetworkGraph graph() {
         return this.graph;
+    }
+
+    NetworkSimulation simulation() {
+        return this.simulation;
     }
 }

@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 
 import dev.netcraft.command.NetCraftCommands;
+import dev.netcraft.network.NetworkManager;
 import dev.netcraft.network.sync.NetworkSync;
 import dev.netcraft.registry.ModAttachments;
 import dev.netcraft.registry.ModBlocks;
@@ -34,6 +35,7 @@ public class NetCraft {
         NeoForge.EVENT_BUS.addListener(NetCraftCommands::register);
         NeoForge.EVENT_BUS.addListener(NetworkSync::onChunkSent);
         NeoForge.EVENT_BUS.addListener(NetworkSync::onChunkUnWatch);
+        NeoForge.EVENT_BUS.addListener(NetworkManager::onServerTick);
         LOGGER.info("NetCraft chargé");
     }
 }
