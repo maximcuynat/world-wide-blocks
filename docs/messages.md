@@ -1,6 +1,6 @@
 # Messages
 
-Audit des messages des lots 1a et 1b-1 (2026-11-18), puis conception du module des messages. Statut : **validé par Max le 2026-11-18**, avec ces décisions :
+Audit des messages des lots 1a et 1b-1 (2026-11-18), puis conception du module des messages. Statut : **validé par Max le 2026-11-18, codé le même jour** (état et vérification à l'œil dans `docs/plan-lots.md`, lot 1b), avec ces décisions :
 
 - Réseau saturé : prévenir les opérateurs connectés, plus le propriétaire du monde en solo.
 - Symboles des niveaux : d'accord, à vérifier à l'œil, avec un repli en texte simple (réglage du client).

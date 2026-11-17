@@ -185,27 +185,54 @@ Codé du 2026-11-17 au 2026-11-18 sur la branche `developement`, validé par Max
 
 Limites connues, à reprendre plus tard :
 
-- Messages : le journal du serveur est en français, le chat suit la langue du client ; une boucle produit deux messages, un par box. À revoir dans le module des messages, avant le 1b-2.
 - Le câble part du centre du dessus de l'appareil, pas du port où il est branché.
-- Traces temporaires `[ESSAI 1b-1]` (niveau DEBUG, `run/logs/debug.log`) encore présentes : à retirer.
-- Non vus à l'œil, à regarder à la prochaine vérification : le portable au bout du câble de 99 blocs, 2 MAC sur le même port (décor « chaine »), le panneau et les messages avec le jeu en français.
+- Messages (log en deux langues, deux messages pour une boucle) et traces `[ESSAI 1b-1]` : repris par le module des messages, ci-dessous.
+
+#### Module des messages (avant le 1b-2)
+
+Audit, conception et règles dans `docs/messages.md` (validés par Max le 2026-11-18). Codé le 2026-11-18 en 6 étapes, un commit chacune après un build vert (`./gradlew build test` : 123 tests unitaires ; `./gradlew runGameTestServer` : 17 tests en jeu). **Vérification à l'œil à faire** (procédure ci-dessous).
+
+| Sujet | État |
+|---|---|
+| Canaux | Fait : le canal découle de l'usage et du niveau (geste : barre d'action ; événement : chat ; détail : log DEBUG) |
+| Niveaux | Fait : information, succès, avertissement, erreur ; symbole (ℹ ✔ ⚠ ✖) ou mot (réglage `messageSymbols` du client), couleur constante |
+| Anti-répétition | Fait : un problème une fois par minute ; une boucle vue par deux box donne un seul message ; la limite d'un réseau est oubliée quand ce réseau change |
+| Textes | Fait : clés et valeurs seulement, vouvoiement, distances entières, longueurs vérifiées par un test, infobulle du cordon |
+| Log | Fait : entièrement en anglais ; traces `[ESSAI 1b-1]` retirées, les utiles passées par `Diagnostics` (DEBUG) |
+| Panneau d'état | Fait : compact par défaut, détaillé accroupi ; contenu en Java pur (`StatusPanel`), le client ne fait que dessiner |
+| Réseau saturé | Fait : message aux opérateurs et au propriétaire en solo ; destinataires sans test automatique (il faudrait saturer le serveur de tests) |
+
+Données séparées du dessin : le serveur envoie clé, valeurs et niveau ; le client décide seul de l'apparence. La future interface HUD (lot F) remplacera `client/ClientMessages` et `client/PortStatusLayer` sans toucher au reste.
 
 Méthode de test (depuis le lot 1b-1) : la logique est prouvée par des tests automatiques ; les essais à la main ne servent plus qu'à ce qui demande des yeux. La sauvegarde de Max n'est jamais modifiée.
 
 1. `./gradlew build test` : compilation (jeu de sources `gametest` compris) et tests unitaires du moteur, en Java pur.
-2. `./gradlew runGameTestServer` : tests en jeu automatiques, sans fenêtre, dans un monde jetable (`run-gametest/`, ignoré par git). Le résultat est en fin de `run-gametest/logs/latest.log` (« All N required tests passed »). Ils couvrent : cordon dont le départ est cassé ou détruit par une explosion (créatif et survie, compte des cordons), changement de dimension et déconnexion pendant un branchement en attente, ports pleins, expiration des MAC (bornes exactes), sauvegarde et relecture du réseau, boucle signalée une fois par minute (écart exact de 1 200 ticks, lot à part car il touche les limites globales du moteur), construction de chaque décor d'essai, refus de `/netcraft test` hors d'un monde d'essai.
-3. Vérification à l'œil avec `/netcraft test <décor>` : `./gradlew runClient`, monde créatif dont le nom commence par « Essais » (la commande est refusée ailleurs ; elle n'existe qu'en développement et seulement pour les opérateurs). Se placer face à un terrain dégagé : le décor est construit 3 blocs devant soi, tourné vers soi, et refusé si la zone n'est pas vide. Viser chaque appareil avant la capture (F2) pour afficher son panneau. `/netcraft test effacer` retire le dernier décor.
+2. `./gradlew runGameTestServer` : tests en jeu automatiques, sans fenêtre, dans un monde jetable (`run-gametest/`, ignoré par git). Le résultat est en fin de `run-gametest/logs/latest.log` (« All N required tests passed »). Ils couvrent : cordon dont le départ est cassé ou détruit par une explosion (créatif et survie, compte des cordons), changement de dimension et déconnexion pendant un branchement en attente, ports pleins, expiration des MAC (bornes exactes), sauvegarde et relecture du réseau, boucle signalée par un seul message par minute pour deux box (écart exact de 1 200 ticks) et limite oubliée seulement pour le réseau qui change (lot à part, car ils touchent les limites globales du moteur), construction de chaque décor d'essai, refus de `/netcraft test` hors d'un monde d'essai. Les messages se vérifient par l'écouteur du module (canal, clé, valeurs, destinataire), sans passer par le chat d'un joueur.
+3. Vérification à l'œil avec `/netcraft test <décor>` : `./gradlew runClient`, monde créatif dont le nom commence par « Essais » (la commande est refusée ailleurs ; elle n'existe qu'en développement et seulement pour les opérateurs). Se placer face à un terrain dégagé : le décor est construit 3 blocs devant soi, tourné vers soi, et refusé si la zone n'est pas vide. Viser chaque appareil avant la capture (F2) pour afficher son panneau, debout (compact) puis accroupi (détaillé). `/netcraft test effacer` retire le dernier décor.
 
 | Décor | À regarder |
 |---|---|
-| `box` | Panneau : ports 1 à 4 libres, port 5 (ligne) inactif ; façade tournée vers le joueur |
-| `box_postes` | Câbles vers 3 postes ; panneau de la box : 3 ports connectés avec la MAC apprise, port 4 libre ; panneau d'un poste : sa MAC |
-| `chaine` | Chaque box montre son poste et ceux de l'autre box ; port 1 de la box de gauche : 2 MAC |
-| `boucle` | Message de boucle dans le chat, de nouveau une minute de jeu plus tard |
-| `ports_pleins` | Cordon en main, clic droit sur la box : « aucun port libre » au-dessus de la barre d'objets |
-| `distance` | Câble de 99 blocs dessiné sur toute sa longueur ; les deux bouts « connecté » (aller jusqu'au second bout pour le viser) |
+| `box` | Panneau compact : « 0/4 ports connectés » ; accroupi : ports 1 à 4 libres, port 5 (ligne) inactif ; façade tournée vers le joueur |
+| `box_postes` | Câbles vers 3 postes ; box compacte « 3/4 ports connectés », accroupi : 3 ports connectés avec la MAC apprise, port 4 libre ; poste compact « Connecté », accroupi : son port et sa MAC |
+| `chaine` | Chaque box montre son poste et ceux de l'autre box ; accroupi, port 1 de la box de gauche : une MAC suivie de « (+1) » |
+| `boucle` | Un seul message de boucle dans le chat (pas un par box), de nouveau un seul une minute de jeu plus tard |
+| `ports_pleins` | Cordon en main, clic droit sur la box : « ✖ Box internet : aucun port libre. » en rouge au-dessus de la barre d'objets |
+| `distance` | Câble de 99 blocs dessiné sur toute sa longueur ; les deux bouts « Connecté » (aller jusqu'au second bout pour le viser) |
 
-Les captures vont dans `run/screenshots`, les messages dans `run/logs/latest.log`, les traces de diagnostic dans `run/logs/debug.log`.
+Les captures vont dans `run/screenshots`, les messages dans `run/logs/latest.log`, les traces de diagnostic dans `run/logs/debug.log` (en anglais).
+
+#### Vérification à l'œil du module des messages (jeu en français)
+
+Préparation : `./gradlew runClient`, puis Options, Langue : Français. Ouvrir (ou créer) un monde créatif dont le nom commence par « Essais », se placer face à un terrain dégagé. Prendre une capture (F2) à chaque point marqué 📷.
+
+1. **Infobulle et barre d'action.** Prendre un cordon Ethernet dans l'onglet NetCraft et le survoler dans l'inventaire : 3 lignes grises (« Clic droit sur deux appareils : les relier. », etc.) 📷. `/netcraft test ports_pleins`, cordon en main, clic droit sur la box : « ✖ Box internet : aucun port libre. » en rouge au-dessus de la barre d'objets 📷. `/netcraft test effacer`.
+2. **Panneau compact puis détaillé (box).** `/netcraft test box_postes`. Viser la box debout : « Box internet », « 3/4 ports connectés » avec un voyant vert, « Accroupi : détails » en gris 📷. S'accroupir en la visant : « Port 1 : connecté, 02:… » (MAC en entier) pour les ports 1 à 3, « Port 4 : libre », « Port 5 (ligne) : inactif » 📷. Viser un poste : « Connecté », puis accroupi « Port 1 : connecté » et « MAC 02:… » 📷. `/netcraft test effacer`.
+3. **2 MAC sur le port 1 de la box de gauche.** `/netcraft test chaine`. Viser la box de gauche accroupi : « Port 1 : connecté, 02:… (+1) » 📷. La box de droite, accroupi : port 1 avec une seule MAC (le poste de gauche), ports 2 et 3 avec la MAC de leur poste. `/netcraft test effacer`.
+4. **Portable au bout du câble de 99 blocs.** `/netcraft test distance`. Viser la tour : « Connecté ». Marcher jusqu'au portable, 99 blocs devant : le câble est dessiné tout du long ; viser le portable : « Connecté », puis accroupi son port et sa MAC 📷. `/netcraft test effacer`.
+5. **Message de boucle, unique et lisible.** `/netcraft test boucle`, rester à côté (moins de 32 blocs). Dans le chat : un seul message, « ⚠ Boucle réseau près de Box internet [x, y, z]. Retirez un câble de la boucle. » en jaune 📷. Une minute plus tard : de nouveau un seul message, pas deux. Retirer un des deux câbles entre les box (main vide, accroupi + clic droit sur la box de gauche) : plus aucun message. Dans `run/logs/latest.log`, une ligne en anglais « Network loop: … » par message. `/netcraft test effacer`.
+6. **Textes français et repli des symboles.** Tout ce qui précède est en français et au vouvoiement ; `/netcraft liens` écrit « Box internet [x, y, z] (minecraft:overworld) » et des longueurs entières. Si un symbole (ℹ ✔ ⚠ ✖) s'affiche mal : dans `run/config/netcraft-client.toml`, mettre `messageSymbols = false` (relu sans relancer le jeu) et refaire le point 1 : « Erreur : Box internet : aucun port libre. ». Remettre `true` ensuite.
+
+À rapporter : les captures, et tout texte coupé, débordant du panneau, mal traduit ou dont le symbole s'affiche mal.
 
 ### 1c : écran sur le poste et commande ping
 

@@ -10,6 +10,8 @@
 
 - Le moteur a des limites globales (trames par tick, taille de la file, limite des signalements) partagées par tout ce qui tourne sur le serveur. Un test automatique qui touche ces limites tourne à part, dans son propre lot, pour que son résultat ne dépende pas des autres tests ni de l'ordre d'exécution. (2026-11-18)
 
+- `runGameTestServer` tourne en serveur dédié : aucun code client (affichage des messages, panneau, réglages du client, infobulles) n'y est exécuté. Un build et des tests en jeu verts ne prouvent rien côté client : le dire à Max en livrant une étape qui en touche, et garder la logique d'affichage en Java pur testable (`StatusPanel`) pour que le client ne fasse que dessiner. (2026-11-18)
+
 ## Moteur réseau
 
 - Différer un traitement (événement mis en attente jusqu'au tick suivant) ouvre une fenêtre où l'état a changé : revalider chaque changement en attente contre l'état courant (appareil ou câble encore présents) au moment de l'appliquer. Un poste posé, câblé et retiré dans le même tick a fait planter le serveur de tests (2026-11-18). Écrire le test « ajouté puis retiré avant le tick » avec toute mise en attente.

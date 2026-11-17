@@ -4,14 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Projet
 
-NetCraft est un mod Minecraft (NeoForge) de simulation de réseau informatique réaliste, « un Packet Tracer en blocs ». Lots faits : 0 (tour PC, PC portable), 1a (cordon Ethernet, ports, indicateur d'état, moteur réseau) et 1b-1 (box internet, adresses MAC, commutation).
+NetCraft est un mod Minecraft (NeoForge) de simulation de réseau informatique réaliste, « un Packet Tracer en blocs ». Lots faits : 0 (tour PC, PC portable), 1a (cordon Ethernet, ports, indicateur d'état, moteur réseau), 1b-1 (box internet, adresses MAC, commutation) et le module des messages (vérification à l'œil à faire).
 
 À lire en début de session :
 - `docs/plan-lots.md` : plan par lots, état de chaque lot, décisions à trancher, procédures de test en jeu ;
 - `docs/equipements-reseau.md` : inventaire des équipements et dimensions réelles ;
+- `docs/messages.md` : audit et règles du module des messages ;
 - `tasks/todo.md` (suivi, idées non validées) et `tasks/lessons.md` (erreurs à ne pas refaire).
 
-Code, commentaires, messages de commit et textes en français ; identifiants (classes, registres, ressources) en anglais. Les deux langues `fr_fr.json` et `en_us.json` sont maintenues.
+Code, commentaires, messages de commit et textes en français ; identifiants (classes, registres, ressources) en anglais. Les deux langues `fr_fr.json` et `en_us.json` sont maintenues (même jeu de clés, vérifié par `LangFilesTest`). Exception : tout ce qui peut finir dans le log (lignes de log, messages d'exception) est en anglais, comme le reste des logs de Minecraft.
 
 ## Versions
 
@@ -51,6 +52,18 @@ Règles à ne jamais casser :
 - Toute modification du réseau passe par `NetworkManager`, qui marque la sauvegarde et prévient les clients.
 - Un joueur ne reçoit que les câbles dont une extrémité est dans un chunk que son client a reçu (`PlayerLinkView`).
 - Vrais échanges de protocoles : de vraies trames Ethernet (puis DHCP, ARP, ICMP) circulent dans le moteur. Elles sont livrées instantanément par une file d'attente que le serveur traite à chaque tick, sans temps de trajet bloc par bloc, et le nombre de trames traitées par tick est limité.
+
+## Messages aux joueurs
+
+Tout message passe par le module des messages (`message/`, règles complètes dans `docs/messages.md`) :
+
+- Côté serveur, `MessageCenter.of(server)` : `gesture(joueur, message)` pour la réponse à un geste, `event(clé du problème, …)` pour un événement réseau. L'appelant donne un niveau (`MessageLevel`), une clé de langue et des valeurs (`MessageArg`) ; le canal découle de l'usage et du niveau (`MessageRouting`), jamais de l'appelant.
+- Le serveur n'envoie jamais de texte rédigé ni de mise en forme : clé, valeurs et niveau seulement (`MessagePayload`). Le client décide seul de l'apparence (`client/ClientMessages`, `client/PortStatusLayer`), pour qu'une future interface HUD remplace le dessin sans toucher au reste.
+- Un même problème n'est signalé qu'une fois par minute, quel que soit le nombre d'appareils qui le voient ; la limite d'un réseau est oubliée quand ce réseau change.
+- Le contenu du panneau d'état est construit en Java pur (`StatusPanel`) : compact par défaut, détaillé quand le joueur est accroupi.
+- Le détail technique va dans le log, en anglais, au niveau DEBUG (`Diagnostics`).
+- Toute nouvelle clé de langue des familles vérifiées doit avoir ses valeurs d'exemple dans `LangFilesTest` (longueurs : 80 caractères pour la barre d'action, 45 pour le panneau et l'infobulle, 90 pour le chat).
+- Tests : `NetworkScene.messages()` capte chaque message envoyé (canal, clé, valeurs, destinataire) ; ne pas passer par le chat d'un joueur.
 
 ## Ajouter un bloc
 
