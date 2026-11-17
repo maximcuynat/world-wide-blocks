@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "netcraft:block/internet_box"
+    },
+    "facing=east": {
+      "model": "netcraft:block/internet_box",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "netcraft:block/internet_box",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "netcraft:block/internet_box",
+      "y": 270
+    }
+  }
+}

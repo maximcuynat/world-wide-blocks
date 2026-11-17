@@ -28,8 +28,8 @@ Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
   - [x] Couche trames : `MacAddress`, `EtherType`, `EthernetFrame`, contenu typé, tests
   - [x] Commutation réutilisable : table d'apprentissage avec expiration, décision de transfert, tests (75 tests au vert)
   - [x] Simulation : file de livraison, minuteries, point d'écoute, détection de boucle et limite par tick, logique du poste et de la box, rôle des appareils, tests (87 tests au vert)
-  - [ ] Branchement Minecraft : tick serveur, événements de câble, message de boucle
-  - [ ] Bloc box internet (modèle 7 x 7 x 3 px, texture provisoire, ressources)
+  - [x] Branchement Minecraft : tick serveur, événements de câble, message de boucle
+  - [x] Bloc box internet (modèle 7 x 7 x 3 px, texture provisoire, ressources)
   - [ ] Indicateur : MAC du poste, MAC apprises par la box (paquet d'état)
   - [ ] Procédure de test en jeu et état du lot dans `docs/plan-lots.md`
 - [ ] Lot 1b-2 (DHCP) : architecture validée avec le 1b-1, pas commencé. Ne pas oublier l'état INIT-REBOOT (bail du poste sauvegardé).

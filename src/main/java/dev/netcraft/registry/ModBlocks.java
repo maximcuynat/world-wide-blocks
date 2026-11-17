@@ -1,6 +1,7 @@
 package dev.netcraft.registry;
 
 import dev.netcraft.NetCraft;
+import dev.netcraft.block.InternetBoxBlock;
 import dev.netcraft.block.LaptopBlock;
 import dev.netcraft.block.PcTowerBlock;
 import net.minecraft.world.level.block.SoundType;
@@ -19,6 +20,10 @@ public final class ModBlocks {
 
     public static final DeferredBlock<LaptopBlock> LAPTOP = BLOCKS.registerBlock("laptop", LaptopBlock::new,
             p -> p.mapColor(MapColor.METAL).strength(1.0F).sound(SoundType.METAL).noOcclusion()
+                    .pushReaction(PushReaction.IMMOVEABLE));
+
+    public static final DeferredBlock<InternetBoxBlock> INTERNET_BOX = BLOCKS.registerBlock("internet_box", InternetBoxBlock::new,
+            p -> p.mapColor(MapColor.COLOR_LIGHT_GRAY).strength(1.0F).sound(SoundType.METAL).noOcclusion()
                     .pushReaction(PushReaction.IMMOVEABLE));
 
     private ModBlocks() {

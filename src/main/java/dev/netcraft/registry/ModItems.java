@@ -13,6 +13,8 @@ public final class ModItems {
 
     public static final DeferredItem<BlockItem> LAPTOP = ITEMS.registerSimpleBlockItem("laptop", ModBlocks.LAPTOP);
 
+    public static final DeferredItem<BlockItem> INTERNET_BOX = ITEMS.registerSimpleBlockItem("internet_box", ModBlocks.INTERNET_BOX);
+
     public static final DeferredItem<EthernetCableItem> ETHERNET_CABLE = ITEMS.registerItem("ethernet_cable", EthernetCableItem::new);
 
     private ModItems() {
