@@ -32,7 +32,7 @@
   "hud.netcraft.learned_more": "%s (+%s)",
   "message.netcraft.cable.end_taken": "Bout retiré de %s, l'autre reste sur %s, port %s.",
   "message.netcraft.cable.retracted": "%s : câble débranché, le cordon est libre.",
-  "message.netcraft.network.loop": "Boucle réseau près de %s [%s, %s, %s]. Retirez un câble de la boucle.",
+  "message.netcraft.network.loop": "Boucle réseau près de %s. Retirez un câble de la boucle.",
   "message.netcraft.with_level": "%s : %s",
   "message.netcraft.level.info": "Info",
   "message.netcraft.level.success": "OK",
@@ -42,5 +42,6 @@
   "netcraft.configuration.messageSymbols": "Symboles devant les messages",
   "item.netcraft.ethernet_cable.tooltip.connect": "Clic droit sur deux appareils : les relier.",
   "item.netcraft.ethernet_cable.tooltip.unplug": "Accroupi + clic sur un appareil : débrancher.",
-  "item.netcraft.ethernet_cable.tooltip.cancel": "Accroupi + clic dans le vide : annuler."
+  "item.netcraft.ethernet_cable.tooltip.cancel": "Accroupi + clic dans le vide : annuler.",
+  "message.netcraft.network.saturated": "Réseau saturé : des trames sont perdues. Cherchez une boucle."
 }

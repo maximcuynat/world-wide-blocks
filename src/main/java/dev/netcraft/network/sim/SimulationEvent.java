@@ -1,23 +1,34 @@
 package dev.netcraft.network.sim;
 
+import java.util.List;
+
 import dev.netcraft.network.DeviceId;
 
 /**
- * Ce que la simulation signale au jeu, qui en fait un message. Chaque événement est limité en
- * fréquence par la simulation (voir {@link SimulationLimits#reportIntervalTicks()}).
+ * Ce que la simulation signale au jeu, qui en fait un message. La simulation constate ; le module des
+ * messages décide qui prévenir et à quelle fréquence (une fois par minute pour un même problème).
  */
 public sealed interface SimulationEvent {
 
-    /**
-     * Une trame est revenue à un switch qu'elle avait déjà traversé : il existe deux chemins entre
-     * eux, donc une boucle. La copie a été supprimée.
-     *
-     * @param port port par lequel la copie est revenue
-     */
-    record LoopDetected(DeviceId device, int port) implements SimulationEvent {
+    /** Port par lequel une copie d'une trame diffusée est revenue à un switch qu'elle avait déjà traversé. */
+    record LoopPoint(DeviceId device, int port) {
     }
 
-    /** La file d'attente était pleine : des trames ont été perdues. */
+    /**
+     * Une boucle dans un réseau : une trame est revenue à un switch qu'elle avait déjà traversé, donc il
+     * existe deux chemins entre eux. Les copies ont été supprimées. Un seul événement par réseau et par
+     * tick, même si plusieurs switchs l'ont vue.
+     *
+     * @param network clé du réseau ({@code NetworkGraph#networkKey}), stable tant que le réseau ne change pas
+     * @param points  switchs et ports où les copies sont revenues, dans l'ordre de leur détection
+     */
+    record LoopDetected(DeviceId network, List<LoopPoint> points) implements SimulationEvent {
+        public LoopDetected {
+            points = List.copyOf(points);
+        }
+    }
+
+    /** La file d'attente était pleine : des trames ont été perdues. Au plus un par tick. */
     record QueueSaturated() implements SimulationEvent {
     }
 }

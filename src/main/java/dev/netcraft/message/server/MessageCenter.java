@@ -1,6 +1,7 @@
 package dev.netcraft.message.server;
 
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -47,6 +48,37 @@ public final class MessageCenter {
     /** Abonne un écouteur à tous les messages envoyés (tests) ; fermer l'abonnement le retire. */
     public MessageHub.Subscription listen(MessageListener listener) {
         return this.hub.listen(listener);
+    }
+
+    /**
+     * Événement du réseau, sans geste du joueur. Un même problème ({@code problemKey}) n'est transmis
+     * qu'une fois par minute de jeu, quel que soit le nombre d'appareils qui le voient. Avertissement
+     * ou erreur : chaque destinataire reçoit son message dans le chat ; dans tous les cas, une ligne en
+     * anglais dans le log.
+     *
+     * @param summary    le message, tel qu'il est retenu pour le log et les écouteurs
+     * @param logText    la ligne du log, en anglais, avec tout le détail technique
+     * @param recipients message de chaque joueur concerné (il peut différer d'un joueur à l'autre)
+     * @return faux si le problème a déjà été signalé dans la minute, et rien n'a été envoyé
+     */
+    public boolean event(String problemKey, Message summary, String logText, Map<ServerPlayer, Message> recipients) {
+        long now = this.gameTime();
+        if (!this.hub.throttle().allow(problemKey, now)) {
+            return false;
+        }
+        MessageRouting.Route route = MessageRouting.route(MessageUsage.EVENT, summary.level());
+        route.player().ifPresent(channel -> recipients.forEach((player, message) -> {
+            PacketDistributor.sendToPlayer(player, new MessagePayload(channel, message));
+            this.publish(channel, message, Optional.of(player.getUUID()), now);
+        }));
+        log(route.log(), "{}", logText);
+        this.publish(MessageChannel.LOG, summary, Optional.empty(), now);
+        return true;
+    }
+
+    /** Oublie un problème déjà signalé (son réseau a changé) : il pourra l'être de nouveau tout de suite. */
+    public void forgetProblem(String problemKey) {
+        this.hub.throttle().forget(problemKey);
     }
 
     /** Réponse immédiate au geste d'un joueur. */

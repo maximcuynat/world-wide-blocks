@@ -59,6 +59,7 @@ public class EthernetCableItem extends Item {
 
     /** Consignes permanentes, trop longues pour la barre d'action : dans l'infobulle de l'inventaire. */
     @Override
+    @SuppressWarnings("deprecation") // marquée obsolète par Minecraft pour l'appel, mais c'est la méthode à surcharger
     public void appendHoverText(ItemStack stack, Item.TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag flag) {
         builder.accept(Component.translatable("item.netcraft.ethernet_cable.tooltip.connect").withStyle(ChatFormatting.GRAY));
         builder.accept(Component.translatable("item.netcraft.ethernet_cable.tooltip.unplug").withStyle(ChatFormatting.GRAY));

@@ -1,8 +1,10 @@
 package dev.netcraft.network;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -73,6 +75,40 @@ public final class NetworkGraph {
             }
         }
         return result;
+    }
+
+    /**
+     * Désigne le réseau de l'appareil : l'ensemble des appareils reliés à lui par des câbles, lui
+     * compris, représenté par le plus petit de leurs identifiants ({@link DeviceId#ORDER}). Deux
+     * appareils du même réseau donnent la même clé. Un appareil inconnu forme un réseau à lui seul.
+     * Parcours port par port, sans balayer tous les câbles.
+     */
+    public DeviceId networkKey(DeviceId device) {
+        DeviceId smallest = device;
+        Set<DeviceId> seen = new HashSet<>();
+        Deque<DeviceId> todo = new ArrayDeque<>();
+        seen.add(device);
+        todo.add(device);
+        while (!todo.isEmpty()) {
+            DeviceId current = todo.poll();
+            if (DeviceId.ORDER.compare(current, smallest) < 0) {
+                smallest = current;
+            }
+            NetworkNode node = this.nodes.get(current);
+            if (node == null) {
+                continue;
+            }
+            for (int i = 0; i < node.portCount(); i++) {
+                Link link = this.linksByPort.get(node.port(i));
+                if (link != null) {
+                    DeviceId other = link.otherEnd(node.port(i)).device();
+                    if (seen.add(other)) {
+                        todo.add(other);
+                    }
+                }
+            }
+        }
+        return smallest;
     }
 
     /** Câbles dont au moins une extrémité se trouve dans ce chunk. */

@@ -69,6 +69,7 @@ public final class NetCraftGameTests {
             // 300 s d'expiration : le serveur de tests ne marque pas de pause entre deux ticks, quelques secondes réelles.
             new Case("mac_expires_after_300_seconds", Batch.SHARED, 6200, NetworkTests::macExpiresAfter300Seconds),
             new Case("loop_reported_once_per_minute", Batch.ENGINE_LIMITS, 4200, NetworkTests::loopReportedOncePerMinute),
+            new Case("loop_forgotten_only_for_changed_network", Batch.ENGINE_LIMITS, 1000, NetworkTests::loopForgottenOnlyForChangedNetwork),
             new Case("trial_command_refused_outside_trial_world", Batch.SHARED, 20, SceneTests::commandRefusedOutsideTrialWorld)),
             // Décors de /netcraft test, sauf « distance » (99 blocs, plus grand que la zone de test).
             // Le décor de boucle touche les limites globales du moteur : lot à part.

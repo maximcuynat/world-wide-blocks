@@ -28,6 +28,13 @@ public final class MessageRecorder implements MessageListener {
                 .toList();
     }
 
+    /** Lignes du log de cette clé (événements réseau), tous appareils confondus : à filtrer par appareil. */
+    public List<SentMessage> logs(String key) {
+        return this.messages.stream()
+                .filter(message -> message.channel() == MessageChannel.LOG && message.key().equals(key))
+                .toList();
+    }
+
     /** Tous les messages reçus par ce joueur, pour expliquer un échec. */
     public List<SentMessage> to(UUID player) {
         return this.messages.stream().filter(message -> message.sentTo(player)).toList();

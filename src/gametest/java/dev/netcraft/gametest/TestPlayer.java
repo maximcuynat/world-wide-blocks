@@ -1,7 +1,5 @@
 package dev.netcraft.gametest;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import com.mojang.authlib.GameProfile;
@@ -11,7 +9,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket;
@@ -36,26 +33,10 @@ import org.jspecify.annotations.Nullable;
  * niveau, le serveur le fait vivre à chaque tick (inventaire compris), il peut changer de dimension
  * et se déconnecter pour de vrai.
  *
- * <p>Il retient chaque message reçu (barre d'objets et chat) pour que les tests le vérifient.
+ * <p>Les messages se vérifient par l'écouteur du module des messages ({@link NetworkScene#messages()}),
+ * pas par ce joueur.
  */
 public final class TestPlayer extends ServerPlayer {
-    /**
-     * Un message reçu : son texte, s'il s'affichait au-dessus de la barre d'objets, et le temps de jeu
-     * (en ticks, celui de la simulation réseau) à sa réception.
-     */
-    public record Message(Component text, boolean overlay, long gameTime) {
-        /** Clé de traduction du message, ou chaîne vide s'il n'est pas traduisible. */
-        public String key() {
-            return this.text.getContents() instanceof TranslatableContents translatable ? translatable.getKey() : "";
-        }
-
-        /** Paramètres du message traduisible, vide sinon. */
-        public List<Object> args() {
-            return this.text.getContents() instanceof TranslatableContents translatable ? List.of(translatable.getArgs()) : List.of();
-        }
-    }
-
-    private final List<Message> messages = new ArrayList<>();
     private boolean left;
 
     private TestPlayer(MinecraftServer server, ServerLevel level, GameProfile profile, ClientInformation information) {
@@ -130,24 +111,5 @@ public final class TestPlayer extends ServerPlayer {
         // La déconnexion est déjà traitée : sans ce retrait, la boucle des connexions du serveur la
         // traiterait une seconde fois (avertissement « handleDisconnection() called twice »).
         this.level().getServer().getConnection().getConnections().remove(memory);
-    }
-
-    @Override
-    public void sendSystemMessage(Component message, boolean overlay) {
-        this.messages.add(new Message(message, overlay, this.level().getServer().overworld().getGameTime()));
-        super.sendSystemMessage(message, overlay);
-    }
-
-    public List<Message> messages() {
-        return List.copyOf(this.messages);
-    }
-
-    /** Messages reçus dont la clé de traduction est {@code key}. */
-    public List<Message> messages(String key) {
-        return this.messages.stream().filter(message -> message.key().equals(key)).toList();
-    }
-
-    public void clearMessages() {
-        this.messages.clear();
     }
 }

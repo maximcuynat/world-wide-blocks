@@ -1,13 +1,13 @@
 package dev.netcraft.gametest;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 import dev.netcraft.NetCraft;
+import dev.netcraft.message.MessageArg;
+import dev.netcraft.message.MessageChannel;
+import dev.netcraft.message.SentMessage;
 import dev.netcraft.network.DeviceId;
 import dev.netcraft.network.Link;
 import dev.netcraft.network.NetworkManager;
@@ -111,46 +111,110 @@ final class NetworkTests {
     }
 
     /**
-     * Deux box reliées par deux câbles, un poste sur A : chaque trame diffusée tourne en boucle. La
-     * boucle est signalée aux joueurs proches exactement une fois par minute de jeu et par appareil
-     * (la présence du poste revient toutes les 30 s), et les signalements cessent quand on retire un
-     * des deux câbles.
+     * Deux box reliées par deux câbles, un poste sur A : chaque trame diffusée tourne en boucle, et les
+     * deux box la voient. Le joueur proche reçoit **un seul** message par minute de jeu (pas un par
+     * box), qui nomme une des deux box, et le log n'a qu'une ligne par message. La présence du poste
+     * revient toutes les 30 s : la limite d'une minute est donc vraiment mise à l'épreuve. Les
+     * messages cessent quand on retire un des deux câbles.
      *
-     * <p>Lot à part : la limite des signalements et les limites de trames sont globales au moteur.
+     * <p>Lot à part : la limite des trames est globale au moteur.
      */
     static void loopReportedOncePerMinute(GameTestHelper helper) {
         NetworkScene scene = NetworkScene.of(helper);
         DeviceId boxA = scene.place(new BlockPos(4, 0, 8), ModBlocks.INTERNET_BOX.get());
         DeviceId boxB = scene.place(new BlockPos(12, 0, 8), ModBlocks.INTERNET_BOX.get());
         DeviceId host = scene.place(new BlockPos(4, 0, 12), ModBlocks.PC_TOWER.get());
-        Link first = scene.cable(boxA, boxB);
+        Link firstCable = scene.cable(boxA, boxB);
         scene.cable(boxA, boxB);
         TestPlayer player = scene.player(GameType.CREATIVE);
         // Branché en dernier : sa présence, diffusée au branchement puis toutes les 30 s, trouve la boucle.
         scene.cable(host, boxA);
+        Set<DeviceId> boxes = Set.of(boxA, boxB);
 
         long interval = SimulationLimits.DEFAULT.reportIntervalTicks();
         long observation = 2 * interval + 200;
         helper.runAfterDelay(observation, () -> {
-            Map<String, List<Long>> reports = loopReportTimes(player);
-            NetCraft.LOGGER.info("[GameTest] signalements de boucle reçus (temps de jeu) : {}", reports);
-            helper.assertTrue(!reports.isEmpty(), "Aucun signalement de boucle en " + observation + " ticks");
-            // Présence toutes les 600 ticks, signalement au plus toutes les 1 200 : exactement un signalement
-            // par minute et par box, à 0, 1 200 et 2 400 ticks du premier. Un écart plus grand (1 800 avant
-            // la correction de l'horloge du 2026-11-18) est un défaut, pas une marge.
-            reports.forEach((device, times) -> {
-                long firstReport = times.getFirst();
-                helper.assertValueEqual(times, List.of(firstReport, firstReport + interval, firstReport + 2 * interval),
-                        "instants des signalements de boucle de " + device);
-            });
+            List<SentMessage> chat = loopChat(scene, player, boxes);
+            List<Long> times = chat.stream().map(SentMessage::gameTime).toList();
+            NetCraft.LOGGER.info("[GameTest] loop messages received at game times {}", times);
+            helper.assertTrue(!times.isEmpty(), "Aucun message de boucle en " + observation + " ticks");
+            // Exactement un message par minute, à 0, 1 200 et 2 400 ticks du premier. Un écart plus grand
+            // (1 800 avant la correction de l'horloge du 2026-11-18) est un défaut, pas une marge.
+            long firstReport = times.getFirst();
+            helper.assertValueEqual(times, List.of(firstReport, firstReport + interval, firstReport + 2 * interval),
+                    "instants des messages de boucle (un seul par minute pour les deux box)");
+            long logLines = scene.messages().logs(LOOP).stream().filter(message -> names(message, boxes)).count();
+            helper.assertValueEqual(logLines, 3L, "lignes du log pour cette boucle");
 
-            int before = player.messages(LOOP).size();
-            scene.network().disconnect(first.a());
+            int before = chat.size();
+            scene.network().disconnect(firstCable.a());
             helper.runAfterDelay(interval + 100, () -> {
-                helper.assertValueEqual(player.messages(LOOP).size(), before, "signalements de boucle après le retrait d'un câble");
+                helper.assertValueEqual(loopChat(scene, player, boxes).size(), before, "messages de boucle après le retrait d'un câble");
                 helper.succeed();
             });
         });
+    }
+
+    /**
+     * Un changement du réseau en boucle fait oublier sa limite (la boucle est resignalée aussitôt) ;
+     * un changement dans un autre réseau ne la touche pas.
+     *
+     * <ul>
+     * <li>S+1 : présence du premier poste, premier message ;</li>
+     * <li>S+100 : un second poste branché sur la box B (ce réseau change) : second message au tick suivant ;</li>
+     * <li>S+200 : deux tours reliées ailleurs (un autre réseau change) ;</li>
+     * <li>S+601 et S+701 : présences des deux postes, dans la minute du second message : rien.</li>
+     * </ul>
+     * Un oubli global donnerait un troisième message à S+601 ; aucun oubli, un seul message en tout.
+     *
+     * <p>Lot à part, comme le test précédent.
+     */
+    static void loopForgottenOnlyForChangedNetwork(GameTestHelper helper) {
+        NetworkScene scene = NetworkScene.of(helper);
+        DeviceId boxA = scene.place(new BlockPos(4, 0, 8), ModBlocks.INTERNET_BOX.get());
+        DeviceId boxB = scene.place(new BlockPos(12, 0, 8), ModBlocks.INTERNET_BOX.get());
+        DeviceId host = scene.place(new BlockPos(4, 0, 12), ModBlocks.PC_TOWER.get());
+        DeviceId secondHost = scene.place(new BlockPos(12, 0, 12), ModBlocks.PC_TOWER.get());
+        scene.cable(boxA, boxB);
+        scene.cable(boxA, boxB);
+        TestPlayer player = scene.player(GameType.CREATIVE);
+        scene.cable(host, boxA);
+        Set<DeviceId> boxes = Set.of(boxA, boxB);
+
+        helper.runAfterDelay(100, () -> {
+            helper.assertValueEqual(loopChat(scene, player, boxes).size(), 1, "messages de boucle avant le second poste");
+            scene.cable(secondHost, boxB);
+            helper.runAfterDelay(100, () -> {
+                helper.assertValueEqual(loopChat(scene, player, boxes).size(), 2, "messages de boucle après le changement de ce réseau");
+                DeviceId towerA = scene.place(new BlockPos(1, 0, 1), ModBlocks.PC_TOWER.get());
+                DeviceId towerB = scene.place(new BlockPos(3, 0, 1), ModBlocks.PC_TOWER.get());
+                scene.cable(towerA, towerB);
+                helper.runAfterDelay(600, () -> {
+                    helper.assertValueEqual(loopChat(scene, player, boxes).size(), 2,
+                            "messages de boucle après un changement dans un autre réseau");
+                    helper.succeed();
+                });
+            });
+        });
+    }
+
+    /** Messages de boucle reçus par le joueur et qui nomment une de ces box (le lot est partagé avec d'autres boucles). */
+    private static List<SentMessage> loopChat(NetworkScene scene, TestPlayer player, Set<DeviceId> boxes) {
+        return scene.messages().to(player.getUUID(), MessageChannel.CHAT, LOOP).stream()
+                .filter(message -> names(message, boxes))
+                .toList();
+    }
+
+    private static boolean names(SentMessage message, Set<DeviceId> devices) {
+        return deviceOf(message).filter(devices::contains).isPresent();
+    }
+
+    /** Appareil nommé par la première valeur d'un message. */
+    private static Optional<DeviceId> deviceOf(SentMessage message) {
+        if (message.args().isEmpty() || !(message.args().getFirst() instanceof MessageArg.Device device)) {
+            return Optional.empty();
+        }
+        return Optional.of(new DeviceId(device.dimension(), device.x(), device.y(), device.z()));
     }
 
     private static Optional<MacTable.Entry> learned(NetworkScene scene, DeviceId device, MacAddress mac) {
@@ -161,16 +225,5 @@ final class NetworkTests {
 
     private static PortRef endOn(Link link, DeviceId device) {
         return link.a().device().equals(device) ? link.a() : link.b();
-    }
-
-    /** Instants de réception des messages de boucle, par appareil (coordonnées du message). */
-    private static Map<String, List<Long>> loopReportTimes(TestPlayer player) {
-        Map<String, List<Long>> times = new LinkedHashMap<>();
-        for (TestPlayer.Message message : player.messages(LOOP)) {
-            List<Object> args = message.args();
-            String device = args.size() >= 4 ? args.get(1) + ", " + args.get(2) + ", " + args.get(3) : "?";
-            times.computeIfAbsent(device, key -> new ArrayList<>()).add(message.gameTime());
-        }
-        return times;
     }
 }

@@ -5,11 +5,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import dev.netcraft.network.DeviceId;
@@ -57,8 +59,9 @@ public final class NetworkSimulation {
     private final PriorityQueue<Timer> timers = new PriorityQueue<>(
             Comparator.comparingLong(Timer::due).thenComparingLong(Timer::sequence));
     private final List<SimulationEvent> events = new ArrayList<>();
-    private final Map<DeviceId, Long> lastLoopReport = new HashMap<>();
-    private Long lastSaturationReport;
+    /** Ports où une trame en boucle est revenue pendant le tick en cours ; regroupés par réseau en fin de tick. */
+    private final Set<SimulationEvent.LoopPoint> loopPoints = new LinkedHashSet<>();
+    private boolean saturatedThisTick;
     private FrameTap tap = FrameTap.NONE;
     private long now;
     private long timerSequence;
@@ -131,7 +134,6 @@ public final class NetworkSimulation {
     public void deviceRemoved(DeviceId device) {
         this.later(() -> {
             this.logics.remove(device);
-            this.lastLoopReport.remove(device);
         });
     }
 
@@ -180,6 +182,29 @@ public final class NetworkSimulation {
             budget--;
             this.deliver(this.queue.poll());
         }
+        this.flushReports();
+    }
+
+    /**
+     * Fin du tick : un événement par réseau où une boucle a été vue, quel que soit le nombre de switchs
+     * qui l'ont vue, et au plus un événement de saturation. La limite de fréquence (une fois par
+     * minute) n'est pas ici : elle appartient au module des messages, qui décide qui prévenir et quand.
+     */
+    private void flushReports() {
+        if (!this.loopPoints.isEmpty()) {
+            Map<DeviceId, DeviceId> networkOf = new HashMap<>();
+            Map<DeviceId, List<SimulationEvent.LoopPoint>> byNetwork = new TreeMap<>(DeviceId.ORDER);
+            for (SimulationEvent.LoopPoint point : this.loopPoints) {
+                DeviceId network = networkOf.computeIfAbsent(point.device(), this.graph::networkKey);
+                byNetwork.computeIfAbsent(network, key -> new ArrayList<>()).add(point);
+            }
+            byNetwork.forEach((network, points) -> this.events.add(new SimulationEvent.LoopDetected(network, points)));
+            this.loopPoints.clear();
+        }
+        if (this.saturatedThisTick) {
+            this.events.add(new SimulationEvent.QueueSaturated());
+            this.saturatedThisTick = false;
+        }
     }
 
     // ---- Interne ----
@@ -219,7 +244,7 @@ public final class NetworkSimulation {
             return; // aucun câble sur ce port : la trame est perdue
         }
         if (this.queue.size() >= this.limits.maxQueued()) {
-            this.reportSaturation();
+            this.saturatedThisTick = true;
             return;
         }
         this.queue.add(new Delivery(link.get().otherEnd(egress), link.get().id(), frame, trace));
@@ -237,26 +262,12 @@ public final class NetworkSimulation {
         }
         this.tap.onFrame(this.now, ingress, FrameDirection.RECEIVED, delivery.frame());
         if (logic.bridges() && !delivery.trace().visited.add(ingress.device())) {
-            this.reportLoop(ingress.device(), ingress.index());
+            this.loopPoints.add(new SimulationEvent.LoopPoint(ingress.device(), ingress.index()));
             return;
         }
         logic.onFrame(new Context(ingress.device(), logic, delivery.trace()), ingress.index(), delivery.frame());
     }
 
-    private void reportLoop(DeviceId device, int port) {
-        Long last = this.lastLoopReport.get(device);
-        if (last == null || this.now - last >= this.limits.reportIntervalTicks()) {
-            this.lastLoopReport.put(device, this.now);
-            this.events.add(new SimulationEvent.LoopDetected(device, port));
-        }
-    }
-
-    private void reportSaturation() {
-        if (this.lastSaturationReport == null || this.now - this.lastSaturationReport >= this.limits.reportIntervalTicks()) {
-            this.lastSaturationReport = this.now;
-            this.events.add(new SimulationEvent.QueueSaturated());
-        }
-    }
 
     /** Contexte d'un appareil pendant un appel ; {@code trace} est la trame en cours, s'il y en a une. */
     private final class Context implements DeviceContext {

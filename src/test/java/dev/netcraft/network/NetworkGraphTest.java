@@ -43,6 +43,48 @@ class NetworkGraphTest {
     }
 
     @Nested
+    class NetworkKey {
+
+        @Test
+        void unAppareilSeulEstSonPropreReseau() {
+            DeviceId seul = device(5, 64, 0).device();
+
+            assertEquals(seul, graph.networkKey(seul));
+            DeviceId inconnu = new DeviceId(OVERWORLD, 99, 64, 0);
+            assertEquals(inconnu, graph.networkKey(inconnu));
+        }
+
+        @Test
+        void tousLesAppareilsReliesDonnentLaMemeCleLePlusPetitIdentifiant() {
+            PortRef centre = device(OVERWORLD, 10, 64, 0, 3);
+            PortRef gauche = device(-4, 64, 0);
+            PortRef droite = device(20, 64, 0);
+            graph.connect(new PortRef(centre.device(), 0), gauche, CUIVRE, true);
+            graph.connect(new PortRef(centre.device(), 1), droite, CUIVRE, true);
+            DeviceId isole = device(-50, 64, 0).device();
+
+            for (PortRef port : List.of(centre, gauche, droite)) {
+                assertEquals(gauche.device(), graph.networkKey(port.device()));
+            }
+            assertEquals(isole, graph.networkKey(isole));
+        }
+
+        @Test
+        void unDebranchementCoupeLeReseauEnDeux() {
+            PortRef centre = device(OVERWORLD, 10, 64, 0, 3);
+            PortRef gauche = device(-4, 64, 0);
+            PortRef droite = device(20, 64, 0);
+            graph.connect(new PortRef(centre.device(), 0), gauche, CUIVRE, true);
+            graph.connect(new PortRef(centre.device(), 1), droite, CUIVRE, true);
+
+            graph.disconnect(gauche);
+
+            assertEquals(gauche.device(), graph.networkKey(gauche.device()));
+            assertEquals(centre.device(), graph.networkKey(droite.device()));
+        }
+    }
+
+    @Nested
     class Connect {
 
         @Test

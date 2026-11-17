@@ -1,18 +1,25 @@
 package dev.netcraft.network;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import dev.netcraft.NetCraft;
 import dev.netcraft.debug.TrialLog;
+import dev.netcraft.message.Message;
+import dev.netcraft.message.MessageArg;
+import dev.netcraft.message.MessageLevel;
+import dev.netcraft.message.server.MessageCenter;
 import dev.netcraft.network.protocol.MacAddress;
 import dev.netcraft.network.sim.DeviceLogic;
 import dev.netcraft.network.sim.NetworkSimulation;
 import dev.netcraft.network.sim.SimulationEvent;
 import dev.netcraft.network.sync.NetworkSync;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -27,8 +34,11 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
  * qu'en solo deux mondes ne se mélangent jamais.
  */
 public final class NetworkManager {
-    /** Les joueurs à moins de 32 blocs d'un appareil en boucle sont prévenus. */
+    /** Les joueurs à moins de 32 blocs d'un appareil qui voit la boucle sont prévenus. */
     private static final double LOOP_MESSAGE_RADIUS = 32.0;
+    private static final String LOOP_MESSAGE = "message.netcraft.network.loop";
+    private static final String SATURATED_MESSAGE = "message.netcraft.network.saturated";
+    private static final String SATURATED_PROBLEM = "saturated";
 
     private final MinecraftServer server;
     private final NetworkSavedData data;
@@ -94,7 +104,11 @@ public final class NetworkManager {
         if (this.graph().node(node.id()).filter(node::equals).isPresent()) {
             return List.of();
         }
+        Set<DeviceId> touched = this.withNeighbours(node.id());
+        Set<DeviceId> networks = this.networksOf(touched);
         List<Link> removed = this.graph().putNode(node);
+        networks.addAll(this.networksOf(touched));
+        this.forgetLoops(networks);
         TrialLog.debug("appareil enregistré : {} : {}", TrialLog.device(this.graph(), node.id()), TrialLog.ports(this.graph(), node));
         this.data.setDirty();
         removed.forEach(this.simulation()::linkDown);
@@ -104,8 +118,12 @@ public final class NetworkManager {
     }
 
     public ConnectOutcome connect(PortRef a, PortRef b, LinkMedium medium, boolean cableConsumed) {
+        Set<DeviceId> touched = Set.copyOf(List.of(a.device(), b.device())); // Set.of refuse les doublons (même appareil)
+        Set<DeviceId> networks = this.networksOf(touched);
         ConnectOutcome outcome = this.graph().connect(a, b, medium, cableConsumed);
         outcome.link().ifPresent(link -> {
+            networks.addAll(this.networksOf(touched));
+            this.forgetLoops(networks);
             this.data.setDirty();
             this.simulation().linkUp(link);
             TrialLog.debug("câble branché : {} <-> {}", TrialLog.port(this.graph(), link.a()), TrialLog.port(this.graph(), link.b()));
@@ -115,8 +133,16 @@ public final class NetworkManager {
     }
 
     public Optional<Link> disconnect(PortRef port) {
+        Optional<Link> present = this.graph().linkAt(port);
+        if (present.isEmpty()) {
+            return Optional.empty();
+        }
+        Set<DeviceId> touched = Set.copyOf(List.of(present.get().a().device(), present.get().b().device()));
+        Set<DeviceId> networks = this.networksOf(touched);
         Optional<Link> removed = this.graph().disconnect(port);
         removed.ifPresent(link -> {
+            networks.addAll(this.networksOf(touched));
+            this.forgetLoops(networks);
             this.data.setDirty();
             this.simulation().linkDown(link);
             TrialLog.debug("câble débranché : {} <-> {}", TrialLog.port(this.graph(), link.a()), TrialLog.port(this.graph(), link.b()));
@@ -131,8 +157,12 @@ public final class NetworkManager {
         if (known) {
             TrialLog.debug("appareil retiré : {}, {} câble(s) retiré(s) avec lui", TrialLog.device(this.graph(), device), this.graph().linksOf(device).size());
         }
+        Set<DeviceId> touched = this.withNeighbours(device);
+        Set<DeviceId> networks = this.networksOf(touched);
         List<Link> removed = this.graph().removeDevice(device);
         if (known || !removed.isEmpty()) {
+            networks.addAll(this.networksOf(touched));
+            this.forgetLoops(networks);
             this.data.setDirty();
         }
         removed.forEach(this.simulation()::linkDown);
@@ -154,31 +184,104 @@ public final class NetworkManager {
         for (SimulationEvent event : this.simulation().drainEvents()) {
             switch (event) {
                 case SimulationEvent.LoopDetected loop -> this.reportLoop(loop);
-                case SimulationEvent.QueueSaturated saturated -> NetCraft.LOGGER.warn(
-                        "Réseau saturé : plus de {} trames en attente, de nouvelles trames ont été perdues.",
-                        this.simulation().limits().maxQueued());
+                case SimulationEvent.QueueSaturated saturated -> this.reportSaturation();
             }
         }
     }
 
-    /** Message clair dans le log et aux joueurs proches, plutôt qu'une tempête de trames. */
+    // ---- Signalements ----
+
+    private static String loopProblem(DeviceId network) {
+        return "loop:" + network;
+    }
+
+    /**
+     * Une boucle, même vue par plusieurs switchs, donne un seul message par joueur : chaque joueur à
+     * moins de 32 blocs d'un switch qui l'a vue reçoit le nom du plus proche. Le log en garde le détail.
+     */
     private void reportLoop(SimulationEvent.LoopDetected loop) {
-        DeviceId id = loop.device();
-        Component name = this.graph().node(id).map(NetworkDevices::displayName).orElse(Component.literal("?"));
-        int port = loop.port() + 1;
-        NetCraft.LOGGER.warn("Boucle réseau : une trame diffusée revient à {} ({}) par le port {}. Copie supprimée.",
-                name.getString(), id, port);
-        Optional<ServerLevel> level = NetworkDevices.levelOf(this.server, id);
-        if (level.isEmpty()) {
-            return;
-        }
-        BlockPos pos = NetworkDevices.posOf(id);
-        Component message = Component.translatable("message.netcraft.network.loop", name, id.x(), id.y(), id.z(), port);
-        for (ServerPlayer player : level.get().players()) {
-            if (player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= LOOP_MESSAGE_RADIUS * LOOP_MESSAGE_RADIUS) {
-                player.sendSystemMessage(message);
+        List<SimulationEvent.LoopPoint> points = loop.points();
+        Map<ServerPlayer, Message> recipients = new LinkedHashMap<>();
+        NetworkDevices.levelOf(this.server, loop.network()).ifPresent(level -> {
+            for (ServerPlayer player : level.players()) {
+                this.nearest(points, player).ifPresent(point -> recipients.put(player, this.loopMessage(point.device())));
+            }
+        });
+        String where = points.stream()
+                .map(point -> this.deviceArg(point.device()).logText() + " port " + (point.port() + 1))
+                .collect(Collectors.joining(", "));
+        MessageCenter.of(this.server).event(loopProblem(loop.network()), this.loopMessage(points.getFirst().device()),
+                "Network loop: copies of a broadcast frame came back to " + where + "; they were dropped.", recipients);
+    }
+
+    /** Le switch qui a vu la boucle le plus près du joueur, à moins de 32 blocs. */
+    private Optional<SimulationEvent.LoopPoint> nearest(List<SimulationEvent.LoopPoint> points, ServerPlayer player) {
+        SimulationEvent.LoopPoint best = null;
+        double bestDistance = LOOP_MESSAGE_RADIUS * LOOP_MESSAGE_RADIUS;
+        for (SimulationEvent.LoopPoint point : points) {
+            BlockPos pos = NetworkDevices.posOf(point.device());
+            double distance = player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+            if (distance <= bestDistance) {
+                best = point;
+                bestDistance = distance;
             }
         }
+        return Optional.ofNullable(best);
+    }
+
+    private Message loopMessage(DeviceId device) {
+        return Message.of(MessageLevel.WARNING, LOOP_MESSAGE, this.deviceArg(device));
+    }
+
+    private MessageArg deviceArg(DeviceId device) {
+        return this.graph().node(device).map(NetworkDevices::deviceArg).orElse(MessageArg.text(device.toString()));
+    }
+
+    /**
+     * La file est globale au serveur : sont prévenus les opérateurs connectés, et en solo le
+     * propriétaire du monde (sans triches, il n'est pas opérateur).
+     */
+    private void reportSaturation() {
+        Message message = Message.of(MessageLevel.WARNING, SATURATED_MESSAGE);
+        Map<ServerPlayer, Message> recipients = new LinkedHashMap<>();
+        for (ServerPlayer player : this.server.getPlayerList().getPlayers()) {
+            if (this.server.getPlayerList().isOp(player.nameAndId()) || this.server.isSingleplayerOwner(player.nameAndId())) {
+                recipients.put(player, message);
+            }
+        }
+        MessageCenter.of(this.server).event(SATURATED_PROBLEM, message, "Network queue saturated: more than "
+                + this.simulation().limits().maxQueued() + " frames waiting, new frames were dropped.", recipients);
+    }
+
+    // ---- Réseaux touchés par un changement ----
+
+    /** L'appareil et ceux qui lui sont reliés directement par un câble. */
+    private Set<DeviceId> withNeighbours(DeviceId device) {
+        Set<DeviceId> devices = new LinkedHashSet<>();
+        devices.add(device);
+        this.graph().node(device).ifPresent(node -> {
+            for (int i = 0; i < node.portCount(); i++) {
+                PortRef port = node.port(i);
+                this.graph().linkAt(port).ifPresent(link -> devices.add(link.otherEnd(port).device()));
+            }
+        });
+        return devices;
+    }
+
+    private Set<DeviceId> networksOf(Collection<DeviceId> devices) {
+        Set<DeviceId> networks = new LinkedHashSet<>();
+        devices.forEach(device -> networks.add(this.graph().networkKey(device)));
+        return networks;
+    }
+
+    /**
+     * Après un changement, les boucles déjà signalées dans les réseaux touchés (avant et après le
+     * changement) sont oubliées : une boucle toujours là est signalée de nouveau sans attendre la
+     * minute. Les autres réseaux gardent leur limite.
+     */
+    private void forgetLoops(Set<DeviceId> networks) {
+        MessageCenter messages = MessageCenter.of(this.server);
+        networks.forEach(network -> messages.forgetProblem(loopProblem(network)));
     }
 
     private NetworkGraph graph() {

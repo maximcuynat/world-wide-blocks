@@ -32,7 +32,7 @@
   "hud.netcraft.learned_more": "%s (+%s)",
   "message.netcraft.cable.end_taken": "End removed from %s, the other stays on %s, port %s.",
   "message.netcraft.cable.retracted": "%s: cable unplugged, the cord is free.",
-  "message.netcraft.network.loop": "Network loop near %s [%s, %s, %s]. Remove one cable of the loop.",
+  "message.netcraft.network.loop": "Network loop near %s. Remove one cable of the loop.",
   "message.netcraft.with_level": "%s: %s",
   "message.netcraft.level.info": "Info",
   "message.netcraft.level.success": "OK",
@@ -42,5 +42,6 @@
   "netcraft.configuration.messageSymbols": "Symbols in front of messages",
   "item.netcraft.ethernet_cable.tooltip.connect": "Right-click two devices to connect them.",
   "item.netcraft.ethernet_cable.tooltip.unplug": "Sneak + click a device: unplug.",
-  "item.netcraft.ethernet_cable.tooltip.cancel": "Sneak + click in the air: cancel."
+  "item.netcraft.ethernet_cable.tooltip.cancel": "Sneak + click in the air: cancel.",
+  "message.netcraft.network.saturated": "Network saturated: frames are being lost. Look for a loop."
 }

@@ -65,7 +65,9 @@ class LangFilesTest {
         for (String refusal : List.of("not_a_device", "incompatible_port", "same_device", "other_dimension", "too_far")) {
             samples.put("message.netcraft.cable.result." + refusal, List.of(DISTANCE, DISTANCE));
         }
-        samples.put("message.netcraft.network.loop", List.of(name, X, Y, Z, PORT));
+        // Un appareil s'écrit « nom [x, y, z] » (clé message.netcraft.device).
+        samples.put("message.netcraft.network.loop", List.of(name + " [" + X + ", " + Y + ", " + Z + "]"));
+        samples.put("message.netcraft.network.saturated", List.of());
         samples.put("hud.netcraft.port.connected", List.of(PORT));
         samples.put("hud.netcraft.port.free", List.of(PORT));
         samples.put("hud.netcraft.port.line", List.of(PORT));

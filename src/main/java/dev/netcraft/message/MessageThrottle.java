@@ -8,9 +8,9 @@ import java.util.Map;
  * par intervalle, quel que soit le nombre d'appareils qui le voient. Le temps est celui des ticks de la
  * simulation, en temps de jeu.
  *
- * <p>Les clés d'un problème lié au réseau sont oubliées quand le réseau change
- * ({@link #forget(String)}) : le joueur qui croit avoir réparé l'apprend au signalement suivant, sans
- * attendre la fin de l'intervalle. Le nombre de clés reste donc petit : une par problème en cours.
+ * <p>La clé d'un problème lié à un réseau est oubliée quand ce réseau change ({@link #forget(String)}) :
+ * le joueur qui croit avoir réparé l'apprend au signalement suivant, sans attendre la fin de
+ * l'intervalle. Les autres réseaux ne sont pas touchés.
  */
 public final class MessageThrottle {
     private final long intervalTicks;
@@ -33,8 +33,8 @@ public final class MessageThrottle {
         return true;
     }
 
-    /** Oublie tous les problèmes dont la clé commence par {@code prefix}. */
-    public void forget(String prefix) {
-        this.lastSent.keySet().removeIf(key -> key.startsWith(prefix));
+    /** Oublie ce problème : il pourra être transmis de nouveau tout de suite. */
+    public void forget(String problemKey) {
+        this.lastSent.remove(problemKey);
     }
 }

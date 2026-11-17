@@ -10,6 +10,8 @@ import java.util.SplittableRandom;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import dev.netcraft.message.MessageThrottle;
+
 import dev.netcraft.network.DeviceId;
 import dev.netcraft.network.DeviceRole;
 import dev.netcraft.network.Link;
@@ -264,15 +266,20 @@ class NetworkSimulationTest {
         assertEquals(0, sim.pendingFrames());
         long receptions = seen.stream().filter(s -> s.direction() == FrameDirection.RECEIVED).count();
         assertTrue(receptions < 10, "réceptions : " + receptions);
+        // Les deux box voient la boucle : un seul événement, qui les cite toutes les deux.
         List<SimulationEvent> events = sim.drainEvents();
-        assertTrue(events.contains(new SimulationEvent.LoopDetected(box1, 2)), events.toString());
-        assertTrue(events.contains(new SimulationEvent.LoopDetected(box2, 2)), events.toString());
+        assertEquals(1, events.size(), events.toString());
+        SimulationEvent.LoopDetected loop = (SimulationEvent.LoopDetected) events.getFirst();
+        assertEquals(box1, loop.network());
+        assertTrue(loop.points().contains(new SimulationEvent.LoopPoint(box1, 2)), loop.toString());
+        assertTrue(loop.points().contains(new SimulationEvent.LoopPoint(box2, 2)), loop.toString());
         // La MAC du poste n'a pas basculé de port à cause des copies supprimées.
         assertEquals(List.of(0), learnedPorts(box1, mac(tour, 0)));
     }
 
     @Test
-    void laBoucleEstSignaleeAuPlusUneFoisParMinuteEtParAppareil() {
+    void laSimulationSignaleLaBoucleAChaqueTickOuElleLaVoitSansLimiteDeFrequence() {
+        // La limite d'une fois par minute appartient au module des messages, pas au moteur.
         DeviceId box1 = box(0);
         DeviceId box2 = box(20);
         DeviceId tour = host(5);
@@ -282,11 +289,34 @@ class NetworkSimulationTest {
         sim.tick(0);
         sim.drainEvents();
 
-        sim.tick(600); // nouvelle présence, même boucle, moins d'une minute après
-        assertTrue(sim.drainEvents().isEmpty());
+        sim.tick(599);
+        assertTrue(sim.drainEvents().isEmpty(), "aucune trame entre deux présences");
 
-        sim.tick(1200); // une minute après le premier signalement
-        assertTrue(sim.drainEvents().contains(new SimulationEvent.LoopDetected(box1, 2)));
+        sim.tick(600); // nouvelle présence, même boucle
+        List<SimulationEvent> events = sim.drainEvents();
+        assertEquals(1, events.size(), events.toString());
+        assertEquals(box1, ((SimulationEvent.LoopDetected) events.getFirst()).network());
+    }
+
+    @Test
+    void deuxBouclesDansDeuxReseauxDonnentDeuxEvenements() {
+        DeviceId a1 = box(0);
+        DeviceId a2 = box(20);
+        plug(a1, 1, a2, 1);
+        plug(a1, 2, a2, 2);
+        plug(a1, 0, host(5), 0);
+        DeviceId b1 = box(100);
+        DeviceId b2 = box(120);
+        plug(b1, 1, b2, 1);
+        plug(b1, 2, b2, 2);
+        plug(b1, 0, host(105), 0);
+
+        sim.tick(0);
+
+        List<DeviceId> networks = sim.drainEvents().stream()
+                .map(event -> ((SimulationEvent.LoopDetected) event).network())
+                .toList();
+        assertEquals(List.of(a1, b1), networks);
     }
 
     @Test
@@ -316,7 +346,8 @@ class NetworkSimulationTest {
 
         sim.tick(0);
 
-        assertTrue(sim.drainEvents().contains(new SimulationEvent.QueueSaturated()));
+        // Au plus un événement par tick, même si beaucoup de trames sont perdues.
+        assertEquals(List.of(new SimulationEvent.QueueSaturated()), sim.drainEvents());
     }
 
     // ---- Horloge : changements survenus entre deux ticks ----
@@ -342,6 +373,8 @@ class NetworkSimulationTest {
     @Test
     void uneBoucleNeeEntreDeuxTicksEstSignaleeToutesLesMinutesExactement() {
         // Défaut relevé le 2026-11-18 par le test en jeu : signalements à 1 800 ticks d'écart au lieu de 1 200.
+        // Le moteur voit la boucle à chaque présence (toutes les 600 ticks) ; le module des messages,
+        // avec le même temps, n'en transmet qu'une par minute.
         DeviceId box1 = box(0);
         DeviceId box2 = box(20);
         plug(box1, 1, box2, 1);
@@ -350,14 +383,22 @@ class NetworkSimulationTest {
         DeviceId tour = host(5);
         plug(box1, 0, tour, 0); // entre le tick 50 et le tick 51
 
+        MessageThrottle throttle = new MessageThrottle(SimulationLimits.DEFAULT.reportIntervalTicks());
+        List<Long> vues = new ArrayList<>();
         List<Long> signalements = new ArrayList<>();
         for (long t = 51; t <= 2500; t++) {
             sim.tick(t);
-            if (sim.drainEvents().contains(new SimulationEvent.LoopDetected(box1, 2))) {
-                signalements.add(t);
+            for (SimulationEvent event : sim.drainEvents()) {
+                if (event instanceof SimulationEvent.LoopDetected loop) {
+                    vues.add(t);
+                    if (throttle.allow("loop:" + loop.network(), t)) {
+                        signalements.add(t);
+                    }
+                }
             }
         }
 
+        assertEquals(List.of(51L, 651L, 1251L, 1851L, 2451L), vues);
         assertEquals(List.of(51L, 1251L, 2451L), signalements);
     }
 

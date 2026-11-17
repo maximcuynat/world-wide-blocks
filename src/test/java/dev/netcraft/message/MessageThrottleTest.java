@@ -34,13 +34,15 @@ class MessageThrottleTest {
     }
 
     @Test
-    void oublierUnPrefixeRendLeProblemeSignalableAussitot() {
+    void oublierUnProblemeLeRendSignalableAussitotSansToucherAuxAutres() {
         assertTrue(throttle.allow("loop:a", 100));
+        assertTrue(throttle.allow("loop:a1", 100));
         assertTrue(throttle.allow("saturated", 100));
 
-        throttle.forget("loop:");
+        throttle.forget("loop:a");
 
         assertTrue(throttle.allow("loop:a", 101));
+        assertFalse(throttle.allow("loop:a1", 101));
         assertFalse(throttle.allow("saturated", 101));
     }
 

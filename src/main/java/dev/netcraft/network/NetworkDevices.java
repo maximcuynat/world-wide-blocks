@@ -104,6 +104,11 @@ public final class NetworkDevices {
         }
     }
 
+    /** Appareil comme valeur d'un message : nom traduit et coordonnées pour le joueur, identifiant dans le log. */
+    public static MessageArg deviceArg(NetworkNode node) {
+        return MessageArg.device(node.id(), node.deviceType());
+    }
+
     /** Nom de l'appareil comme valeur d'un message : sa clé de langue, traduite par le client. */
     public static MessageArg nameArg(NetworkNode node) {
         return MessageArg.key("block." + node.deviceType().replace(':', '.'));

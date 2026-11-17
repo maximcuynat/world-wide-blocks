@@ -1,5 +1,7 @@
 package dev.netcraft.network;
 
+import java.util.Comparator;
+
 /**
  * Identifie un appareil réseau par sa position : dimension et coordonnées du bloc.
  * Un appareil ne se déplace jamais (il refuse les pistons), sa position suffit donc à l'identifier.
@@ -9,6 +11,11 @@ package dev.netcraft.network;
  * @param dimension identifiant de la dimension, par exemple {@code minecraft:overworld}
  */
 public record DeviceId(String dimension, int x, int y, int z) {
+    /** Ordre total et stable : dimension, puis x, y, z. Sert à désigner un réseau par un de ses appareils. */
+    public static final Comparator<DeviceId> ORDER = Comparator.comparing(DeviceId::dimension)
+            .thenComparingInt(DeviceId::x)
+            .thenComparingInt(DeviceId::y)
+            .thenComparingInt(DeviceId::z);
 
     public boolean sameDimension(DeviceId other) {
         return this.dimension.equals(other.dimension);
