@@ -1,6 +1,6 @@
 # NetCraft : plan par lots
 
-Établi le 2026-11-17. Statut : proposé, en attente de validation. Rien n'est codé au-delà du lot 0.
+Établi le 2026-11-17, révisé le même jour après relecture. Statut : proposé, en attente de validation. Rien n'est codé au-delà du lot 0.
 
 ## Principes
 
@@ -9,6 +9,21 @@
 - Les équipements sont génériques : aucune marque, aucun modèle commercial.
 - Pendant les lots, le retour visuel reste minimal : un indicateur d'état lisible (connecté ou non, adresse obtenue ou non). Les voyants animés, textures allumées et sons sont regroupés dans le lot de finition.
 - Une ligne par bloc ou par item à créer. « Bloc » se pose dans le monde, « item » se tient en main.
+- La simulation reste abstraite : le mod calcule si un chemin existe entre deux appareils et affiche le résultat, sans faire voyager chaque message tick par tick. C'est la condition pour tenir la charge avec beaucoup d'appareils, en particulier sur un serveur multijoueur.
+
+## Périmètre
+
+- Hors périmètre : le réseau câblé coaxial (modem câble, tête de réseau CMTS, noeud optique, amplificateurs). Il reste dans l'inventaire des équipements à titre de référence, mais aucun lot ne le prévoit.
+- Le cuivre reste dans le plan comme technologie historique : Orange a transmis en 2022 à l'Arcep son plan de fermeture du réseau cuivre [14].
+
+## Décisions à trancher
+
+| Décision | Avant le lot | Proposition | Statut |
+|---|---|---|---|
+| Rôle de l'écran, du clavier et de la souris | 1c | Le terminal s'ouvre directement sur la tour ; les périphériques du lot 2c restent décoratifs et ne conditionnent pas l'accès. Alternative : les rendre obligatoires, ce qui changerait le comportement de la tour au lot 2c | À valider |
+| Batterie du portable | É | Le portable fonctionne sur batterie quand il n'est pas branché et se recharge sur une prise | À valider |
+| Électricité obligatoire ou non | É | Option de configuration « alimentation requise », activée par défaut ; désactivée, tous les appareils fonctionnent sans courant | À valider |
+| Échelle des équipements en baie | 6a | Échelle par famille : baies à l'échelle du joueur, petits équipements agrandis. Avec le facteur 2,4 de la tour PC, une baie 42U ferait environ 4,8 blocs de haut | À valider |
 
 Les dimensions réelles de chaque équipement sont dans `docs/equipements-reseau.md`.
 
@@ -128,6 +143,8 @@ Lot court, placé juste après le lot 1 pour ne pas avoir à reprendre des dizai
 | Item | Cordon d'alimentation | Relie un appareil à une prise |
 | Bloc | Multiprise | Plusieurs appareils sur une seule prise |
 | Mécanique | Consommation | Chaque appareil consomme une puissance ; non alimenté, il est éteint et ne répond plus |
+| Mécanique | Batterie du portable | Le portable continue de fonctionner débranché, tant que sa batterie n'est pas vide (voir « Décisions à trancher ») |
+| Réglage | Option « alimentation requise » | Permet de jouer sans gérer l'électricité (voir « Décisions à trancher ») |
 
 Jouable à la fin : on débranche la box, tout le réseau du logement tombe.
 
@@ -168,6 +185,8 @@ Jouable à la fin : un poste branché sur la prise d'une chambre joint la box ra
 | Bloc | Imprimante réseau | Impression depuis n'importe quel poste |
 
 Jouable à la fin : un fichier déposé depuis un poste est lu depuis un autre.
+
+Le rôle de l'écran, du clavier et de la souris dépend de la décision prise avant le lot 1c (voir « Décisions à trancher »).
 
 ### 2d : autres appareils du logement
 
@@ -221,7 +240,7 @@ Jouable à la fin : la box affiche « ligne raccordée » par le cuivre, avec un
 | Item | Câble aérien optique | Câble à plusieurs fibres tendu de poteau en poteau |
 | Item | Câble aérien cuivre | Câble à plusieurs paires tendu de poteau en poteau |
 | Bloc | Boîtier de branchement optique | Dernier boîtier fibre avant les logements, fixé sur poteau ou en façade |
-| Bloc | Boîtier de raccordement cuivre | Dernier boîtier cuivre avant les logements (rôle et nom réels à confirmer, voir le tableau des vérifications) |
+| Bloc | Point de concentration cuivre | Dernier boîtier cuivre avant les logements, fixé sur poteau ou en façade |
 
 Jouable à la fin : une maison raccordée par une ligne tirée sur trois poteaux.
 
@@ -263,6 +282,8 @@ Jouable à la fin : plusieurs maisons raccordées en cuivre à une même armoire
 ### 6a : la baie
 
 Sous-lot à part, car il introduit une mécanique nouvelle : le montage d'équipements dans des emplacements numérotés.
+
+Prérequis : avoir tranché l'échelle des équipements en baie (voir « Décisions à trancher »).
 
 | Type | Équipement | Rôle |
 |---|---|---|
@@ -478,6 +499,7 @@ Jouable à la fin : tout le mod est accessible sans le mode créatif.
 - Le lot É est requis par l'adaptateur CPL, l'injecteur PoE et l'énergie de salle (8e).
 - Le lot 3 a besoin du bloc de test tant que les lots 4 à 6 ne sont pas faits.
 - La baie 19 pouces (6a) est requise par 6b, 7b et tout le lot 8.
+- La décision d'échelle des équipements en baie doit être prise avant 6a.
 - Les outils (9a) peuvent être avancés si l'on veut fabriquer les câbles plus tôt.
 
 ## Fonctionnement réel : ce qui a été vérifié
@@ -494,8 +516,13 @@ Jouable à la fin : tout le mod est accessible sans le mode créatif.
 | L'OLT se trouve au noeud de raccordement optique et y joue le rôle du DSLAM | Lu | [6] |
 | Cuivre : la boucle locale va du répartiteur de l'opérateur à la prise de l'abonné | Lu | [7] |
 | Cuivre : le répartiteur est dans le central ; le sous-répartiteur raccorde une zone au réseau principal | Lu | [8] |
-| Un poste derrière une box n'est pas joignable de l'extérieur par son adresse privée | De mémoire, non sourcé | À confirmer avant le lot 6c |
-| Cuivre : nom et rôle du dernier boîtier avant le logement (point de concentration) | Recherché, aucune source trouvée | Non tranché : à sourcer avant le lot 4a |
+| Les adresses privées (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16) ne sont pas routées sur internet : un poste derrière une box n'est joignable de l'extérieur que par la traduction d'adresses (NAT) | Extrait | [9], [10] |
+| Cuivre : le dernier boîtier avant le logement est le point de concentration (PC), en façade ou sur poteau ; le câble de distribution, commun à plusieurs abonnés, arrive en amont | Extrait | [11], [12] |
+| Cuivre : la ligne remonte du point de concentration au sous-répartiteur, puis au répartiteur | Extrait | [13] |
+
+« Lu » : page ouverte et lue. « Extrait » : vu dans un résultat de moteur de recherche, page non ouverte en entier.
+
+Les sources lues sont surtout Wikipedia : c'est suffisant pour le fonctionnement général. Pour les points propres à la France (PM, PBO, NRO, PC), lire en priorité avant les lots 4 et 5 les documents repérés dans l'inventaire : le guide CREDO d'Acome et le recueil de spécifications de l'Arcep pour les zones moins denses.
 
 ## Sources
 
@@ -507,3 +534,9 @@ Jouable à la fin : tout le mod est accessible sans le mode créatif.
 6. Wikipedia, « Noeud de raccordement optique » : https://fr.wikipedia.org/wiki/N%C5%93ud_de_raccordement_optique
 7. Wikipedia, « Boucle locale » : https://fr.wikipedia.org/wiki/Boucle_locale
 8. Wikipedia, « Répartiteur téléphonique » : https://fr.wikipedia.org/wiki/R%C3%A9partiteur_t%C3%A9l%C3%A9phonique
+9. IETF, RFC 1918, « Address Allocation for Private Internets » : https://www.rfc-editor.org/rfc/rfc1918.txt
+10. Wikipedia, « Private network » : https://www.wikipedia.org/wiki/Private_network
+11. OVHcloud, « La desserte interne » : https://docs.ovhcloud.com/fr/guides/web-cloud/internet/internet-access/la-desserte-interne
+12. Arcep, avis du comité d'experts cuivre DEX150505, VDSL2 au PC : https://arcep.fr/fileadmin/reprise/dossiers/degroup/avis-DEX150505-VDSL2_au_PC-050515.pdf
+13. Orange, définition et classes des PLP : https://developer.orange.com/ope-contents/channels/87afd7365baec589/offers/7QKqBnDZ5utv021d/products/sAxl9K40i4n0a0sS/contents/faKUIj4gm2fYD5G2
+14. Arcep, rapport 2026, fiche fermeture du réseau cuivre : https://www.arcep.fr/fileadmin/user_upload/espace_collectivites/rapport-TC-2026/RA2026-Tome02-fermeture-reseau-cuivre.pdf

@@ -17,6 +17,8 @@ Chaque dimension porte un statut, parce que toutes n'ont pas le même niveau de 
 
 Les dimensions sont données en millimètres, dans l'ordre largeur x profondeur x hauteur, sauf mention contraire.
 
+Précision utile : en jeu, 1 pixel représente 62,5 mm et les équipements sont agrandis d'environ 2,4. Une erreur de quelques millimètres ne change donc rien au modèle. On ne vérifie une cote qu'au moment de modéliser l'équipement, lot par lot, sans chercher à tout confirmer d'avance.
+
 Limite de cette recherche : l'outil de lecture de pages était bloqué pendant la session. Une partie seulement des fiches constructeur a pu être ouverte, et beaucoup de dimensions restent en statut E ou M. La liste des équipements, elle, est complète pour un premier inventaire.
 
 ## Échelle : du réel au jeu
@@ -25,6 +27,7 @@ Limite de cette recherche : l'outil de lecture de pages était bloqué pendant l
 - À cette échelle exacte, la plupart des équipements sont illisibles : un switch 1U ferait 7 px de large pour 0,7 px de haut, une tour PC 3 px de large.
 - Les deux blocs déjà faits sont donc agrandis : la tour PC fait 8 px de large pour 210 mm réels, soit un facteur d'environ 2,4.
 - Point à trancher avant de modéliser les baies : une échelle unique agrandie (cohérente mais encombrante), ou une échelle par famille (baies à l'échelle du joueur, petits équipements agrandis).
+- Proposition : l'échelle par famille. Avec le facteur 2,4, une baie 42U de 1991 mm ferait environ 4,8 blocs de haut. La décision est suivie dans `docs/plan-lots.md`, section « Décisions à trancher ».
 
 ## 1. Postes et terminaux
 
@@ -51,7 +54,7 @@ Limite de cette recherche : l'outil de lecture de pages était bloqué pendant l
 | Prise terminale optique, PTO (ex. Acome PTO2803) | Optical outlet | Arrivée de la fibre dans le logement, passive | 100 x 80 x 27,5 | E |
 | ONT fibre (ex. Fracarro ONTG-4GP2F-S) | Optical network terminal | Convertit la fibre de l'opérateur en Ethernet | 205 x 110 x 30 | E |
 | Prise téléphonique, filtre DSL | Phone socket, DSL filter | Arrivée de la ligne cuivre | [À COMPLÉTER] | |
-| Modem câble | Cable modem | Accès par le réseau câblé coaxial | [À COMPLÉTER] | |
+| Modem câble | Cable modem | Accès par le réseau câblé coaxial (hors périmètre du plan) | [À COMPLÉTER] | |
 | Routeur 4G/5G (ex. Netgear Nighthawk M6) | Mobile router | Accès internet par le réseau mobile | 105 x 105 x 21,5 | E |
 | Antenne satellite (Starlink V5) | Satellite dish | Terminal satellite de l'abonné, 35 à 50 W en moyenne | 384 x 306 x 34 | S [3] |
 | Bloc d'alimentation Starlink V5 | Power supply | Alimente l'antenne | 157 x 74 x 36 | S [3] |
@@ -311,13 +314,15 @@ Chaîne, du coeur vers l'abonné : NRO, puis point de mutualisation, puis point 
 
 ## 15. Réseau d'opérateur : cuivre et câble
 
+Le réseau câblé coaxial (tête de réseau, noeud optique, amplificateurs) est hors périmètre du plan des lots : ces lignes sont gardées pour référence.
+
 | Équipement | Nom anglais | Rôle | Statut |
 |---|---|---|---|
 | Central téléphonique, NRA | Telephone exchange | Local d'où partent les lignes cuivre | [À COMPLÉTER] |
 | Répartiteur général | Main distribution frame | Brassage des paires cuivre au central | [À COMPLÉTER] |
 | DSLAM | DSLAM | Équipement actif de l'ADSL et du VDSL | [À COMPLÉTER] |
 | Sous-répartiteur, armoire de rue | Cross-connect cabinet | Répartition des paires dans un quartier | [À COMPLÉTER] |
-| Point de concentration | Distribution point | Dernier boîtier cuivre avant l'abonné | [À COMPLÉTER] |
+| Point de concentration, PC | Distribution point | Dernier boîtier cuivre avant l'abonné, en façade ou sur poteau ; le câble de distribution commun à plusieurs abonnés arrive en amont | E |
 | Tête de réseau, CMTS | Headend, CMTS | Équipement actif du réseau câblé | [À COMPLÉTER] |
 | Noeud optique, amplificateur, dérivateur | Optical node, amplifier, tap | Éléments du réseau coaxial | [À COMPLÉTER] |
 
@@ -395,14 +400,15 @@ Utile pour le système d'énergie du mod. Valeurs lues sur Wikipedia [6], sauf m
 
 ## Ce qui reste à vérifier
 
-- Toutes les lignes en statut E et M, en priorité celles des premiers blocs à modéliser.
+- Les lignes en statut E et M, uniquement au moment de modéliser l'équipement concerné (voir « Comment lire ce document »).
+- Les dimensions du point de concentration cuivre.
 - L'ordre des cotes (largeur, profondeur, hauteur) pour les NAS, l'onduleur et le routeur Starlink Mini.
 - Les valeurs contradictoires selon les sources : couleur de gaine OM4, fréquence de la Cat 7, diamètres des coaxiaux.
 - Les dimensions de tout ce qui est en extérieur : poteaux, PBO, antennes mobiles, chambres en béton.
 - Les consommations des switchs et serveurs dépendent de la configuration : les valeurs citées sont des puissances d'alimentation ou des moyennes constructeur, pas des garanties.
 - Dans les sections 5 à 8, les équipements sans modèle cité (switch de coeur, châssis, routeurs, PDU, batteries, confinement) n'ont pas été recherchés.
 
-Documents repérés mais non lus, à consulter pour compléter le réseau d'opérateur : le guide CREDO 2018 d'Acome sur les composants du réseau d'accès, le recueil de spécifications ARCEP pour les zones moins denses (version du 29/06/2026) et le catalogue Nexans « central office » 2024.
+Documents repérés mais non lus, à consulter en priorité avant les lots 4 et 5 pour compléter le réseau d'opérateur : le guide CREDO 2018 d'Acome sur les composants du réseau d'accès, le recueil de spécifications ARCEP pour les zones moins denses (version du 29/06/2026) et le catalogue Nexans « central office » 2024.
 
 ## Sources
 
@@ -458,3 +464,5 @@ Résultats de recherche, pages non ouvertes (statut E) :
 - Rittal TS 8 : https://www.rittal.com/pdf-creator/variant/com-en/8806750
 - Dalles de faux plancher : https://source.thenbs.com/en-us/gb/product/beh600pbt-heavy-grade-porcelain-edge-banded-panel/deWJdesYthhtqkzvTneCzd/h5xPg6gCNF82zv4FWFMw64
 - Open Rack version 3 : https://www.opencompute.org/products/440/rittal-open-rack-v3-orv3
+- Point de concentration, OVHcloud : https://docs.ovhcloud.com/fr/guides/web-cloud/internet/internet-access/la-desserte-interne
+- Point de concentration, avis Arcep DEX150505 : https://arcep.fr/fileadmin/reprise/dossiers/degroup/avis-DEX150505-VDSL2_au_PC-050515.pdf
