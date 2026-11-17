@@ -3,7 +3,6 @@ package dev.netcraft.client;
 import java.util.Locale;
 
 import dev.netcraft.message.Message;
-import dev.netcraft.message.MessageArg;
 import dev.netcraft.message.MessageLevel;
 import dev.netcraft.network.sync.MessagePayload;
 import net.minecraft.ChatFormatting;
@@ -39,24 +38,13 @@ final class ClientMessages {
     }
 
     private Component render(Message message) {
-        Object[] args = message.args().stream().map(ClientMessages::render).toArray();
-        Component body = Component.translatable(message.key(), args);
+        Component body = ClientText.of(message.key(), message.args());
         MessageLevel level = message.level();
         MutableComponent line = this.config.messageSymbols()
                 ? Component.literal(symbol(level) + " ").append(body)
                 : Component.translatable("message.netcraft.with_level",
                         Component.translatable("message.netcraft.level." + level.name().toLowerCase(Locale.ROOT)), body);
         return line.withStyle(color(level));
-    }
-
-    private static Component render(MessageArg arg) {
-        return switch (arg) {
-            case MessageArg.Text text -> Component.literal(text.value());
-            case MessageArg.Number number -> Component.literal(Long.toString(number.value()));
-            case MessageArg.Key key -> Component.translatable(key.key());
-            case MessageArg.Device device -> Component.translatable("message.netcraft.device",
-                    Component.translatable(device.nameKey()), device.x(), device.y(), device.z());
-        };
     }
 
     private static String symbol(MessageLevel level) {

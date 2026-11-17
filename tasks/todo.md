@@ -50,7 +50,7 @@ Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
     - [x] 3. Textes : vouvoiement, distances entières, doublon et `result.ok` retirés, format commun d'un appareil, infobulle du cordon, test des fichiers de langue (mêmes clés, longueurs maximales).
     - [x] 4. Boucle et saturation : un événement par réseau et par tick, limite par minute dans le module, oubli au changement du réseau, message à l'appareil le plus proche du joueur, saturation aux opérateurs et au propriétaire en solo ; tests du moteur, du module et en jeu (une seule série de messages pour deux box).
     - [x] 5. Log en anglais et nettoyage : traces utiles passées par le module (DEBUG, anglais), `TrialLog` et `graphForTrial` retirés, exceptions en anglais.
-    - [ ] 6. Panneau d'état : lignes construites en Java pur (compact, détaillé accroupi, ligne « Accroupi : détails »), le client ne fait que dessiner ; tests unitaires.
+    - [x] 6. Panneau d'état : lignes construites en Java pur (compact, détaillé accroupi, ligne « Accroupi : détails »), le client ne fait que dessiner ; tests unitaires.
     - [ ] 7. Documents : `CLAUDE.md` (log en anglais, règles du module, données séparées du dessin), état dans `docs/plan-lots.md`, procédure de vérification à l'œil.
 - [ ] Lot 1b-2 (DHCP) : architecture validée avec le 1b-1, pas commencé. Ne pas oublier l'état INIT-REBOOT (bail du poste sauvegardé).
 

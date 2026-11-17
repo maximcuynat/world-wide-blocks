@@ -71,9 +71,13 @@ class LangFilesTest {
         samples.put("hud.netcraft.port.connected", List.of(PORT));
         samples.put("hud.netcraft.port.free", List.of(PORT));
         samples.put("hud.netcraft.port.line", List.of(PORT));
-        samples.put("hud.netcraft.port.connected_learned", List.of(PORT, MAC + " (+" + COUNT + ")"));
+        samples.put("hud.netcraft.port.connected_learned", List.of(PORT, MAC));
+        samples.put("hud.netcraft.port.connected_learned_more", List.of(PORT, MAC, COUNT));
         samples.put("hud.netcraft.mac", List.of(MAC));
-        samples.put("hud.netcraft.learned_more", List.of(MAC, COUNT));
+        samples.put("hud.netcraft.ports_connected", List.of(COUNT, COUNT));
+        samples.put("hud.netcraft.connected", List.of());
+        samples.put("hud.netcraft.not_connected", List.of());
+        samples.put("hud.netcraft.sneak_for_details", List.of());
         samples.put("item.netcraft.ethernet_cable.tooltip.connect", List.of());
         samples.put("item.netcraft.ethernet_cable.tooltip.unplug", List.of());
         samples.put("item.netcraft.ethernet_cable.tooltip.cancel", List.of());
