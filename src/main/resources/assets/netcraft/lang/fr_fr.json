@@ -14,6 +14,7 @@
   "message.netcraft.cable.no_free_port": "%s : aucun port libre.",
   "message.netcraft.cable.cancelled": "Branchement annulé.",
   "message.netcraft.cable.start_gone": "La première extrémité n'existe plus : branchement annulé.",
+  "message.netcraft.cable.cancelled_dimension": "Changement de dimension : branchement annulé, le cordon est libre.",
   "message.netcraft.cable.start_taken": "Le port de la première extrémité est désormais occupé : branchement annulé.",
   "message.netcraft.cable.connected": "Connecté : %s port %s ↔ %s port %s (%s blocs).",
   "message.netcraft.cable.unplugged": "%s : port %s débranché.",

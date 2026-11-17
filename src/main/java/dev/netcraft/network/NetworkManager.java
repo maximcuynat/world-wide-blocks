@@ -72,6 +72,11 @@ public final class NetworkManager {
         return this.graph().firstFreePort(device, medium);
     }
 
+    /** Un branchement en attente depuis {@code start} peut-il encore être terminé par qui se trouve dans {@code holderDimension} ? */
+    public PendingCable.Status pendingCable(PortRef start, String holderDimension) {
+        return PendingCable.check(this.graph(), start, holderDimension);
+    }
+
     public List<MacAddress> macsOf(DeviceId device) {
         return this.graph().macsOf(device);
     }

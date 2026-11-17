@@ -14,6 +14,7 @@
   "message.netcraft.cable.no_free_port": "%s: no free port.",
   "message.netcraft.cable.cancelled": "Connection cancelled.",
   "message.netcraft.cable.start_gone": "The first end no longer exists: connection cancelled.",
+  "message.netcraft.cable.cancelled_dimension": "Dimension changed: connection cancelled, the cord is free.",
   "message.netcraft.cable.start_taken": "The first end's port is now in use: connection cancelled.",
   "message.netcraft.cable.connected": "Connected: %s port %s ↔ %s port %s (%s blocks).",
   "message.netcraft.cable.unplugged": "%s: port %s unplugged.",

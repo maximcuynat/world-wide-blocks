@@ -3,6 +3,8 @@ package dev.netcraft.item;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import dev.netcraft.network.DeviceId;
+import dev.netcraft.network.PortRef;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -23,4 +25,11 @@ public record CableStart(GlobalPos device, int port) {
             GlobalPos.STREAM_CODEC, CableStart::device,
             ByteBufCodecs.VAR_INT, CableStart::port,
             CableStart::new);
+
+    /** Le port de départ, tel que le moteur réseau le désigne. */
+    public PortRef portRef() {
+        DeviceId id = new DeviceId(this.device.dimension().identifier().toString(),
+                this.device.pos().getX(), this.device.pos().getY(), this.device.pos().getZ());
+        return new PortRef(id, this.port);
+    }
 }

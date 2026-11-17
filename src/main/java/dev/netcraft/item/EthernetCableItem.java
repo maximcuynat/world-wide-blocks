@@ -12,6 +12,7 @@ import dev.netcraft.network.NetworkDevice;
 import dev.netcraft.network.NetworkDevices;
 import dev.netcraft.network.NetworkManager;
 import dev.netcraft.network.NetworkNode;
+import dev.netcraft.network.PendingCable;
 import dev.netcraft.network.PortRef;
 import dev.netcraft.registry.ModDataComponents;
 import dev.netcraft.registry.ModItems;
@@ -22,11 +23,15 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Prediction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * Cordon Ethernet : un clic droit sur un appareil, puis un clic droit sur un autre, les relie.
@@ -85,6 +90,31 @@ public class EthernetCableItem extends Item {
         return InteractionResult.SUCCESS;
     }
 
+    /**
+     * Côté serveur, à chaque tick, pour chaque cordon d'un inventaire : un branchement en attente dont
+     * le départ a disparu (cassé, explosé, remplacé, y compris pendant une déconnexion) ou dont le
+     * porteur a changé de dimension est annulé, et le joueur prévenu. Seule l'attente est effacée : le
+     * cordon reste dans l'inventaire, aucun n'est créé ni perdu.
+     */
+    @Override
+    public void inventoryTick(ItemStack stack, ServerLevel level, Entity owner, @Nullable EquipmentSlot slot) {
+        CableStart pending = stack.get(ModDataComponents.CABLE_START.get());
+        if (pending == null) {
+            return;
+        }
+        String holderDimension = level.dimension().identifier().toString();
+        PendingCable.Status status = NetworkManager.of(level.getServer()).pendingCable(pending.portRef(), holderDimension);
+        if (status == PendingCable.Status.VALID) {
+            return;
+        }
+        stack.remove(ModDataComponents.CABLE_START.get());
+        if (owner instanceof Player player) {
+            player.sendOverlayMessage(Component.translatable(status == PendingCable.Status.START_GONE
+                    ? "message.netcraft.cable.start_gone"
+                    : "message.netcraft.cable.cancelled_dimension"));
+        }
+    }
+
     /** Accroupi + clic droit dans le vide : annule le branchement commencé. */
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
@@ -115,8 +145,7 @@ public class EthernetCableItem extends Item {
     private void finish(ServerLevel level, Player player, ItemStack stack, NetworkNode end) {
         NetworkManager network = NetworkManager.of(level.getServer());
         CableStart pending = stack.get(ModDataComponents.CABLE_START.get());
-        DeviceId startId = new DeviceId(pending.device().dimension().identifier().toString(),
-                pending.device().pos().getX(), pending.device().pos().getY(), pending.device().pos().getZ());
+        DeviceId startId = pending.portRef().device();
 
         // La première extrémité a pu disparaître depuis le premier clic : on la revérifie.
         if (!startId.sameDimension(end.id())) {
