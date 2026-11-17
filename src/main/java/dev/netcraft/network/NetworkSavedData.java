@@ -6,6 +6,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import dev.netcraft.NetCraft;
+import dev.netcraft.debug.TrialLog;
 import dev.netcraft.network.sim.NetworkSimulation;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -32,6 +33,8 @@ public final class NetworkSavedData extends SavedData {
 
     private final NetworkGraph graph = new NetworkGraph();
     private final NetworkSimulation simulation = new NetworkSimulation(this.graph);
+    /** TEMPORAIRE : traces des essais du lot 1b-1. */
+    private final TrialLog trialLog = new TrialLog();
 
     private NetworkSavedData() {
     }
@@ -50,6 +53,18 @@ public final class NetworkSavedData extends SavedData {
                 NetCraft.LOGGER.warn("Lien réseau incohérent ignoré au chargement : {}", link);
             }
         }
+        // TEMPORAIRE (essais du lot 1b-1) : contenu du réseau relu.
+        if (!TrialLog.enabled()) {
+            return;
+        }
+        TrialLog.debug("chargement : {} appareils, {} câbles, MAC {}", nodes.size(), this.graph.links().size(),
+                macsGenerated ? "générées pour au moins un appareil (monde d'avant le lot 1b ou MAC invalides)" : "toutes reprises de la sauvegarde");
+        for (NetworkNode node : this.graph.nodes()) {
+            TrialLog.debug("chargement : {} : {}", TrialLog.device(this.graph, node.id()), TrialLog.ports(this.graph, node));
+        }
+        for (Link link : this.graph.links()) {
+            TrialLog.debug("chargement : câble {} <-> {}", TrialLog.port(this.graph, link.a()), TrialLog.port(this.graph, link.b()));
+        }
     }
 
     private List<SavedNode> savedNodes() {
@@ -64,5 +79,9 @@ public final class NetworkSavedData extends SavedData {
 
     NetworkSimulation simulation() {
         return this.simulation;
+    }
+
+    TrialLog trialLog() {
+        return this.trialLog;
     }
 }

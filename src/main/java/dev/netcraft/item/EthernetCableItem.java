@@ -3,6 +3,7 @@ package dev.netcraft.item;
 import java.util.Locale;
 import java.util.Optional;
 
+import dev.netcraft.debug.TrialLog;
 import dev.netcraft.network.ConnectOutcome;
 import dev.netcraft.network.ConnectResult;
 import dev.netcraft.network.DeviceId;
@@ -79,7 +80,7 @@ public class EthernetCableItem extends Item {
         if (pending != null && pending.device().equals(GlobalPos.of(level.dimension(), pos))) {
             // Clic sur l'appareil où l'autre bout est branché : on le débranche, le cordon reste libre en main.
             stack.remove(ModDataComponents.CABLE_START.get());
-            player.sendOverlayMessage(Component.translatable("message.netcraft.cable.retracted", NetworkDevices.displayName(node.get())));
+            tell(player, Component.translatable("message.netcraft.cable.retracted", NetworkDevices.displayName(node.get())));
         } else if (player.isSecondaryUseActive()) {
             this.unplug(serverLevel, player, node.get());
         } else if (pending != null) {
@@ -109,7 +110,7 @@ public class EthernetCableItem extends Item {
         }
         stack.remove(ModDataComponents.CABLE_START.get());
         if (owner instanceof Player player) {
-            player.sendOverlayMessage(Component.translatable(status == PendingCable.Status.START_GONE
+            tell(player, Component.translatable(status == PendingCable.Status.START_GONE
                     ? "message.netcraft.cable.start_gone"
                     : "message.netcraft.cable.cancelled_dimension"));
         }
@@ -124,7 +125,7 @@ public class EthernetCableItem extends Item {
         }
         if (!level.isClientSide()) {
             stack.remove(ModDataComponents.CABLE_START.get());
-            player.sendOverlayMessage(Component.translatable("message.netcraft.cable.cancelled"));
+            tell(player, Component.translatable("message.netcraft.cable.cancelled"));
         }
         return InteractionResult.SUCCESS;
     }
@@ -133,12 +134,12 @@ public class EthernetCableItem extends Item {
         NetworkManager network = NetworkManager.of(level.getServer());
         Optional<PortRef> port = network.firstFreePort(node.id(), MEDIUM);
         if (port.isEmpty()) {
-            player.sendOverlayMessage(Component.translatable("message.netcraft.cable.no_free_port", NetworkDevices.displayName(node)));
+            tell(player, Component.translatable("message.netcraft.cable.no_free_port", NetworkDevices.displayName(node)));
             return;
         }
         GlobalPos device = GlobalPos.of(level.dimension(), NetworkDevices.posOf(node.id()));
         stack.set(ModDataComponents.CABLE_START.get(), new CableStart(device, port.get().index()));
-        player.sendOverlayMessage(Component.translatable("message.netcraft.cable.start",
+        tell(player, Component.translatable("message.netcraft.cable.start",
                 NetworkDevices.displayName(node), port.get().displayNumber()));
     }
 
@@ -149,19 +150,19 @@ public class EthernetCableItem extends Item {
 
         // La première extrémité a pu disparaître depuis le premier clic : on la revérifie.
         if (!startId.sameDimension(end.id())) {
-            player.sendOverlayMessage(result(ConnectResult.OTHER_DIMENSION, 0));
+            tell(player, result(ConnectResult.OTHER_DIMENSION, 0));
             return;
         }
         Optional<NetworkNode> start = NetworkDevices.validate(level, startId);
         if (start.isEmpty() || !start.get().hasPort(pending.port())) {
             stack.remove(ModDataComponents.CABLE_START.get());
-            player.sendOverlayMessage(Component.translatable("message.netcraft.cable.start_gone"));
+            tell(player, Component.translatable("message.netcraft.cable.start_gone"));
             return;
         }
         PortRef startPort = start.get().port(pending.port());
         if (network.linkAt(startPort).isPresent()) {
             stack.remove(ModDataComponents.CABLE_START.get());
-            player.sendOverlayMessage(Component.translatable("message.netcraft.cable.start_taken"));
+            tell(player, Component.translatable("message.netcraft.cable.start_taken"));
             return;
         }
 
@@ -170,7 +171,7 @@ public class EthernetCableItem extends Item {
         boolean consume = !player.hasInfiniteMaterials();
         ConnectOutcome outcome = network.connect(startPort, endPort, MEDIUM, consume);
         if (!outcome.isSuccess()) {
-            player.sendOverlayMessage(result(outcome.result(), startId.distanceTo(end.id())));
+            tell(player, result(outcome.result(), startId.distanceTo(end.id())));
             return;
         }
         Link link = outcome.link().orElseThrow();
@@ -178,7 +179,7 @@ public class EthernetCableItem extends Item {
         if (consume) {
             stack.shrink(1);
         }
-        player.sendOverlayMessage(Component.translatable("message.netcraft.cable.connected",
+        tell(player, Component.translatable("message.netcraft.cable.connected",
                 NetworkDevices.displayName(start.get()), startPort.displayNumber(),
                 NetworkDevices.displayName(end), endPort.displayNumber(),
                 String.format(Locale.ROOT, "%.1f", link.length())));
@@ -188,14 +189,14 @@ public class EthernetCableItem extends Item {
     private void unplug(ServerLevel level, Player player, NetworkNode node) {
         Optional<Link> removed = disconnectFirst(level, node);
         if (removed.isEmpty()) {
-            player.sendOverlayMessage(Component.translatable("message.netcraft.cable.nothing_to_unplug", NetworkDevices.displayName(node)));
+            tell(player, Component.translatable("message.netcraft.cable.nothing_to_unplug", NetworkDevices.displayName(node)));
             return;
         }
         // Seul un câble qui a consommé un cordon en rend un.
         if (removed.get().cableConsumed()) {
             player.getInventory().placeItemBackInInventory(new ItemStack(this), Prediction.SERVER_ONLY);
         }
-        player.sendOverlayMessage(Component.translatable("message.netcraft.cable.unplugged",
+        tell(player, Component.translatable("message.netcraft.cable.unplugged",
                 NetworkDevices.displayName(node), portOn(removed.get(), node).displayNumber()));
     }
 
@@ -215,13 +216,13 @@ public class EthernetCableItem extends Item {
         }
         Optional<Link> removed = disconnectFirst(level, node.get());
         if (removed.isEmpty()) {
-            player.sendOverlayMessage(Component.translatable("message.netcraft.cable.nothing_to_unplug", NetworkDevices.displayName(node.get())));
+            tell(player, Component.translatable("message.netcraft.cable.nothing_to_unplug", NetworkDevices.displayName(node.get())));
             return;
         }
         Link link = removed.get();
         PortRef here = portOn(link, node.get());
         if (!link.cableConsumed() && !player.hasInfiniteMaterials()) {
-            player.sendOverlayMessage(Component.translatable("message.netcraft.cable.unplugged",
+            tell(player, Component.translatable("message.netcraft.cable.unplugged",
                     NetworkDevices.displayName(node.get()), here.displayNumber()));
             return;
         }
@@ -237,7 +238,7 @@ public class EthernetCableItem extends Item {
         Component otherName = NetworkManager.of(level.getServer()).node(other.device())
                 .map(NetworkDevices::displayName)
                 .orElse(Component.literal("?"));
-        player.sendOverlayMessage(Component.translatable("message.netcraft.cable.end_taken",
+        tell(player, Component.translatable("message.netcraft.cable.end_taken",
                 NetworkDevices.displayName(node.get()), otherName, other.displayNumber()));
     }
 
@@ -256,6 +257,15 @@ public class EthernetCableItem extends Item {
     /** Extrémité du lien qui se trouve sur cet appareil. */
     private static PortRef portOn(Link link, NetworkNode node) {
         return link.a().device().equals(node.id()) ? link.a() : link.b();
+    }
+
+    /**
+     * Message au joueur, au-dessus de la barre d'objets. TEMPORAIRE : aussi tracé au niveau DEBUG pour
+     * les essais du lot 1b-1 (ces messages n'apparaissent pas dans le log sinon).
+     */
+    private static void tell(Player player, Component message) {
+        TrialLog.debug("cordon, message à {} : {}", player.getName().getString(), message.getString());
+        player.sendOverlayMessage(message);
     }
 
     private static Component result(ConnectResult result, double distance) {

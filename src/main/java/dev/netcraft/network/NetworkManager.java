@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import dev.netcraft.NetCraft;
+import dev.netcraft.debug.TrialLog;
 import dev.netcraft.network.protocol.MacAddress;
 import dev.netcraft.network.sim.DeviceLogic;
 import dev.netcraft.network.sim.NetworkSimulation;
@@ -94,6 +95,7 @@ public final class NetworkManager {
             return List.of();
         }
         List<Link> removed = this.graph().putNode(node);
+        TrialLog.debug("appareil enregistré : {} : {}", TrialLog.device(this.graph(), node.id()), TrialLog.ports(this.graph(), node));
         this.data.setDirty();
         removed.forEach(this.simulation()::linkDown);
         this.simulation().deviceAdded(node);
@@ -106,6 +108,7 @@ public final class NetworkManager {
         outcome.link().ifPresent(link -> {
             this.data.setDirty();
             this.simulation().linkUp(link);
+            TrialLog.debug("câble branché : {} <-> {}", TrialLog.port(this.graph(), link.a()), TrialLog.port(this.graph(), link.b()));
             NetworkSync.linkAdded(this.server, link);
         });
         return outcome;
@@ -116,6 +119,7 @@ public final class NetworkManager {
         removed.ifPresent(link -> {
             this.data.setDirty();
             this.simulation().linkDown(link);
+            TrialLog.debug("câble débranché : {} <-> {}", TrialLog.port(this.graph(), link.a()), TrialLog.port(this.graph(), link.b()));
             NetworkSync.linksRemoved(this.server, List.of(link));
         });
         return removed;
@@ -124,6 +128,9 @@ public final class NetworkManager {
     /** Retire l'appareil et ses câbles ; renvoie les câbles retirés. */
     public List<Link> removeDevice(DeviceId device) {
         boolean known = this.graph().node(device).isPresent();
+        if (known) {
+            TrialLog.debug("appareil retiré : {}, {} câble(s) retiré(s) avec lui", TrialLog.device(this.graph(), device), this.graph().linksOf(device).size());
+        }
         List<Link> removed = this.graph().removeDevice(device);
         if (known || !removed.isEmpty()) {
             this.data.setDirty();
@@ -139,7 +146,11 @@ public final class NetworkManager {
     /** Un tick du serveur : la simulation avance au temps de jeu, puis ses signalements deviennent des messages. */
     private void tick() {
         // Temps de jeu de l'Overworld : sauvegardé avec le monde, il ne recule jamais.
-        this.simulation().tick(this.server.overworld().getGameTime());
+        long gameTime = this.server.overworld().getGameTime();
+        this.simulation().tick(gameTime);
+        if (gameTime % 20 == 0) {
+            this.data.trialLog().compareLearned(this.graph(), this.simulation(), gameTime); // TEMPORAIRE (essais du lot 1b-1)
+        }
         for (SimulationEvent event : this.simulation().drainEvents()) {
             switch (event) {
                 case SimulationEvent.LoopDetected loop -> this.reportLoop(loop);
@@ -171,6 +182,11 @@ public final class NetworkManager {
     }
 
     private NetworkGraph graph() {
+        return this.data.graph();
+    }
+
+    /** TEMPORAIRE (essais du lot 1b-1) : lecture du graphe pour les traces. Ne jamais le modifier par ici. */
+    public NetworkGraph graphForTrial() {
         return this.data.graph();
     }
 

@@ -32,6 +32,7 @@ Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
   - [x] Bloc box internet (modèle 7 x 7 x 3 px, texture provisoire, ressources)
   - [x] Indicateur : MAC du poste, MAC apprises par la box (paquet d'état), build vert, essai en jeu à faire
   - [x] Bug du cordon : l'attente restait accrochée à un point de départ cassé (relevé par Max le 2026-11-17). Reproduit par `PendingCableTest`, corrigé (annulation aussi au changement de dimension)
+  - [ ] Retirer les traces temporaires `[ESSAI 1b-1]` (`debug/TrialLog` et ses appels) une fois les essais du lot 1b-1 validés
   - [ ] Procédure de test en jeu et état du lot dans `docs/plan-lots.md`
 - [ ] Lot 1b-2 (DHCP) : architecture validée avec le 1b-1, pas commencé. Ne pas oublier l'état INIT-REBOOT (bail du poste sauvegardé).
 
