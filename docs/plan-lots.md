@@ -9,7 +9,7 @@
 - Les équipements sont génériques : aucune marque, aucun modèle commercial.
 - Pendant les lots, le retour visuel reste minimal : un indicateur d'état lisible (connecté ou non, adresse obtenue ou non). Les voyants animés, textures allumées et sons sont regroupés dans le lot de finition.
 - Une ligne par bloc ou par item à créer. « Bloc » se pose dans le monde, « item » se tient en main.
-- La simulation reste abstraite : le mod calcule si un chemin existe entre deux appareils et affiche le résultat, sans faire voyager chaque message tick par tick. C'est la condition pour tenir la charge avec beaucoup d'appareils, en particulier sur un serveur multijoueur.
+- La simulation fait circuler de vrais échanges de protocoles (principe révisé le 2026-11-17, avant le lot 1b ; il remplace celui de la simulation abstraite) : de vraies trames Ethernet circulent dans le moteur, puis de vrais messages DHCP (lot 1b), ARP et ICMP (lot 1c). Une trame est livrée instantanément : le serveur la dépose dans une file d'attente qu'il traite à chaque tick, sans temps de trajet bloc par bloc le long du câble. Une limite de trames traitées par tick protège le serveur, en particulier en multijoueur et quand des équipements sont reliés en boucle.
 
 ## Périmètre
 
@@ -117,7 +117,7 @@ Comportement retenu :
 
 Socle technique pour les lots suivants :
 
-- Le moteur (`dev.netcraft.network`) est un graphe d'appareils et de câbles en Java pur, testé sans lancer le jeu. Il ne fait voyager aucun message : les lots 1b et 1c le parcourront pour savoir si un chemin existe.
+- Le moteur (`dev.netcraft.network`) est un graphe d'appareils et de câbles en Java pur, testé sans lancer le jeu. Au lot 1a, il ne fait voyager aucun message ; depuis le lot 1b, de vraies trames y circulent (voir les principes).
 - Il est sauvegardé dans le stockage global du serveur (`data/netcraft/network.dat` du monde), indépendant des chunks chargés. Aucune donnée réseau n'est en mémoire statique : en solo, deux mondes ne se mélangent pas.
 - Chaque appareil connu du moteur garde son nombre de ports. C'est là que s'ajouteront l'adresse matérielle des ports (1b) et l'état de chaque appareil.
 - Chaque lien retient son support (`copper_ethernet`, 100 blocs au plus) : la fibre et la ligne téléphonique s'y ajouteront.

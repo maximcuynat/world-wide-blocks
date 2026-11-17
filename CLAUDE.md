@@ -48,7 +48,7 @@ Règles à ne jamais casser :
 - La logique réseau reste en Java pur et testable, sans classe Minecraft.
 - Toute modification du réseau passe par `NetworkManager`, qui marque la sauvegarde et prévient les clients.
 - Un joueur ne reçoit que les câbles dont une extrémité est dans un chunk que son client a reçu (`PlayerLinkView`).
-- Simulation abstraite : on calcule si un chemin existe, aucun message ne voyage tick par tick.
+- Vrais échanges de protocoles : de vraies trames Ethernet (puis DHCP, ARP, ICMP) circulent dans le moteur. Elles sont livrées instantanément par une file d'attente que le serveur traite à chaque tick, sans temps de trajet bloc par bloc, et le nombre de trames traitées par tick est limité.
 
 ## Ajouter un bloc
 
