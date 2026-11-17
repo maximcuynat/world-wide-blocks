@@ -1,6 +1,6 @@
 # NetCraft : plan par lots
 
-Établi le 2026-11-17, révisé le même jour après relecture. Statut : proposé, en attente de validation. Rien n'est codé au-delà du lot 0.
+Établi le 2026-11-17, révisé le même jour après relecture. Statut : proposé, en attente de validation. Lots codés : 0 et 1a (voir l'état de chaque lot).
 
 ## Principes
 
@@ -33,7 +33,7 @@ Les dimensions réelles de chaque équipement sont dans `docs/equipements-reseau
 | Lot | Thème | Ce qui marche à la fin |
 |---|---|---|
 | 0 | Postes | Deux postes posables (fait, portable à tester en jeu) |
-| 1a | Câble et branchement | Deux postes reliés par un câble affichent « connecté » |
+| 1a | Câble et branchement | Deux postes reliés par un câble affichent « connecté » (fait, redémarrage à confirmer) |
 | 1b | La box attribue les adresses | Chaque poste branché à la box reçoit une adresse |
 | 1c | Écran et commande ping | Depuis un poste, `ping` vers l'autre poste, qui répond |
 | 1d | Switch de bureau | Plus de postes que la box n'a de ports |
@@ -94,6 +94,53 @@ Choix proposés :
 - Longueur maximale de 100 blocs, comme les 100 m d'un lien Ethernet cuivre réel.
 
 Contrainte technique à tenir dès ce sous-lot : un lien doit continuer d'exister quand la zone du monde où il se trouve n'est pas chargée. Les lots 4 à 7 relient des sites éloignés, et le réseau ne doit pas tomber quand le joueur s'éloigne.
+
+#### État du lot 1a
+
+Codé le 2026-11-17 sur la branche `developement`. Build et 34 tests unitaires au vert. Essais en jeu validés par Max le même jour : branchement, débranchement, casse d'un appareil, éloignement et retour. Reste à confirmer : le lien après une sauvegarde et un redémarrage (étape 6 de la procédure).
+
+| Type | Équipement | État |
+|---|---|---|
+| Item | Cordon Ethernet | Fait, texture provisoire |
+| Mécanique | Port réseau | Fait : 1 port pour la tour et pour le portable |
+| Mécanique | Indicateur d'état | Fait : panneau en haut au centre, un voyant par port |
+| Rendu | Câble visible | Fait : ligne bleue légèrement affaissée, provisoire |
+
+Comportement retenu :
+
+- Clic droit avec le cordon sur un appareil, puis sur un autre : relie le premier port libre de chacun. Le cordon brille tant que le branchement est en attente. Au second clic, le serveur revérifie que la première extrémité existe toujours, est dans la même dimension et a son port libre.
+- Accroupi + clic droit sur un appareil, cordon en main : débranche son câble. Accroupi + clic droit dans le vide : annule un branchement commencé.
+- Refusés : plus de 100 blocs en ligne droite entre les centres des deux blocs, deux dimensions différentes, le même appareil aux deux bouts, un port déjà occupé.
+- Survie : le cordon est consommé au branchement. Il n'est rendu (au débranchement ou en tombant quand on casse un appareil) que si le lien en avait consommé un ; un lien posé en créatif ne rend rien.
+- Les appareils refusent les pistons : le moteur les identifie par leur position.
+
+Socle technique pour les lots suivants :
+
+- Le moteur (`dev.netcraft.network`) est un graphe d'appareils et de câbles en Java pur, testé sans lancer le jeu. Il ne fait voyager aucun message : les lots 1b et 1c le parcourront pour savoir si un chemin existe.
+- Il est sauvegardé dans le stockage global du serveur (`data/netcraft/network.dat` du monde), indépendant des chunks chargés. Aucune donnée réseau n'est en mémoire statique : en solo, deux mondes ne se mélangent pas.
+- Chaque appareil connu du moteur garde son nombre de ports. C'est là que s'ajouteront l'adresse matérielle des ports (1b) et l'état de chaque appareil.
+- Chaque lien retient son support (`copper_ethernet`, 100 blocs au plus) : la fibre et la ligne téléphonique s'y ajouteront.
+- Toute la logique tourne sur le serveur. Un joueur ne reçoit que les câbles dont une extrémité est dans un chunk que son client a reçu, pour ne pas révéler l'emplacement d'appareils hors de vue.
+- Commande `/netcraft liens` (opérateurs) : liste les liens tels que le serveur les connaît, même quand leur zone n'est pas chargée.
+
+Limites connues, à reprendre plus tard :
+
+- Le choix du port se fait automatiquement (premier port libre). Il faudra choisir le port visé quand les appareils en auront plusieurs (box au lot 1b).
+- Un appareil retiré sans que le jeu le signale (par exemple un `/setblock` sans mise à jour) laisse un lien orphelin. Il est nettoyé à la prochaine pose ou au prochain clic sur cette position.
+- Le panneau d'état occupe la même place que les barres de boss.
+- La distance est affichée avec un point décimal quelle que soit la langue.
+
+Procédure de test en jeu :
+
+1. `./gradlew runClient`, monde « Netcraft » en créatif. Le cordon est dans l'onglet NetCraft.
+2. Poser une tour PC et un PC portable à une vingtaine de blocs l'un de l'autre. En visant chacun, le panneau en haut au centre affiche « Port 1 : libre » avec un voyant gris.
+3. Cordon en main, clic droit sur la tour (message « Extrémité 1 : Tour PC, port 1… », le cordon brille), puis clic droit sur le portable (message « Connecté… », l'écran du portable ne bascule pas). Un câble bleu relie les deux appareils ; en visant chacun, le panneau affiche « Port 1 : connecté » avec un voyant vert. `/netcraft liens` liste le lien.
+4. Accroupi + clic droit sur l'un des deux avec le cordon : message « port 1 débranché », le câble disparaît, les deux repassent à « libre ». Rebrancher.
+5. S'éloigner : `/tp ~400 ~ ~`. Taper `/netcraft liens` : le lien est toujours listé alors que sa zone n'est plus chargée. Revenir : `/tp ~-400 ~ ~`. Le câble est de nouveau visible et les deux appareils affichent « connecté ».
+6. Sauvegarder et redémarrer : quitter vers le menu, fermer le jeu, relancer `./gradlew runClient`, rouvrir le monde. Le câble est visible, les deux appareils affichent « connecté » et `/netcraft liens` liste le lien.
+7. Refus : relier un appareil à plus de 100 blocs (« Trop loin… »), puis un appareil dont le port est occupé (« Aucun port libre… »).
+8. Casse : casser la tour branchée. Le câble disparaît et le portable repasse à « libre ».
+9. Survie (`/gamemode survival`, avec un cordon dans l'inventaire) : brancher consomme le cordon, débrancher le rend. Casser un appareil relié en créatif ne fait tomber aucun cordon.
 
 ### 1b : la box attribue une adresse à chaque poste
 
