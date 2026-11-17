@@ -2,7 +2,6 @@ package dev.netcraft.network.switching;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,9 +15,7 @@ import dev.netcraft.network.protocol.MacAddress;
  * trouve. Une entrée expire si sa MAC n'a plus émis depuis le délai d'expiration, et disparaît
  * dès que le câble de son port est retiré.
  *
- * <p>Le temps est celui du jeu, en ticks, fourni par l'appelant. Le compteur {@link #version()}
- * augmente à chaque changement visible (entrée ajoutée, déplacée ou retirée), pas quand une entrée
- * est simplement rafraîchie : l'indicateur ne renvoie l'état que s'il a changé.
+ * <p>Le temps est celui du jeu, en ticks, fourni par l'appelant.
  *
  * <p>Java pur, sans classe Minecraft. Pas thread-safe.
  */
@@ -32,7 +29,6 @@ public final class MacTable {
 
     private final long agingTicks;
     private final Map<MacAddress, Entry> entries = new LinkedHashMap<>();
-    private long version;
 
     public MacTable(long agingTicks) {
         if (agingTicks <= 0) {
@@ -49,10 +45,7 @@ public final class MacTable {
         if (mac.isMulticast()) {
             return;
         }
-        Entry previous = this.entries.put(mac, new Entry(mac, port, now));
-        if (previous == null || previous.port() != port || this.isExpired(previous, now)) {
-            this.version++;
-        }
+        this.entries.put(mac, new Entry(mac, port, now));
     }
 
     /** Port derrière lequel se trouve {@code mac}, si elle est connue et n'a pas expiré. */
@@ -76,25 +69,11 @@ public final class MacTable {
         return Collections.unmodifiableList(new ArrayList<>(this.entries.values()));
     }
 
-    /** Augmente à chaque changement visible du contenu de la table. */
-    public long version() {
-        return this.version;
-    }
-
     private boolean isExpired(Entry entry, long now) {
         return now - entry.lastSeen() >= this.agingTicks;
     }
 
     private void removeIf(Predicate<Entry> condition) {
-        boolean removed = false;
-        for (Iterator<Entry> it = this.entries.values().iterator(); it.hasNext(); ) {
-            if (condition.test(it.next())) {
-                it.remove();
-                removed = true;
-            }
-        }
-        if (removed) {
-            this.version++;
-        }
+        this.entries.values().removeIf(condition);
     }
 }

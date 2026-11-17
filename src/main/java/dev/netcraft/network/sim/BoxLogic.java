@@ -64,13 +64,8 @@ public final class BoxLogic implements DeviceLogic {
         return true;
     }
 
-    /** MAC apprises derrière chaque port réseau local (indicateur). */
+    @Override
     public List<MacTable.Entry> learnedMacs() {
         return this.lan.entries();
-    }
-
-    /** Augmente à chaque changement visible des MAC apprises. */
-    public long version() {
-        return this.lan.version();
     }
 }

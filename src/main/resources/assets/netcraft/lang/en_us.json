@@ -27,6 +27,10 @@
   "message.netcraft.cable.result.ok": "Connected.",
   "hud.netcraft.port.connected": "Port %s: connected",
   "hud.netcraft.port.free": "Port %s: free",
+  "hud.netcraft.port.line": "Port %s (line): inactive",
+  "hud.netcraft.port.connected_learned": "Port %s: connected, %s",
+  "hud.netcraft.mac": "MAC %s",
+  "hud.netcraft.learned_more": "%s (+%s)",
   "message.netcraft.cable.end_taken": "%s: end unplugged, the other one stays on %s port %s. Right-click a device to plug it back, sneak + click in the air to put it away.",
   "message.netcraft.cable.retracted": "%s: cable unplugged, the cord is free in your hand.",
   "message.netcraft.network.loop": "Network loop: a broadcast frame came back to %s [%s, %s, %s] through port %s. It was dropped; remove one of the cables in the loop."

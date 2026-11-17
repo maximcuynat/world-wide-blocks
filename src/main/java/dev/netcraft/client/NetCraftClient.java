@@ -1,6 +1,7 @@
 package dev.netcraft.client;
 
 import dev.netcraft.NetCraft;
+import dev.netcraft.network.sync.DeviceStatusPayload;
 import dev.netcraft.network.sync.LinkAddedPayload;
 import dev.netcraft.network.sync.LinkRemovedPayload;
 import dev.netcraft.network.sync.LinksResetPayload;
@@ -23,6 +24,7 @@ import net.neoforged.neoforge.client.network.event.RegisterClientPayloadHandlers
 @Mod(value = NetCraft.MODID, dist = Dist.CLIENT)
 public final class NetCraftClient {
     private final ClientLinkCache links = new ClientLinkCache();
+    private final ClientDeviceStatus deviceStatus = new ClientDeviceStatus();
     private final CableRenderer cableRenderer = new CableRenderer(this.links);
 
     public NetCraftClient(IEventBus modEventBus) {
@@ -34,13 +36,17 @@ public final class NetCraftClient {
     }
 
     private void registerPayloadHandlers(RegisterClientPayloadHandlersEvent event) {
-        event.register(LinksResetPayload.TYPE, (payload, context) -> this.links.clear());
+        event.register(LinksResetPayload.TYPE, (payload, context) -> {
+            this.links.clear();
+            this.deviceStatus.clear();
+        });
         event.register(LinkAddedPayload.TYPE, (payload, context) -> this.links.add(payload.link()));
         event.register(LinkRemovedPayload.TYPE, (payload, context) -> this.links.remove(payload.id()));
+        event.register(DeviceStatusPayload.TYPE, (payload, context) -> this.deviceStatus.set(payload));
     }
 
     private void registerGuiLayers(RegisterGuiLayersEvent event) {
-        event.registerAbove(VanillaGuiLayers.CROSSHAIR, Identifier.fromNamespaceAndPath(NetCraft.MODID, "port_status"), new PortStatusLayer(this.links));
+        event.registerAbove(VanillaGuiLayers.CROSSHAIR, Identifier.fromNamespaceAndPath(NetCraft.MODID, "port_status"), new PortStatusLayer(this.links, this.deviceStatus));
     }
 
     private void extractCables(ExtractLevelRenderStateEvent event) {
@@ -54,5 +60,6 @@ public final class NetCraftClient {
     /** En solo, deux mondes ne doivent pas se mélanger : on oublie tout en quittant. */
     private void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         this.links.clear();
+        this.deviceStatus.clear();
     }
 }

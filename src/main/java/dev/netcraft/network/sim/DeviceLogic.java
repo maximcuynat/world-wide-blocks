@@ -1,6 +1,9 @@
 package dev.netcraft.network.sim;
 
+import java.util.List;
+
 import dev.netcraft.network.protocol.EthernetFrame;
+import dev.netcraft.network.switching.MacTable;
 
 /**
  * Comportement d'un appareil dans la simulation : ce qu'il fait quand un câble est branché ou retiré,
@@ -29,5 +32,10 @@ public interface DeviceLogic {
      */
     default boolean bridges() {
         return false;
+    }
+
+    /** MAC apprises derrière chaque port, pour un appareil qui commute (indicateur) ; vide sinon. */
+    default List<MacTable.Entry> learnedMacs() {
+        return List.of();
     }
 }

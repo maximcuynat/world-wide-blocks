@@ -80,11 +80,6 @@ public final class EthernetSwitch {
         return this.table.entries();
     }
 
-    /** Augmente à chaque changement visible de la table. */
-    public long version() {
-        return this.table.version();
-    }
-
     private List<Integer> floodFrom(int ingress) {
         List<Integer> egress = new ArrayList<>(this.ports.size() + 1);
         for (int port : this.ports) {

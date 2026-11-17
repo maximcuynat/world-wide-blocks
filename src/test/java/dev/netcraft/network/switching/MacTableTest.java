@@ -36,7 +36,6 @@ class MacTableTest {
         table.learn(MacAddress.BROADCAST, 0, 0);
 
         assertTrue(table.entries().isEmpty());
-        assertEquals(0, table.version());
     }
 
     @Test
@@ -78,25 +77,5 @@ class MacTableTest {
 
         assertTrue(table.lookup(A, 0).isEmpty());
         assertEquals(OptionalInt.of(2), table.lookup(B, 0));
-    }
-
-    @Test
-    void laVersionNeChangeQueSurUnChangementVisible() {
-        table.learn(A, 1, 0);
-        long apresAjout = table.version();
-
-        table.learn(A, 1, 10);
-        assertEquals(apresAjout, table.version());
-
-        table.learn(A, 2, 20);
-        long apresDeplacement = table.version();
-        assertTrue(apresDeplacement > apresAjout);
-
-        table.flushPort(3);
-        table.purgeExpired(30);
-        assertEquals(apresDeplacement, table.version());
-
-        table.flushPort(2);
-        assertTrue(table.version() > apresDeplacement);
     }
 }
