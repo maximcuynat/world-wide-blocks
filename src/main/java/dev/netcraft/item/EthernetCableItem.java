@@ -33,6 +33,7 @@ import net.minecraft.world.level.Level;
  * Accroupi + clic droit sur un appareil, cordon en main : débranche son câble des deux bouts.
  * Accroupi + clic droit main vide : retire un seul bout et le garde en main (voir {@link #takeCableEnd}).
  * Accroupi + clic droit dans le vide : annule un branchement commencé, ou range un bout tenu en main.
+ * Avec un branchement commencé, un clic droit sur l'appareil où l'autre bout est branché le débranche.
  *
  * <p>Toute la logique tourne sur le serveur ; le client se contente de confirmer le clic.
  */
@@ -69,9 +70,14 @@ public class EthernetCableItem extends Item {
         if (node.isEmpty()) {
             return InteractionResult.FAIL;
         }
-        if (player.isSecondaryUseActive()) {
+        CableStart pending = stack.get(ModDataComponents.CABLE_START.get());
+        if (pending != null && pending.device().equals(GlobalPos.of(level.dimension(), pos))) {
+            // Clic sur l'appareil où l'autre bout est branché : on le débranche, le cordon reste libre en main.
+            stack.remove(ModDataComponents.CABLE_START.get());
+            player.sendOverlayMessage(Component.translatable("message.netcraft.cable.retracted", NetworkDevices.displayName(node.get())));
+        } else if (player.isSecondaryUseActive()) {
             this.unplug(serverLevel, player, node.get());
-        } else if (stack.has(ModDataComponents.CABLE_START.get())) {
+        } else if (pending != null) {
             this.finish(serverLevel, player, stack, node.get());
         } else {
             this.start(serverLevel, player, stack, node.get());

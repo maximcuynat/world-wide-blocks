@@ -109,7 +109,7 @@ Codé le 2026-11-17 sur la branche `developement`. Build et 34 tests unitaires a
 Comportement retenu :
 
 - Clic droit avec le cordon sur un appareil, puis sur un autre : relie le premier port libre de chacun. Le cordon brille tant que le branchement est en attente. Au second clic, le serveur revérifie que la première extrémité existe toujours, est dans la même dimension et a son port libre.
-- Accroupi + clic droit main vide sur un appareil branché : on retire le bout du câble de cet appareil et on le garde en main, l'autre bout reste branché (une ligne relie l'appareil à la main). Clic droit sur un autre appareil : le câble y est rebranché, sans consommer de nouveau cordon. Accroupi + clic dans le vide : le câble est débranché de l'autre bout aussi et rangé dans l'inventaire.
+- Accroupi + clic droit main vide sur un appareil branché : on retire le bout du câble de cet appareil et on le garde en main, l'autre bout reste branché (une ligne relie l'appareil à la main). Clic droit sur un autre appareil : le câble y est rebranché, sans consommer de nouveau cordon. Clic droit sur l'appareil où l'autre bout est branché, ou accroupi + clic dans le vide : le câble est débranché de l'autre bout aussi et le cordon reste libre en main.
 - Accroupi + clic droit sur un appareil, cordon en main : débranche les deux bouts et range le cordon. Accroupi + clic droit dans le vide : annule un branchement commencé.
 - Refusés : plus de 100 blocs en ligne droite entre les centres des deux blocs, deux dimensions différentes, le même appareil aux deux bouts, un port déjà occupé.
 - Survie : le cordon est consommé au branchement. Il n'est rendu (au débranchement, en retirant un bout ou en tombant quand on casse un appareil) que si le lien en avait consommé un ; un lien posé en créatif ne rend rien en survie.
@@ -137,12 +137,12 @@ Procédure de test en jeu :
 2. Poser une tour PC et un PC portable à une vingtaine de blocs l'un de l'autre. En visant chacun, le panneau en haut au centre affiche « Port 1 : libre » avec un voyant gris.
 3. Cordon en main, clic droit sur la tour (message « Extrémité 1 : Tour PC, port 1… », le cordon brille), puis clic droit sur le portable (message « Connecté… », l'écran du portable ne bascule pas). Un câble bleu relie les deux appareils ; en visant chacun, le panneau affiche « Port 1 : connecté » avec un voyant vert. `/netcraft liens` liste le lien.
 4. Accroupi + clic droit sur l'un des deux avec le cordon : message « port 1 débranché », le câble disparaît, les deux repassent à « libre ». Rebrancher.
-5. Accroupi + clic droit main vide sur le portable : le bout est retiré et reste en main, une ligne relie la tour à la main. Clic droit sur un troisième appareil : le câble relie la tour à ce nouvel appareil. Recommencer, puis accroupi + clic dans le vide : le câble est rangé dans l'inventaire et la tour repasse à « libre ».
+5. Accroupi + clic droit main vide sur le portable : le bout est retiré et reste en main, une ligne relie la tour à la main. Clic droit sur un troisième appareil : le câble relie la tour à ce nouvel appareil. Recommencer, puis clic droit sur la tour : le câble en est débranché, le cordon reste libre en main et la tour repasse à « libre ».
 6. S'éloigner : `/tp ~400 ~ ~`. Taper `/netcraft liens` : le lien est toujours listé alors que sa zone n'est plus chargée. Revenir : `/tp ~-400 ~ ~`. Le câble est de nouveau visible et les deux appareils affichent « connecté ».
 7. Sauvegarder et redémarrer : quitter vers le menu, fermer le jeu, relancer `./gradlew runClient`, rouvrir le monde. Le câble est visible, les deux appareils affichent « connecté » et `/netcraft liens` liste le lien.
 8. Refus : relier un appareil à plus de 100 blocs (« Trop loin… »), puis un appareil dont le port est occupé (« Aucun port libre… »).
 9. Casse : casser la tour branchée. Le câble disparaît et le portable repasse à « libre ».
-10. Survie (`/gamemode survival`, avec un seul cordon dans l'inventaire) : brancher consomme le cordon. Main vide, accroupi + clic droit sur un appareil : le bout revient en main ; accroupi + clic dans le vide : le cordon est rangé. Casser un appareil relié en créatif ne fait tomber aucun cordon.
+10. Survie (`/gamemode survival`, avec un seul cordon dans l'inventaire) : brancher consomme le cordon. Main vide, accroupi + clic droit sur un appareil : le bout revient en main ; clic droit sur l'autre appareil : le cordon est libre en main, prêt à resservir. Casser un appareil relié en créatif ne fait tomber aucun cordon.
 
 ### 1b : la box attribue une adresse à chaque poste
 

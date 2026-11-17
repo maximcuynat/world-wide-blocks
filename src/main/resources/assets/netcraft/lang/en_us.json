@@ -25,5 +25,6 @@
   "message.netcraft.cable.result.ok": "Connected.",
   "hud.netcraft.port.connected": "Port %s: connected",
   "hud.netcraft.port.free": "Port %s: free",
-  "message.netcraft.cable.end_taken": "%s: end unplugged, the other one stays on %s port %s. Right-click a device to plug it back, sneak + click in the air to put it away."
+  "message.netcraft.cable.end_taken": "%s: end unplugged, the other one stays on %s port %s. Right-click a device to plug it back, sneak + click in the air to put it away.",
+  "message.netcraft.cable.retracted": "%s: cable unplugged, the cord is free in your hand."
 }

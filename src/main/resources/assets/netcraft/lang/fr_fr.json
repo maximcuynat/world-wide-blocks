@@ -25,5 +25,6 @@
   "message.netcraft.cable.result.ok": "Connecté.",
   "hud.netcraft.port.connected": "Port %s : connecté",
   "hud.netcraft.port.free": "Port %s : libre",
-  "message.netcraft.cable.end_taken": "%s : bout débranché, l'autre reste sur %s port %s. Clic droit sur un appareil pour le rebrancher, accroupi + clic dans le vide pour le ranger."
+  "message.netcraft.cable.end_taken": "%s : bout débranché, l'autre reste sur %s port %s. Clic droit sur un appareil pour le rebrancher, accroupi + clic dans le vide pour le ranger.",
+  "message.netcraft.cable.retracted": "%s : câble débranché, le cordon est libre dans ta main."
 }
