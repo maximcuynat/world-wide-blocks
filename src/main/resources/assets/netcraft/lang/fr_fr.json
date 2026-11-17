@@ -34,5 +34,12 @@
   "hud.netcraft.learned_more": "%s (+%s)",
   "message.netcraft.cable.end_taken": "%s : bout débranché, l'autre reste sur %s port %s. Clic droit sur un appareil pour le rebrancher, accroupi + clic dans le vide pour le ranger.",
   "message.netcraft.cable.retracted": "%s : câble débranché, le cordon est libre dans ta main.",
-  "message.netcraft.network.loop": "Boucle réseau : une trame diffusée revient à %s [%s, %s, %s] par le port %s. Elle a été supprimée ; retirez un des câbles de la boucle."
+  "message.netcraft.network.loop": "Boucle réseau : une trame diffusée revient à %s [%s, %s, %s] par le port %s. Elle a été supprimée ; retirez un des câbles de la boucle.",
+  "message.netcraft.with_level": "%s : %s",
+  "message.netcraft.level.info": "Info",
+  "message.netcraft.level.success": "OK",
+  "message.netcraft.level.warning": "Attention",
+  "message.netcraft.level.error": "Erreur",
+  "message.netcraft.device": "%s [%s, %s, %s]",
+  "netcraft.configuration.messageSymbols": "Symboles devant les messages"
 }

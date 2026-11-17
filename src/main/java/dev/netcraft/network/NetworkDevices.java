@@ -3,6 +3,7 @@ package dev.netcraft.network;
 import java.util.List;
 import java.util.Optional;
 
+import dev.netcraft.message.MessageArg;
 import dev.netcraft.registry.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -101,6 +102,11 @@ public final class NetworkDevices {
                 Block.popResource(level, pos, new ItemStack(ModItems.ETHERNET_CABLE.get()));
             }
         }
+    }
+
+    /** Nom de l'appareil comme valeur d'un message : sa clé de langue, traduite par le client. */
+    public static MessageArg nameArg(NetworkNode node) {
+        return MessageArg.key("block." + node.deviceType().replace(':', '.'));
     }
 
     /** Nom de l'appareil tel qu'il apparaît en jeu, par exemple « Tour PC ». */

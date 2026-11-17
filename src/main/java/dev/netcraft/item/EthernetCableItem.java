@@ -1,9 +1,11 @@
 package dev.netcraft.item;
 
-import java.util.Locale;
 import java.util.Optional;
 
-import dev.netcraft.debug.TrialLog;
+import dev.netcraft.message.Message;
+import dev.netcraft.message.MessageArg;
+import dev.netcraft.message.MessageLevel;
+import dev.netcraft.message.server.MessageCenter;
 import dev.netcraft.network.ConnectOutcome;
 import dev.netcraft.network.ConnectResult;
 import dev.netcraft.network.DeviceId;
@@ -19,8 +21,8 @@ import dev.netcraft.registry.ModDataComponents;
 import dev.netcraft.registry.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Prediction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -80,7 +82,7 @@ public class EthernetCableItem extends Item {
         if (pending != null && pending.device().equals(GlobalPos.of(level.dimension(), pos))) {
             // Clic sur l'appareil où l'autre bout est branché : on le débranche, le cordon reste libre en main.
             stack.remove(ModDataComponents.CABLE_START.get());
-            tell(player, Component.translatable("message.netcraft.cable.retracted", NetworkDevices.displayName(node.get())));
+            tell(player, MessageLevel.SUCCESS, "message.netcraft.cable.retracted", NetworkDevices.nameArg(node.get()));
         } else if (player.isSecondaryUseActive()) {
             this.unplug(serverLevel, player, node.get());
         } else if (pending != null) {
@@ -110,9 +112,9 @@ public class EthernetCableItem extends Item {
         }
         stack.remove(ModDataComponents.CABLE_START.get());
         if (owner instanceof Player player) {
-            tell(player, Component.translatable(status == PendingCable.Status.START_GONE
+            tell(player, MessageLevel.WARNING, status == PendingCable.Status.START_GONE
                     ? "message.netcraft.cable.start_gone"
-                    : "message.netcraft.cable.cancelled_dimension"));
+                    : "message.netcraft.cable.cancelled_dimension");
         }
     }
 
@@ -125,7 +127,7 @@ public class EthernetCableItem extends Item {
         }
         if (!level.isClientSide()) {
             stack.remove(ModDataComponents.CABLE_START.get());
-            tell(player, Component.translatable("message.netcraft.cable.cancelled"));
+            tell(player, MessageLevel.INFO, "message.netcraft.cable.cancelled");
         }
         return InteractionResult.SUCCESS;
     }
@@ -134,13 +136,13 @@ public class EthernetCableItem extends Item {
         NetworkManager network = NetworkManager.of(level.getServer());
         Optional<PortRef> port = network.firstFreePort(node.id(), MEDIUM);
         if (port.isEmpty()) {
-            tell(player, Component.translatable("message.netcraft.cable.no_free_port", NetworkDevices.displayName(node)));
+            tell(player, MessageLevel.ERROR, "message.netcraft.cable.no_free_port", NetworkDevices.nameArg(node));
             return;
         }
         GlobalPos device = GlobalPos.of(level.dimension(), NetworkDevices.posOf(node.id()));
         stack.set(ModDataComponents.CABLE_START.get(), new CableStart(device, port.get().index()));
-        tell(player, Component.translatable("message.netcraft.cable.start",
-                NetworkDevices.displayName(node), port.get().displayNumber()));
+        tell(player, MessageLevel.INFO, "message.netcraft.cable.start",
+                NetworkDevices.nameArg(node), MessageArg.number(port.get().displayNumber()));
     }
 
     private void finish(ServerLevel level, Player player, ItemStack stack, NetworkNode end) {
@@ -150,19 +152,19 @@ public class EthernetCableItem extends Item {
 
         // La première extrémité a pu disparaître depuis le premier clic : on la revérifie.
         if (!startId.sameDimension(end.id())) {
-            tell(player, result(ConnectResult.OTHER_DIMENSION, 0));
+            refuse(player, ConnectResult.OTHER_DIMENSION, 0);
             return;
         }
         Optional<NetworkNode> start = NetworkDevices.validate(level, startId);
         if (start.isEmpty() || !start.get().hasPort(pending.port())) {
             stack.remove(ModDataComponents.CABLE_START.get());
-            tell(player, Component.translatable("message.netcraft.cable.start_gone"));
+            tell(player, MessageLevel.WARNING, "message.netcraft.cable.start_gone");
             return;
         }
         PortRef startPort = start.get().port(pending.port());
         if (network.linkAt(startPort).isPresent()) {
             stack.remove(ModDataComponents.CABLE_START.get());
-            tell(player, Component.translatable("message.netcraft.cable.start_taken"));
+            tell(player, MessageLevel.WARNING, "message.netcraft.cable.start_taken");
             return;
         }
 
@@ -171,7 +173,7 @@ public class EthernetCableItem extends Item {
         boolean consume = !player.hasInfiniteMaterials();
         ConnectOutcome outcome = network.connect(startPort, endPort, MEDIUM, consume);
         if (!outcome.isSuccess()) {
-            tell(player, result(outcome.result(), startId.distanceTo(end.id())));
+            refuse(player, outcome.result(), startId.distanceTo(end.id()));
             return;
         }
         Link link = outcome.link().orElseThrow();
@@ -179,25 +181,25 @@ public class EthernetCableItem extends Item {
         if (consume) {
             stack.shrink(1);
         }
-        tell(player, Component.translatable("message.netcraft.cable.connected",
-                NetworkDevices.displayName(start.get()), startPort.displayNumber(),
-                NetworkDevices.displayName(end), endPort.displayNumber(),
-                String.format(Locale.ROOT, "%.1f", link.length())));
+        tell(player, MessageLevel.SUCCESS, "message.netcraft.cable.connected",
+                NetworkDevices.nameArg(start.get()), MessageArg.number(startPort.displayNumber()),
+                NetworkDevices.nameArg(end), MessageArg.number(endPort.displayNumber()),
+                MessageArg.blocks(link.length()));
     }
 
     /** Accroupi + clic droit, cordon en main : débranche les deux bouts et range le cordon. */
     private void unplug(ServerLevel level, Player player, NetworkNode node) {
         Optional<Link> removed = disconnectFirst(level, node);
         if (removed.isEmpty()) {
-            tell(player, Component.translatable("message.netcraft.cable.nothing_to_unplug", NetworkDevices.displayName(node)));
+            tell(player, MessageLevel.ERROR, "message.netcraft.cable.nothing_to_unplug", NetworkDevices.nameArg(node));
             return;
         }
         // Seul un câble qui a consommé un cordon en rend un.
         if (removed.get().cableConsumed()) {
             player.getInventory().placeItemBackInInventory(new ItemStack(this), Prediction.SERVER_ONLY);
         }
-        tell(player, Component.translatable("message.netcraft.cable.unplugged",
-                NetworkDevices.displayName(node), portOn(removed.get(), node).displayNumber()));
+        tell(player, MessageLevel.SUCCESS, "message.netcraft.cable.unplugged",
+                NetworkDevices.nameArg(node), MessageArg.number(portOn(removed.get(), node).displayNumber()));
     }
 
     /**
@@ -216,14 +218,14 @@ public class EthernetCableItem extends Item {
         }
         Optional<Link> removed = disconnectFirst(level, node.get());
         if (removed.isEmpty()) {
-            tell(player, Component.translatable("message.netcraft.cable.nothing_to_unplug", NetworkDevices.displayName(node.get())));
+            tell(player, MessageLevel.ERROR, "message.netcraft.cable.nothing_to_unplug", NetworkDevices.nameArg(node.get()));
             return;
         }
         Link link = removed.get();
         PortRef here = portOn(link, node.get());
         if (!link.cableConsumed() && !player.hasInfiniteMaterials()) {
-            tell(player, Component.translatable("message.netcraft.cable.unplugged",
-                    NetworkDevices.displayName(node.get()), here.displayNumber()));
+            tell(player, MessageLevel.SUCCESS, "message.netcraft.cable.unplugged",
+                    NetworkDevices.nameArg(node.get()), MessageArg.number(here.displayNumber()));
             return;
         }
         PortRef other = link.otherEnd(here);
@@ -235,11 +237,11 @@ public class EthernetCableItem extends Item {
         } else {
             player.getInventory().placeItemBackInInventory(cable, Prediction.SERVER_ONLY);
         }
-        Component otherName = NetworkManager.of(level.getServer()).node(other.device())
-                .map(NetworkDevices::displayName)
-                .orElse(Component.literal("?"));
-        tell(player, Component.translatable("message.netcraft.cable.end_taken",
-                NetworkDevices.displayName(node.get()), otherName, other.displayNumber()));
+        MessageArg otherName = NetworkManager.of(level.getServer()).node(other.device())
+                .map(NetworkDevices::nameArg)
+                .orElse(MessageArg.text("?"));
+        tell(player, MessageLevel.INFO, "message.netcraft.cable.end_taken",
+                NetworkDevices.nameArg(node.get()), otherName, MessageArg.number(other.displayNumber()));
     }
 
     /** Débranche le câble du premier port occupé de l'appareil. */
@@ -260,17 +262,19 @@ public class EthernetCableItem extends Item {
     }
 
     /**
-     * Message au joueur, au-dessus de la barre d'objets. TEMPORAIRE : aussi tracé au niveau DEBUG pour
-     * les essais du lot 1b-1 (ces messages n'apparaissent pas dans le log sinon).
+     * Réponse au geste du joueur, par le module des messages. Niveaux : la réussite est un succès ;
+     * une étape ou une annulation voulue par le joueur, une information ; une annulation causée par
+     * autre chose (départ disparu, dimension), un avertissement ; un geste refusé, une erreur.
      */
-    private static void tell(Player player, Component message) {
-        TrialLog.debug("cordon, message à {} : {}", player.getName().getString(), message.getString());
-        player.sendOverlayMessage(message);
+    private static void tell(Player player, MessageLevel level, String key, MessageArg... args) {
+        if (player instanceof ServerPlayer serverPlayer) {
+            MessageCenter.of(serverPlayer.level().getServer()).gesture(serverPlayer, Message.of(level, key, args));
+        }
     }
 
-    private static Component result(ConnectResult result, double distance) {
-        return Component.translatable("message.netcraft.cable.result." + result.key(),
-                String.format(Locale.ROOT, "%.1f", distance),
-                String.format(Locale.ROOT, "%.0f", MEDIUM.maxLength()));
+    /** Refus du moteur ; la distance n'est utile qu'au refus « trop loin ». */
+    private static void refuse(Player player, ConnectResult result, double distance) {
+        tell(player, MessageLevel.ERROR, "message.netcraft.cable.result." + result.key(),
+                MessageArg.blocks(distance), MessageArg.blocks(MEDIUM.maxLength()));
     }
 }

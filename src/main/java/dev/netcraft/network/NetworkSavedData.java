@@ -8,6 +8,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import dev.netcraft.NetCraft;
 import dev.netcraft.debug.TrialLog;
+import dev.netcraft.message.MessageHub;
 import dev.netcraft.network.protocol.MacAddress;
 import dev.netcraft.network.sim.NetworkSimulation;
 import net.minecraft.resources.Identifier;
@@ -21,8 +22,8 @@ import net.minecraft.world.level.saveddata.SavedDataType;
  * <p>Ce stockage ne dépend d'aucun chunk : un lien existe même quand ses deux extrémités sont
  * déchargées. Il appartient à l'instance du serveur : en solo, chaque monde ouvert a le sien.
  *
- * <p>Il porte aussi la simulation, qui n'est pas sauvegardée : elle vit et meurt avec le serveur,
- * sans aucun état statique.
+ * <p>Il porte aussi la simulation et l'état du module des messages, qui ne sont pas sauvegardés : ils
+ * vivent et meurent avec le serveur, sans aucun état statique.
  */
 public final class NetworkSavedData extends SavedData {
     private static final Codec<NetworkSavedData> CODEC = RecordCodecBuilder.create(i -> i.group(
@@ -36,6 +37,7 @@ public final class NetworkSavedData extends SavedData {
 
     private final NetworkGraph graph = new NetworkGraph();
     private final NetworkSimulation simulation = new NetworkSimulation(this.graph);
+    private final MessageHub messageHub = new MessageHub(this.simulation.limits().reportIntervalTicks());
     /** TEMPORAIRE : traces des essais du lot 1b-1. */
     private final TrialLog trialLog = new TrialLog();
 
@@ -96,6 +98,11 @@ public final class NetworkSavedData extends SavedData {
 
     NetworkSimulation simulation() {
         return this.simulation;
+    }
+
+    /** Anti-répétition et écouteurs du module des messages (voir {@code MessageCenter}). */
+    public MessageHub messageHub() {
+        return this.messageHub;
     }
 
     TrialLog trialLog() {

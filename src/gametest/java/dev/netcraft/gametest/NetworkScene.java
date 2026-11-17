@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import dev.netcraft.message.MessageChannel;
+import dev.netcraft.message.MessageHub;
+import dev.netcraft.message.server.MessageCenter;
 import dev.netcraft.network.ConnectOutcome;
 import dev.netcraft.network.DeviceId;
 import dev.netcraft.network.Link;
@@ -36,14 +39,19 @@ import net.minecraft.world.phys.Vec3;
  * <p>Tous les tests partagent le même moteur réseau. À la fin du test, réussi ou non, la scène
  * déconnecte ses joueurs et retire ses appareils du monde et du moteur : rien de ce test ne continue
  * à émettre des trames pendant les suivants.
+ *
+ * <p>Elle écoute le module des messages pendant tout le test ({@link #messages()}).
  */
 public final class NetworkScene implements GameTestListener {
     private final GameTestHelper helper;
     private final List<BlockPos> devices = new ArrayList<>();
     private final List<TestPlayer> players = new ArrayList<>();
+    private final MessageRecorder messages = new MessageRecorder();
+    private final MessageHub.Subscription subscription;
 
     private NetworkScene(GameTestHelper helper) {
         this.helper = helper;
+        this.subscription = MessageCenter.of(helper.getLevel().getServer()).listen(this.messages);
     }
 
     public static NetworkScene of(GameTestHelper helper) {
@@ -168,14 +176,21 @@ public final class NetworkScene implements GameTestListener {
         return count;
     }
 
-    /** Vérifie que le joueur a reçu exactement {@code expected} messages de cette clé. */
-    public void assertMessages(TestPlayer player, String key, int expected) {
-        int received = player.messages(key).size();
-        this.helper.assertTrue(received == expected, "Message " + key + " reçu " + received + " fois au lieu de "
-                + expected + ". Messages reçus : " + player.messages().stream().map(TestPlayer.Message::key).toList());
+    /** Messages envoyés par le module depuis le début du test. */
+    public MessageRecorder messages() {
+        return this.messages;
+    }
+
+    /** Vérifie que le joueur a reçu exactement {@code expected} messages de cette clé sur ce canal. */
+    public void assertMessages(TestPlayer player, MessageChannel channel, String key, int expected) {
+        int received = this.messages.to(player.getUUID(), channel, key).size();
+        this.helper.assertTrue(received == expected, "Message " + key + " (" + channel + ") reçu " + received
+                + " fois au lieu de " + expected + ". Messages reçus : "
+                + this.messages.to(player.getUUID()).stream().map(m -> m.channel() + " " + m.key()).toList());
     }
 
     private void cleanUp() {
+        this.subscription.close();
         this.players.forEach(TestPlayer::leaveServer);
         this.players.clear();
         NetworkManager network = this.network();

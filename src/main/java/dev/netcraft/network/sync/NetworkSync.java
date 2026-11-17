@@ -33,7 +33,7 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
  * de main. Le serveur reste seul juge : le client ne reçoit qu'une copie et ne renvoie rien.
  */
 public final class NetworkSync {
-    private static final String PROTOCOL_VERSION = "2";
+    private static final String PROTOCOL_VERSION = "3";
     /** L'appareil visé par chaque joueur est relevé tous les 5 ticks (un quart de seconde). */
     private static final int STATUS_INTERVAL_TICKS = 5;
 
@@ -46,7 +46,8 @@ public final class NetworkSync {
                 .playToClient(LinksResetPayload.TYPE, LinksResetPayload.STREAM_CODEC)
                 .playToClient(LinkAddedPayload.TYPE, LinkAddedPayload.STREAM_CODEC)
                 .playToClient(LinkRemovedPayload.TYPE, LinkRemovedPayload.STREAM_CODEC)
-                .playToClient(DeviceStatusPayload.TYPE, DeviceStatusPayload.STREAM_CODEC);
+                .playToClient(DeviceStatusPayload.TYPE, DeviceStatusPayload.STREAM_CODEC)
+                .playToClient(MessagePayload.TYPE, MessagePayload.STREAM_CODEC);
     }
 
     // ---- Suivi des chunks par joueur ----

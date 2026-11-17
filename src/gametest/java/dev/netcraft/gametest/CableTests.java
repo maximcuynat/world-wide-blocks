@@ -3,6 +3,7 @@ package dev.netcraft.gametest;
 import java.util.List;
 import java.util.UUID;
 
+import dev.netcraft.message.MessageChannel;
 import dev.netcraft.network.DeviceId;
 import dev.netcraft.network.LinkMedium;
 import dev.netcraft.registry.ModBlocks;
@@ -49,7 +50,7 @@ final class CableTests {
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.ETHERNET_CABLE.get()));
         scene.rightClick(player, boxPos);
 
-        scene.assertMessages(player, "message.netcraft.cable.no_free_port", 1);
+        scene.assertMessages(player, MessageChannel.ACTION_BAR, "message.netcraft.cable.no_free_port", 1);
         helper.assertFalse(player.getMainHandItem().has(ModDataComponents.CABLE_START.get()),
                 "Un branchement a commencé sur une box sans port libre");
         helper.assertValueEqual(scene.cordsHeldBy(player), 1, "cordons dans l'inventaire");
@@ -137,7 +138,7 @@ final class CableTests {
 
         // Main vide, accroupi + clic droit sur B : le bout est retiré et reste en main.
         scene.sneakRightClick(player, END);
-        scene.assertMessages(player, "message.netcraft.cable.end_taken", 1);
+        scene.assertMessages(player, MessageChannel.ACTION_BAR, "message.netcraft.cable.end_taken", 1);
         helper.assertTrue(scene.hasPendingCord(player), "Le bout retiré n'attend pas d'être rebranché");
         helper.assertValueEqual(scene.cordsHeldBy(player), 1, "cordons après le retrait du bout");
         helper.assertValueEqual(scene.network().linksOf(box).size(), 0, "câbles de la box après le retrait");
@@ -150,7 +151,7 @@ final class CableTests {
     private static void assertCancelled(NetworkScene scene, TestPlayer player, String messageKey) {
         GameTestHelper helper = scene.helper();
         helper.assertFalse(scene.hasPendingCord(player), "Le cordon attend encore d'être branché");
-        scene.assertMessages(player, messageKey, 1);
+        scene.assertMessages(player, MessageChannel.ACTION_BAR, messageKey, 1);
         helper.assertValueEqual(scene.cordsHeldBy(player), 1, "cordons dans l'inventaire");
         helper.assertValueEqual(scene.cordsOnGround(), 0, "cordons au sol");
     }

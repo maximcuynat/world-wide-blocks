@@ -147,7 +147,7 @@ final class NetworkTests {
             int before = player.messages(LOOP).size();
             scene.network().disconnect(first.a());
             helper.runAfterDelay(interval + 100, () -> {
-                scene.assertMessages(player, LOOP, before);
+                helper.assertValueEqual(player.messages(LOOP).size(), before, "signalements de boucle après le retrait d'un câble");
                 helper.succeed();
             });
         });

@@ -105,6 +105,8 @@ Chaque message déclare un **usage** et un **niveau** ; le canal en découle, le
 
 Exception assumée : la réponse à une commande (`/netcraft liens`, `/netcraft test`) reste dans le chat de qui l'a tapée, comme toutes les commandes de Minecraft. Les textes de `/netcraft test` restent en dur, en français : la commande n'existe qu'en développement (jeu de sources `gametest`, absent du jar), et ses clés n'ont pas leur place dans les fichiers de langue distribués. Seul « ta connexion » passe au vouvoiement.
 
+Niveau d'un geste : la réussite est un **succès** ; une étape ou une annulation voulue par le joueur, une **information** ; une annulation causée par autre chose (départ disparu, changement de dimension, port pris entre-temps), un **avertissement** ; un geste refusé, une **erreur**.
+
 | Niveau | Couleur | Symbole |
 |---|---|---|
 | Information | blanc | ℹ |
