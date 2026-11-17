@@ -592,6 +592,9 @@ Jouable à la fin : tout le mod est accessible sans le mode créatif.
 | Sons | Ventilateurs, clics de branchement, bips |
 | Modèles | Reprise des modèles et textures provisoires |
 | Cordon au sol | Le cordon est rendu posé au sol au lieu d'une ligne tendue (idée notée le 2026-11-17, non validée) |
+| Interface HUD | Vraie interface soignée pour le panneau d'état et les messages, qui remplace le dessin provisoire (demandée par Max le 2026-11-18) |
+
+Interface HUD : le module des messages (voir `docs/messages.md`) sépare les données du dessin. Le serveur n'envoie que des clés, des valeurs et un niveau ; les lignes du panneau sont construites en Java pur ; seul le client décide de l'apparence. La nouvelle interface remplace donc le dessin (`client/`) sans toucher au moteur, aux paquets ni aux textes.
 
 Cordon au sol, idée à préciser en arrivant au lot :
 
