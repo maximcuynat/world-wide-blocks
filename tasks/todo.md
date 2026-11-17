@@ -21,7 +21,7 @@ Le découpage complet (lots, équipements, dépendances) est dans `docs/plan-lot
 
 Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
 
-- [x] Lot 1a (câble et branchement) : codé le 2026-11-17, essais en jeu validés. Reste à confirmer : le lien après sauvegarde et redémarrage (étape 6 de la procédure dans `docs/plan-lots.md`).
+- [ ] Lot 1a (câble et branchement) : codé le 2026-11-17, branchement et câble jugés bons en jeu. Restent à confirmer : panneau d'état, redémarrage (étape 6) et survie (étape 9) de la procédure dans `docs/plan-lots.md`.
 
 ## Idées en vrac (dites par Max, non triées, non validées)
 

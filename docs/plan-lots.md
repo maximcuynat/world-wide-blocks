@@ -97,13 +97,13 @@ Contrainte technique à tenir dès ce sous-lot : un lien doit continuer d'existe
 
 #### État du lot 1a
 
-Codé le 2026-11-17 sur la branche `developement`. Build et 34 tests unitaires au vert. Essais en jeu validés par Max le même jour : branchement, débranchement, casse d'un appareil, éloignement et retour. Reste à confirmer : le lien après une sauvegarde et un redémarrage (étape 6 de la procédure).
+Codé le 2026-11-17 sur la branche `developement`. Build et 34 tests unitaires au vert jusqu'au rendu du câble (commit `0de7d6a`). Essais en jeu jugés bons par Max le même jour sur le branchement et le câble visible. Restent à confirmer : le panneau d'état en haut au centre (commit suivant, pas encore compilé), le lien après une sauvegarde et un redémarrage (étape 6), la consommation et la restitution du cordon en survie (étape 9).
 
 | Type | Équipement | État |
 |---|---|---|
 | Item | Cordon Ethernet | Fait, texture provisoire |
 | Mécanique | Port réseau | Fait : 1 port pour la tour et pour le portable |
-| Mécanique | Indicateur d'état | Fait : panneau en haut au centre, un voyant par port |
+| Mécanique | Indicateur d'état | Fait : panneau en haut au centre, un voyant par port (à voir en jeu) |
 | Rendu | Câble visible | Fait : ligne bleue légèrement affaissée, provisoire |
 
 Comportement retenu :
