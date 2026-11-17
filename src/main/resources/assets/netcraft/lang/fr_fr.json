@@ -7,5 +7,20 @@
   "commands.netcraft.links.entry": "%s port %s ↔ %s port %s : %s blocs, %s",
   "commands.netcraft.links.device": "%s [%s, %s, %s] (%s)",
   "commands.netcraft.links.consumed": "cordon consommé",
-  "commands.netcraft.links.not_consumed": "cordon non consommé"
+  "commands.netcraft.links.not_consumed": "cordon non consommé",
+  "item.netcraft.ethernet_cable": "Cordon Ethernet",
+  "message.netcraft.cable.start": "Extrémité 1 : %s, port %s. Clic droit sur le second appareil (accroupi + clic dans le vide pour annuler).",
+  "message.netcraft.cable.no_free_port": "%s : aucun port libre.",
+  "message.netcraft.cable.cancelled": "Branchement annulé.",
+  "message.netcraft.cable.start_gone": "La première extrémité n'existe plus : branchement annulé.",
+  "message.netcraft.cable.start_taken": "Le port de la première extrémité est désormais occupé : branchement annulé.",
+  "message.netcraft.cable.connected": "Connecté : %s port %s ↔ %s port %s (%s blocs).",
+  "message.netcraft.cable.unplugged": "%s : port %s débranché.",
+  "message.netcraft.cable.nothing_to_unplug": "%s : aucun câble branché.",
+  "message.netcraft.cable.result.not_a_device": "Ce n'est pas un appareil réseau.",
+  "message.netcraft.cable.result.same_device": "Choisissez un autre appareil que le premier.",
+  "message.netcraft.cable.result.other_dimension": "Les deux appareils doivent être dans la même dimension.",
+  "message.netcraft.cable.result.too_far": "Trop loin : %s blocs, %s au maximum.",
+  "message.netcraft.cable.result.port_in_use": "Aucun port libre sur cet appareil.",
+  "message.netcraft.cable.result.ok": "Connecté."
 }

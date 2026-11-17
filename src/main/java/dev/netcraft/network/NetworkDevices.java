@@ -3,10 +3,14 @@ package dev.netcraft.network;
 import java.util.List;
 import java.util.Optional;
 
+import dev.netcraft.registry.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
@@ -73,11 +77,25 @@ public final class NetworkDevices {
             return network.node(id);
         }
         Optional<NetworkNode> actual = nodeAt(level, pos);
-        if (actual.isEmpty()) {
-            network.removeDevice(id);
-        } else {
-            network.registerDevice(actual.get());
-        }
+        List<Link> removed = actual.isEmpty() ? network.removeDevice(id) : network.registerDevice(actual.get());
+        dropCables(level, pos, removed);
         return actual;
+    }
+
+    /**
+     * Fait tomber à cette position un cordon par câble retiré, mais seulement pour les câbles
+     * qui en avaient consommé un : un câble posé en créatif ne rend rien.
+     */
+    public static void dropCables(ServerLevel level, BlockPos pos, List<Link> removed) {
+        for (Link link : removed) {
+            if (link.cableConsumed()) {
+                Block.popResource(level, pos, new ItemStack(ModItems.ETHERNET_CABLE.get()));
+            }
+        }
+    }
+
+    /** Nom de l'appareil tel qu'il apparaît en jeu, par exemple « Tour PC ». */
+    public static Component displayName(NetworkNode node) {
+        return Component.translatable("block." + node.deviceType().replace(':', '.'));
     }
 }

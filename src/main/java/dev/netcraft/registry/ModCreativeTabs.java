@@ -16,6 +16,7 @@ public final class ModCreativeTabs {
             .displayItems((parameters, output) -> {
                 output.accept(ModItems.PC_TOWER.get());
                 output.accept(ModItems.LAPTOP.get());
+                output.accept(ModItems.ETHERNET_CABLE.get());
             })
             .build());
 

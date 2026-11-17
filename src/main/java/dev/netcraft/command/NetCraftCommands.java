@@ -7,8 +7,8 @@ import com.mojang.brigadier.context.CommandContext;
 
 import dev.netcraft.network.DeviceId;
 import dev.netcraft.network.Link;
+import dev.netcraft.network.NetworkDevices;
 import dev.netcraft.network.NetworkManager;
-import dev.netcraft.network.NetworkNode;
 import dev.netcraft.network.PortRef;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -54,10 +54,7 @@ public final class NetCraftCommands {
     /** Nom de l'appareil et position, par exemple « Tour PC [12, 64, -3] (minecraft:overworld) ». */
     private static Component describe(NetworkManager network, PortRef port) {
         DeviceId id = port.device();
-        Component name = network.node(id)
-                .map(NetworkNode::deviceType)
-                .<Component>map(type -> Component.translatable("block." + type.replace(':', '.')))
-                .orElse(Component.literal("?"));
+        Component name = network.node(id).map(NetworkDevices::displayName).orElse(Component.literal("?"));
         return Component.translatable("commands.netcraft.links.device", name, id.x(), id.y(), id.z(), id.dimension());
     }
 }

@@ -7,5 +7,20 @@
   "commands.netcraft.links.entry": "%s port %s ↔ %s port %s: %s blocks, %s",
   "commands.netcraft.links.device": "%s [%s, %s, %s] (%s)",
   "commands.netcraft.links.consumed": "cable consumed",
-  "commands.netcraft.links.not_consumed": "cable not consumed"
+  "commands.netcraft.links.not_consumed": "cable not consumed",
+  "item.netcraft.ethernet_cable": "Ethernet Cable",
+  "message.netcraft.cable.start": "End 1: %s, port %s. Right-click the second device (sneak + click in the air to cancel).",
+  "message.netcraft.cable.no_free_port": "%s: no free port.",
+  "message.netcraft.cable.cancelled": "Connection cancelled.",
+  "message.netcraft.cable.start_gone": "The first end no longer exists: connection cancelled.",
+  "message.netcraft.cable.start_taken": "The first end's port is now in use: connection cancelled.",
+  "message.netcraft.cable.connected": "Connected: %s port %s ↔ %s port %s (%s blocks).",
+  "message.netcraft.cable.unplugged": "%s: port %s unplugged.",
+  "message.netcraft.cable.nothing_to_unplug": "%s: no cable plugged in.",
+  "message.netcraft.cable.result.not_a_device": "This is not a network device.",
+  "message.netcraft.cable.result.same_device": "Pick a device other than the first one.",
+  "message.netcraft.cable.result.other_dimension": "Both devices must be in the same dimension.",
+  "message.netcraft.cable.result.too_far": "Too far: %s blocks, %s maximum.",
+  "message.netcraft.cable.result.port_in_use": "No free port on this device.",
+  "message.netcraft.cable.result.ok": "Connected."
 }

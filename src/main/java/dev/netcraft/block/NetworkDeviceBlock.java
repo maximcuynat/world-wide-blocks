@@ -32,13 +32,13 @@ public abstract class NetworkDeviceBlock extends HorizontalDirectionalBlock impl
         super.onPlace(state, level, pos, oldState, movedByPiston);
         // Un simple changement d'état (écran du portable ouvert ou fermé) n'est pas une nouvelle pose.
         if (level instanceof ServerLevel serverLevel && !oldState.is(this)) {
-            NetworkDevices.onPlaced(serverLevel, pos);
+            NetworkDevices.dropCables(serverLevel, pos, NetworkDevices.onPlaced(serverLevel, pos));
         }
     }
 
     @Override
     protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
         super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
-        NetworkDevices.onRemoved(level, pos);
+        NetworkDevices.dropCables(level, pos, NetworkDevices.onRemoved(level, pos));
     }
 }

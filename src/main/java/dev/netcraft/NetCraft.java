@@ -7,6 +7,7 @@ import com.mojang.logging.LogUtils;
 import dev.netcraft.command.NetCraftCommands;
 import dev.netcraft.registry.ModBlocks;
 import dev.netcraft.registry.ModCreativeTabs;
+import dev.netcraft.registry.ModDataComponents;
 import dev.netcraft.registry.ModItems;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -22,6 +23,7 @@ public class NetCraft {
     public NetCraft(IEventBus modEventBus, ModContainer modContainer) {
         ModBlocks.BLOCKS.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
+        ModDataComponents.DATA_COMPONENTS.register(modEventBus);
         ModCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
 
         NeoForge.EVENT_BUS.addListener(NetCraftCommands::register);
