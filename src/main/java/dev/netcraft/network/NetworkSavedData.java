@@ -19,7 +19,7 @@ import net.minecraft.world.level.saveddata.SavedDataType;
  */
 public final class NetworkSavedData extends SavedData {
     private static final Codec<NetworkSavedData> CODEC = RecordCodecBuilder.create(i -> i.group(
-            NetworkCodecs.NODE.listOf().fieldOf("nodes").forGetter(data -> List.copyOf(data.graph.nodes())),
+            NetworkCodecs.NODE.listOf().fieldOf("nodes").forGetter(NetworkSavedData::savedNodes),
             NetworkCodecs.LINK.listOf().fieldOf("links").forGetter(data -> List.copyOf(data.graph.links()))
     ).apply(i, NetworkSavedData::new));
 
@@ -31,13 +31,26 @@ public final class NetworkSavedData extends SavedData {
     private NetworkSavedData() {
     }
 
-    private NetworkSavedData(List<NetworkNode> nodes, List<Link> links) {
-        nodes.forEach(this.graph::putNode);
+    private NetworkSavedData(List<SavedNode> nodes, List<Link> links) {
+        boolean macsGenerated = false;
+        for (SavedNode saved : nodes) {
+            macsGenerated |= !this.graph.restoreNode(saved.node(), saved.macs());
+        }
+        if (macsGenerated) {
+            // Monde d'avant le lot 1b : on écrit tout de suite les adresses générées, pour qu'elles ne changent plus.
+            this.setDirty();
+        }
         for (Link link : links) {
             if (!this.graph.restoreLink(link)) {
                 NetCraft.LOGGER.warn("Lien réseau incohérent ignoré au chargement : {}", link);
             }
         }
+    }
+
+    private List<SavedNode> savedNodes() {
+        return this.graph.nodes().stream()
+                .map(node -> new SavedNode(node, this.graph.macsOf(node.id())))
+                .toList();
     }
 
     NetworkGraph graph() {

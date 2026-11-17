@@ -1,7 +1,9 @@
 package dev.netcraft.block;
 
+import java.util.List;
 import java.util.Map;
 
+import dev.netcraft.network.PortKind;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -20,13 +22,13 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  */
 public class PcTowerBlock extends NetworkDeviceBlock {
     /** Une carte réseau intégrée. */
-    public static final int PORT_COUNT = 1;
+    public static final List<PortKind> PORTS = List.of(PortKind.ETHERNET);
 
     // Forme pour une tour alignée sur l'axe Z (face avant au nord ou au sud), tournée pour l'axe X.
     private static final Map<Direction.Axis, VoxelShape> SHAPES = Shapes.rotateHorizontalAxis(Block.boxZ(8.0, 0.0, 15.0, 1.0, 15.0));
 
     public PcTowerBlock(BlockBehaviour.Properties properties) {
-        super(properties, PORT_COUNT);
+        super(properties, PORTS);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
 

@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import dev.netcraft.network.protocol.MacAddress;
 import dev.netcraft.network.sync.NetworkSync;
 import net.minecraft.server.MinecraftServer;
 
@@ -50,8 +51,12 @@ public final class NetworkManager {
         return this.graph().linksTouching(chunk);
     }
 
-    public Optional<PortRef> firstFreePort(DeviceId device) {
-        return this.graph().firstFreePort(device);
+    public Optional<PortRef> firstFreePort(DeviceId device, LinkMedium medium) {
+        return this.graph().firstFreePort(device, medium);
+    }
+
+    public List<MacAddress> macsOf(DeviceId device) {
+        return this.graph().macsOf(device);
     }
 
     // ---- Modification ----

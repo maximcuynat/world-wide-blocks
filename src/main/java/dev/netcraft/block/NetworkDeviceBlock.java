@@ -1,8 +1,11 @@
 package dev.netcraft.block;
 
+import java.util.List;
+
 import dev.netcraft.item.EthernetCableItem;
 import dev.netcraft.network.NetworkDevice;
 import dev.netcraft.network.NetworkDevices;
+import dev.netcraft.network.PortKind;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
@@ -14,7 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
 /**
- * Appareil réseau orientable : s'enregistre dans le moteur réseau à la pose et en sort, avec ses
+ * Appareil réseau orientable, aux ports fixes : s'enregistre dans le moteur réseau à la pose et en sort, avec ses
  * câbles, quand il quitte sa position. Il doit refuser les pistons ({@code PushReaction.IMMOVEABLE}),
  * car le moteur l'identifie par sa position.
  *
@@ -23,16 +26,16 @@ import net.minecraft.world.phys.BlockHitResult;
  * ({@link #useDevice}).
  */
 public abstract class NetworkDeviceBlock extends HorizontalDirectionalBlock implements NetworkDevice {
-    private final int portCount;
+    private final List<PortKind> ports;
 
-    protected NetworkDeviceBlock(BlockBehaviour.Properties properties, int portCount) {
+    protected NetworkDeviceBlock(BlockBehaviour.Properties properties, List<PortKind> ports) {
         super(properties);
-        this.portCount = portCount;
+        this.ports = List.copyOf(ports);
     }
 
     @Override
-    public int portCount() {
-        return this.portCount;
+    public List<PortKind> ports() {
+        return this.ports;
     }
 
     @Override

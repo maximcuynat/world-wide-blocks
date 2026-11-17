@@ -24,7 +24,7 @@ Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
 - [x] Lot 1a (câble et branchement) : codé et validé en jeu le 2026-11-17 (procédure dans `docs/plan-lots.md`).
 - [x] Principe « vrais échanges de protocoles » dans `docs/plan-lots.md` et `CLAUDE.md` (commit 132fbc6).
 - [ ] Lot 1b-1 (box, MAC, commutation) : architecture validée par Max le 2026-11-17 (résumé dans `docs/plan-lots.md`, lot 1b). Étapes, un commit chacune :
-  - [ ] Ports typés (Ethernet, ligne) et MAC par port dans le graphe, sauvegarde compatible avec les mondes du lot 1a, tests
+  - [x] Ports typés (Ethernet, ligne) et MAC par port dans le graphe, sauvegarde compatible avec les mondes du lot 1a, tests (53 tests au vert)
   - [ ] Couche trames : `MacAddress`, `EtherType`, `EthernetFrame`, contenu typé, tests
   - [ ] Commutation réutilisable : table d'apprentissage avec expiration, décision de transfert, tests
   - [ ] Simulation : file de livraison, minuteries, point d'écoute, détection de boucle et limite par tick, logique du poste et de la box, tests

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -11,14 +12,20 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.random.RandomGenerator;
+
+import dev.netcraft.network.protocol.MacAddress;
 
 /**
  * Graphe du réseau : les appareils (noeuds) et les câbles (liens) qui relient leurs ports.
  *
  * <p>C'est le coeur du moteur. Il est en Java pur, sans aucune classe Minecraft, pour être testé
  * sans lancer le jeu. Il ne sait rien des chunks : un lien existe tant qu'on ne l'a pas retiré.
- * La simulation reste abstraite : les lots suivants parcourront ce graphe pour savoir si un
- * chemin existe, sans faire voyager de messages tick par tick.
+ * Il décrit le matériel (appareils, ports, adresses MAC, câbles) ; les trames qui y circulent
+ * sont l'affaire de la simulation.
+ *
+ * <p>Chaque port reçoit une adresse MAC à la première inscription de son appareil. Elle lui reste
+ * tant que l'appareil est inchangé ; un appareil retiré puis reposé, ou remplacé, en reçoit de nouvelles.
  *
  * <p>Pas thread-safe : n'y accéder que depuis le thread du serveur.
  */
@@ -27,6 +34,18 @@ public final class NetworkGraph {
     private final Map<UUID, Link> links = new LinkedHashMap<>();
     private final Map<PortRef, Link> linksByPort = new HashMap<>();
     private final Map<ChunkKey, Set<Link>> linksByChunk = new HashMap<>();
+    private final Map<DeviceId, List<MacAddress>> macs = new HashMap<>();
+    private final Set<MacAddress> usedMacs = new HashSet<>();
+    private final RandomGenerator random;
+
+    public NetworkGraph() {
+        this(RandomGenerator.getDefault());
+    }
+
+    /** @param random source des adresses MAC générées ; une graine fixe rend les tests reproductibles */
+    public NetworkGraph(RandomGenerator random) {
+        this.random = random;
+    }
 
     // ---- Lecture ----
 
@@ -62,19 +81,29 @@ public final class NetworkGraph {
         return found == null ? List.of() : Collections.unmodifiableCollection(found);
     }
 
-    /** Premier port sans câble de l'appareil, s'il en reste un. */
-    public Optional<PortRef> firstFreePort(DeviceId device) {
+    /** Premier port sans câble de l'appareil qui accepte ce support, s'il en reste un. */
+    public Optional<PortRef> firstFreePort(DeviceId device, LinkMedium medium) {
         NetworkNode node = this.nodes.get(device);
         if (node == null) {
             return Optional.empty();
         }
         for (int i = 0; i < node.portCount(); i++) {
             PortRef port = node.port(i);
-            if (!this.linksByPort.containsKey(port)) {
+            if (medium.accepts(node.portKind(i)) && !this.linksByPort.containsKey(port)) {
                 return Optional.of(port);
             }
         }
         return Optional.empty();
+    }
+
+    /** Adresses MAC des ports de l'appareil, dans l'ordre des ports ; vide si l'appareil est inconnu. */
+    public List<MacAddress> macsOf(DeviceId device) {
+        return this.macs.getOrDefault(device, List.of());
+    }
+
+    public Optional<MacAddress> macOf(PortRef port) {
+        List<MacAddress> deviceMacs = this.macsOf(port.device());
+        return port.index() >= 0 && port.index() < deviceMacs.size() ? Optional.of(deviceMacs.get(port.index())) : Optional.empty();
     }
 
     // ---- Modification ----
@@ -87,15 +116,39 @@ public final class NetworkGraph {
      */
     public List<Link> putNode(NetworkNode node) {
         NetworkNode previous = this.nodes.put(node.id(), node);
-        if (previous == null || previous.equals(node)) {
+        if (previous != null && previous.equals(node)) {
             return List.of();
         }
-        return this.removeLinksOf(node.id());
+        List<Link> removed = previous == null ? List.of() : this.removeLinksOf(node.id());
+        // Nouvel appareil, ou appareil remplacé : de nouvelles adresses.
+        this.releaseMacs(node.id());
+        this.macs.put(node.id(), this.generateMacs(node.portCount()));
+        return removed;
+    }
+
+    /**
+     * Remet en place un appareil relu depuis la sauvegarde, avec ses adresses MAC. Si elles manquent
+     * (monde sauvegardé avant le lot 1b) ou ne conviennent pas (nombre, doublon, adresse de groupe),
+     * de nouvelles sont générées.
+     *
+     * @return vrai si les adresses sauvegardées ont été reprises telles quelles
+     */
+    public boolean restoreNode(NetworkNode node, List<MacAddress> savedMacs) {
+        this.removeDevice(node.id());
+        this.nodes.put(node.id(), node);
+        boolean usable = savedMacs.size() == node.portCount()
+                && savedMacs.stream().distinct().count() == savedMacs.size()
+                && savedMacs.stream().noneMatch(mac -> mac.isMulticast() || this.usedMacs.contains(mac));
+        List<MacAddress> assigned = usable ? List.copyOf(savedMacs) : this.generateMacs(node.portCount());
+        this.usedMacs.addAll(assigned);
+        this.macs.put(node.id(), assigned);
+        return usable;
     }
 
     /**
      * Branche un câble entre deux ports. Les vérifications se font dans cet ordre : appareils et
-     * ports existants, appareils distincts, même dimension, distance, ports libres.
+     * ports existants, ports compatibles avec le support, appareils distincts, même dimension,
+     * distance, ports libres.
      */
     public ConnectOutcome connect(PortRef a, PortRef b, LinkMedium medium, boolean cableConsumed) {
         ConnectResult check = this.check(a, b, medium);
@@ -120,6 +173,7 @@ public final class NetworkGraph {
     /** Retire l'appareil et tous ses câbles. */
     public List<Link> removeDevice(DeviceId device) {
         this.nodes.remove(device);
+        this.releaseMacs(device);
         return this.removeLinksOf(device);
     }
 
@@ -144,6 +198,9 @@ public final class NetworkGraph {
         if (nodeA == null || nodeB == null || !nodeA.hasPort(a.index()) || !nodeB.hasPort(b.index())) {
             return ConnectResult.NOT_A_DEVICE;
         }
+        if (!medium.accepts(nodeA.portKind(a.index())) || !medium.accepts(nodeB.portKind(b.index()))) {
+            return ConnectResult.INCOMPATIBLE_PORT;
+        }
         if (a.device().equals(b.device())) {
             return ConnectResult.SAME_DEVICE;
         }
@@ -157,6 +214,25 @@ public final class NetworkGraph {
             return ConnectResult.PORT_IN_USE;
         }
         return ConnectResult.OK;
+    }
+
+    /** Adresses neuves, uniques dans tout le graphe, et réservées. */
+    private List<MacAddress> generateMacs(int count) {
+        List<MacAddress> generated = new ArrayList<>(count);
+        while (generated.size() < count) {
+            MacAddress mac = MacAddress.randomLocal(this.random);
+            if (this.usedMacs.add(mac)) {
+                generated.add(mac);
+            }
+        }
+        return List.copyOf(generated);
+    }
+
+    private void releaseMacs(DeviceId device) {
+        List<MacAddress> released = this.macs.remove(device);
+        if (released != null) {
+            this.usedMacs.removeAll(released);
+        }
     }
 
     private List<Link> removeLinksOf(DeviceId device) {

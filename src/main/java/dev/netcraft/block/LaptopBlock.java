@@ -1,7 +1,9 @@
 package dev.netcraft.block;
 
+import java.util.List;
 import java.util.Map;
 
+import dev.netcraft.network.PortKind;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionResult;
@@ -26,7 +28,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  */
 public class LaptopBlock extends NetworkDeviceBlock {
     /** Une prise Ethernet ; le Wi-Fi arrive au lot 2a. */
-    public static final int PORT_COUNT = 1;
+    public static final List<PortKind> PORTS = List.of(PortKind.ETHERNET);
 
     public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
 
@@ -39,7 +41,7 @@ public class LaptopBlock extends NetworkDeviceBlock {
     private static final Map<Direction, VoxelShape> OPEN_SHAPES = Shapes.rotateHorizontal(OPEN_NORTH);
 
     public LaptopBlock(BlockBehaviour.Properties properties) {
-        super(properties, PORT_COUNT);
+        super(properties, PORTS);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(OPEN, true));
     }
 

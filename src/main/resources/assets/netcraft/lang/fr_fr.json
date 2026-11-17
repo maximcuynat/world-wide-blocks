@@ -18,6 +18,7 @@
   "message.netcraft.cable.unplugged": "%s : port %s débranché.",
   "message.netcraft.cable.nothing_to_unplug": "%s : aucun câble branché.",
   "message.netcraft.cable.result.not_a_device": "Ce n'est pas un appareil réseau.",
+  "message.netcraft.cable.result.incompatible_port": "Ce port n'accepte pas ce câble.",
   "message.netcraft.cable.result.same_device": "Choisissez un autre appareil que le premier.",
   "message.netcraft.cable.result.other_dimension": "Les deux appareils doivent être dans la même dimension.",
   "message.netcraft.cable.result.too_far": "Trop loin : %s blocs, %s au maximum.",

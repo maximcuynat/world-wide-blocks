@@ -1,10 +1,17 @@
 package dev.netcraft.network;
 
+import java.util.List;
+
 /**
- * Bloc qui est un appareil réseau. Le nombre de ports est fixe pour un type d'appareil :
- * il ne dépend ni de l'état du bloc ni de sa configuration.
+ * Bloc qui est un appareil réseau. Ses ports (nombre et type) sont fixes pour un type d'appareil :
+ * ils ne dépendent ni de l'état du bloc ni de sa configuration.
  */
 public interface NetworkDevice {
 
-    int portCount();
+    /** Type de chaque port, dans l'ordre des numéros de port. */
+    List<PortKind> ports();
+
+    default int portCount() {
+        return this.ports().size();
+    }
 }

@@ -101,7 +101,7 @@ public class EthernetCableItem extends Item {
 
     private void start(ServerLevel level, Player player, ItemStack stack, NetworkNode node) {
         NetworkManager network = NetworkManager.of(level.getServer());
-        Optional<PortRef> port = network.firstFreePort(node.id());
+        Optional<PortRef> port = network.firstFreePort(node.id(), MEDIUM);
         if (port.isEmpty()) {
             player.sendOverlayMessage(Component.translatable("message.netcraft.cable.no_free_port", NetworkDevices.displayName(node)));
             return;
@@ -137,7 +137,7 @@ public class EthernetCableItem extends Item {
         }
 
         // Pas de port libre en face : on vise le port 0 pour obtenir le refus « port occupé ».
-        PortRef endPort = network.firstFreePort(end.id()).orElse(end.port(0));
+        PortRef endPort = network.firstFreePort(end.id(), MEDIUM).orElse(end.port(0));
         boolean consume = !player.hasInfiniteMaterials();
         ConnectOutcome outcome = network.connect(startPort, endPort, MEDIUM, consume);
         if (!outcome.isSuccess()) {

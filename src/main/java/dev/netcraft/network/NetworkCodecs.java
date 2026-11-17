@@ -1,8 +1,13 @@
 package dev.netcraft.network;
 
+import java.util.List;
+import java.util.Optional;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+
+import dev.netcraft.network.protocol.MacAddress;
 
 import net.minecraft.core.UUIDUtil;
 
@@ -23,11 +28,30 @@ final class NetworkCodecs {
             Codec.INT.fieldOf("port").forGetter(PortRef::index)
     ).apply(i, PortRef::new));
 
-    static final Codec<NetworkNode> NODE = RecordCodecBuilder.create(i -> i.group(
-            DEVICE_ID.fieldOf("id").forGetter(NetworkNode::id),
-            Codec.STRING.fieldOf("type").forGetter(NetworkNode::deviceType),
-            Codec.INT.fieldOf("ports").forGetter(NetworkNode::portCount)
-    ).apply(i, NetworkNode::new));
+    static final Codec<PortKind> PORT_KIND = Codec.STRING.comapFlatMap(
+            name -> PortKind.bySerializedName(name)
+                    .map(DataResult::success)
+                    .orElseGet(() -> DataResult.error(() -> "Type de port inconnu : " + name)),
+            PortKind::serializedName);
+
+    /** Écrite en texte ({@code 02:4f:a0:00:1b:7c}) pour rester lisible dans un éditeur NBT. */
+    static final Codec<MacAddress> MAC = Codec.STRING.comapFlatMap(
+            text -> MacAddress.parse(text)
+                    .map(DataResult::success)
+                    .orElseGet(() -> DataResult.error(() -> "Adresse MAC illisible : " + text)),
+            MacAddress::toString);
+
+    /**
+     * {@code port_kinds} et {@code macs} n'existent que depuis le lot 1b : ils sont facultatifs pour
+     * relire les mondes plus anciens (voir {@link SavedNode#decode}).
+     */
+    static final Codec<SavedNode> NODE = RecordCodecBuilder.create(i -> i.group(
+            DEVICE_ID.fieldOf("id").forGetter(saved -> saved.node().id()),
+            Codec.STRING.fieldOf("type").forGetter(saved -> saved.node().deviceType()),
+            Codec.INT.fieldOf("ports").forGetter(saved -> saved.node().portCount()),
+            PORT_KIND.listOf().optionalFieldOf("port_kinds").forGetter(saved -> Optional.of(saved.node().ports())),
+            MAC.listOf().optionalFieldOf("macs", List.of()).forGetter(SavedNode::macs)
+    ).apply(i, SavedNode::decode));
 
     static final Codec<LinkMedium> MEDIUM = Codec.STRING.comapFlatMap(
             name -> LinkMedium.bySerializedName(name)
