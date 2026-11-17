@@ -28,6 +28,7 @@ sourceSets.main.resources {
 
 repositories {
     // Add here additional repositories if required by some of the dependencies below.
+    mavenCentral()
 }
 
 base {
@@ -111,6 +112,11 @@ configurations {
 }
 
 dependencies {
+    // Tests unitaires du moteur réseau (Java pur, sans lancer le jeu) : ./gradlew test
+    testImplementation platform('org.junit:junit-bom:5.13.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"
@@ -169,6 +175,10 @@ publishing {
             url "file://${project.projectDir}/repo"
         }
     }
+}
+
+tasks.named('test', Test).configure {
+    useJUnitPlatform()
 }
 
 tasks.withType(JavaCompile).configureEach {

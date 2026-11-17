@@ -1,5 +1,11 @@
 {
   "itemGroup.netcraft": "NetCraft",
   "block.netcraft.pc_tower": "PC Tower",
-  "block.netcraft.laptop": "Laptop"
+  "block.netcraft.laptop": "Laptop",
+  "commands.netcraft.links.none": "No network link.",
+  "commands.netcraft.links.header": "%s network link(s):",
+  "commands.netcraft.links.entry": "%s port %s ↔ %s port %s: %s blocks, %s",
+  "commands.netcraft.links.device": "%s [%s, %s, %s] (%s)",
+  "commands.netcraft.links.consumed": "cable consumed",
+  "commands.netcraft.links.not_consumed": "cable not consumed"
 }

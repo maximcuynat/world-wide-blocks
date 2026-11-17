@@ -2,5 +2,10 @@
   "itemGroup.netcraft": "NetCraft",
   "block.netcraft.pc_tower": "Tour PC",
   "block.netcraft.laptop": "PC portable",
-  "block.netcraft.laptop": "PC portable"
+  "commands.netcraft.links.none": "Aucun lien réseau.",
+  "commands.netcraft.links.header": "%s lien(s) réseau :",
+  "commands.netcraft.links.entry": "%s port %s ↔ %s port %s : %s blocs, %s",
+  "commands.netcraft.links.device": "%s [%s, %s, %s] (%s)",
+  "commands.netcraft.links.consumed": "cordon consommé",
+  "commands.netcraft.links.not_consumed": "cordon non consommé"
 }
