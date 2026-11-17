@@ -10,9 +10,16 @@
 - [x] `./gradlew build` passe : BUILD SUCCESSFUL en 3 min 53 s, `build/libs/netcraft-0.1.0.jar` produit (lancé par Max, Gradle ne peut pas ouvrir de socket local dans le bac à sable de Claude)
 - [x] Le jeu se lance via `./gradlew runClient` (confirmé par Max le 2026-11-17). Monde de test : « Netcraft », créatif, superflat Redstone Ready. Présence de NetCraft dans l'écran Mods non confirmée explicitement.
 
-## Étape 2 : session de questions (à faire après l'étape 1)
+## Blocs
 
-Objectif : liste complète des blocs et items, ordre d'apparition, dépendances.
+- [x] Tour PC (`pc_tower`) : bloc, modèle, texture
+- [ ] PC portable (`laptop`) : code et ressources écrits le 2026-11-17 (modèles ouvert et fermé, blockstate, item, loot table, tag pioche, traductions). Texture provisoire générée par script. À vérifier : `./gradlew build` puis en jeu (inclinaison de l'écran dans les 4 orientations, clic droit ouvre/ferme, nom et icône dans l'onglet, drop à la pioche en survie, aucune erreur `netcraft:laptop` dans le log)
+
+## Plan par lots
+
+Le découpage complet (lots, équipements, dépendances) est dans `docs/plan-lots.md`. Statut : proposé le 2026-11-17, en attente de validation par Max. Aucun code au-delà du lot 0 avant validation.
+
+Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
 
 ## Idées en vrac (dites par Max, non triées, non validées)
 
