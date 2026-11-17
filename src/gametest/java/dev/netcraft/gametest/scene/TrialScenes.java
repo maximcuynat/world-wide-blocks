@@ -56,7 +56,7 @@ public final class TrialScenes {
             BlockPos at = obstacle.get();
             return Result.refused("La zone du décor n'est pas vide : bloc « "
                     + level.getBlockState(at).getBlock().getName().getString() + " » en "
-                    + at.getX() + " " + at.getY() + " " + at.getZ() + ". Place-toi face à un terrain dégagé.");
+                    + at.getX() + " " + at.getY() + " " + at.getZ() + ". Placez-vous face à un terrain dégagé.");
         }
         List<BlockPos> placed = new ArrayList<>();
         for (TrialScenario.Device device : scenario.devices()) {

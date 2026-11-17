@@ -1,7 +1,6 @@
 package dev.netcraft.command;
 
 import java.util.Collection;
-import java.util.Locale;
 
 import com.mojang.brigadier.context.CommandContext;
 
@@ -44,17 +43,18 @@ public final class NetCraftCommands {
             Component line = Component.translatable("commands.netcraft.links.entry",
                     describe(network, link.a()), link.a().displayNumber(),
                     describe(network, link.b()), link.b().displayNumber(),
-                    String.format(Locale.ROOT, "%.1f", link.length()),
+                    Math.round(link.length()),
                     Component.translatable(link.cableConsumed() ? "commands.netcraft.links.consumed" : "commands.netcraft.links.not_consumed"));
             source.sendSuccess(() -> line, false);
         }
         return links.size();
     }
 
-    /** Nom de l'appareil et position, par exemple « Tour PC [12, 64, -3] (minecraft:overworld) ». */
+    /** Appareil au format commun des messages, suivi de sa dimension : « Tour PC [12, 64, -3] (minecraft:overworld) ». */
     private static Component describe(NetworkManager network, PortRef port) {
         DeviceId id = port.device();
         Component name = network.node(id).map(NetworkDevices::displayName).orElse(Component.literal("?"));
-        return Component.translatable("commands.netcraft.links.device", name, id.x(), id.y(), id.z(), id.dimension());
+        Component device = Component.translatable("message.netcraft.device", name, id.x(), id.y(), id.z());
+        return Component.translatable("commands.netcraft.links.device", device, id.dimension());
     }
 }

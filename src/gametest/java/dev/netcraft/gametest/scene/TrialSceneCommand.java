@@ -98,7 +98,7 @@ public final class TrialSceneCommand {
         ServerPlayer player = source.getPlayerOrException();
         List<BlockPos> last = player.getData(BUILT_SCENES).scenes.poll();
         if (last == null) {
-            source.sendFailure(Component.literal("Aucun décor à retirer depuis ta connexion."));
+            source.sendFailure(Component.literal("Aucun décor à retirer depuis votre connexion."));
             return 0;
         }
         int removed = TrialScenes.remove(player.level(), last);
@@ -120,7 +120,7 @@ public final class TrialSceneCommand {
             return true;
         }
         source.sendFailure(Component.literal("Commande réservée aux mondes d'essai : ce monde s'appelle « " + name
-                + " ». Crée un monde dont le nom commence par « " + TRIAL_WORLD_PREFIX + " »."));
+                + " ». Créez un monde dont le nom commence par « " + TRIAL_WORLD_PREFIX + " »."));
         return false;
     }
 }

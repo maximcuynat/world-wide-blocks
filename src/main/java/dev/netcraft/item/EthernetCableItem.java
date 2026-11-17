@@ -1,6 +1,7 @@
 package dev.netcraft.item;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import dev.netcraft.message.Message;
 import dev.netcraft.message.MessageArg;
@@ -19,8 +20,10 @@ import dev.netcraft.network.PendingCable;
 import dev.netcraft.network.PortRef;
 import dev.netcraft.registry.ModDataComponents;
 import dev.netcraft.registry.ModItems;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Prediction;
@@ -31,6 +34,8 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
@@ -50,6 +55,14 @@ public class EthernetCableItem extends Item {
 
     public EthernetCableItem(Item.Properties properties) {
         super(properties);
+    }
+
+    /** Consignes permanentes, trop longues pour la barre d'action : dans l'infobulle de l'inventaire. */
+    @Override
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag flag) {
+        builder.accept(Component.translatable("item.netcraft.ethernet_cable.tooltip.connect").withStyle(ChatFormatting.GRAY));
+        builder.accept(Component.translatable("item.netcraft.ethernet_cable.tooltip.unplug").withStyle(ChatFormatting.GRAY));
+        builder.accept(Component.translatable("item.netcraft.ethernet_cable.tooltip.cancel").withStyle(ChatFormatting.GRAY));
     }
 
     /** Branchement commencé : l'objet brille, comme un objet enchanté. */
@@ -152,7 +165,7 @@ public class EthernetCableItem extends Item {
 
         // La première extrémité a pu disparaître depuis le premier clic : on la revérifie.
         if (!startId.sameDimension(end.id())) {
-            refuse(player, ConnectResult.OTHER_DIMENSION, 0);
+            refuse(player, ConnectResult.OTHER_DIMENSION, end, 0);
             return;
         }
         Optional<NetworkNode> start = NetworkDevices.validate(level, startId);
@@ -173,7 +186,7 @@ public class EthernetCableItem extends Item {
         boolean consume = !player.hasInfiniteMaterials();
         ConnectOutcome outcome = network.connect(startPort, endPort, MEDIUM, consume);
         if (!outcome.isSuccess()) {
-            refuse(player, outcome.result(), startId.distanceTo(end.id()));
+            refuse(player, outcome.result(), end, startId.distanceTo(end.id()));
             return;
         }
         Link link = outcome.link().orElseThrow();
@@ -272,8 +285,16 @@ public class EthernetCableItem extends Item {
         }
     }
 
-    /** Refus du moteur ; la distance n'est utile qu'au refus « trop loin ». */
-    private static void refuse(Player player, ConnectResult result, double distance) {
+    /**
+     * Refus du moteur au second clic. « Port occupé » vise l'appareil d'arrivée (le départ est
+     * vérifié avant) : c'est le même message qu'au premier clic sur un appareil plein. La distance
+     * n'est utile qu'au refus « trop loin ».
+     */
+    private static void refuse(Player player, ConnectResult result, NetworkNode end, double distance) {
+        if (result == ConnectResult.PORT_IN_USE) {
+            tell(player, MessageLevel.ERROR, "message.netcraft.cable.no_free_port", NetworkDevices.nameArg(end));
+            return;
+        }
         tell(player, MessageLevel.ERROR, "message.netcraft.cable.result." + result.key(),
                 MessageArg.blocks(distance), MessageArg.blocks(MEDIUM.maxLength()));
     }

@@ -150,7 +150,7 @@ Textes réécrits (français, avec la longueur du cas le plus long ; l'anglais s
 | `cable.connected` | Connecté : %s port %s ↔ %s port %s (%s blocs). | 66 |
 | `network.loop` | Boucle réseau près de %s. Retirez un câble de la boucle. | 85 |
 | `network.saturated` | Réseau saturé : des trames sont perdues. Cherchez une boucle. | 60 |
-| `item.netcraft.ethernet_cable.tooltip` (3 lignes) | Clic droit sur deux appareils : les relier. / Accroupi + clic sur un appareil : débrancher. / Accroupi + clic dans le vide : annuler, ranger. | 45 par ligne |
+| `item.netcraft.ethernet_cable.tooltip` (3 lignes) | Clic droit sur deux appareils : les relier. / Accroupi + clic sur un appareil : débrancher. / Accroupi + clic dans le vide : annuler. | 45 par ligne |
 
 ### Panneau d'état
 
