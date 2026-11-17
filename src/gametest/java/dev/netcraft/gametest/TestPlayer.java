@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import com.mojang.authlib.GameProfile;
 
+import dev.netcraft.NetCraft;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -20,8 +21,11 @@ import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.event.EventHooks;
 import net.neoforged.neoforge.network.registration.NetworkRegistry;
 
 import org.jspecify.annotations.Nullable;
@@ -35,15 +39,24 @@ import org.jspecify.annotations.Nullable;
  * <p>Il retient chaque message reçu (barre d'objets et chat) pour que les tests le vérifient.
  */
 public final class TestPlayer extends ServerPlayer {
-    /** Un message reçu : son texte et s'il s'affichait au-dessus de la barre d'objets. */
-    public record Message(Component text, boolean overlay) {
+    /**
+     * Un message reçu : son texte, s'il s'affichait au-dessus de la barre d'objets, et le temps de jeu
+     * (en ticks, celui de la simulation réseau) à sa réception.
+     */
+    public record Message(Component text, boolean overlay, long gameTime) {
         /** Clé de traduction du message, ou chaîne vide s'il n'est pas traduisible. */
         public String key() {
             return this.text.getContents() instanceof TranslatableContents translatable ? translatable.getKey() : "";
         }
+
+        /** Paramètres du message traduisible, vide sinon. */
+        public List<Object> args() {
+            return this.text.getContents() instanceof TranslatableContents translatable ? List.of(translatable.getArgs()) : List.of();
+        }
     }
 
     private final List<Message> messages = new ArrayList<>();
+    private boolean left;
 
     private TestPlayer(MinecraftServer server, ServerLevel level, GameProfile profile, ClientInformation information) {
         super(server, level, profile, information);
@@ -78,6 +91,14 @@ public final class TestPlayer extends ServerPlayer {
         // Le constructeur associe le canal à la connexion.
         new EmbeddedChannel(memory);
         NetworkRegistry.configureMockConnection(memory);
+        // Comme PrepareSpawnTask.spawn à une vraie connexion : les données sauvegardées du joueur
+        // (inventaire compris) sont relues avant qu'il entre dans le monde.
+        try (ProblemReporter.ScopedCollector reporter = new ProblemReporter.ScopedCollector(player.problemPath(), NetCraft.LOGGER)) {
+            server.getPlayerList().loadPlayerData(player.nameAndId())
+                    .map(tag -> TagValueInput.create(reporter, server.registryAccess(), tag))
+                    .ifPresent(player::load);
+            EventHooks.firePlayerLoadingEvent(player, server.getPlayerList(), player.getStringUUID());
+        }
         server.getPlayerList().placeNewPlayer(memory, player, cookie);
         // Inscrite parmi les connexions du serveur, elle est tickée : le joueur vit comme un vrai.
         server.getConnection().getConnections().add(memory);
@@ -96,18 +117,24 @@ public final class TestPlayer extends ServerPlayer {
     }
 
     /**
-     * Déconnexion, comme un client qui quitte : le serveur sauvegarde le joueur et le retire au
-     * tick suivant. (Pas {@code disconnect()}, qui est une étape interne de {@code ServerPlayer}.)
+     * Déconnexion, comme un client qui quitte : le serveur sauvegarde le joueur et le retire
+     * aussitôt. (Pas {@code disconnect()}, qui est une étape interne de {@code ServerPlayer}.)
      */
     public void leaveServer() {
-        if (this.connection.getConnection().isConnected()) {
-            this.connection.disconnect(Component.literal("Test NetCraft terminé"));
+        if (this.left) {
+            return;
         }
+        this.left = true;
+        net.minecraft.network.Connection memory = this.connection.getConnection();
+        this.connection.disconnect(Component.literal("Test NetCraft terminé"));
+        // La déconnexion est déjà traitée : sans ce retrait, la boucle des connexions du serveur la
+        // traiterait une seconde fois (avertissement « handleDisconnection() called twice »).
+        this.level().getServer().getConnection().getConnections().remove(memory);
     }
 
     @Override
     public void sendSystemMessage(Component message, boolean overlay) {
-        this.messages.add(new Message(message, overlay));
+        this.messages.add(new Message(message, overlay, this.level().getServer().overworld().getGameTime()));
         super.sendSystemMessage(message, overlay);
     }
 

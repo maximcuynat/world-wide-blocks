@@ -1,12 +1,14 @@
 package dev.netcraft.network;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import dev.netcraft.NetCraft;
 import dev.netcraft.debug.TrialLog;
+import dev.netcraft.network.protocol.MacAddress;
 import dev.netcraft.network.sim.NetworkSimulation;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -28,7 +30,8 @@ public final class NetworkSavedData extends SavedData {
             NetworkCodecs.LINK.listOf().fieldOf("links").forGetter(data -> List.copyOf(data.graph.links()))
     ).apply(i, NetworkSavedData::new));
 
-    static final SavedDataType<NetworkSavedData> TYPE = new SavedDataType<>(
+    /** Public pour les tests en jeu, qui relisent le fichier par un stockage neuf. */
+    public static final SavedDataType<NetworkSavedData> TYPE = new SavedDataType<>(
             Identifier.fromNamespaceAndPath(NetCraft.MODID, "network"), () -> new NetworkSavedData(), CODEC);
 
     private final NetworkGraph graph = new NetworkGraph();
@@ -75,6 +78,20 @@ public final class NetworkSavedData extends SavedData {
 
     NetworkGraph graph() {
         return this.graph;
+    }
+
+    // ---- Lecture seule, pour comparer des données relues du disque (tests en jeu) ----
+
+    public Optional<NetworkNode> node(DeviceId id) {
+        return this.graph.node(id);
+    }
+
+    public List<MacAddress> macsOf(DeviceId id) {
+        return this.graph.macsOf(id);
+    }
+
+    public List<Link> linksOf(DeviceId id) {
+        return this.graph.linksOf(id);
     }
 
     NetworkSimulation simulation() {

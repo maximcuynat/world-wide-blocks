@@ -11,6 +11,7 @@ import dev.netcraft.network.LinkMedium;
 import dev.netcraft.network.NetworkDevices;
 import dev.netcraft.network.NetworkManager;
 import dev.netcraft.network.PortRef;
+import dev.netcraft.registry.ModDataComponents;
 import dev.netcraft.registry.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -23,6 +24,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.BlockHitResult;
@@ -117,6 +119,32 @@ public final class NetworkScene implements GameTestListener {
         } finally {
             player.setShiftKeyDown(false);
         }
+    }
+
+    /** Le joueur casse l'appareil, par le même chemin que dans le jeu (gouttes selon son mode de jeu). */
+    public void breakAsPlayer(TestPlayer player, BlockPos relative) {
+        this.helper.assertTrue(player.gameMode.destroyBlock(this.helper.absolutePos(relative)), "Casse refusée en " + relative);
+    }
+
+    /** Explosion centrée sur ce bloc, qui détruit les blocs comme une créature explosive. */
+    public void explodeAt(BlockPos relative, float power) {
+        Vec3 center = Vec3.atCenterOf(this.helper.absolutePos(relative));
+        this.helper.getLevel().explode(null, center.x, center.y, center.z, power, Level.ExplosionInteraction.BLOCK);
+    }
+
+    /** Temps de jeu en ticks, celui de la simulation réseau. */
+    public long gameTime() {
+        return this.helper.getLevel().getServer().overworld().getGameTime();
+    }
+
+    /** Vrai si un cordon de l'inventaire attend encore d'être branché. */
+    public boolean hasPendingCord(TestPlayer player) {
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+            if (player.getInventory().getItem(slot).has(ModDataComponents.CABLE_START.get())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Cordons dans l'inventaire du joueur. */
