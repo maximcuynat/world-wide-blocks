@@ -4,53 +4,57 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Projet
 
-NetCraft est un mod Minecraft (NeoForge) de simulation de réseau informatique réaliste : postes, baies, switchs, firewalls, câblage, alimentation. La vision est « un Packet Tracer en blocs ». Le projet démarre : seuls des blocs décoratifs existent pour l'instant (Tour PC, PC portable en cours). La feuille de route, les idées non validées et les faits vérifiés sur l'écosystème sont dans `tasks/todo.md`, à lire en début de session.
+NetCraft est un mod Minecraft (NeoForge) de simulation de réseau informatique réaliste, « un Packet Tracer en blocs ». Lots faits : 0 (tour PC, PC portable) et 1a (cordon Ethernet, ports, indicateur d'état, moteur réseau).
 
-Le code, les commentaires, les messages de commit et les noms d'éléments de modèles sont en français. Les identifiants (classes, registres, ressources) sont en anglais.
+À lire en début de session :
+- `docs/plan-lots.md` : plan par lots, état de chaque lot, décisions à trancher, procédures de test en jeu ;
+- `docs/equipements-reseau.md` : inventaire des équipements et dimensions réelles ;
+- `tasks/todo.md` (suivi, idées non validées) et `tasks/lessons.md` (erreurs à ne pas refaire).
+
+Code, commentaires, messages de commit et textes en français ; identifiants (classes, registres, ressources) en anglais. Les deux langues `fr_fr.json` et `en_us.json` sont maintenues.
 
 ## Versions
 
-- Minecraft 26.3, NeoForge 26.3.0.103, plugin `net.neoforged.moddev` 2.0.148, Gradle 9.2.1 (wrapper).
-- Java 25 pour la compilation, téléchargé par la toolchain Gradle. Un JDK 17 suffit pour lancer Gradle lui-même.
-- Les versions et l'identité du mod (`mod_id`, `mod_version`, etc.) se changent dans `gradle.properties`. Elles sont injectées dans `src/main/templates/META-INF/neoforge.mods.toml` par la tâche `generateModMetadata` : ne pas écrire de valeurs en dur dans ce template.
-- Minecraft 26.x n'est pas obfusqué et les API NeoForge ont beaucoup bougé depuis la 1.21.1 (transferts d'énergie, items, fluides et FML refondus en 21.9). Les tutoriels et exemples 1.20/1.21 sont souvent faux pour cette version : vérifier les signatures dans les sources décompilées ou la doc NeoForge à jour avant d'écrire du code d'API.
+- Minecraft 26.3, NeoForge 26.3.0.103, plugin `net.neoforged.moddev` 2.0.148, Gradle 9.2.1, Java 25 (téléchargé par la toolchain).
+- Versions et identité du mod dans `gradle.properties`, injectées dans `neoforge.mods.toml` : rien en dur dans le template.
+- Les API ont beaucoup bougé depuis la 1.21 (rendu, interface, noms de constantes). Vérifier chaque nom de classe, de méthode, d'enum et chaque package d'import dans les sources : Minecraft dans `build/moddev/artifacts/minecraft-patched-*-sources.jar`, NeoForge dans le jar `-sources` de maven.neoforged.net.
 
 ## Commandes
 
 ```bash
-./gradlew build            # compile et produit build/libs/netcraft-<version>.jar
-./gradlew runClient        # lance le client de dev (monde de test : « Netcraft », créatif, superflat)
-./gradlew runServer        # serveur dédié, sans GUI
-./gradlew runGameTestServer  # exécute les GameTests du namespace netcraft puis s'arrête
-./gradlew runData          # datagen vers src/generated/resources
+./gradlew build test   # compile, puis tests JUnit du moteur (Java pur, sans lancer le jeu)
+./gradlew runClient    # client de dev, monde de test « Netcraft » (créatif, superflat)
+./gradlew runServer    # serveur dédié sans interface
 ```
 
-Il n'y a aucun test (ni JUnit ni GameTest) ni linter configuré pour l'instant. La vérification d'un changement passe par `./gradlew build` puis un contrôle en jeu avec `runClient`.
+## Façon de travailler
 
-Dans le bac à sable de Claude Code, Gradle ne peut pas ouvrir de socket local : `./gradlew ...` échoue. Demander à l'utilisateur de lancer la commande lui-même (préfixe `!` dans le prompt) et de rapporter le résultat.
+- Branche `developement` uniquement. Rien vers `main` sans l'accord de Max.
+- Petits commits, un par étape logique.
+- Le bac à sable de Claude Code ne peut pas lancer Gradle : c'est Max qui lance les builds et les essais en jeu (préfixe `!`) et rapporte le résultat. Ne jamais annoncer un build ou un essai comme réussi sans ce retour.
 
-## Architecture
+## Architecture du moteur réseau
 
-- `dev.netcraft.NetCraft` : point d'entrée `@Mod`. Son constructeur attache chaque `DeferredRegister` au bus d'événements du mod. Tout nouveau registre doit y être ajouté.
-- `dev.netcraft.registry` : un fichier par type de registre (`ModBlocks`, `ModItems`, `ModCreativeTabs`), classes `final` à constructeur privé qui exposent des champs statiques `Deferred*`.
-- `dev.netcraft.block` : une classe par bloc. Les blocs actuels étendent `HorizontalDirectionalBlock`, s'orientent face au joueur à la pose et définissent leurs `VoxelShape` une seule fois pour une orientation de référence, puis les font tourner avec `Shapes.rotateHorizontal` ou `Shapes.rotateHorizontalAxis`.
+- `network/` : `NetworkGraph` (appareils, câbles, index par port et par chunk), les records `DeviceId`, `PortRef`, `Link`, `NetworkNode`, `ChunkKey`, et `sync/PlayerLinkView`. Tout cela est en Java pur, testé dans `src/test`.
+- `NetworkSavedData` sauvegarde le graphe dans le stockage global du serveur (`data/netcraft/network.dat`), indépendamment des chunks chargés.
+- `NetworkManager.of(server)` est une façade sans état sur ces données ; `NetworkDevices` fait le lien entre le monde (niveaux, positions, blocs) et le moteur.
+- `block/NetworkDeviceBlock` : base des appareils (nombre de ports fixe, enregistrement à la pose, retrait des câbles à la casse, refus des pistons).
+- `item/EthernetCableItem` : branchement, débranchement, bout tenu en main.
+- `network/sync/` : paquets vers le client. `client/` : cache en lecture seule, panneau d'état, rendu des câbles.
 
-### Ajouter un bloc
+Règles à ne jamais casser :
+- Le serveur décide, le client affiche. Aucune logique réseau côté client, et aucune classe de `client/` chargée sur un serveur dédié.
+- Aucun état statique : les données vivent dans le serveur en cours (stockage global, attachement par joueur) ou dans l'instance client.
+- La logique réseau reste en Java pur et testable, sans classe Minecraft.
+- Toute modification du réseau passe par `NetworkManager`, qui marque la sauvegarde et prévient les clients.
+- Un joueur ne reçoit que les câbles dont une extrémité est dans un chunk que son client a reçu (`PlayerLinkView`).
+- Simulation abstraite : on calcule si un chemin existe, aucun message ne voyage tick par tick.
 
-Un bloc touche plusieurs fichiers qui doivent tous utiliser le même identifiant. Les ressources sont écrites à la main dans `src/main/resources` (le datagen est configuré mais non utilisé).
+## Ajouter un bloc
 
-Java :
-1. classe dans `block/`
-2. `ModBlocks` : `BLOCKS.registerBlock(...)` (avec `noOcclusion()` pour un modèle qui ne remplit pas le cube)
-3. `ModItems` : `ITEMS.registerSimpleBlockItem(...)`
-4. `ModCreativeTabs` : `output.accept(...)` dans l'onglet `netcraft`
+Un bloc touche plusieurs fichiers au même identifiant `<id>`, écrits à la main (le datagen n'est pas utilisé) :
+- Java : classe dans `block/` (étendre `NetworkDeviceBlock` pour un appareil réseau), `ModBlocks`, `ModItems`, `ModCreativeTabs`. Tout nouveau registre s'ajoute dans le constructeur de `NetCraft`.
+- `assets/netcraft/` : `blockstates/<id>.json`, `models/block/<id>.json`, `textures/block/<id>.png`, `items/<id>.json` (obligatoire depuis 1.21.4), clés `block.netcraft.<id>` dans les deux fichiers de langue.
+- `data/` : `netcraft/loot_table/blocks/<id>.json` et l'identifiant dans `minecraft/tags/block/mineable/pickaxe.json`.
 
-Ressources (`<id>` = identifiant du bloc) :
-- `assets/netcraft/blockstates/<id>.json` : une variante par valeur de propriété (rotation `y` par `facing`)
-- `assets/netcraft/models/block/<id>.json` et `assets/netcraft/textures/block/<id>.png`
-- `assets/netcraft/items/<id>.json` : définition d'item côté client, obligatoire en plus du modèle (format introduit en 1.21.4)
-- `assets/netcraft/lang/en_us.json` et `fr_fr.json` : clé `block.netcraft.<id>`, les deux langues sont maintenues
-- `data/netcraft/loot_table/blocks/<id>.json` : sans elle le bloc ne lâche rien
-- `data/minecraft/tags/block/mineable/pickaxe.json` : ajouter l'identifiant
-
-Les fichiers de projet Blockbench (`.bbmodel`) peuvent rester à côté des ressources : ils sont exclus du jar par `build.gradle`.
+Les `.bbmodel` peuvent rester à côté des ressources : ils sont exclus du jar.

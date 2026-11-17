@@ -23,6 +23,22 @@ Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
 
 - [x] Lot 1a (câble et branchement) : codé et validé en jeu le 2026-11-17 (procédure dans `docs/plan-lots.md`). Prochain : lot 1b, pas commencé.
 
+## Tests multijoueur (à faire plus tard, non prioritaire)
+
+En attendant, garder la séparation client et serveur stricte dans le code (voir les règles du `CLAUDE.md`).
+
+- [ ] À la fin du lot 1 : serveur dédié avec un seul client sur le même PC.
+  1. `./gradlew runServer` (la première fois, accepter l'EULA dans `run/eula.txt` puis relancer).
+  2. Dans un autre terminal, `./gradlew runClient`, puis Multijoueur, connexion à `localhost`.
+  3. Dérouler la procédure du lot 1 dans `docs/plan-lots.md` : branchement, câble visible, indicateur d'état, débranchement, adresses et `ping` (lots 1b et 1c).
+  4. Arrêter puis relancer le serveur : les liens tiennent.
+  5. Vérifier dans les deux logs l'absence d'erreur, en particulier aucune classe client chargée par le serveur.
+- [ ] Vers la fin du lot 3 : deux joueurs.
+  1. Deux clients sur le même serveur (deux machines, ou deux instances avec des pseudos différents).
+  2. Filtrage par chunks : un câble posé loin du second joueur ne lui parvient pas ; il apparaît quand il s'en approche et disparaît quand il s'éloigne, sauf si l'autre bout reste dans sa zone.
+  3. Un joueur branche ou débranche : l'autre voit le câble apparaître ou disparaître et l'indicateur changer.
+  4. Changement de dimension (Nether) : aller-retour, les câbles de l'Overworld réapparaissent au retour et aucun câble d'une autre dimension n'est affiché.
+
 ## Idées en vrac (dites par Max, non triées, non validées)
 
 Vision : un Packet Tracer en blocs, fidèle au réel, complet, pour tout le monde et pour les passionnés de réseau.
