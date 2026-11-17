@@ -46,6 +46,10 @@ public final class NetworkManager {
         return this.graph().linksOf(device);
     }
 
+    public Collection<Link> linksTouching(ChunkKey chunk) {
+        return this.graph().linksTouching(chunk);
+    }
+
     public Optional<PortRef> firstFreePort(DeviceId device) {
         return this.graph().firstFreePort(device);
     }

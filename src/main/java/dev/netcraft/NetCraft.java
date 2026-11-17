@@ -6,6 +6,7 @@ import com.mojang.logging.LogUtils;
 
 import dev.netcraft.command.NetCraftCommands;
 import dev.netcraft.network.sync.NetworkSync;
+import dev.netcraft.registry.ModAttachments;
 import dev.netcraft.registry.ModBlocks;
 import dev.netcraft.registry.ModCreativeTabs;
 import dev.netcraft.registry.ModDataComponents;
@@ -25,14 +26,14 @@ public class NetCraft {
         ModBlocks.BLOCKS.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
         ModDataComponents.DATA_COMPONENTS.register(modEventBus);
+        ModAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ModCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
 
         modEventBus.addListener(NetworkSync::registerPayloads);
 
         NeoForge.EVENT_BUS.addListener(NetCraftCommands::register);
-        NeoForge.EVENT_BUS.addListener(NetworkSync::onPlayerLoggedIn);
-        NeoForge.EVENT_BUS.addListener(NetworkSync::onPlayerChangedDimension);
-        NeoForge.EVENT_BUS.addListener(NetworkSync::onPlayerRespawn);
+        NeoForge.EVENT_BUS.addListener(NetworkSync::onChunkSent);
+        NeoForge.EVENT_BUS.addListener(NetworkSync::onChunkUnWatch);
         LOGGER.info("NetCraft chargé");
     }
 }

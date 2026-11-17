@@ -5,9 +5,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -24,6 +26,7 @@ public final class NetworkGraph {
     private final Map<DeviceId, NetworkNode> nodes = new LinkedHashMap<>();
     private final Map<UUID, Link> links = new LinkedHashMap<>();
     private final Map<PortRef, Link> linksByPort = new HashMap<>();
+    private final Map<ChunkKey, Set<Link>> linksByChunk = new HashMap<>();
 
     // ---- Lecture ----
 
@@ -51,6 +54,12 @@ public final class NetworkGraph {
             }
         }
         return result;
+    }
+
+    /** Câbles dont au moins une extrémité se trouve dans ce chunk. */
+    public Collection<Link> linksTouching(ChunkKey chunk) {
+        Set<Link> found = this.linksByChunk.get(chunk);
+        return found == null ? List.of() : Collections.unmodifiableCollection(found);
     }
 
     /** Premier port sans câble de l'appareil, s'il en reste un. */
@@ -160,11 +169,22 @@ public final class NetworkGraph {
         this.links.put(link.id(), link);
         this.linksByPort.put(link.a(), link);
         this.linksByPort.put(link.b(), link);
+        this.linksByChunk.computeIfAbsent(ChunkKey.of(link.a().device()), k -> new LinkedHashSet<>()).add(link);
+        this.linksByChunk.computeIfAbsent(ChunkKey.of(link.b().device()), k -> new LinkedHashSet<>()).add(link);
     }
 
     private void remove(Link link) {
         this.links.remove(link.id());
         this.linksByPort.remove(link.a());
         this.linksByPort.remove(link.b());
+        this.unindexChunk(ChunkKey.of(link.a().device()), link);
+        this.unindexChunk(ChunkKey.of(link.b().device()), link);
+    }
+
+    private void unindexChunk(ChunkKey chunk, Link link) {
+        Set<Link> inChunk = this.linksByChunk.get(chunk);
+        if (inChunk != null && inChunk.remove(link) && inChunk.isEmpty()) {
+            this.linksByChunk.remove(chunk);
+        }
     }
 }
