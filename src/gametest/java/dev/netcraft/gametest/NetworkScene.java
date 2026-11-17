@@ -70,6 +70,11 @@ public final class NetworkScene implements GameTestListener {
         return id;
     }
 
+    /** Prend en charge, pour le nettoyage de fin de test, des appareils posés par un autre code. */
+    public void adopt(List<BlockPos> absolutePositions) {
+        this.devices.addAll(absolutePositions);
+    }
+
     public DeviceId id(BlockPos relative) {
         return NetworkDevices.idOf(this.helper.getLevel(), this.helper.absolutePos(relative));
     }

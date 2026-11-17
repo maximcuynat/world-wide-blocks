@@ -40,7 +40,7 @@ Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
     - [x] Tests du lot commun (verts le 2026-11-18) : départ détruit (casse et explosion, créatif et survie, compte des cordons), changement de dimension, déconnexion et reconnexion, expiration des MAC, sauvegarde et relecture
     - [x] Lot à part (environnement dédié) pour ce qui touche les limites globales du moteur : boucle et limite d'un signalement par minute
     - [x] Horloge du moteur (demandé par Max le 2026-11-18) : un changement survenu entre deux ticks prenait le temps du tick précédent, la boucle était signalée toutes les 90 s au lieu de 60. Changements appliqués au début du tick suivant, tests unitaires de l'horloge, tests en jeu de la boucle (écart exact) et de l'expiration (bornes exactes) resserrés
-    - [ ] `/netcraft test <scénario>` et `/netcraft test effacer` : développement seulement (jeu de sources `gametest`), refus hors d'un monde dont le nom commence par « Essais », refus si la zone n'est pas vide
+    - [x] `/netcraft test <scénario>` et `/netcraft test effacer` (décors testés en jeu, vérification à l'œil par Max à faire) : développement seulement (jeu de sources `gametest`), refus hors d'un monde dont le nom commence par « Essais », refus si la zone n'est pas vide
   - [ ] Procédure de test en jeu (ce qui demande des yeux) et état du lot dans `docs/plan-lots.md`
   - [ ] Module des messages (prompt séparé de Max), avant le 1b-2 : prévoir dès la conception un moyen pour les tests de capter les messages envoyés
 - [ ] Lot 1b-2 (DHCP) : architecture validée avec le 1b-1, pas commencé. Ne pas oublier l'état INIT-REBOOT (bail du poste sauvegardé).
