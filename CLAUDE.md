@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Projet
 
-NetCraft est un mod Minecraft (NeoForge) de simulation de réseau informatique réaliste, « un Packet Tracer en blocs ». Lots faits : 0 (tour PC, PC portable) et 1a (cordon Ethernet, ports, indicateur d'état, moteur réseau).
+NetCraft est un mod Minecraft (NeoForge) de simulation de réseau informatique réaliste, « un Packet Tracer en blocs ». Lots faits : 0 (tour PC, PC portable), 1a (cordon Ethernet, ports, indicateur d'état, moteur réseau) et 1b-1 (box internet, adresses MAC, commutation).
 
 À lire en début de session :
 - `docs/plan-lots.md` : plan par lots, état de chaque lot, décisions à trancher, procédures de test en jeu ;
@@ -25,6 +25,7 @@ Code, commentaires, messages de commit et textes en français ; identifiants (cl
 ./gradlew build test   # compile, puis tests JUnit du moteur (Java pur, sans lancer le jeu)
 ./gradlew runClient    # client de dev, monde de test « Netcraft » (créatif, superflat)
 ./gradlew runServer    # serveur dédié sans interface
+./gradlew runGameTestServer  # tests en jeu automatiques (src/gametest), monde jetable run-gametest/
 ```
 
 ## Façon de travailler

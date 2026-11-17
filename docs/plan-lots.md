@@ -172,6 +172,41 @@ Architecture retenue :
 - Trame de présence : **échafaudage, à retirer au lot 1c** quand le DHCP et l'ARP produiront du vrai trafic. Un poste diffuse une trame de type 0x88B5 (type expérimental IEEE) au branchement de son câble puis toutes les 30 s, pour que la box apprenne sa MAC avant que le DHCP existe.
 - 1b-2 : client DHCP du poste selon la RFC 2131 (DISCOVER, OFFER, REQUEST, ACK avec un identifiant de transaction ; renouvellement à 50 % du bail, puis à 87,5 % en diffusion). Un poste qui avait une adresse avant un redémarrage du serveur redemande directement son ancienne adresse (état INIT-REBOOT) : son bail est donc sauvegardé. Plage 192.168.1.10 à 192.168.1.200 en /24, box en 192.168.1.1 (passerelle et serveur de noms), bail d'un jour de jeu (24 000 ticks), la box se souvient de l'adresse prêtée à chaque MAC. Deux serveurs DHCP sur le même réseau : l'indicateur signale le conflit.
 
+#### État du lot 1b-1
+
+Codé du 2026-11-17 au 2026-11-18 sur la branche `developement`, validé par Max le 2026-11-18. Tests unitaires et tests en jeu automatiques au vert, vérification à l'œil faite (panneau d'état, câbles dessinés, messages).
+
+| Type | Équipement | État |
+|---|---|---|
+| Bloc | Box internet | Fait : 4 ports réseau local et 1 arrivée de ligne inactive, modèle 7 x 7 x 3 px, texture provisoire |
+| Mécanique | Adresse matérielle | Fait : une MAC par port, sauvegardée, compatible avec les mondes du lot 1a |
+| Mécanique | Commutation | Fait : apprentissage, diffusion, expiration à 300 s, oubli au retrait du câble, protection contre les boucles |
+| Mécanique | Indicateur d'état | Fait : MAC du poste ; pour la box, la MAC apprise derrière chaque port |
+
+Limites connues, à reprendre plus tard :
+
+- Messages : le journal du serveur est en français, le chat suit la langue du client ; une boucle produit deux messages, un par box. À revoir dans le module des messages, avant le 1b-2.
+- Le câble part du centre du dessus de l'appareil, pas du port où il est branché.
+- Traces temporaires `[ESSAI 1b-1]` (niveau DEBUG, `run/logs/debug.log`) encore présentes : à retirer.
+- Non vus à l'œil, à regarder à la prochaine vérification : le portable au bout du câble de 99 blocs, 2 MAC sur le même port (décor « chaine »), le panneau et les messages avec le jeu en français.
+
+Méthode de test (depuis le lot 1b-1) : la logique est prouvée par des tests automatiques ; les essais à la main ne servent plus qu'à ce qui demande des yeux. La sauvegarde de Max n'est jamais modifiée.
+
+1. `./gradlew build test` : compilation (jeu de sources `gametest` compris) et tests unitaires du moteur, en Java pur.
+2. `./gradlew runGameTestServer` : tests en jeu automatiques, sans fenêtre, dans un monde jetable (`run-gametest/`, ignoré par git). Le résultat est en fin de `run-gametest/logs/latest.log` (« All N required tests passed »). Ils couvrent : cordon dont le départ est cassé ou détruit par une explosion (créatif et survie, compte des cordons), changement de dimension et déconnexion pendant un branchement en attente, ports pleins, expiration des MAC (bornes exactes), sauvegarde et relecture du réseau, boucle signalée une fois par minute (écart exact de 1 200 ticks, lot à part car il touche les limites globales du moteur), construction de chaque décor d'essai, refus de `/netcraft test` hors d'un monde d'essai.
+3. Vérification à l'œil avec `/netcraft test <décor>` : `./gradlew runClient`, monde créatif dont le nom commence par « Essais » (la commande est refusée ailleurs ; elle n'existe qu'en développement et seulement pour les opérateurs). Se placer face à un terrain dégagé : le décor est construit 3 blocs devant soi, tourné vers soi, et refusé si la zone n'est pas vide. Viser chaque appareil avant la capture (F2) pour afficher son panneau. `/netcraft test effacer` retire le dernier décor.
+
+| Décor | À regarder |
+|---|---|
+| `box` | Panneau : ports 1 à 4 libres, port 5 (ligne) inactif ; façade tournée vers le joueur |
+| `box_postes` | Câbles vers 3 postes ; panneau de la box : 3 ports connectés avec la MAC apprise, port 4 libre ; panneau d'un poste : sa MAC |
+| `chaine` | Chaque box montre son poste et ceux de l'autre box ; port 1 de la box de gauche : 2 MAC |
+| `boucle` | Message de boucle dans le chat, de nouveau une minute de jeu plus tard |
+| `ports_pleins` | Cordon en main, clic droit sur la box : « aucun port libre » au-dessus de la barre d'objets |
+| `distance` | Câble de 99 blocs dessiné sur toute sa longueur ; les deux bouts « connecté » (aller jusqu'au second bout pour le viser) |
+
+Les captures vont dans `run/screenshots`, les messages dans `run/logs/latest.log`, les traces de diagnostic dans `run/logs/debug.log`.
+
 ### 1c : écran sur le poste et commande ping
 
 | Type | Équipement | Rôle |
