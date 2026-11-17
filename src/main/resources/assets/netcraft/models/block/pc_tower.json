@@ -1,0 +1,407 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "minecraft:block/gray_concrete",
+    "body": "minecraft:block/gray_concrete",
+    "dark": "minecraft:block/black_concrete",
+    "light": "minecraft:block/light_gray_concrete"
+  },
+  "elements": [
+    {
+      "name": "boitier",
+      "from": [
+        4,
+        1,
+        1
+      ],
+      "to": [
+        12,
+        15,
+        15
+      ],
+      "faces": {
+        "north": {
+          "texture": "#body"
+        },
+        "east": {
+          "texture": "#body"
+        },
+        "south": {
+          "texture": "#body"
+        },
+        "west": {
+          "texture": "#body"
+        },
+        "up": {
+          "texture": "#body"
+        },
+        "down": {
+          "texture": "#body"
+        }
+      }
+    },
+    {
+      "name": "pied_avant_gauche",
+      "from": [
+        4.5,
+        0,
+        2
+      ],
+      "to": [
+        6,
+        1,
+        4
+      ],
+      "faces": {
+        "north": {
+          "texture": "#dark"
+        },
+        "east": {
+          "texture": "#dark"
+        },
+        "south": {
+          "texture": "#dark"
+        },
+        "west": {
+          "texture": "#dark"
+        },
+        "up": {
+          "texture": "#dark"
+        },
+        "down": {
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "pied_avant_droit",
+      "from": [
+        10,
+        0,
+        2
+      ],
+      "to": [
+        11.5,
+        1,
+        4
+      ],
+      "faces": {
+        "north": {
+          "texture": "#dark"
+        },
+        "east": {
+          "texture": "#dark"
+        },
+        "south": {
+          "texture": "#dark"
+        },
+        "west": {
+          "texture": "#dark"
+        },
+        "up": {
+          "texture": "#dark"
+        },
+        "down": {
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "pied_arriere_gauche",
+      "from": [
+        4.5,
+        0,
+        12
+      ],
+      "to": [
+        6,
+        1,
+        14
+      ],
+      "faces": {
+        "north": {
+          "texture": "#dark"
+        },
+        "east": {
+          "texture": "#dark"
+        },
+        "south": {
+          "texture": "#dark"
+        },
+        "west": {
+          "texture": "#dark"
+        },
+        "up": {
+          "texture": "#dark"
+        },
+        "down": {
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "pied_arriere_droit",
+      "from": [
+        10,
+        0,
+        12
+      ],
+      "to": [
+        11.5,
+        1,
+        14
+      ],
+      "faces": {
+        "north": {
+          "texture": "#dark"
+        },
+        "east": {
+          "texture": "#dark"
+        },
+        "south": {
+          "texture": "#dark"
+        },
+        "west": {
+          "texture": "#dark"
+        },
+        "up": {
+          "texture": "#dark"
+        },
+        "down": {
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "facade",
+      "from": [
+        4.5,
+        1.5,
+        0.5
+      ],
+      "to": [
+        11.5,
+        14.5,
+        1
+      ],
+      "faces": {
+        "north": {
+          "texture": "#dark"
+        },
+        "east": {
+          "texture": "#dark"
+        },
+        "south": {
+          "texture": "#dark"
+        },
+        "west": {
+          "texture": "#dark"
+        },
+        "up": {
+          "texture": "#dark"
+        },
+        "down": {
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "bouton_power",
+      "from": [
+        7.5,
+        13,
+        0.25
+      ],
+      "to": [
+        8.5,
+        14,
+        0.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#light"
+        },
+        "east": {
+          "texture": "#light"
+        },
+        "south": {
+          "texture": "#light"
+        },
+        "west": {
+          "texture": "#light"
+        },
+        "up": {
+          "texture": "#light"
+        },
+        "down": {
+          "texture": "#light"
+        }
+      }
+    },
+    {
+      "name": "lecteur",
+      "from": [
+        5,
+        11,
+        0.25
+      ],
+      "to": [
+        11,
+        12,
+        0.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#light"
+        },
+        "east": {
+          "texture": "#light"
+        },
+        "south": {
+          "texture": "#light"
+        },
+        "west": {
+          "texture": "#light"
+        },
+        "up": {
+          "texture": "#light"
+        },
+        "down": {
+          "texture": "#light"
+        }
+      }
+    },
+    {
+      "name": "ports_usb",
+      "from": [
+        5.5,
+        3,
+        0.25
+      ],
+      "to": [
+        8,
+        3.5,
+        0.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#light"
+        },
+        "east": {
+          "texture": "#light"
+        },
+        "south": {
+          "texture": "#light"
+        },
+        "west": {
+          "texture": "#light"
+        },
+        "up": {
+          "texture": "#light"
+        },
+        "down": {
+          "texture": "#light"
+        }
+      }
+    },
+    {
+      "name": "alimentation",
+      "from": [
+        5,
+        11,
+        15
+      ],
+      "to": [
+        11,
+        14.5,
+        15.25
+      ],
+      "faces": {
+        "north": {
+          "texture": "#dark"
+        },
+        "east": {
+          "texture": "#dark"
+        },
+        "south": {
+          "texture": "#dark"
+        },
+        "west": {
+          "texture": "#dark"
+        },
+        "up": {
+          "texture": "#dark"
+        },
+        "down": {
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "prise_secteur",
+      "from": [
+        6,
+        12,
+        15.25
+      ],
+      "to": [
+        8,
+        13.5,
+        15.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#light"
+        },
+        "east": {
+          "texture": "#light"
+        },
+        "south": {
+          "texture": "#light"
+        },
+        "west": {
+          "texture": "#light"
+        },
+        "up": {
+          "texture": "#light"
+        },
+        "down": {
+          "texture": "#light"
+        }
+      }
+    },
+    {
+      "name": "port_rj45",
+      "from": [
+        6,
+        6,
+        15
+      ],
+      "to": [
+        7.5,
+        7.5,
+        15.25
+      ],
+      "faces": {
+        "north": {
+          "texture": "#light"
+        },
+        "east": {
+          "texture": "#light"
+        },
+        "south": {
+          "texture": "#light"
+        },
+        "west": {
+          "texture": "#light"
+        },
+        "up": {
+          "texture": "#light"
+        },
+        "down": {
+          "texture": "#light"
+        }
+      }
+    }
+  ]
+}

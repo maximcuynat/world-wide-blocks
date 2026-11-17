@@ -6,9 +6,9 @@
 - [x] JDK 25 : téléchargé automatiquement par Gradle au premier build (toolchain foojay), le Java 17 Homebrew suffit pour lancer Gradle 9.2.1
 - [x] Générer le projet depuis le modèle officiel MDK-26.3-ModDevGradle
 - [x] Renseigner l'identité du mod (id `netcraft`, package `dev.netcraft`, nom NetCraft, version 0.1.0)
-- [ ] Initialiser git : bloqué dans le bac à sable de Claude (lecture de ~/.gitconfig refusée). À lancer par Max : `git init -b main`
-- [ ] `./gradlew build` passe : NON VÉRIFIÉ, Gradle ne peut pas ouvrir de socket local dans le bac à sable de Claude. À lancer par Max.
-- [ ] Le jeu se lance avec le mod chargé (`./gradlew runClient`, à vérifier par Max)
+- [x] Initialiser git et pousser sur le dépôt privé https://github.com/maximcuynat/netcraft (commit 41eadcb, lancé par Max)
+- [x] `./gradlew build` passe : BUILD SUCCESSFUL en 3 min 53 s, `build/libs/netcraft-0.1.0.jar` produit (lancé par Max, Gradle ne peut pas ouvrir de socket local dans le bac à sable de Claude)
+- [x] Le jeu se lance via `./gradlew runClient` (confirmé par Max le 2026-11-17). Monde de test : « Netcraft », créatif, superflat Redstone Ready. Présence de NetCraft dans l'écran Mods non confirmée explicitement.
 
 ## Étape 2 : session de questions (à faire après l'étape 1)
 
