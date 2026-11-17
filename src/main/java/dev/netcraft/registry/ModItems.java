@@ -10,6 +10,8 @@ public final class ModItems {
 
     public static final DeferredItem<BlockItem> PC_TOWER = ITEMS.registerSimpleBlockItem("pc_tower", ModBlocks.PC_TOWER);
 
+    public static final DeferredItem<BlockItem> LAPTOP = ITEMS.registerSimpleBlockItem("laptop", ModBlocks.LAPTOP);
+
     private ModItems() {
     }
 }

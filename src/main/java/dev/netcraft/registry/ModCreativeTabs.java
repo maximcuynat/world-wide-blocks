@@ -13,7 +13,10 @@ public final class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> NETCRAFT = CREATIVE_MODE_TABS.register("netcraft", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.netcraft"))
             .icon(() -> ModItems.PC_TOWER.get().getDefaultInstance())
-            .displayItems((parameters, output) -> output.accept(ModItems.PC_TOWER.get()))
+            .displayItems((parameters, output) -> {
+                output.accept(ModItems.PC_TOWER.get());
+                output.accept(ModItems.LAPTOP.get());
+            })
             .build());
 
     private ModCreativeTabs() {

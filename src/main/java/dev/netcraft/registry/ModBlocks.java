@@ -1,6 +1,7 @@
 package dev.netcraft.registry;
 
 import dev.netcraft.NetCraft;
+import dev.netcraft.block.LaptopBlock;
 import dev.netcraft.block.PcTowerBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.material.MapColor;
@@ -12,6 +13,9 @@ public final class ModBlocks {
 
     public static final DeferredBlock<PcTowerBlock> PC_TOWER = BLOCKS.registerBlock("pc_tower", PcTowerBlock::new,
             p -> p.mapColor(MapColor.COLOR_GRAY).strength(2.0F).sound(SoundType.METAL).noOcclusion());
+
+    public static final DeferredBlock<LaptopBlock> LAPTOP = BLOCKS.registerBlock("laptop", LaptopBlock::new,
+            p -> p.mapColor(MapColor.METAL).strength(1.0F).sound(SoundType.METAL).noOcclusion());
 
     private ModBlocks() {
     }

@@ -1,4 +1,6 @@
 {
   "itemGroup.netcraft": "NetCraft",
-  "block.netcraft.pc_tower": "Tour PC"
+  "block.netcraft.pc_tower": "Tour PC",
+  "block.netcraft.laptop": "PC portable",
+  "block.netcraft.laptop": "PC portable"
 }
