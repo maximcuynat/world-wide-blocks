@@ -30,6 +30,7 @@ Code, commentaires, messages de commit et textes en français ; identifiants (cl
 
 ## Façon de travailler
 
+- Toujours répondre à Max en français.
 - Branche `developement` uniquement. Rien vers `main` sans l'accord de Max.
 - Petits commits, un par étape logique.
 - Le bac à sable de Claude Code ne peut pas lancer Gradle : c'est Max qui lance les builds et les essais en jeu (préfixe `!`) et rapporte le résultat. Ne jamais annoncer un build ou un essai comme réussi sans ce retour.
