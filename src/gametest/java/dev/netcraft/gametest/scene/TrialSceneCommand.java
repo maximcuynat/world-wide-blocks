@@ -106,9 +106,17 @@ public final class TrialSceneCommand {
         return 1;
     }
 
+    /**
+     * Règle des mondes d'essai : le nom commence par {@value #TRIAL_WORLD_PREFIX}, majuscule comprise.
+     * « Essais 1b-1 » est accepté ; « Netcraft », « Mes Essais » et « essais » sont refusés.
+     */
+    public static boolean isTrialWorldName(String name) {
+        return name.startsWith(TRIAL_WORLD_PREFIX);
+    }
+
     private static boolean isTrialWorld(CommandSourceStack source) {
         String name = source.getServer().getWorldData().getLevelName();
-        if (name.startsWith(TRIAL_WORLD_PREFIX)) {
+        if (isTrialWorldName(name)) {
             return true;
         }
         source.sendFailure(Component.literal("Commande réservée aux mondes d'essai : ce monde s'appelle « " + name

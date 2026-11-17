@@ -1,21 +1,33 @@
 package dev.netcraft.gametest;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+
+import dev.netcraft.gametest.scene.TrialSceneCommand;
 import dev.netcraft.gametest.scene.TrialScenario;
 import dev.netcraft.gametest.scene.TrialScenes;
 import dev.netcraft.network.DeviceId;
 import dev.netcraft.network.Link;
 import dev.netcraft.network.NetworkDevices;
+import net.minecraft.commands.CommandSource;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.permissions.LevelBasedPermissionSet;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 
 /**
  * Tests en jeu des décors de {@code /netcraft test} : chaque décor se construit avec ses appareils
- * enregistrés, tournés vers le joueur et câblés, et un second décor au même endroit est refusé.
+ * enregistrés, tournés vers le joueur et câblés, et un second décor au même endroit est refusé. La
+ * commande elle-même refuse de construire hors d'un monde d'essai.
  */
 final class SceneTests {
     private SceneTests() {
@@ -45,6 +57,68 @@ final class SceneTests {
         TrialScenes.Result again = TrialScenes.build(helper.getLevel(), scenario, origin, forward);
         helper.assertTrue(again.refusal().isPresent() && again.devices().isEmpty(),
                 "Un second décor a été construit sur le premier");
+        helper.succeed();
+    }
+
+    /**
+     * Règle du nom de monde, puis la vraie commande sur le serveur de tests, dont le monde ne s'appelle
+     * pas « Essais… » : refus avec un message, aucun bloc posé.
+     */
+    static void commandRefusedOutsideTrialWorld(GameTestHelper helper) {
+        helper.assertTrue(TrialSceneCommand.isTrialWorldName("Essais 1b-1"), "« Essais 1b-1 » doit être un monde d'essai");
+        helper.assertTrue(TrialSceneCommand.isTrialWorldName("Essais"), "« Essais » doit être un monde d'essai");
+        helper.assertFalse(TrialSceneCommand.isTrialWorldName("Netcraft"), "« Netcraft » ne doit pas être un monde d'essai");
+        helper.assertFalse(TrialSceneCommand.isTrialWorldName("Mes Essais"), "« Mes Essais » ne doit pas être un monde d'essai");
+        helper.assertFalse(TrialSceneCommand.isTrialWorldName("essais 1b-1"), "« essais 1b-1 » ne doit pas être un monde d'essai");
+
+        MinecraftServer server = helper.getLevel().getServer();
+        String worldName = server.getWorldData().getLevelName();
+        helper.assertFalse(TrialSceneCommand.isTrialWorldName(worldName),
+                "Le monde du serveur de tests s'appelle « " + worldName + " » : le test suppose un monde hors essai");
+
+        NetworkScene scene = NetworkScene.of(helper);
+        TestPlayer player = scene.player(GameType.CREATIVE);
+        BlockPos wouldBeBox = player.blockPosition().relative(player.getDirection(), TrialScenes.DISTANCE_FROM_PLAYER);
+        List<Component> received = new ArrayList<>();
+        CommandSource capture = new CommandSource() {
+            @Override
+            public void sendSystemMessage(Component message) {
+                received.add(message);
+            }
+
+            @Override
+            public boolean acceptsSuccess() {
+                return true;
+            }
+
+            @Override
+            public boolean acceptsFailure() {
+                return true;
+            }
+
+            @Override
+            public boolean shouldInformAdmins() {
+                return false;
+            }
+        };
+        // Opérateur, pour que seul le nom du monde puisse refuser la commande.
+        CommandSourceStack source = player.createCommandSourceStack()
+                .withPermission(LevelBasedPermissionSet.OWNER)
+                .withSource(capture);
+
+        int result;
+        try {
+            result = server.getCommands().getDispatcher().execute("netcraft test box", source);
+        } catch (CommandSyntaxException e) {
+            throw helper.assertionException(Component.literal("Commande non reconnue : " + e.getMessage()));
+        }
+
+        helper.assertValueEqual(result, 0, "résultat de la commande");
+        helper.assertValueEqual(received.size(), 1, "messages reçus");
+        String message = received.get(0).getString();
+        helper.assertTrue(message.contains(worldName) && message.contains(TrialSceneCommand.TRIAL_WORLD_PREFIX),
+                "Message de refus inattendu : " + message);
+        helper.assertTrue(helper.getLevel().isEmptyBlock(wouldBeBox), "Un bloc a été posé malgré le refus en " + wouldBeBox);
         helper.succeed();
     }
 }

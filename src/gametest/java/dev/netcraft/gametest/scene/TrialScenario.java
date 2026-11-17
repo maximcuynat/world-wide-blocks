@@ -22,11 +22,15 @@ public enum TrialScenario {
             List.of(device(0, 0, ModBlocks.INTERNET_BOX::get), device(-3, 3, ModBlocks.PC_TOWER::get),
                     device(0, 4, ModBlocks.LAPTOP::get), device(3, 3, ModBlocks.PC_TOWER::get)),
             List.of(cable(0, 1), cable(0, 2), cable(0, 3))),
-    /** Deux box reliées, un poste sur chacune : chaque box apprend aussi le poste de l'autre. */
-    CHAINE("chaine", "deux box reliées, un poste sur chacune",
+    /**
+     * Deux box reliées, un poste sur celle de gauche et deux sur celle de droite : chaque box apprend
+     * aussi les postes de l'autre, et le port 1 de la box de gauche porte 2 MAC (lisibilité du panneau).
+     */
+    CHAINE("chaine", "deux box reliées, un poste à gauche, deux à droite",
             List.of(device(-3, 0, ModBlocks.INTERNET_BOX::get), device(3, 0, ModBlocks.INTERNET_BOX::get),
-                    device(-3, 3, ModBlocks.PC_TOWER::get), device(3, 3, ModBlocks.LAPTOP::get)),
-            List.of(cable(0, 1), cable(0, 2), cable(1, 3))),
+                    device(-3, 3, ModBlocks.PC_TOWER::get), device(3, 3, ModBlocks.LAPTOP::get),
+                    device(6, 3, ModBlocks.PC_TOWER::get)),
+            List.of(cable(0, 1), cable(0, 2), cable(1, 3), cable(1, 4))),
     /** Deux box reliées par deux câbles, un poste : message de boucle dans le chat, une fois par minute. */
     BOUCLE("boucle", "deux box reliées par deux câbles, un poste",
             List.of(device(-3, 0, ModBlocks.INTERNET_BOX::get), device(3, 0, ModBlocks.INTERNET_BOX::get),
