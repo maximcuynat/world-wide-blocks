@@ -157,6 +157,21 @@ Jouable à la fin : chaque poste branché à la box affiche son adresse dans l'i
 
 La box a aussi un port d'arrivée de ligne, inactif jusqu'au lot 3.
 
+Le lot est coupé en deux sous-lots (architecture validée par Max le 2026-11-17) :
+
+- **1b-1 : box, adresses MAC et commutation.** Jouable : deux postes branchés à la box, la box affiche quelle MAC est derrière quel port.
+- **1b-2 : DHCP.** Jouable : chaque poste obtient son adresse par un vrai échange DHCP et l'affiche avec l'état de son bail.
+
+Architecture retenue :
+
+- Trames en couches (`network/protocol/`) : une trame Ethernet porte une MAC source, une MAC destination (ou la diffusion), un type et un contenu typé. IPv4 (0x0800), puis UDP et DHCP, ARP (type officiel 0x0806) et ICMP s'y ajoutent chacun comme une variante de la couche du dessous.
+- Une MAC par port, premier octet `02` (adresse administrée localement), unique dans le monde et sauvegardée ; un appareil cassé puis reposé en reçoit de nouvelles. Chaque port a un type : Ethernet ou arrivée de ligne. Le cordon Ethernet prend le premier port réseau local libre ; le choix du port viendra au lot 3.
+- Simulation (`network/sim/`) : file de livraison traitée à chaque tick du serveur, minuteries, point d'écoute sur chaque trame entrante ou sortante (pour un futur analyseur), horloge sur le temps de jeu. Elle tourne même quand les chunks ne sont pas chargés.
+- Commutation (`network/switching/`) : apprentissage des MAC sur les trames reçues, diffusion si la destination est inconnue ou adressée à tous, expiration des entrées après 300 s de jeu (valeur recommandée par IEEE 802.1D), oubli immédiat quand le câble est retiré. La box est ce switch plus un point local, sur lequel se branchera son propre service (DHCP au 1b-2) ; le switch de bureau du lot 1d sera le même switch, sans point local.
+- Protection contre les boucles, en attendant le STP du lot 8b : une trame diffusée qui revient à un switch qu'elle a déjà traversé est supprimée et signalée (log, et message aux joueurs à moins de 32 blocs, au plus un par minute et par appareil). Filet de sécurité : 10 000 trames traitées par tick au plus, 50 000 en file.
+- Trame de présence : **échafaudage, à retirer au lot 1c** quand le DHCP et l'ARP produiront du vrai trafic. Un poste diffuse une trame de type 0x88B5 (type expérimental IEEE) au branchement de son câble puis toutes les 30 s, pour que la box apprenne sa MAC avant que le DHCP existe.
+- 1b-2 : client DHCP du poste selon la RFC 2131 (DISCOVER, OFFER, REQUEST, ACK avec un identifiant de transaction ; renouvellement à 50 % du bail, puis à 87,5 % en diffusion). Un poste qui avait une adresse avant un redémarrage du serveur redemande directement son ancienne adresse (état INIT-REBOOT) : son bail est donc sauvegardé. Plage 192.168.1.10 à 192.168.1.200 en /24, box en 192.168.1.1 (passerelle et serveur de noms), bail d'un jour de jeu (24 000 ticks), la box se souvient de l'adresse prêtée à chaque MAC. Deux serveurs DHCP sur le même réseau : l'indicateur signale le conflit.
+
 ### 1c : écran sur le poste et commande ping
 
 | Type | Équipement | Rôle |

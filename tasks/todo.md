@@ -21,7 +21,18 @@ Le découpage complet (lots, équipements, dépendances) est dans `docs/plan-lot
 
 Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
 
-- [x] Lot 1a (câble et branchement) : codé et validé en jeu le 2026-11-17 (procédure dans `docs/plan-lots.md`). Prochain : lot 1b, pas commencé.
+- [x] Lot 1a (câble et branchement) : codé et validé en jeu le 2026-11-17 (procédure dans `docs/plan-lots.md`).
+- [x] Principe « vrais échanges de protocoles » dans `docs/plan-lots.md` et `CLAUDE.md` (commit 132fbc6).
+- [ ] Lot 1b-1 (box, MAC, commutation) : architecture validée par Max le 2026-11-17 (résumé dans `docs/plan-lots.md`, lot 1b). Étapes, un commit chacune :
+  - [ ] Ports typés (Ethernet, ligne) et MAC par port dans le graphe, sauvegarde compatible avec les mondes du lot 1a, tests
+  - [ ] Couche trames : `MacAddress`, `EtherType`, `EthernetFrame`, contenu typé, tests
+  - [ ] Commutation réutilisable : table d'apprentissage avec expiration, décision de transfert, tests
+  - [ ] Simulation : file de livraison, minuteries, point d'écoute, détection de boucle et limite par tick, logique du poste et de la box, tests
+  - [ ] Branchement Minecraft : tick serveur, événements de câble, message de boucle
+  - [ ] Bloc box internet (modèle 7 x 7 x 3 px, texture provisoire, ressources)
+  - [ ] Indicateur : MAC du poste, MAC apprises par la box (paquet d'état)
+  - [ ] Procédure de test en jeu et état du lot dans `docs/plan-lots.md`
+- [ ] Lot 1b-2 (DHCP) : architecture validée avec le 1b-1, pas commencé. Ne pas oublier l'état INIT-REBOOT (bail du poste sauvegardé).
 
 ## Tests multijoueur (à faire plus tard, non prioritaire)
 
