@@ -3,6 +3,7 @@ package dev.netcraft.block;
 import java.util.List;
 import java.util.Map;
 
+import dev.netcraft.network.DeviceRole;
 import dev.netcraft.network.PortKind;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -41,7 +42,7 @@ public class LaptopBlock extends NetworkDeviceBlock {
     private static final Map<Direction, VoxelShape> OPEN_SHAPES = Shapes.rotateHorizontal(OPEN_NORTH);
 
     public LaptopBlock(BlockBehaviour.Properties properties) {
-        super(properties, PORTS);
+        super(properties, DeviceRole.HOST, PORTS);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(OPEN, true));
     }
 

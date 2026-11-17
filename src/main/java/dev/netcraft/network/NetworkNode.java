@@ -1,26 +1,31 @@
 package dev.netcraft.network;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Appareil connu du moteur réseau. Il est enregistré à la pose du bloc et existe même quand
- * son chunk n'est pas chargé : le moteur sait ainsi quels ports il a sans charger le monde.
+ * son chunk n'est pas chargé : le moteur sait ainsi quels ports il a et comment il se comporte
+ * sans charger le monde.
  *
- * <p>Ce record décrit ce que le bloc déclare (type et ports). Il est reconstruit depuis le bloc puis
- * comparé à celui du moteur : il ne porte donc pas les adresses MAC, que le graphe attribue et garde à part.
+ * <p>Ce record décrit ce que le bloc déclare (type, rôle et ports). Il est reconstruit depuis le bloc
+ * puis comparé à celui du moteur : il ne porte donc pas les adresses MAC, que le graphe attribue et
+ * garde à part.
  *
  * @param deviceType identifiant du bloc, par exemple {@code netcraft:pc_tower}
+ * @param role       comportement de l'appareil dans la simulation
  * @param ports      type de chaque port, dans l'ordre des numéros de port
  */
-public record NetworkNode(DeviceId id, String deviceType, List<PortKind> ports) {
+public record NetworkNode(DeviceId id, String deviceType, DeviceRole role, List<PortKind> ports) {
 
     public NetworkNode {
+        Objects.requireNonNull(role, "role");
         ports = List.copyOf(ports);
     }
 
-    /** Appareil dont tous les ports sont des prises Ethernet. */
+    /** Poste dont tous les ports sont des prises Ethernet. */
     public NetworkNode(DeviceId id, String deviceType, int ethernetPorts) {
-        this(id, deviceType, PortKind.ethernet(ethernetPorts));
+        this(id, deviceType, DeviceRole.HOST, PortKind.ethernet(ethernetPorts));
     }
 
     public int portCount() {

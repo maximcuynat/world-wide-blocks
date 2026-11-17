@@ -3,6 +3,7 @@ package dev.netcraft.block;
 import java.util.List;
 import java.util.Map;
 
+import dev.netcraft.network.DeviceRole;
 import dev.netcraft.network.PortKind;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -28,7 +29,7 @@ public class PcTowerBlock extends NetworkDeviceBlock {
     private static final Map<Direction.Axis, VoxelShape> SHAPES = Shapes.rotateHorizontalAxis(Block.boxZ(8.0, 0.0, 15.0, 1.0, 15.0));
 
     public PcTowerBlock(BlockBehaviour.Properties properties) {
-        super(properties, PORTS);
+        super(properties, DeviceRole.HOST, PORTS);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
 

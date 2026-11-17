@@ -3,6 +3,7 @@ package dev.netcraft.block;
 import java.util.List;
 
 import dev.netcraft.item.EthernetCableItem;
+import dev.netcraft.network.DeviceRole;
 import dev.netcraft.network.NetworkDevice;
 import dev.netcraft.network.NetworkDevices;
 import dev.netcraft.network.PortKind;
@@ -26,11 +27,18 @@ import net.minecraft.world.phys.BlockHitResult;
  * ({@link #useDevice}).
  */
 public abstract class NetworkDeviceBlock extends HorizontalDirectionalBlock implements NetworkDevice {
+    private final DeviceRole role;
     private final List<PortKind> ports;
 
-    protected NetworkDeviceBlock(BlockBehaviour.Properties properties, List<PortKind> ports) {
+    protected NetworkDeviceBlock(BlockBehaviour.Properties properties, DeviceRole role, List<PortKind> ports) {
         super(properties);
+        this.role = role;
         this.ports = List.copyOf(ports);
+    }
+
+    @Override
+    public DeviceRole role() {
+        return this.role;
     }
 
     @Override

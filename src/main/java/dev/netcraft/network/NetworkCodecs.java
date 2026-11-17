@@ -28,6 +28,12 @@ final class NetworkCodecs {
             Codec.INT.fieldOf("port").forGetter(PortRef::index)
     ).apply(i, PortRef::new));
 
+    static final Codec<DeviceRole> ROLE = Codec.STRING.comapFlatMap(
+            name -> DeviceRole.bySerializedName(name)
+                    .map(DataResult::success)
+                    .orElseGet(() -> DataResult.error(() -> "Rôle d'appareil inconnu : " + name)),
+            DeviceRole::serializedName);
+
     static final Codec<PortKind> PORT_KIND = Codec.STRING.comapFlatMap(
             name -> PortKind.bySerializedName(name)
                     .map(DataResult::success)
@@ -42,12 +48,13 @@ final class NetworkCodecs {
             MacAddress::toString);
 
     /**
-     * {@code port_kinds} et {@code macs} n'existent que depuis le lot 1b : ils sont facultatifs pour
+     * {@code role}, {@code port_kinds} et {@code macs} n'existent que depuis le lot 1b : ils sont facultatifs pour
      * relire les mondes plus anciens (voir {@link SavedNode#decode}).
      */
     static final Codec<SavedNode> NODE = RecordCodecBuilder.create(i -> i.group(
             DEVICE_ID.fieldOf("id").forGetter(saved -> saved.node().id()),
             Codec.STRING.fieldOf("type").forGetter(saved -> saved.node().deviceType()),
+            ROLE.optionalFieldOf("role").forGetter(saved -> Optional.of(saved.node().role())),
             Codec.INT.fieldOf("ports").forGetter(saved -> saved.node().portCount()),
             PORT_KIND.listOf().optionalFieldOf("port_kinds").forGetter(saved -> Optional.of(saved.node().ports())),
             MAC.listOf().optionalFieldOf("macs", List.of()).forGetter(SavedNode::macs)

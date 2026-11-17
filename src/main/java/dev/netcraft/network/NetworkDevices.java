@@ -37,7 +37,7 @@ public final class NetworkDevices {
             return Optional.empty();
         }
         String type = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
-        return Optional.of(new NetworkNode(idOf(level, pos), type, device.ports()));
+        return Optional.of(new NetworkNode(idOf(level, pos), type, device.role(), device.ports()));
     }
 
     /**

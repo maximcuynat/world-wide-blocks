@@ -277,7 +277,7 @@ class NetworkGraphTest {
     /** Box : 4 prises Ethernet puis l'arrivée de ligne. */
     private DeviceId box(int x, int y, int z) {
         DeviceId id = new DeviceId(OVERWORLD, x, y, z);
-        graph.putNode(new NetworkNode(id, "netcraft:internet_box",
+        graph.putNode(new NetworkNode(id, "netcraft:internet_box", DeviceRole.BOX,
                 List.of(PortKind.ETHERNET, PortKind.ETHERNET, PortKind.ETHERNET, PortKind.ETHERNET, PortKind.LINE)));
         return id;
     }

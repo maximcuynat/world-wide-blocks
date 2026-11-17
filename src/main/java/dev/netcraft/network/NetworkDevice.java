@@ -8,6 +8,9 @@ import java.util.List;
  */
 public interface NetworkDevice {
 
+    /** Comportement de l'appareil dans la simulation. */
+    DeviceRole role();
+
     /** Type de chaque port, dans l'ordre des numéros de port. */
     List<PortKind> ports();
 

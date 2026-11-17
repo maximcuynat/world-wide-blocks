@@ -18,10 +18,13 @@ record SavedNode(NetworkNode node, List<MacAddress> macs) {
     }
 
     /**
-     * Relit un appareil. Avant le lot 1b, seul le nombre de ports était écrit, et tous étaient des
-     * prises Ethernet ; depuis, le type de chaque port est écrit et fait foi.
+     * Relit un appareil. Avant le lot 1b, seul le nombre de ports était écrit : tous les appareils
+     * étaient des postes et tous leurs ports des prises Ethernet. Depuis, le rôle et le type de
+     * chaque port sont écrits et font foi.
      */
-    static SavedNode decode(DeviceId id, String type, int portCount, Optional<List<PortKind>> portKinds, List<MacAddress> macs) {
-        return new SavedNode(new NetworkNode(id, type, portKinds.orElseGet(() -> PortKind.ethernet(portCount))), macs);
+    static SavedNode decode(DeviceId id, String type, Optional<DeviceRole> role, int portCount,
+            Optional<List<PortKind>> portKinds, List<MacAddress> macs) {
+        return new SavedNode(new NetworkNode(id, type, role.orElse(DeviceRole.HOST),
+                portKinds.orElseGet(() -> PortKind.ethernet(portCount))), macs);
     }
 }

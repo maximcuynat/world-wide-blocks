@@ -27,7 +27,7 @@ Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
   - [x] Ports typés (Ethernet, ligne) et MAC par port dans le graphe, sauvegarde compatible avec les mondes du lot 1a, tests (53 tests au vert)
   - [x] Couche trames : `MacAddress`, `EtherType`, `EthernetFrame`, contenu typé, tests
   - [x] Commutation réutilisable : table d'apprentissage avec expiration, décision de transfert, tests (75 tests au vert)
-  - [ ] Simulation : file de livraison, minuteries, point d'écoute, détection de boucle et limite par tick, logique du poste et de la box, tests
+  - [x] Simulation : file de livraison, minuteries, point d'écoute, détection de boucle et limite par tick, logique du poste et de la box, rôle des appareils, tests (87 tests au vert)
   - [ ] Branchement Minecraft : tick serveur, événements de câble, message de boucle
   - [ ] Bloc box internet (modèle 7 x 7 x 3 px, texture provisoire, ressources)
   - [ ] Indicateur : MAC du poste, MAC apprises par la box (paquet d'état)
