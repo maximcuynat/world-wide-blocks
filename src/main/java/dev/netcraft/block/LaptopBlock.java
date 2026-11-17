@@ -21,7 +21,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * PC portable : 14 px de large, 10 px de profondeur. Un clic droit ouvre ou ferme l'écran.
+ * PC portable : 14 px de large, 10 px de profondeur. Un clic droit main vide ouvre ou ferme l'écran.
  * FACING désigne le côté où se tient l'utilisateur (le bord avant du clavier).
  */
 public class LaptopBlock extends NetworkDeviceBlock {
@@ -50,7 +50,7 @@ public class LaptopBlock extends NetworkDeviceBlock {
     }
 
     @Override
-    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
+    protected InteractionResult useDevice(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         level.setBlock(pos, state.cycle(OPEN), Block.UPDATE_CLIENTS);
         return InteractionResult.SUCCESS;
     }

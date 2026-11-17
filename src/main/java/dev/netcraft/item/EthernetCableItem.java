@@ -14,6 +14,7 @@ import dev.netcraft.network.NetworkManager;
 import dev.netcraft.network.NetworkNode;
 import dev.netcraft.network.PortRef;
 import dev.netcraft.registry.ModDataComponents;
+import dev.netcraft.registry.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
@@ -29,8 +30,9 @@ import net.minecraft.world.level.Level;
 
 /**
  * Cordon Ethernet : un clic droit sur un appareil, puis un clic droit sur un autre, les relie.
- * Accroupi + clic droit sur un appareil : débranche son câble. Accroupi + clic droit dans le vide :
- * annule un branchement commencé.
+ * Accroupi + clic droit sur un appareil, cordon en main : débranche son câble des deux bouts.
+ * Accroupi + clic droit main vide : retire un seul bout et le garde en main (voir {@link #takeCableEnd}).
+ * Accroupi + clic droit dans le vide : annule un branchement commencé, ou range un bout tenu en main.
  *
  * <p>Toute la logique tourne sur le serveur ; le client se contente de confirmer le clic.
  */
@@ -147,22 +149,78 @@ public class EthernetCableItem extends Item {
                 String.format(Locale.ROOT, "%.1f", link.length())));
     }
 
+    /** Accroupi + clic droit, cordon en main : débranche les deux bouts et range le cordon. */
     private void unplug(ServerLevel level, Player player, NetworkNode node) {
+        Optional<Link> removed = disconnectFirst(level, node);
+        if (removed.isEmpty()) {
+            player.sendOverlayMessage(Component.translatable("message.netcraft.cable.nothing_to_unplug", NetworkDevices.displayName(node)));
+            return;
+        }
+        // Seul un câble qui a consommé un cordon en rend un.
+        if (removed.get().cableConsumed()) {
+            player.getInventory().placeItemBackInInventory(new ItemStack(this), Prediction.SERVER_ONLY);
+        }
+        player.sendOverlayMessage(Component.translatable("message.netcraft.cable.unplugged",
+                NetworkDevices.displayName(node), portOn(removed.get(), node).displayNumber()));
+    }
+
+    /**
+     * Accroupi + clic droit main vide sur un appareil : on retire de cet appareil le bout de son câble
+     * et on le garde en main, l'autre bout restant branché. Le cordon en main porte cette autre
+     * extrémité comme un branchement commencé : un clic droit sur un appareil le rebranche,
+     * accroupi + clic dans le vide le débranche aussi de l'autre bout et le range.
+     *
+     * <p>Un câble posé en créatif (sans cordon consommé) ne donne pas de cordon en survie : il est
+     * simplement débranché des deux bouts, sinon on fabriquerait des cordons gratuits.
+     */
+    public static void takeCableEnd(ServerLevel level, Player player, BlockPos pos) {
+        Optional<NetworkNode> node = NetworkDevices.validate(level, NetworkDevices.idOf(level, pos));
+        if (node.isEmpty()) {
+            return;
+        }
+        Optional<Link> removed = disconnectFirst(level, node.get());
+        if (removed.isEmpty()) {
+            player.sendOverlayMessage(Component.translatable("message.netcraft.cable.nothing_to_unplug", NetworkDevices.displayName(node.get())));
+            return;
+        }
+        Link link = removed.get();
+        PortRef here = portOn(link, node.get());
+        if (!link.cableConsumed() && !player.hasInfiniteMaterials()) {
+            player.sendOverlayMessage(Component.translatable("message.netcraft.cable.unplugged",
+                    NetworkDevices.displayName(node.get()), here.displayNumber()));
+            return;
+        }
+        PortRef other = link.otherEnd(here);
+        ItemStack cable = new ItemStack(ModItems.ETHERNET_CABLE.get());
+        GlobalPos otherDevice = GlobalPos.of(level.dimension(), NetworkDevices.posOf(other.device()));
+        cable.set(ModDataComponents.CABLE_START.get(), new CableStart(otherDevice, other.index()));
+        if (player.getMainHandItem().isEmpty()) {
+            player.setItemInHand(InteractionHand.MAIN_HAND, cable);
+        } else {
+            player.getInventory().placeItemBackInInventory(cable, Prediction.SERVER_ONLY);
+        }
+        Component otherName = NetworkManager.of(level.getServer()).node(other.device())
+                .map(NetworkDevices::displayName)
+                .orElse(Component.literal("?"));
+        player.sendOverlayMessage(Component.translatable("message.netcraft.cable.end_taken",
+                NetworkDevices.displayName(node.get()), otherName, other.displayNumber()));
+    }
+
+    /** Débranche le câble du premier port occupé de l'appareil. */
+    private static Optional<Link> disconnectFirst(ServerLevel level, NetworkNode node) {
         NetworkManager network = NetworkManager.of(level.getServer());
         for (int i = 0; i < node.portCount(); i++) {
-            PortRef port = node.port(i);
-            Optional<Link> removed = network.disconnect(port);
+            Optional<Link> removed = network.disconnect(node.port(i));
             if (removed.isPresent()) {
-                // Seul un câble qui a consommé un cordon en rend un.
-                if (removed.get().cableConsumed()) {
-                    player.getInventory().placeItemBackInInventory(new ItemStack(this), Prediction.SERVER_ONLY);
-                }
-                player.sendOverlayMessage(Component.translatable("message.netcraft.cable.unplugged",
-                        NetworkDevices.displayName(node), port.displayNumber()));
-                return;
+                return removed;
             }
         }
-        player.sendOverlayMessage(Component.translatable("message.netcraft.cable.nothing_to_unplug", NetworkDevices.displayName(node)));
+        return Optional.empty();
+    }
+
+    /** Extrémité du lien qui se trouve sur cet appareil. */
+    private static PortRef portOn(Link link, NetworkNode node) {
+        return link.a().device().equals(node.id()) ? link.a() : link.b();
     }
 
     private static Component result(ConnectResult result, double distance) {

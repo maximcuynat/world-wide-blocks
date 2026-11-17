@@ -33,7 +33,7 @@ Les dimensions réelles de chaque équipement sont dans `docs/equipements-reseau
 | Lot | Thème | Ce qui marche à la fin |
 |---|---|---|
 | 0 | Postes | Deux postes posables (fait, portable à tester en jeu) |
-| 1a | Câble et branchement | Deux postes reliés par un câble affichent « connecté » (fait, survie à confirmer) |
+| 1a | Câble et branchement | Deux postes reliés par un câble affichent « connecté » (fait) |
 | 1b | La box attribue les adresses | Chaque poste branché à la box reçoit une adresse |
 | 1c | Écran et commande ping | Depuis un poste, `ping` vers l'autre poste, qui répond |
 | 1d | Switch de bureau | Plus de postes que la box n'a de ports |
@@ -97,21 +97,22 @@ Contrainte technique à tenir dès ce sous-lot : un lien doit continuer d'existe
 
 #### État du lot 1a
 
-Codé le 2026-11-17 sur la branche `developement`. Build et 34 tests unitaires au vert, panneau d'état compris. Essais en jeu du même jour : branchement et câble visible jugés bons par Max ; d'après le log, le lien posé avant le redémarrage est toujours listé par `/netcraft liens` après relance du jeu, et encore listé depuis x ≈ 380, zone non chargée. Restent à confirmer par Max : l'aspect du panneau d'état en haut au centre et la consommation et la restitution du cordon en survie (étape 9).
+Codé le 2026-11-17 sur la branche `developement`. Build et 34 tests unitaires au vert, panneau d'état compris. Essais en jeu du même jour : branchement et câble visible jugés bons par Max ; d'après le log, le lien posé avant le redémarrage est toujours listé par `/netcraft liens` après relance du jeu, et encore listé depuis x ≈ 380, zone non chargée. Panneau d'état et consommation du cordon en survie validés par Max. Ajouté ensuite à sa demande : retirer un seul bout du câble main vide (étape 5), à vérifier en jeu avec l'étape 10.
 
 | Type | Équipement | État |
 |---|---|---|
 | Item | Cordon Ethernet | Fait, texture provisoire |
 | Mécanique | Port réseau | Fait : 1 port pour la tour et pour le portable |
-| Mécanique | Indicateur d'état | Fait : panneau en haut au centre, un voyant par port (à voir en jeu) |
+| Mécanique | Indicateur d'état | Fait : panneau en haut au centre, un voyant par port |
 | Rendu | Câble visible | Fait : ligne bleue légèrement affaissée, provisoire |
 
 Comportement retenu :
 
 - Clic droit avec le cordon sur un appareil, puis sur un autre : relie le premier port libre de chacun. Le cordon brille tant que le branchement est en attente. Au second clic, le serveur revérifie que la première extrémité existe toujours, est dans la même dimension et a son port libre.
-- Accroupi + clic droit sur un appareil, cordon en main : débranche son câble. Accroupi + clic droit dans le vide : annule un branchement commencé.
+- Accroupi + clic droit main vide sur un appareil branché : on retire le bout du câble de cet appareil et on le garde en main, l'autre bout reste branché (une ligne relie l'appareil à la main). Clic droit sur un autre appareil : le câble y est rebranché, sans consommer de nouveau cordon. Accroupi + clic dans le vide : le câble est débranché de l'autre bout aussi et rangé dans l'inventaire.
+- Accroupi + clic droit sur un appareil, cordon en main : débranche les deux bouts et range le cordon. Accroupi + clic droit dans le vide : annule un branchement commencé.
 - Refusés : plus de 100 blocs en ligne droite entre les centres des deux blocs, deux dimensions différentes, le même appareil aux deux bouts, un port déjà occupé.
-- Survie : le cordon est consommé au branchement. Il n'est rendu (au débranchement ou en tombant quand on casse un appareil) que si le lien en avait consommé un ; un lien posé en créatif ne rend rien.
+- Survie : le cordon est consommé au branchement. Il n'est rendu (au débranchement, en retirant un bout ou en tombant quand on casse un appareil) que si le lien en avait consommé un ; un lien posé en créatif ne rend rien en survie.
 - Les appareils refusent les pistons : le moteur les identifie par leur position.
 
 Socle technique pour les lots suivants :
@@ -136,11 +137,12 @@ Procédure de test en jeu :
 2. Poser une tour PC et un PC portable à une vingtaine de blocs l'un de l'autre. En visant chacun, le panneau en haut au centre affiche « Port 1 : libre » avec un voyant gris.
 3. Cordon en main, clic droit sur la tour (message « Extrémité 1 : Tour PC, port 1… », le cordon brille), puis clic droit sur le portable (message « Connecté… », l'écran du portable ne bascule pas). Un câble bleu relie les deux appareils ; en visant chacun, le panneau affiche « Port 1 : connecté » avec un voyant vert. `/netcraft liens` liste le lien.
 4. Accroupi + clic droit sur l'un des deux avec le cordon : message « port 1 débranché », le câble disparaît, les deux repassent à « libre ». Rebrancher.
-5. S'éloigner : `/tp ~400 ~ ~`. Taper `/netcraft liens` : le lien est toujours listé alors que sa zone n'est plus chargée. Revenir : `/tp ~-400 ~ ~`. Le câble est de nouveau visible et les deux appareils affichent « connecté ».
-6. Sauvegarder et redémarrer : quitter vers le menu, fermer le jeu, relancer `./gradlew runClient`, rouvrir le monde. Le câble est visible, les deux appareils affichent « connecté » et `/netcraft liens` liste le lien.
-7. Refus : relier un appareil à plus de 100 blocs (« Trop loin… »), puis un appareil dont le port est occupé (« Aucun port libre… »).
-8. Casse : casser la tour branchée. Le câble disparaît et le portable repasse à « libre ».
-9. Survie (`/gamemode survival`, avec un cordon dans l'inventaire) : brancher consomme le cordon, débrancher le rend. Casser un appareil relié en créatif ne fait tomber aucun cordon.
+5. Accroupi + clic droit main vide sur le portable : le bout est retiré et reste en main, une ligne relie la tour à la main. Clic droit sur un troisième appareil : le câble relie la tour à ce nouvel appareil. Recommencer, puis accroupi + clic dans le vide : le câble est rangé dans l'inventaire et la tour repasse à « libre ».
+6. S'éloigner : `/tp ~400 ~ ~`. Taper `/netcraft liens` : le lien est toujours listé alors que sa zone n'est plus chargée. Revenir : `/tp ~-400 ~ ~`. Le câble est de nouveau visible et les deux appareils affichent « connecté ».
+7. Sauvegarder et redémarrer : quitter vers le menu, fermer le jeu, relancer `./gradlew runClient`, rouvrir le monde. Le câble est visible, les deux appareils affichent « connecté » et `/netcraft liens` liste le lien.
+8. Refus : relier un appareil à plus de 100 blocs (« Trop loin… »), puis un appareil dont le port est occupé (« Aucun port libre… »).
+9. Casse : casser la tour branchée. Le câble disparaît et le portable repasse à « libre ».
+10. Survie (`/gamemode survival`, avec un seul cordon dans l'inventaire) : brancher consomme le cordon. Main vide, accroupi + clic droit sur un appareil : le bout revient en main ; accroupi + clic dans le vide : le cordon est rangé. Casser un appareil relié en créatif ne fait tomber aucun cordon.
 
 ### 1b : la box attribue une adresse à chaque poste
 
@@ -166,7 +168,7 @@ La box a aussi un port d'arrivée de ligne, inactif jusqu'au lot 3.
 
 Jouable à la fin : depuis un poste, `ping` vers l'autre poste, et il répond. C'est le critère de réussite du lot 1.
 
-Conséquence sur le portable : le clic droit ouvrira le terminal, et l'ouverture ou la fermeture de l'écran passera sur accroupi + clic droit.
+Conséquence sur le portable : le clic droit ouvrira le terminal, et l'écran s'ouvrira ou se fermera en cliquant sur la partie écran du modèle. Accroupi + clic droit main vide est déjà pris par le débranchement d'un bout de câble (décidé au lot 1a, le 2026-11-17).
 
 Choix proposé : les commandes suivent la convention Linux (`ip addr`, `ping`, `traceroute`, `nslookup`), qui est aussi la plus proche des équipements réseau.
 

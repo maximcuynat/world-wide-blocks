@@ -24,5 +24,6 @@
   "message.netcraft.cable.result.port_in_use": "No free port on this device.",
   "message.netcraft.cable.result.ok": "Connected.",
   "hud.netcraft.port.connected": "Port %s: connected",
-  "hud.netcraft.port.free": "Port %s: free"
+  "hud.netcraft.port.free": "Port %s: free",
+  "message.netcraft.cable.end_taken": "%s: end unplugged, the other one stays on %s port %s. Right-click a device to plug it back, sneak + click in the air to put it away."
 }

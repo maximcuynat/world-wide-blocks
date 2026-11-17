@@ -7,12 +7,16 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import dev.netcraft.NetCraft;
+import dev.netcraft.item.CableStart;
 import dev.netcraft.network.sync.ClientLink;
+import dev.netcraft.registry.ModDataComponents;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.context.ContextKey;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.event.ExtractLevelRenderStateEvent;
@@ -20,7 +24,7 @@ import net.neoforged.neoforge.client.event.SubmitCustomGeometryEvent;
 
 /**
  * Dessine chaque câble comme une ligne tendue entre ses deux appareils, avec un léger affaissement
- * au milieu. Rendu provisoire du lot 1a : l'épaisseur et la texture du câble viendront au lot de finition.
+ * au milieu, ainsi que le câble tenu en main par un joueur dont l'autre bout est branché. Rendu provisoire du lot 1a : l'épaisseur et la texture du câble viendront au lot de finition.
  *
  * <p>Comme l'exige le rendu de Minecraft 26.x, les câbles à dessiner sont relevés pendant
  * l'extraction de l'état de rendu, puis soumis comme géométrie à part.
@@ -54,7 +58,39 @@ final class CableRenderer {
                 visible.add(new Cable(a, b));
             }
         }
+        this.extractHeldCables(event, visible);
         event.getRenderState().setRenderData(CABLES, visible);
+    }
+
+    /**
+     * Un joueur qui tient un cordon dont un bout est branché (branchement commencé, ou bout retiré
+     * d'un appareil) : on dessine le câble de l'appareil jusqu'à sa main.
+     */
+    private void extractHeldCables(ExtractLevelRenderStateEvent event, List<Cable> visible) {
+        Minecraft minecraft = Minecraft.getInstance();
+        float partialTick = event.getDeltaTracker().getGameTimeDeltaPartialTick(false);
+        for (AbstractClientPlayer player : event.getLevel().players()) {
+            CableStart start = heldCableStart(player);
+            if (start == null || !start.device().dimension().equals(event.getLevel().dimension())) {
+                continue;
+            }
+            Vec3 eye = player.getEyePosition(partialTick);
+            boolean firstPerson = player == minecraft.player && minecraft.options.getCameraType().isFirstPerson();
+            Vec3 hand = firstPerson
+                    ? eye.add(player.getViewVector(partialTick).scale(0.6)).add(0.0, -0.35, 0.0)
+                    : eye.add(0.0, -0.7, 0.0);
+            visible.add(new Cable(attachPoint(start.device().pos()), hand));
+        }
+    }
+
+    private static CableStart heldCableStart(AbstractClientPlayer player) {
+        for (InteractionHand hand : InteractionHand.values()) {
+            CableStart start = player.getItemInHand(hand).get(ModDataComponents.CABLE_START.get());
+            if (start != null) {
+                return start;
+            }
+        }
+        return null;
     }
 
     void submit(SubmitCustomGeometryEvent event) {
