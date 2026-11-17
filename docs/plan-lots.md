@@ -97,7 +97,7 @@ Contrainte technique à tenir dès ce sous-lot : un lien doit continuer d'existe
 
 #### État du lot 1a
 
-Codé le 2026-11-17 sur la branche `developement`. Build et 34 tests unitaires au vert, panneau d'état compris. Essais en jeu du même jour : branchement et câble visible jugés bons par Max ; d'après le log, le lien posé avant le redémarrage est toujours listé par `/netcraft liens` après relance du jeu, et encore listé depuis x ≈ 380, zone non chargée. Panneau d'état et consommation du cordon en survie validés par Max. Ajouté ensuite à sa demande : retirer un seul bout du câble main vide (étape 5), à vérifier en jeu avec l'étape 10.
+Codé le 2026-11-17 sur la branche `developement`. Build et 34 tests unitaires au vert, panneau d'état compris. Essais en jeu du même jour : branchement et câble visible jugés bons par Max ; d'après le log, le lien posé avant le redémarrage est toujours listé par `/netcraft liens` après relance du jeu, et encore listé depuis x ≈ 380, zone non chargée. Panneau d'état et consommation du cordon en survie validés par Max. Ajouté ensuite à sa demande et validé en jeu : retirer un seul bout du câble main vide, puis le débrancher de l'autre appareil pour récupérer le cordon (étapes 5 et 10). Lot 1a terminé.
 
 | Type | Équipement | État |
 |---|---|---|
