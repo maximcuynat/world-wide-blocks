@@ -51,6 +51,9 @@ public final class NetworkManager {
 
     /** Enregistre ou met à jour un appareil ; renvoie les câbles devenus invalides et retirés. */
     public List<Link> registerDevice(NetworkNode node) {
+        if (this.graph().node(node.id()).filter(node::equals).isPresent()) {
+            return List.of();
+        }
         List<Link> removed = this.graph().putNode(node);
         this.data.setDirty();
         return removed;

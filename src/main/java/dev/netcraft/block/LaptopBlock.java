@@ -10,7 +10,6 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -25,7 +24,10 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * PC portable : 14 px de large, 10 px de profondeur. Un clic droit ouvre ou ferme l'écran.
  * FACING désigne le côté où se tient l'utilisateur (le bord avant du clavier).
  */
-public class LaptopBlock extends HorizontalDirectionalBlock {
+public class LaptopBlock extends NetworkDeviceBlock {
+    /** Une prise Ethernet ; le Wi-Fi arrive au lot 2a. */
+    public static final int PORT_COUNT = 1;
+
     public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
 
     // Formes pour un portable dont l'utilisateur est au nord : l'écran se dresse côté sud.
@@ -37,7 +39,7 @@ public class LaptopBlock extends HorizontalDirectionalBlock {
     private static final Map<Direction, VoxelShape> OPEN_SHAPES = Shapes.rotateHorizontal(OPEN_NORTH);
 
     public LaptopBlock(BlockBehaviour.Properties properties) {
-        super(properties);
+        super(properties, PORT_COUNT);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(OPEN, true));
     }
 

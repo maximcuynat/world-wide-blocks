@@ -7,7 +7,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -19,12 +18,15 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * Tour PC : 8 px de large, 14 px de profondeur, 15 px de haut, centrée dans le bloc.
  * FACING désigne la direction vers laquelle regarde la face avant.
  */
-public class PcTowerBlock extends HorizontalDirectionalBlock {
+public class PcTowerBlock extends NetworkDeviceBlock {
+    /** Une carte réseau intégrée. */
+    public static final int PORT_COUNT = 1;
+
     // Forme pour une tour alignée sur l'axe Z (face avant au nord ou au sud), tournée pour l'axe X.
     private static final Map<Direction.Axis, VoxelShape> SHAPES = Shapes.rotateHorizontalAxis(Block.boxZ(8.0, 0.0, 15.0, 1.0, 15.0));
 
     public PcTowerBlock(BlockBehaviour.Properties properties) {
-        super(properties);
+        super(properties, PORT_COUNT);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
 
