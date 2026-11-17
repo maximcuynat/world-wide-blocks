@@ -23,7 +23,7 @@ public record Link(UUID id, PortRef a, PortRef b, LinkMedium medium, boolean cab
         if (this.b.equals(port)) {
             return this.a;
         }
-        throw new IllegalArgumentException("Le port " + port + " n'appartient pas au lien " + this.id);
+        throw new IllegalArgumentException("Port " + port + " does not belong to link " + this.id);
     }
 
     public double length() {

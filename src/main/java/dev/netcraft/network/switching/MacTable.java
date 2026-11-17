@@ -32,7 +32,7 @@ public final class MacTable {
 
     public MacTable(long agingTicks) {
         if (agingTicks <= 0) {
-            throw new IllegalArgumentException("Délai d'expiration non positif : " + agingTicks);
+            throw new IllegalArgumentException("Non-positive aging delay: " + agingTicks);
         }
         this.agingTicks = agingTicks;
     }

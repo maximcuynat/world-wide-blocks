@@ -2,7 +2,6 @@ package dev.netcraft.block;
 
 import java.util.List;
 
-import dev.netcraft.debug.TrialLog;
 import dev.netcraft.item.EthernetCableItem;
 import dev.netcraft.network.DeviceRole;
 import dev.netcraft.network.NetworkDevice;
@@ -69,7 +68,6 @@ public abstract class NetworkDeviceBlock extends HorizontalDirectionalBlock impl
         // Un simple changement d'état (écran du portable ouvert ou fermé) n'est pas une nouvelle pose.
         if (level instanceof ServerLevel serverLevel && !oldState.is(this)) {
             NetworkDevices.dropCables(serverLevel, pos, NetworkDevices.onPlaced(serverLevel, pos));
-            TrialLog.debug("pose : {} en [{}, {}, {}], façade vers {}", this.getName().getString(), pos.getX(), pos.getY(), pos.getZ(), state.getValue(FACING)); // TEMPORAIRE
         }
     }
 

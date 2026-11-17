@@ -9,10 +9,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import dev.netcraft.debug.TrialLog;
 import dev.netcraft.message.Message;
 import dev.netcraft.message.MessageArg;
 import dev.netcraft.message.MessageLevel;
+import dev.netcraft.message.server.Diagnostics;
 import dev.netcraft.message.server.MessageCenter;
 import dev.netcraft.network.protocol.MacAddress;
 import dev.netcraft.network.sim.DeviceLogic;
@@ -21,7 +21,6 @@ import dev.netcraft.network.sim.SimulationEvent;
 import dev.netcraft.network.sync.NetworkSync;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
@@ -109,7 +108,10 @@ public final class NetworkManager {
         List<Link> removed = this.graph().putNode(node);
         networks.addAll(this.networksOf(touched));
         this.forgetLoops(networks);
-        TrialLog.debug("appareil enregistré : {} : {}", TrialLog.device(this.graph(), node.id()), TrialLog.ports(this.graph(), node));
+        if (Diagnostics.enabled()) {
+            Diagnostics.debug("Device registered: {}, ports: {}", NetworkDescriptions.device(this.graph(), node.id()),
+                    NetworkDescriptions.ports(this.graph(), node));
+        }
         this.data.setDirty();
         removed.forEach(this.simulation()::linkDown);
         this.simulation().deviceAdded(node);
@@ -126,7 +128,10 @@ public final class NetworkManager {
             this.forgetLoops(networks);
             this.data.setDirty();
             this.simulation().linkUp(link);
-            TrialLog.debug("câble branché : {} <-> {}", TrialLog.port(this.graph(), link.a()), TrialLog.port(this.graph(), link.b()));
+            if (Diagnostics.enabled()) {
+                Diagnostics.debug("Cable connected: {} <-> {}", NetworkDescriptions.port(this.graph(), link.a()),
+                        NetworkDescriptions.port(this.graph(), link.b()));
+            }
             NetworkSync.linkAdded(this.server, link);
         });
         return outcome;
@@ -145,7 +150,10 @@ public final class NetworkManager {
             this.forgetLoops(networks);
             this.data.setDirty();
             this.simulation().linkDown(link);
-            TrialLog.debug("câble débranché : {} <-> {}", TrialLog.port(this.graph(), link.a()), TrialLog.port(this.graph(), link.b()));
+            if (Diagnostics.enabled()) {
+                Diagnostics.debug("Cable disconnected: {} <-> {}", NetworkDescriptions.port(this.graph(), link.a()),
+                        NetworkDescriptions.port(this.graph(), link.b()));
+            }
             NetworkSync.linksRemoved(this.server, List.of(link));
         });
         return removed;
@@ -154,8 +162,9 @@ public final class NetworkManager {
     /** Retire l'appareil et ses câbles ; renvoie les câbles retirés. */
     public List<Link> removeDevice(DeviceId device) {
         boolean known = this.graph().node(device).isPresent();
-        if (known) {
-            TrialLog.debug("appareil retiré : {}, {} câble(s) retiré(s) avec lui", TrialLog.device(this.graph(), device), this.graph().linksOf(device).size());
+        if (known && Diagnostics.enabled()) {
+            Diagnostics.debug("Device removed: {}, with {} cable(s)", NetworkDescriptions.device(this.graph(), device),
+                    this.graph().linksOf(device).size());
         }
         Set<DeviceId> touched = this.withNeighbours(device);
         Set<DeviceId> networks = this.networksOf(touched);
@@ -178,9 +187,6 @@ public final class NetworkManager {
         // Temps de jeu de l'Overworld : sauvegardé avec le monde, il ne recule jamais.
         long gameTime = this.server.overworld().getGameTime();
         this.simulation().tick(gameTime);
-        if (gameTime % 20 == 0) {
-            this.data.trialLog().compareLearned(this.graph(), this.simulation(), gameTime); // TEMPORAIRE (essais du lot 1b-1)
-        }
         for (SimulationEvent event : this.simulation().drainEvents()) {
             switch (event) {
                 case SimulationEvent.LoopDetected loop -> this.reportLoop(loop);
@@ -285,11 +291,6 @@ public final class NetworkManager {
     }
 
     private NetworkGraph graph() {
-        return this.data.graph();
-    }
-
-    /** TEMPORAIRE (essais du lot 1b-1) : lecture du graphe pour les traces. Ne jamais le modifier par ici. */
-    public NetworkGraph graphForTrial() {
         return this.data.graph();
     }
 

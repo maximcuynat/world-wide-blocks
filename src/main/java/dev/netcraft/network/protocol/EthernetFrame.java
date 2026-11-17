@@ -20,10 +20,10 @@ public record EthernetFrame(MacAddress source, MacAddress destination, EtherType
         Objects.requireNonNull(type, "type");
         Objects.requireNonNull(payload, "payload");
         if (source.isMulticast()) {
-            throw new IllegalArgumentException("Une trame ne peut pas partir d'une adresse de groupe : " + source);
+            throw new IllegalArgumentException("A frame cannot be sent from a group address: " + source);
         }
         if (type != payload.etherType()) {
-            throw new IllegalArgumentException("Type " + type + " incohérent avec le contenu " + payload.etherType());
+            throw new IllegalArgumentException("Type " + type + " does not match payload " + payload.etherType());
         }
     }
 

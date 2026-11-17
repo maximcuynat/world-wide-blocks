@@ -37,6 +37,6 @@ public class NetCraft {
         NeoForge.EVENT_BUS.addListener(NetworkSync::onChunkUnWatch);
         NeoForge.EVENT_BUS.addListener(NetworkManager::onServerTick);
         NeoForge.EVENT_BUS.addListener(NetworkSync::onServerTick);
-        LOGGER.info("NetCraft chargé");
+        LOGGER.info("NetCraft loaded");
     }
 }

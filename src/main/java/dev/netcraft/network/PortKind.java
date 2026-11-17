@@ -37,7 +37,7 @@ public enum PortKind {
     /** {@code count} ports Ethernet : la configuration de tous les appareils sauvegardés avant le lot 1b. */
     public static List<PortKind> ethernet(int count) {
         if (count < 0) {
-            throw new IllegalArgumentException("Nombre de ports négatif : " + count);
+            throw new IllegalArgumentException("Negative port count: " + count);
         }
         return Collections.nCopies(count, ETHERNET);
     }

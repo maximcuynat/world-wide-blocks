@@ -21,7 +21,7 @@ public record MacAddress(long value) {
 
     public MacAddress {
         if ((value & ~MASK) != 0) {
-            throw new IllegalArgumentException("Adresse MAC hors de 48 bits : " + Long.toHexString(value));
+            throw new IllegalArgumentException("MAC address out of 48 bits: " + Long.toHexString(value));
         }
     }
 

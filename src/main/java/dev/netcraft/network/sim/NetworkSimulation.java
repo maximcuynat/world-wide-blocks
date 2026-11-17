@@ -314,7 +314,7 @@ public final class NetworkSimulation {
         @Override
         public void relay(int port, EthernetFrame frame) {
             if (this.trace == null) {
-                throw new IllegalStateException("Aucune trame en cours à relayer");
+                throw new IllegalStateException("No frame being relayed");
             }
             emit(new PortRef(this.device, port), frame, this.trace);
         }
@@ -322,7 +322,7 @@ public final class NetworkSimulation {
         @Override
         public void schedule(long delayTicks, Object key) {
             if (delayTicks <= 0) {
-                throw new IllegalArgumentException("Délai non positif : " + delayTicks);
+                throw new IllegalArgumentException("Non-positive delay: " + delayTicks);
             }
             timers.add(new Timer(NetworkSimulation.this.now + delayTicks, timerSequence++, this.device, this.logic, key));
         }

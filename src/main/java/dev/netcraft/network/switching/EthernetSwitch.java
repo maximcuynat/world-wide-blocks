@@ -34,7 +34,7 @@ public final class EthernetSwitch {
     public EthernetSwitch(List<Integer> ports, boolean localPort, long agingTicks) {
         for (int port : ports) {
             if (port < 0) {
-                throw new IllegalArgumentException("Numéro de port négatif : " + port);
+                throw new IllegalArgumentException("Negative port number: " + port);
             }
         }
         this.ports = List.copyOf(ports);
@@ -49,7 +49,7 @@ public final class EthernetSwitch {
      */
     public List<Integer> receive(int ingress, EthernetFrame frame, long now) {
         if (ingress != LOCAL_PORT && !this.ports.contains(ingress)) {
-            throw new IllegalArgumentException("Port " + ingress + " non commuté");
+            throw new IllegalArgumentException("Port " + ingress + " is not switched");
         }
         this.table.learn(frame.source(), ingress, now);
         if (!frame.destination().isMulticast()) {

@@ -7,8 +7,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import dev.netcraft.NetCraft;
-import dev.netcraft.debug.TrialLog;
 import dev.netcraft.message.MessageHub;
+import dev.netcraft.message.server.Diagnostics;
 import dev.netcraft.network.protocol.MacAddress;
 import dev.netcraft.network.sim.NetworkSimulation;
 import net.minecraft.resources.Identifier;
@@ -38,8 +38,6 @@ public final class NetworkSavedData extends SavedData {
     private final NetworkGraph graph = new NetworkGraph();
     private final NetworkSimulation simulation = new NetworkSimulation(this.graph);
     private final MessageHub messageHub = new MessageHub(this.simulation.limits().reportIntervalTicks());
-    /** TEMPORAIRE : traces des essais du lot 1b-1. */
-    private final TrialLog trialLog = new TrialLog();
 
     private NetworkSavedData() {
     }
@@ -55,21 +53,11 @@ public final class NetworkSavedData extends SavedData {
         }
         for (Link link : links) {
             if (!this.graph.restoreLink(link)) {
-                NetCraft.LOGGER.warn("Lien réseau incohérent ignoré au chargement : {}", link);
+                NetCraft.LOGGER.warn("Inconsistent network link ignored on load: {}", link);
             }
         }
-        // TEMPORAIRE (essais du lot 1b-1) : contenu du réseau relu.
-        if (!TrialLog.enabled()) {
-            return;
-        }
-        TrialLog.debug("chargement : {} appareils, {} câbles, MAC {}", nodes.size(), this.graph.links().size(),
-                macsGenerated ? "générées pour au moins un appareil (monde d'avant le lot 1b ou MAC invalides)" : "toutes reprises de la sauvegarde");
-        for (NetworkNode node : this.graph.nodes()) {
-            TrialLog.debug("chargement : {} : {}", TrialLog.device(this.graph, node.id()), TrialLog.ports(this.graph, node));
-        }
-        for (Link link : this.graph.links()) {
-            TrialLog.debug("chargement : câble {} <-> {}", TrialLog.port(this.graph, link.a()), TrialLog.port(this.graph, link.b()));
-        }
+        Diagnostics.debug("Network loaded: {} devices, {} cables, MAC addresses {}", nodes.size(), this.graph.links().size(),
+                macsGenerated ? "generated for at least one device (world from before lot 1b, or invalid addresses)" : "all taken from the save");
     }
 
     private List<SavedNode> savedNodes() {
@@ -103,9 +91,5 @@ public final class NetworkSavedData extends SavedData {
     /** Anti-répétition et écouteurs du module des messages (voir {@code MessageCenter}). */
     public MessageHub messageHub() {
         return this.messageHub;
-    }
-
-    TrialLog trialLog() {
-        return this.trialLog;
     }
 }

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 
 import dev.netcraft.network.ChunkKey;
-import dev.netcraft.debug.TrialLog;
 import dev.netcraft.network.DeviceId;
 import dev.netcraft.network.Link;
 import dev.netcraft.network.NetworkDevice;
@@ -92,22 +91,8 @@ public final class NetworkSync {
             DeviceStatusPayload status = statusAimedBy(player);
             if (player.getData(ModAttachments.PLAYER_STATUS_VIEW).update(status)) {
                 PacketDistributor.sendToPlayer(player, status);
-                traceStatus(player, status); // TEMPORAIRE (essais du lot 1b-1)
             }
         }
-    }
-
-    /** TEMPORAIRE (essais du lot 1b-1) : ce que l'indicateur du joueur affiche désormais. */
-    private static void traceStatus(ServerPlayer player, DeviceStatusPayload status) {
-        if (!TrialLog.enabled()) {
-            return;
-        }
-        NetworkManager network = NetworkManager.of(player.level().getServer());
-        DeviceId id = NetworkDevices.idOf(player.level(), status.pos());
-        String learned = status.learned().isEmpty() ? "aucune" : String.join(", ", status.learned().stream()
-                .map(l -> "port " + (l.port() + 1) + " : " + new MacAddress(l.mac())).toList());
-        network.node(id).ifPresent(node -> TrialLog.debug("indicateur de {} : {} : ports {} ; MAC apprises : {}",
-                player.getName().getString(), TrialLog.device(network.graphForTrial(), id), TrialLog.ports(network.graphForTrial(), node), learned));
     }
 
     /** État de l'appareil réseau que le joueur vise à portée de main, ou {@code null}. */

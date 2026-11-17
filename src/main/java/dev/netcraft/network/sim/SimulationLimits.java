@@ -14,7 +14,7 @@ public record SimulationLimits(int maxDeliveriesPerTick, int maxQueued, long rep
 
     public SimulationLimits {
         if (maxDeliveriesPerTick <= 0 || maxQueued <= 0 || reportIntervalTicks < 0) {
-            throw new IllegalArgumentException("Limites invalides");
+            throw new IllegalArgumentException("Invalid limits");
         }
     }
 }
