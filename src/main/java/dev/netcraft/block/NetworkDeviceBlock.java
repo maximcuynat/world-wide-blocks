@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * Appareil réseau orientable : s'enregistre dans le moteur réseau à la pose et en sort, avec ses
- * câbles, quand il quitte sa position. Il doit refuser les pistons ({@code PushReaction.BLOCK}),
+ * câbles, quand il quitte sa position. Il doit refuser les pistons ({@code PushReaction.IMMOVEABLE}),
  * car le moteur l'identifie par sa position.
  */
 public abstract class NetworkDeviceBlock extends HorizontalDirectionalBlock implements NetworkDevice {
