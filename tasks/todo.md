@@ -33,7 +33,15 @@ Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
   - [x] Indicateur : MAC du poste, MAC apprises par la box (paquet d'état), build vert, essai en jeu à faire
   - [x] Bug du cordon : l'attente restait accrochée à un point de départ cassé (relevé par Max le 2026-11-17). Reproduit par `PendingCableTest`, corrigé (annulation aussi au changement de dimension)
   - [ ] Retirer les traces temporaires `[ESSAI 1b-1]` (`debug/TrialLog` et ses appels) une fois les essais du lot 1b-1 validés
-  - [ ] Procédure de test en jeu et état du lot dans `docs/plan-lots.md`
+  - [x] Build de contrôle de c178668 et 5014267 (commités sans build, voir `tasks/lessons.md`) : vert sur 5014267 le 2026-11-18
+  - [ ] Tests en jeu automatiques et décors d'essai : conception validée par Max le 2026-11-18. Un commit par étape, seulement après un build vert :
+    - [x] Jeu de sources `src/gametest/` exclu du jar, branché sur les runs ; run `gameTestServer` dans `run-gametest/` (ignoré par git) ; `./gradlew build` compile aussi ce jeu de sources
+    - [x] Structure vide 16 x 4 x 16, joueur de test connecté (sur le modèle de `GameTestPlayer` de NeoForge, messages captés), nettoyage des appareils de chaque test à sa fin, réussie ou non
+    - [ ] Tests du lot commun (ports pleins fait, vert le 2026-11-18) : départ détruit (casse et explosion, créatif et survie, compte des cordons), changement de dimension, déconnexion et reconnexion, expiration des MAC, sauvegarde et relecture
+    - [ ] Lot à part (environnement dédié) pour ce qui touche les limites globales du moteur : boucle et limite d'un signalement par minute
+    - [ ] `/netcraft test <scénario>` et `/netcraft test effacer` : développement seulement (jeu de sources `gametest`), refus hors d'un monde dont le nom commence par « Essais », refus si la zone n'est pas vide
+  - [ ] Procédure de test en jeu (ce qui demande des yeux) et état du lot dans `docs/plan-lots.md`
+  - [ ] Module des messages (prompt séparé de Max), avant le 1b-2 : prévoir dès la conception un moyen pour les tests de capter les messages envoyés
 - [ ] Lot 1b-2 (DHCP) : architecture validée avec le 1b-1, pas commencé. Ne pas oublier l'état INIT-REBOOT (bail du poste sauvegardé).
 
 ## Tests multijoueur (à faire plus tard, non prioritaire)

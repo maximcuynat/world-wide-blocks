@@ -34,6 +34,8 @@ bin/
 
 ### Minecraft Modding ###
 run/
+# Monde jetable du serveur de tests en jeu (./gradlew runGameTestServer)
+run-gametest/
 !**/src/**/run/
 **/src/generated/**/.cache/
 repo/
