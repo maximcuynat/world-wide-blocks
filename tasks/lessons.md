@@ -10,6 +10,11 @@
 
 - Le moteur a des limites globales (trames par tick, taille de la file, limite des signalements) partagées par tout ce qui tourne sur le serveur. Un test automatique qui touche ces limites tourne à part, dans son propre lot, pour que son résultat ne dépende pas des autres tests ni de l'ordre d'exécution. (2026-11-18)
 
+## Moteur réseau
+
+- Différer un traitement (événement mis en attente jusqu'au tick suivant) ouvre une fenêtre où l'état a changé : revalider chaque changement en attente contre l'état courant (appareil ou câble encore présents) au moment de l'appliquer. Un poste posé, câblé et retiré dans le même tick a fait planter le serveur de tests (2026-11-18). Écrire le test « ajouté puis retiré avant le tick » avec toute mise en attente.
+- Une exception dans le tick de la simulation fait tomber tout le serveur : tout chemin appelé depuis le tick doit tolérer un appareil ou un câble disparu. (2026-11-18)
+
 ## Shell partagé
 
 - Les commandes `!` de Max s'exécutent dans le dossier courant de ma session. Ne jamais terminer une commande dans un sous-dossier (`cd src/...`) : faire les `cd` dans un sous-shell `( cd … && … )` ou utiliser des chemins absolus, et vérifier que le shell est à la racine du projet avant de donner un point de contrôle. Un `./gradlew` a échoué pour cette raison. (2026-11-17)
