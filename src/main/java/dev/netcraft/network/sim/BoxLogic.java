@@ -12,8 +12,11 @@ import dev.netcraft.network.switching.MacTable;
  * local du switch.
  */
 public final class BoxLogic implements DeviceLogic {
-    /** Fréquence de nettoyage des entrées expirées : une fois par seconde de jeu. */
-    static final long PURGE_INTERVAL_TICKS = 20L;
+    /**
+     * Fréquence de nettoyage des entrées expirées : une fois par seconde de jeu. Une entrée expirée
+     * n'est plus utilisée pour commuter, mais reste visible dans la table jusqu'au nettoyage suivant.
+     */
+    public static final long PURGE_INTERVAL_TICKS = 20L;
 
     private record PurgeTimer() {
     }

@@ -65,7 +65,7 @@ public final class NetCraftGameTests {
             new Case("network_save_and_reload", Batch.SHARED, 20, NetworkTests::networkSurvivesSaveAndReload),
             // 300 s d'expiration : le serveur de tests ne marque pas de pause entre deux ticks, quelques secondes réelles.
             new Case("mac_expires_after_300_seconds", Batch.SHARED, 6200, NetworkTests::macExpiresAfter300Seconds),
-            new Case("loop_reported_at_most_once_per_minute", Batch.ENGINE_LIMITS, 4200, NetworkTests::loopReportedAtMostOncePerMinute));
+            new Case("loop_reported_once_per_minute", Batch.ENGINE_LIMITS, 4200, NetworkTests::loopReportedOncePerMinute));
 
     private NetCraftGameTests() {
     }

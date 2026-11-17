@@ -14,6 +14,7 @@ import dev.netcraft.network.NetworkManager;
 import dev.netcraft.network.NetworkSavedData;
 import dev.netcraft.network.PortRef;
 import dev.netcraft.network.protocol.MacAddress;
+import dev.netcraft.network.sim.BoxLogic;
 import dev.netcraft.network.sim.DeviceLogic;
 import dev.netcraft.network.sim.SimulationLimits;
 import dev.netcraft.network.switching.MacTable;
@@ -35,8 +36,12 @@ final class NetworkTests {
 
     /**
      * Box A reliée à la box B, un poste H sur B. A apprend H derrière son port vers B. On débranche
-     * H de B : B l'oublie aussitôt (câble retiré), A n'en sait rien et le garde jusqu'à 300 s de jeu
-     * après la dernière trame de H, puis l'oublie.
+     * H de B : B l'oublie au tick suivant (câble retiré), A n'en sait rien et le garde exactement
+     * 300 s de jeu après la dernière trame de H, puis le retire au nettoyage suivant (au plus une
+     * seconde après).
+     *
+     * <p>Vérifié à chaque tick sur le temps de jeu : un rappel de GameTest s'exécute pendant le tick
+     * {@code T}, avant que la simulation traite ce tick ; elle a donc traité les ticks jusqu'à {@code T - 1}.
      */
     static void macExpiresAfter300Seconds(GameTestHelper helper) {
         NetworkScene scene = NetworkScene.of(helper);
@@ -47,23 +52,32 @@ final class NetworkTests {
         Link bh = scene.cable(boxB, host);
         MacAddress hostMac = scene.network().macsOf(host).getFirst();
 
-        // La présence de H, émise au branchement, a eu le temps de traverser les deux box.
-        helper.runAfterDelay(5, () -> {
-            MacTable.Entry learned = learned(scene, boxA, hostMac).orElseThrow(
-                    () -> helper.assertionException(Component.literal("A n'a pas appris la MAC de H")));
-            helper.assertValueEqual(learned.port(), endOn(ab, boxA).index(), "port de A derrière lequel se trouve H");
-
-            scene.network().disconnect(endOn(bh, host));
-            helper.assertTrue(learned(scene, boxB, hostMac).isEmpty(), "B garde la MAC de H alors que son câble est retiré");
-
-            long expiry = learned.lastSeen() + MacTable.DEFAULT_AGING_TICKS;
-            long now = scene.gameTime();
-            helper.runAfterDelay(expiry - now - 20, () -> helper.assertTrue(learned(scene, boxA, hostMac).isPresent(),
-                    "A a oublié la MAC de H avant 300 s"));
-            helper.runAfterDelay(expiry - now + 40, () -> {
-                helper.assertTrue(learned(scene, boxA, hostMac).isEmpty(), "A garde la MAC de H plus de 300 s");
+        long[] unplugged = {-1};
+        long[] expiry = {-1};
+        helper.onEachTick(() -> {
+            long processed = scene.gameTime() - 1;
+            if (unplugged[0] < 0) {
+                Optional<MacTable.Entry> learned = learned(scene, boxA, hostMac);
+                if (learned.isEmpty()) {
+                    return; // la présence de H n'a pas encore été livrée
+                }
+                helper.assertValueEqual(learned.get().port(), endOn(ab, boxA).index(), "port de A derrière lequel se trouve H");
+                scene.network().disconnect(endOn(bh, host));
+                unplugged[0] = processed + 1; // appliqué par la simulation à ce tick
+                expiry[0] = learned.get().lastSeen() + MacTable.DEFAULT_AGING_TICKS;
+                return;
+            }
+            if (processed >= unplugged[0]) {
+                helper.assertTrue(learned(scene, boxB, hostMac).isEmpty(), "B garde la MAC de H un tick après le retrait de son câble");
+            }
+            if (processed < expiry[0]) {
+                helper.assertTrue(learned(scene, boxA, hostMac).isPresent(),
+                        "A a oublié la MAC de H au tick " + processed + ", avant son expiration au tick " + expiry[0]);
+            } else if (processed >= expiry[0] + BoxLogic.PURGE_INTERVAL_TICKS - 1) {
+                helper.assertTrue(learned(scene, boxA, hostMac).isEmpty(),
+                        "A garde la MAC de H au tick " + processed + ", plus d'une seconde après son expiration au tick " + expiry[0]);
                 helper.succeed();
-            });
+            }
         });
     }
 
@@ -98,12 +112,13 @@ final class NetworkTests {
 
     /**
      * Deux box reliées par deux câbles, un poste sur A : chaque trame diffusée tourne en boucle. La
-     * boucle est signalée aux joueurs proches, au plus une fois par minute de jeu et par appareil, et
-     * les signalements cessent quand on retire un des deux câbles.
+     * boucle est signalée aux joueurs proches exactement une fois par minute de jeu et par appareil
+     * (la présence du poste revient toutes les 30 s), et les signalements cessent quand on retire un
+     * des deux câbles.
      *
      * <p>Lot à part : la limite des signalements et les limites de trames sont globales au moteur.
      */
-    static void loopReportedAtMostOncePerMinute(GameTestHelper helper) {
+    static void loopReportedOncePerMinute(GameTestHelper helper) {
         NetworkScene scene = NetworkScene.of(helper);
         DeviceId boxA = scene.place(new BlockPos(4, 0, 8), ModBlocks.INTERNET_BOX.get());
         DeviceId boxB = scene.place(new BlockPos(12, 0, 8), ModBlocks.INTERNET_BOX.get());
@@ -120,12 +135,13 @@ final class NetworkTests {
             Map<String, List<Long>> reports = loopReportTimes(player);
             NetCraft.LOGGER.info("[GameTest] signalements de boucle reçus (temps de jeu) : {}", reports);
             helper.assertTrue(!reports.isEmpty(), "Aucun signalement de boucle en " + observation + " ticks");
+            // Présence toutes les 600 ticks, signalement au plus toutes les 1 200 : exactement un signalement
+            // par minute et par box, à 0, 1 200 et 2 400 ticks du premier. Un écart plus grand (1 800 avant
+            // la correction de l'horloge du 2026-11-18) est un défaut, pas une marge.
             reports.forEach((device, times) -> {
-                helper.assertTrue(times.size() >= 2, "Boucle signalée une seule fois en " + observation + " ticks pour " + device);
-                for (int i = 1; i < times.size(); i++) {
-                    long gap = times.get(i) - times.get(i - 1);
-                    helper.assertTrue(gap >= interval, "Deux signalements à " + gap + " ticks d'écart pour " + device);
-                }
+                long firstReport = times.getFirst();
+                helper.assertValueEqual(times, List.of(firstReport, firstReport + interval, firstReport + 2 * interval),
+                        "instants des signalements de boucle de " + device);
             });
 
             int before = player.messages(LOOP).size();

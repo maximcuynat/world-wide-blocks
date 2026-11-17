@@ -39,7 +39,7 @@ Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
     - [x] Structure vide 16 x 4 x 16, joueur de test connecté (sur le modèle de `GameTestPlayer` de NeoForge, messages captés), nettoyage des appareils de chaque test à sa fin, réussie ou non
     - [x] Tests du lot commun (verts le 2026-11-18) : départ détruit (casse et explosion, créatif et survie, compte des cordons), changement de dimension, déconnexion et reconnexion, expiration des MAC, sauvegarde et relecture
     - [x] Lot à part (environnement dédié) pour ce qui touche les limites globales du moteur : boucle et limite d'un signalement par minute
-    - [ ] Écart relevé par le test de boucle : un branchement fait entre deux ticks prend le temps du tick précédent ; la boucle est alors signalée toutes les 90 s au lieu de 60 (règle « au plus une par minute » respectée). Correction à décider par Max
+    - [x] Horloge du moteur (demandé par Max le 2026-11-18) : un changement survenu entre deux ticks prenait le temps du tick précédent, la boucle était signalée toutes les 90 s au lieu de 60. Changements appliqués au début du tick suivant, tests unitaires de l'horloge, tests en jeu de la boucle (écart exact) et de l'expiration (bornes exactes) resserrés
     - [ ] `/netcraft test <scénario>` et `/netcraft test effacer` : développement seulement (jeu de sources `gametest`), refus hors d'un monde dont le nom commence par « Essais », refus si la zone n'est pas vide
   - [ ] Procédure de test en jeu (ce qui demande des yeux) et état du lot dans `docs/plan-lots.md`
   - [ ] Module des messages (prompt séparé de Max), avant le 1b-2 : prévoir dès la conception un moyen pour les tests de capter les messages envoyés

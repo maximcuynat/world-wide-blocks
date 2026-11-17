@@ -33,6 +33,14 @@ import dev.netcraft.network.protocol.MacAddress;
  * trame. Si une copie revient à un switch que la trace a déjà traversé, il existe deux chemins entre
  * eux : la copie est supprimée et la boucle signalée. Dans un réseau sans boucle, cela n'arrive jamais.
  *
+ * <p>Horloge : le temps de la simulation est celui du tick en cours de traitement. Un changement du
+ * graphe (branchement, débranchement, appareil posé ou retiré) survient souvent entre deux ticks :
+ * un clic de joueur est traité après le tick de la simulation. Il est donc mis en attente et appliqué
+ * au début du tick suivant, avec le temps de ce tick. Ainsi ses trames, ses minuteries et ses
+ * signalements partent du tick même où ses trames sont livrées. (Appliqué sur-le-champ avec le temps
+ * du tick précédent, une présence émise au branchement était livrée un tick après sa date : les
+ * présences suivantes tombaient 1 199 ticks après le signalement de boucle au lieu de 1 200.)
+ *
  * <p>L'état d'exécution (comportement des appareils, file, minuteries) n'est pas sauvegardé : au
  * démarrage du serveur, chaque appareil repart de zéro et chaque câble existant est annoncé comme
  * branché, comme après une coupure de courant.
@@ -44,6 +52,8 @@ public final class NetworkSimulation {
     private final SimulationLimits limits;
     private final Map<DeviceId, DeviceLogic> logics = new HashMap<>();
     private final ArrayDeque<Delivery> queue = new ArrayDeque<>();
+    /** Changements du graphe survenus depuis le dernier tick, appliqués dans l'ordre au tick suivant. */
+    private final ArrayDeque<Runnable> pendingChanges = new ArrayDeque<>();
     private final PriorityQueue<Timer> timers = new PriorityQueue<>(
             Comparator.comparingLong(Timer::due).thenComparingLong(Timer::sequence));
     private final List<SimulationEvent> events = new ArrayList<>();
@@ -102,37 +112,49 @@ public final class NetworkSimulation {
     }
 
     // ---- Changements du graphe ----
-    // Avant le premier tick, ils sont ignorés : le démarrage relit tout le graphe.
+    // Appliqués au début du tick suivant, avec son temps (voir la classe). Avant le premier tick, ils
+    // sont ignorés : le démarrage relit tout le graphe.
+    //
+    // Un changement en attente ne s'applique qu'à ce qui existe encore dans le graphe au moment du
+    // tick : un appareil ou un câble retiré entre-temps est déjà remplacé par son retrait, lui aussi en
+    // attente. (Un poste posé, câblé et retiré dans le même tick faisait planter le serveur.)
 
     /** Un appareil vient d'être ajouté, ou remplacé par un autre (son ancien comportement est oublié). */
     public void deviceAdded(NetworkNode node) {
-        if (this.started) {
-            this.start(node);
-        }
+        this.later(() -> {
+            if (this.graph.node(node.id()).filter(node::equals).isPresent()) {
+                this.start(node);
+            }
+        });
     }
 
     public void deviceRemoved(DeviceId device) {
-        this.logics.remove(device);
-        this.lastLoopReport.remove(device);
+        this.later(() -> {
+            this.logics.remove(device);
+            this.lastLoopReport.remove(device);
+        });
     }
 
     public void linkUp(Link link) {
-        if (this.started) {
-            this.notifyLink(link, true);
-        }
+        this.later(() -> this.notifyLink(link, true));
     }
 
     /** À appeler après le retrait du câble du graphe. */
     public void linkDown(Link link) {
+        this.later(() -> this.notifyLink(link, false));
+    }
+
+    private void later(Runnable change) {
         if (this.started) {
-            this.notifyLink(link, false);
+            this.pendingChanges.add(change);
         }
     }
 
     // ---- Tick ----
 
     /**
-     * Fait avancer la simulation jusqu'à {@code now} : minuteries échues, puis livraison des trames.
+     * Fait avancer la simulation jusqu'à {@code now} : changements du graphe survenus depuis le tick
+     * précédent, minuteries échues, puis livraison des trames.
      *
      * @param now temps de jeu, en ticks ; il ne doit jamais reculer
      */
@@ -142,6 +164,9 @@ public final class NetworkSimulation {
             this.started = true;
             this.graph.nodes().forEach(this::start);
             this.graph.links().forEach(link -> this.notifyLink(link, true));
+        }
+        while (!this.pendingChanges.isEmpty()) {
+            this.pendingChanges.poll().run();
         }
         while (!this.timers.isEmpty() && this.timers.peek().due() <= now) {
             Timer timer = this.timers.poll();
@@ -166,10 +191,13 @@ public final class NetworkSimulation {
     }
 
     private void notifyLink(Link link, boolean up) {
+        if (up && !this.isInGraph(link)) {
+            return; // débranché depuis : son débranchement suit dans la file
+        }
         for (PortRef end : List.of(link.a(), link.b())) {
             DeviceLogic logic = this.logics.get(end.device());
-            if (logic == null) {
-                continue;
+            if (logic == null || this.graph.node(end.device()).isEmpty()) {
+                continue; // appareil retiré depuis : son comportement va être oublié
             }
             Context context = new Context(end.device(), logic, null);
             if (up) {
@@ -178,6 +206,10 @@ public final class NetworkSimulation {
                 logic.onLinkDown(context, end.index());
             }
         }
+    }
+
+    private boolean isInGraph(Link link) {
+        return this.graph.linkAt(link.a()).filter(current -> current.id().equals(link.id())).isPresent();
     }
 
     private void emit(PortRef egress, EthernetFrame frame, Trace trace) {
