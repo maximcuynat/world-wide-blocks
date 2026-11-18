@@ -13,7 +13,7 @@ Une grande partie des protections n'existe pas pour un dépôt **privé** sur un
 | 1 | Maintenant | Double authentification sur le compte | [1](#1-double-authentification) |
 | 2 | Maintenant | Adresse e-mail masquée | [2](#2-adresse-e-mail-masquée) |
 | 3 | Maintenant | Signature SSH des commits et des tags | [3](#3-signer-ses-commits-et-ses-tags) |
-| 4 | Maintenant | Fusions : commit de fusion seulement, pas de suppression automatique des branches ; Actions désactivées | [4](#4-réglages-généraux-du-dépôt) |
+| 4 | Maintenant | Branche par défaut `developement`, fusions par commit de fusion seulement, suppression automatique des branches fusionnées, tableau Projects ; Actions désactivées | [4](#4-réglages-généraux-du-dépôt) et [`docs/project-management.md`](project-management.md) |
 | 5 | Session dédiée | **Renommage du mod (bloquant)** : voir `tasks/todo.md` | |
 | 6 | Passage en public | Paramètres du dépôt > General > Danger Zone > **Change visibility** > Make public | |
 | 7 | Juste après | Protection de `main` et de `developement` (rulesets) | [5](#5-protection-des-branches) |
@@ -41,7 +41,7 @@ Les 57 premiers commits utilisent déjà l'adresse masquée `93578199+maximcuyna
 
 ## 3. Signer ses commits et ses tags
 
-La signature prouve que les commits et les tags viennent bien de vous ; GitHub les marque **Verified**. Le script de release exige une clé de signature. Procédure avec une clé SSH dédiée à la signature (séparée de la clé qui sert à se connecter) :
+La signature prouve que les commits et les tags viennent bien de vous ; GitHub les marque **Verified**. `scripts/dev release` exige une clé de signature. Procédure avec une clé SSH dédiée à la signature (séparée de la clé qui sert à se connecter) :
 
 **3.1. Créer la clé** (avec une phrase de passe) :
 
@@ -108,10 +108,11 @@ La réponse attendue contient `Good "git" signature for 93578199+maximcuynat@use
 
 ## 4. Réglages généraux du dépôt
 
-Paramètres du dépôt > **General** > section **Pull Requests** :
+Branche par défaut, fusions et suppression des branches : voir [`docs/project-management.md`](project-management.md), sections 1 et 2 (révisé le 2026-11-18 avec le modèle `lot/`, `release/`, `hotfix/`). En résumé :
 
-- cochez **Allow merge commits** seulement ; décochez **Allow squash merging** et **Allow rebase merging**. Le modèle de branches repose sur le commit de fusion : un squash ferait perdre le tag de version dans `developement` ;
-- laissez **Automatically delete head branches** décoché : sinon GitHub supprimerait `developement` après chaque release.
+- branche par défaut : `developement` (les mots-clés « Closes # » ne sont lus que vers elle) ;
+- **Allow merge commits** seulement, message par défaut **Default message** ; **Allow squash merging** et **Allow rebase merging** décochés : un squash écraserait les commits d'un lot (changelog et signatures), un rebase perdrait les signatures ;
+- **Automatically delete head branches** coché : les releases passent désormais par une branche `release/v<version>`, si bien que `developement` n'est jamais la branche source d'une pull request et n'est jamais supprimée.
 
 Paramètres du dépôt > **Actions** > **General** > **Actions permissions** > **Disable actions** **(à vérifier)** : le projet n'utilise pas GitHub Actions, toutes les vérifications tournent en local.
 
@@ -131,7 +132,7 @@ Une fois le dépôt public : Paramètres du dépôt > **Rules** > **Rulesets** >
 - **Restrict deletions** ;
 - **Block force pushes**.
 
-Pas de pull request obligatoire sur `developement` : le travail courant et le script de release y poussent directement.
+Pas de pull request obligatoire sur `developement` : les petits travaux y arrivent directement, et `scripts/dev release publish` y pousse le report de `main` après chaque version. Les lots y arrivent par pull request depuis `lot/<id>`.
 
 Facultatif, **tag ruleset** sur `v*` : **Restrict deletions** et **Restrict updates**, pour qu'un tag de version publié ne bouge plus.
 
@@ -164,7 +165,7 @@ Limite connue : pour Gradle, GitHub ne lit pas les dépendances par analyse stat
 GitHub refuse de fusionner une pull request qui contient des commits non signés, même anciens. Or les 57 commits actuels ne le sont pas. Ordre :
 
 1. Signer tous les nouveaux commits et tags (section 3, et décision 3.8 pour les commits de Claude).
-2. Faire la première release : la pull request `developement` > `main` amène l'historique non signé dans `main`, ce qui est encore permis.
+2. Faire la première release : la pull request `release/v…` > `main` amène l'historique non signé dans `main`, ce qui est encore permis.
 3. Activer **Require signed commits** dans le ruleset `main`. Les pull requests suivantes n'apporteront que des commits signés.
 
 À vérifier à la première release suivante : la documentation ne dit pas clairement si GitHub signe le commit de fusion qu'il crée depuis l'interface (elle le confirme seulement pour le squash). Si la fusion est refusée pour cette raison, revenir ici avant de désactiver quoi que ce soit.

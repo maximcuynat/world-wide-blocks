@@ -1,110 +1,149 @@
-# Contribuer à NetCraft
+# Contributing
 
-Merci de votre intérêt ! Ce guide décrit comment le projet est organisé et vérifié. Le projet est écrit en français (code, commentaires, documents, messages de commit), avec des identifiants en anglais (classes, registres, ressources). Les lignes de log et les messages d'exception sont en anglais, comme le reste des logs de Minecraft.
-## Installer le projet
+Thank you for your interest! This guide describes how the project is organised and checked.
 
-Prérequis : Git, un JDK 17 ou plus récent pour lancer Gradle (le JDK 25 est téléchargé automatiquement au premier build), et de préférence [gitleaks](https://github.com/gitleaks/gitleaks) (macOS : `brew install gitleaks`).
+Language: the repository is moving to English. Everything new is written in English (commit messages, changelog, issues, pull requests, new documents). The code, its comments and the design documents of `docs/` are still in French and will be translated. Identifiers (classes, registries, resources) are in English. Log lines and exception messages are in English, like the rest of Minecraft's logs.
+
+## Set up the project
+
+Requirements: Git, a JDK 17 or newer to run Gradle (JDK 25 is downloaded automatically by the first build), and preferably [gitleaks](https://github.com/gitleaks/gitleaks) (macOS: `brew install gitleaks`). To use `scripts/dev`: [git-cliff](https://git-cliff.org/) and the [GitHub CLI](https://cli.github.com/) (macOS: `brew install git-cliff gh`, then `gh auth login`).
 
 ```bash
-git clone https://github.com/maximcuynat/netcraft.git
-cd netcraft
-git switch developement
+git clone <repository URL>
+cd <repository>
 scripts/install-hooks.sh
 ```
 
-`scripts/install-hooks.sh` branche les hooks versionnés du dossier `.githooks/` sur votre clone (`git config core.hooksPath .githooks`). À relancer seulement si vous reclonez le dépôt.
+The default branch is `developement`: a fresh clone is already on it. `scripts/install-hooks.sh` plugs the versioned hooks of `.githooks/` into your clone (`git config core.hooksPath .githooks`). Run it again only if you clone the repository again.
 
-## Lancer les tests
+## Run the tests
 
 ```bash
-./gradlew build test         # compilation (mod et tests en jeu) et tests unitaires du moteur réseau, en Java pur
-./gradlew runGameTestServer  # tests en jeu automatiques, serveur dédié dans un monde jetable (run-gametest/)
-./gradlew runClient          # client de développement, pour vérifier à l'œil ce qui s'affiche
+./gradlew build test         # build (mod and game tests) and unit tests of the network engine, in plain Java
+./gradlew runGameTestServer  # automatic game tests, on a dedicated server in a throwaway world (run-gametest/)
+./gradlew runClient          # development client, to check by eye what is displayed
 ```
 
-`runGameTestServer` tourne en serveur dédié : il ne prouve rien sur l'affichage côté client. Une modification de l'affichage se vérifie aussi avec `runClient`.
+`runGameTestServer` runs a dedicated server: it proves nothing about what the client draws. A display change is also checked with `runClient`.
 
 ## Branches
 
-| Branche | Rôle |
+| Branch | Role |
 |---|---|
-| `developement` | Intégration : tout le travail courant y arrive. C'est la branche à viser pour une pull request. |
-| `main` | Versions publiées uniquement. Elle ne reçoit que des pull requests de release depuis `developement`, fusionnées avec un commit de fusion. |
+| `main` | Released versions only. Each commit is the merge commit of a release, tagged `v<version>` and signed. |
+| `developement` | Integration, default branch, always green. Pull requests target it. |
+| `lot/<id>` | One branch per lot of [`docs/plan-lots.md`](docs/plan-lots.md), created from `developement` and merged back by a pull request. |
+| `release/v<version>` | Short-lived: carries the version commit to `main` through a pull request, deleted after the merge. |
+| `hotfix/<version>` | Fix of a released version, created from `main`, merged into `main`, then brought back into `developement`. |
 
-Pour une contribution externe : créez une branche depuis `developement` dans votre fork (`feat/…`, `fix/…`), puis ouvrez une pull request vers `developement`. Une fois le dépôt public, les deux branches sont protégées : ni réécriture forcée, ni suppression.
+Every pull request is merged with **Create a merge commit**: the individual commits stay in the history, which feeds the changelog, and their signatures are kept. Merged branches are deleted automatically on GitHub.
 
-## Messages de commit
+External contribution: fork the repository, create a branch from `developement` (`feat/…`, `fix/…`), then open a pull request to `developement`.
 
-Le projet suit [Conventional Commits](https://www.conventionalcommits.org/fr/v1.0.0/). Le hook `commit-msg` refuse un message qui ne respecte pas ce format :
+## Issues and pull requests
+
+- The tasks of each lot are issues, grouped in the milestone of the lot; a milestone per version holds the beta fixes and the work shared by several lots. The design of each lot stays in [`docs/plan-lots.md`](docs/plan-lots.md).
+- Templates: bug report and idea for issues, and a pull request template with a "Breaks existing worlds" box.
+- A pull request into `developement` closes its issues with one `Closes #<number>` line per issue. A commit that reaches `developement` with `Fixes #<number>` in its message closes the issue too (useful for hotfixes). These keywords only work towards the default branch, `developement`.
+- Labels: `type: …`, `area: …`, `priority: …`, and `breaking` for anything that breaks existing worlds.
+
+Details and GitHub settings: [`docs/project-management.md`](docs/project-management.md).
+
+## Commit messages
+
+The project follows [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/), in English. The `commit-msg` hook refuses a message that does not follow this format:
 
 ```
-<type>(<portée>): <description courte et impérative>
+<type>(<scope>): <short imperative description>
 ```
 
-| Type | Usage | Dans le changelog |
+| Type | Use | In the changelog |
 |---|---|---|
-| `feat` | Nouvelle fonctionnalité | Ajouté |
-| `fix` | Correction de bug | Corrigé |
-| `refactor` | Réorganisation sans changement fonctionnel | Modifié |
-| `perf` | Optimisation | Modifié |
-| `docs` | Documentation | non |
-| `test` | Tests | non |
-| `chore` | Maintenance | non |
-| `style` | Changement cosmétique | non |
-| `build` | Construction du projet, outillage | non |
-| `ci` | Vérifications automatiques | non |
-| `revert` | Retour arrière | non |
+| `feat` | New feature | Added |
+| `fix` | Bug fix | Fixed |
+| `refactor` | Reorganisation without functional change | Changed |
+| `perf` | Optimisation | Changed |
+| `docs` | Documentation | no |
+| `test` | Tests | no |
+| `chore` | Maintenance | no |
+| `style` | Cosmetic change | no |
+| `build` | Build, tooling | no |
+| `ci` | Automatic checks | no |
+| `revert` | Revert | no |
 
-- La portée est facultative, en minuscules : `fix(cordon): …`, `feat(box): …`.
-- Un `!` avant les deux-points signale un changement incompatible, par exemple une sauvegarde de monde illisible par les versions précédentes : `feat(reseau)!: …`. Il apparaît toujours dans le changelog.
-- Un petit commit par étape logique. Les commits de fusion et les `Revert "…"` générés par Git sont acceptés tels quels.
+- The scope is optional, in lower case: `fix(cable): …`, `feat(box): …`.
+- A `!` before the colon marks a change that **breaks existing worlds** (for example a world save unreadable by previous versions): `feat(network)!: …`. Whatever its type, it goes into the "Breaks existing worlds" section at the top of the changelog. Mark the pull request with the `breaking` label (`scripts/dev lot finish` does it).
+- One small commit per logical step. Merge commits and `Revert "…"` commits generated by Git are accepted as they are.
 
-Exemples tirés de l'historique :
+Examples:
 
 ```
-feat(box): ajouter le bloc box internet avec 4 ports réseau local et une arrivée de ligne
-fix(cordon): débrancher l'autre bout en cliquant sur son appareil
-docs(plan): découper le lot 1b et consigner l'architecture validée
+feat(box): add the internet box block with 4 local ports and a line input
+fix(cable): unplug the other end when clicking its device
+build(hooks): write the pre-push test log to a file and show only its end on failure
 ```
 
-## Hooks Git
+## Git hooks
 
-| Hook | Ce qu'il fait | En cas d'échec |
+| Hook | What it does | On failure |
 |---|---|---|
-| `commit-msg` | Vérifie la convention des messages | Commit refusé |
-| `pre-commit` | Cherche des secrets (mots de passe, jetons, clés) dans les changements indexés avec gitleaks | Commit refusé ; si gitleaks n'est pas installé, simple avertissement |
-| `pre-push` | Lance `./gradlew build test` puis `./gradlew runGameTestServer` | Push refusé |
+| `commit-msg` | Checks the commit message convention | Commit refused |
+| `pre-commit` | Looks for secrets (passwords, tokens, keys) in the staged changes with gitleaks | Commit refused; without gitleaks, a warning only |
+| `pre-push` | Runs `./gradlew build test`, then `./gradlew runGameTestServer` | Push refused |
 
-Le hook `pre-push` :
+The `pre-push` hook:
 
-- saute les tests si tous les fichiers des commits envoyés sont des `.md` ou sont dans `docs/` ; tout le reste, ressources comprises, déclenche les tests ;
-- exige un arbre de travail propre et que le commit envoyé soit `HEAD`, car les tests portent sur l'arbre de travail ;
-- prend quelques minutes (le premier build plus longtemps).
+- skips the tests when every file of the pushed commits is a `.md` file or lives in `docs/`; anything else, resources included, triggers the tests;
+- requires a clean working tree, and the pushed commit to be `HEAD`, because the tests run on the working tree;
+- writes Gradle's output to `build/pre-push.log` and shows only its last lines on failure (`tail -f build/pre-push.log` to follow it);
+- takes a few minutes (the first build longer).
 
-Contourner un hook (`--no-verify`) est réservé aux cas où la vérification vient d'être faite sur ce même état, comme le fait le script de release.
+Bypassing a hook (`--no-verify`) is kept for cases where the same checks have just passed on the same commit, as `scripts/dev` does.
 
-## Versions et changelog
+## Versions and releases
 
-- Versionnage sémantique, en 0.x tant que le mod n'est pas stable : une version mineure (0.**2**.0) peut casser les mondes existants, un correctif (0.1.**1**) non.
-- Canaux alignés sur CurseForge et Modrinth, déduits du suffixe : `-alpha.N` (alpha), `-beta.N` (beta), sans suffixe (release).
-- Une seule source de vérité : `mod_version` dans `gradle.properties`, reprise dans `neoforge.mods.toml` et dans le nom du jar (`netcraft-<minecraft>-<version>.jar`).
-- `CHANGELOG.md` est généré par [git-cliff](https://git-cliff.org/) (`cliff.toml`) depuis les messages de commit, au format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) : ne le modifiez pas à la main.
+- [Semantic Versioning](https://semver.org/), in 0.x while the mod is not stable: a minor version (0.**2**.0) may break existing worlds, a patch version (0.1.**1**) never does.
+- Channels, aligned with CurseForge and Modrinth, deduced from the suffix: `-alpha.N` (alpha), `-beta.N` (beta), no suffix (release).
+- Cycle of a minor version:
+  - an **alpha** at the end of each lot;
+  - a **beta** when the content of the version is complete: **feature freeze**, fixes only until the release (`release prepare` refuses `feat` commits after the first beta, unless `--allow-features`);
+  - the **release** when the beta is stable;
+  - a **hotfix** (patch version) for a released version, only while it is the latest version on `main`: once an alpha of the next version is published, fixes go into the next alpha or beta.
+- Roadmap of the minor versions: [`docs/project-management.md`](docs/project-management.md).
+- A single source of truth: `mod_version` in `gradle.properties`, used in `neoforge.mods.toml` and in the jar name (`<mod_id>-<minecraft>-<version>.jar`).
+- `CHANGELOG.md` is generated by [git-cliff](https://git-cliff.org/) (`cliff.toml`) from the commit messages, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format: do not edit it by hand.
 
-## Publier une version (mainteneur)
+## Assisted commands (maintainer)
 
-Tout se fait en local avec `scripts/release.sh`. Il faut git-cliff, la GitHub CLI connectée (`gh auth login`) et une clé de signature configurée (voir [`docs/securite-depot.md`](docs/securite-depot.md)).
+`scripts/dev` groups the commands of the branch model and the release cycle. Each command shows what it is going to do, asks for confirmation on the terminal before any public action (push, pull request, tag, release), and has a `--dry-run` mode that runs every check without changing anything. The GitHub repository is read from the `origin` remote, the mod identity and version from `gradle.properties`.
 
-1. **Essai à blanc**, sans rien modifier : `scripts/release.sh --dry-run 0.1.0-alpha.1`.
-2. **Préparation** depuis `developement` à jour : `scripts/release.sh 0.1.0-alpha.1`.
-   - vérifie la branche, l'arbre et le tag ;
-   - écrit la version dans `gradle.properties` et génère `CHANGELOG.md` ;
-   - lance `build test` puis `runGameTestServer` ;
-   - crée le commit `chore(release): v0.1.0-alpha.1` et le tag annoté `v0.1.0-alpha.1`, tous deux signés ;
-   - **demande confirmation**, puis envoie `developement` et le tag et ouvre la pull request vers `main`.
-3. **Fusion** de la pull request sur GitHub avec **Create a merge commit** (ni squash ni rebase : le tag doit rester sur `developement` et dans `main`).
-4. **Release GitHub** : `git switch --detach v0.1.0-alpha.1`, puis `scripts/release.sh --publish 0.1.0-alpha.1`. Le script construit le jar depuis le tag et, **après confirmation**, crée la release en **brouillon** (marquée pré-version pour alpha et beta) avec le jar et les notes. La publication se fait à la main sur GitHub.
-5. Retour sur `developement` : `git switch developement`.
+| Command | What it does |
+|---|---|
+| `scripts/dev status` | Branch, version, latest tag and suggested next versions, commits not pushed, phase (feature freeze), open issues of the current lot, open pull requests, merged branches to delete locally. Read-only. |
+| `scripts/dev lot start <id>` | Fast-forwards `developement`, creates `lot/<id>` locally and lists the open issues of its milestone. |
+| `scripts/dev lot finish [--except n,m]` | Runs the checks, then pushes `lot/<id>` and opens the pull request to `developement`, with one `Closes #` line per open issue of the milestone (except n, m) and the `breaking` label if a commit is marked `!`. |
+| `scripts/dev release prepare <version>` | From `developement` (or `hotfix/<version>`): checks the version order, the feature freeze and, for a patch, that nothing breaks worlds; writes the version and the changelog on `release/v<version>`, runs the checks, commits (signed), then pushes and opens the pull request to `main`. |
+| `scripts/dev release publish <version>` | After the merge: signed tag on the merge commit of `main`, jar built from it in a temporary worktree, **draft** GitHub release (pre-release for alpha and beta), `main` brought back into `developement`, finished milestones closed. |
+| `scripts/dev hotfix start <version>` | Creates `hotfix/<version>` from `main`, which must be at the previous release. |
+| `scripts/dev project sync` | Creates the labels, milestones and issues of `scripts/project/` on GitHub. Can be run again: nothing is created twice. |
 
-## Signaler une faille
+### Publish a version
 
-Pas d'issue publique : voir [`SECURITY.md`](SECURITY.md).
+Requirements: git-cliff, the GitHub CLI logged in (`gh auth login`) and a signing key (see [`docs/securite-depot.md`](docs/securite-depot.md), section 3).
+
+1. `scripts/dev release prepare <version> --dry-run`, then without `--dry-run`, from `developement` up to date with `origin`.
+2. On GitHub, merge the pull request "Release v<version>" with **Create a merge commit**.
+3. `scripts/dev release publish <version> --dry-run`: builds the jar and writes the release notes to `build/release/notes-v<version>.md`. Rewrite them there if needed: the file is kept and used by the real run, which also offers to open it in your editor.
+4. `scripts/dev release publish <version>`: tag, draft release, `developement` updated.
+5. Review the draft on GitHub (Releases) and publish it yourself.
+
+The notes of `0.1.0-alpha.1` are written by hand in English at step 3, since the commits before the move to English are in French.
+
+### Fix a released version
+
+1. `scripts/dev hotfix start <X.Y.Z>`, then commit the fixes (`fix: …`, with `Fixes #<issue>`).
+2. Then the same steps as a version: `release prepare <X.Y.Z>` (from the hotfix branch), merge, `release publish <X.Y.Z>`. Bringing `main` back into `developement` keeps `developement`'s side of `gradle.properties` and `CHANGELOG.md` in case of conflict; any other conflict stops the command with the steps to finish by hand.
+
+## Report a vulnerability
+
+No public issue: see [`SECURITY.md`](SECURITY.md).

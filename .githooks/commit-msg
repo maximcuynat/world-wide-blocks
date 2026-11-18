@@ -32,6 +32,6 @@ commit-msg : le message ne suit pas la convention du projet.
   Types   : ${types//|/, }
   Exemple : fix(cordon): annuler l'attente quand le point de départ disparaît
 
-Voir CONTRIBUTING.md, section « Messages de commit ».
+Voir CONTRIBUTING.md, section « Commit messages ».
 EOF
 exit 1

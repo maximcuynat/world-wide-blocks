@@ -1,5 +1,7 @@
 # NetCraft
 
+> **This is `developement`, the development branch**: its code is work in progress between two versions. The released versions, with their jar files, are on the [Releases](../../releases) page.
+
 [Français](#français) · [English](#english)
 
 ---
