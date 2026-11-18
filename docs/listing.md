@@ -26,7 +26,7 @@ Left out on purpose: `packet-tracer` and other product names (the mod has no lin
 
 ### Command
 
-Run from the clone, after the rename of the repository (`going-public.md`, step 2). `gh repo edit` applies to the repository of the current directory. `--add-topic` adds topics and leaves the existing ones in place. The comma-separated list below was not run **(to verify)**: if gh refuses it, repeat `--add-topic` once per topic.
+Run from the clone, after the rename of the repository (`going-public.md`, step 2). `gh repo edit` applies to the repository of the current directory. `--add-topic` adds topics and leaves the existing ones in place; it accepts the comma-separated list below (run on 2026-11-18).
 
 ```bash
 gh repo edit \
@@ -36,7 +36,7 @@ gh repo edit \
 gh repo view --json description,repositoryTopics --jq '{description, topics: [.repositoryTopics[].name]}'
 ```
 
-Options checked with `gh repo edit --help` (gh 2.103.3). The check command was not run: its field names (`repositoryTopics`) are **to verify** with `gh repo view --json` without a field, which lists them.
+Options checked with `gh repo edit --help` (gh 2.103.3). The check command, with its fields `description` and `repositoryTopics`, works (run on 2026-11-18).
 
 ### Social preview image
 

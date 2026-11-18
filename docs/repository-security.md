@@ -143,13 +143,25 @@ On a public repository, secret scanning runs automatically and for free. To enab
 - **Secret Protection**: **Enable**;
 - then in the same section, **Push protection**: **Enable** (rejects a push that contains a recognized secret).
 
-The documentation does not say clearly whether push protection is free for a public personal repository: if the option is not offered, the `pre-commit` hook (gitleaks) remains the local protection.
+Or from the command line (run on 2026-11-18, which enabled both on this public personal repository):
+
+```bash
+gh api -X PATCH 'repos/{owner}/{repo}' \
+  -f "security_and_analysis[secret_scanning][status]=enabled" \
+  -f "security_and_analysis[secret_scanning_push_protection][status]=enabled"
+```
+
+The `pre-commit` hook (gitleaks) stays the local protection, before anything reaches GitHub.
 
 Push protection "for users" (account level) is enabled by default and blocks secrets pushed to any public repository: check that it is active in the account settings **(path to verify, not given by the documentation)**.
 
 ## 7. Private vulnerability reporting
 
-Repository settings > section **Security and quality** > **Advanced Security** > **Private vulnerability reporting**: **Enable**. Required for `SECURITY.md`, which points to the **Report a vulnerability** button of the **Security** tab. The documentation presents this setting for public repositories: to do after going public.
+Repository settings > section **Security and quality** > **Advanced Security** > **Private vulnerability reporting**: **Enable**. Required for `SECURITY.md`, which points to the **Report a vulnerability** button of the **Security** tab. The documentation presents this setting for public repositories: to do after going public. Or from the command line (run on 2026-11-18):
+
+```bash
+gh api -X PUT 'repos/{owner}/{repo}/private-vulnerability-reporting'
+```
 
 ## 8. Dependabot alerts
 
@@ -157,6 +169,12 @@ Repository settings > section **Security and quality** > **Advanced Security**:
 
 - **Dependency graph**: **Enable**;
 - **Dependabot alerts**: **Enable**.
+
+Or from the command line, for the alerts (run on 2026-11-18):
+
+```bash
+gh api -X PUT 'repos/{owner}/{repo}/vulnerability-alerts'
+```
 
 Known limit: for Gradle, GitHub does not read dependencies by static analysis. The graph is filled by automatic dependency submission, which requires GitHub Actions. Without Actions, the alerts will probably not see the mod's dependencies. The risk is low: the only dependencies are NeoForge (and Minecraft) and JUnit for the tests. NeoForge updates are followed by hand.
 
