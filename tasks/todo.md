@@ -1,5 +1,27 @@
 # NetCraft : suivi
 
+## Bloquant pour la publication
+
+- [ ] **Renommer le mod avant de rendre le dépôt public.** « Netcraft » est le nom d'une société britannique (netcraft.com) qui travaille dans le même domaine que le mod (réseau, sécurité internet) : risque de conflit de nom. Max cherche un autre nom ; le renommage (nom affiché, `mod_id`, package `dev.netcraft`, ressources, dépôt GitHub, docs) fera l'objet d'une session dédiée. Rien ne sera rendu public, ni publié sur CurseForge ou Modrinth, avant. (décidé le 2026-11-18)
+
+## Session A : dépôt propre, sécurisé et outillé (2026-11-18)
+
+Audit de l'historique fait et validé par Max le 2026-11-18 : aucun secret (gitleaks, 57 commits), auteurs avec l'adresse masquée de GitHub, aucun fichier indésirable jamais commité, aucun chemin du poste. `CLAUDE.md`, `tasks/` et les mentions de Max restent publics. Aucun changement au code du mod, pas de GitHub Actions.
+
+Décisions de Max : licence LGPL-3.0, titulaire « maximcuynat » ; version SemVer `0.1.0-alpha.1` dans `gradle.properties` (seule source), canal déduit du suffixe (alpha, beta, rien = release), tag `v0.1.0-alpha.1`, jar `netcraft-26.3-0.1.0-alpha.1.jar` ; `main` ne reçoit que les versions publiées, par une pull request depuis `developement` fusionnée avec un commit de fusion ; le tag 0.1.0-alpha.1 pourra devenir une pré-version GitHub, CurseForge et Modrinth attendront la fin du lot 1 ; hook avant push : tests sautés seulement si tous les fichiers modifiés sont des `.md` ou dans `docs/` ; gitleaks absent : avertissement.
+
+Un commit par sujet, après le build vert de Max (Gradle ne tourne pas dans le bac à sable de Claude) :
+
+- [ ] 1. Wrapper Gradle régénéré en 9.2.1 avec l'empreinte de l'archive (`distributionSha256Sum`). Le jar actuel est un wrapper officiel 8.14.x, authentique mais périmé. Commande lancée par Max, puis contrôle : SHA-256 du jar = `423cb469…` (wrapper officiel 9.2.1), `build test` vert.
+- [ ] 2. `.gitignore` complété (`.env`, logs, captures, rapports de plantage, fichiers macOS et éditeurs) ; `git ls-files -ci --exclude-standard` reste vide.
+- [ ] 3. Licence LGPL-3.0 : `COPYING.LESSER` (LGPL) et `COPYING` (GPL, à laquelle la LGPL renvoie), `mod_license=LGPL-3.0-only`. `TEMPLATE_LICENSE.txt` (MIT du MDK) conservé. Build vert.
+- [ ] 4. Version `0.1.0-alpha.1` et nom du jar avec la version de Minecraft. Build, tests en jeu verts (FML accepte la version) et nom du jar contrôlé dans `build/libs/`.
+- [ ] 5. Hooks versionnés (`.githooks/`) et `scripts/install-hooks.sh` : messages de commit (rejoués sur les 57 sujets existants), gitleaks avant commit, build et tests en jeu avant push (sauf `.md` et `docs/` seuls ; arbre propre exigé). Hook avant push testé dans un clone jetable avec un faux `gradlew`.
+- [ ] 6. Releases : `cliff.toml` (Keep a Changelog en français : Ajouté, Modifié, Corrigé), `CHANGELOG.md`, `scripts/release.sh` (mode `--dry-run`, commit et tag signés, confirmation avant tout envoi, release GitHub en brouillon). Essai de Max : `scripts/release.sh --dry-run 0.1.0-alpha.1`.
+- [ ] 7. `README.md` (français et anglais), `SECURITY.md` (signalement privé par GitHub), `CONTRIBUTING.md` (commits, branches, hooks, tests, releases).
+- [ ] 8. `docs/securite-depot.md` : réglages GitHub à faire par Max, chemins de l'interface, ordre des opérations, signature SSH des commits et des tags.
+- [ ] 9. `CLAUDE.md` : hooks, script de release, modèle de branches. Revue de la session ci-dessous.
+
 ## Étape 1 : environnement de dev
 
 - [x] Choisir le loader et la version de Minecraft : NeoForge 26.3.0.103 sur Minecraft 26.3 (le mod doit d'abord fonctionner seul)
