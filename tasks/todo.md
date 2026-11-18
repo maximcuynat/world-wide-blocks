@@ -6,9 +6,36 @@ Session notes only. Tasks are GitHub issues, grouped by milestone (one lot, one 
 
 - [x] **Rename the mod before making the repository public.** The former name of the mod was also the name of a British company working in the same field (networking, internet security): risk of a name conflict. Max looked for another name; the rename (display name, `mod_id`, package, resources, GitHub repository, docs) was left to a dedicated session. Nothing is made public, nor published on CurseForge or Modrinth, before. (decided on 2026-11-18) Done on 2026-11-18: renamed World Wide Blocks (session C).
 
-## To do in the renaming session
+## Done in the renaming session (session C)
 
 - [x] Translate the existing content into English: `docs/lot-plan.md`, `docs/messages.md`, `docs/network-equipment.md`, `docs/repository-security.md`, `tasks/`, `CLAUDE.md`, the code and its comments, the hook messages. Max's goal: a repository entirely in English. Since session B, everything new is already in English (commits, changelog, templates, labels, issues, new documents). (decided on 2026-11-18) Done on 2026-11-18 (session C).
+
+## Session C: rename to World Wide Blocks, repository in English, listing texts (2026-11-18)
+
+Plan and decisions approved by Max on 2026-11-18: display name World Wide Blocks, mod id `worldwideblocks`, package and Maven group `io.github.maximcuynat.worldwideblocks`, repository and Modrinth and CurseForge address `world-wide-blocks` (free on both, checked through the Modrinth API and by Max in a browser for CurseForge). No migration of existing worlds. README and SECURITY in English only; the electricity lot becomes plain lot E; subcommands and scenes in English; docs renamed `lot-plan.md`, `network-equipment.md`, `repository-security.md`; branch `chore/rename-and-english`. Short command alias `/wwb` (no vanilla command of that name in the 26.3 sources). Max takes care of his own worlds in `run/saves`.
+
+One commit per step, code commits only after Max's green build:
+
+- [x] C1 `refactor!`: rename (packages, resources, keys, `gradle.properties`, saved data `data/worldwideblocks/network.dat` checked in `SavedDataStorage`, client config, commands, `/wwb` alias redirected to the node Brigadier keeps, checked in Brigadier 1.3.11; the refusal game test runs both forms). Build, 123 unit tests, 17 game tests green (Max).
+- [x] C2: code comments, test names and messages in English, by 4 agents in parallel with a glossary. Checked by a script that compares the Java token streams without comments with the previous commit (only consistent renames and test messages allowed, plus two exception messages listed one by one), and a search for renames that collide with an existing name. Build and tests green (Max).
+- [x] C3: `links`, `test clear`, scenes `box_hosts`, `chain`, `loop`, `full_ports`, trial world prefix "Trials"; the game test refuses "Test Level" (the game test server's world, `GameTestServer`) explicitly. Build and tests green (Max).
+- [x] `scripts/dev project update-issues` (asked by Max): rewrites issue bodies from their files, dry run with a diff per issue, confirmation, issues with ticked boxes skipped. Tried in a throwaway clone with a fake `gh` (dry run, CRLF bodies, ticked box, no terminal, yes in a pseudo-terminal, second run with nothing to do).
+- [x] C4: design documents translated and renamed, links updated, lot E, `SECURITY.md` and language notes of `CLAUDE.md` and `CONTRIBUTING.md`.
+- [x] C5: `tasks/` translated; historical lines that named the old identity reworded without it.
+- [x] C6 README rewritten for discoverability; C7 `docs/listing.md`; C8 `docs/going-public.md`.
+
+Final checks (2026-11-18, tracked files only):
+
+- Old name, case-insensitive: only two old entries of `CHANGELOG.md`; no path.
+- Accents, French quotes, em dash (outside `fr_fr.json` and `CHANGELOG.md`): only the angle quotation marks of `gradlew`, Gradle's own wrapper script, left as generated.
+- French words: only inside three source URLs.
+
+Review of session C:
+
+- Checked for real: build, unit and game tests after C1, C2 and C3 (Max); JSON files, resource references, package declarations; Java logic unchanged (script); local links of every document.
+- Not checked: the check by eye in a new "Trials" world (asked from Max at the end of the session); `scripts/dev project update-issues` against the real `gh` (first run with `--dry-run` by Max, after the merge); `gh repo view` field names and the summary limits of Modrinth and CurseForge, marked "(to verify)" in the docs; whether `gh repo rename` updates the `origin` remote.
+- Choices made by Claude and reported to Max: class names `WorldWideBlocks*`, the 16 topics and the description, Modrinth categories `technology` and `utility`, CurseForge Technology and Education, British spelling in the docs, the milestone selected by the end of its title so the command needs no accented letter.
+- Left to Max, in order: check by eye, push and pull request, merge, then `docs/going-public.md`.
 
 ## Session B: project management on GitHub and assisted commands (2026-11-18)
 
@@ -109,7 +136,7 @@ Inventory and real dimensions: `docs/network-equipment.md`.
   - [x] Message module, before 1b-2: audit and design approved by Max on 2026-11-18 (`docs/messages.md`), 7 steps coded and committed the same day after green builds, check by eye done the same day (result in `docs/lot-plan.md`). Steps:
     - [x] 1. Core in plain Java (`message/`): levels, uses, channels, values, routing, repeat limit, sent message and listener; unit tests of routing and of the repeat limit. No visible change.
     - [x] 2. Transport and display: `MessagePayload` (channel, level, key, values), `MessageCenter` carried by the server data, display decided by the client (symbol or word according to the `messageSymbols` setting), cord messages migrated, game tests of the cord through the listener. `TestPlayer` still captures the chat for the loop test, until step 4.
-    - [x] 3. Texts: formal "vous", whole distances, duplicate and `result.ok` removed, common device format, cord tooltip, test of the language files (same keys, maximum lengths).
+    - [x] 3. Texts: formal address in French, whole distances, duplicate and `result.ok` removed, common device format, cord tooltip, test of the language files (same keys, maximum lengths).
     - [x] 4. Loop and saturation: one event per network and per tick, per-minute limit in the module, forgotten when the network changes, message to the device closest to the player, saturation to the operators and to the owner in single player; tests of the engine, of the module and in game (a single series of messages for two boxes).
     - [x] 5. Log in English and cleanup: useful log lines passed through the module (DEBUG, English), `TrialLog` and `graphForTrial` removed, exceptions in English.
     - [x] 6. Status panel: lines built in plain Java (compact, detailed when sneaking, "Sneak: details" line), the client only draws; unit tests.

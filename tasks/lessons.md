@@ -37,3 +37,15 @@
 
 - Never give a `gh` command as working without checking its `--help` or its documentation: `gh project link --owner @me` was refused, the login is needed (`--owner <login>`). Mark an unchecked command as such. (2026-11-18)
 - A command that waits for an answer (`scripts/dev` confirmations, `gh auth refresh`) cannot be run through the assistant's shell (`!` included): tell the maintainer to run it in a real terminal. (2026-11-18)
+
+## Shell (zsh) and text tools
+
+- zsh does not split an unquoted variable into words: `perl -i script $files` received the whole list as one file name, and `git grep … -- $paths` searched one path that does not exist and printed nothing. Pass lists through `xargs -0` or write the paths out, and never take an empty search result as proof before checking that the search can find something. (2026-11-18)
+- `perl -CSD` decodes the file but not a non-ASCII letter written in the expression (without `use utf8`): the substitution silently did nothing. After any bulk replacement, search again for what was replaced. (2026-11-18)
+- In this shell `cp` asks before overwriting and answers no without a terminal: use `/bin/cp -f` in scripts. (2026-11-18)
+
+## Translation and delegated rewrites
+
+- A translation delegated to agents is checked by a tool, not by their report: compare the code without comments with the previous commit (only consistent renames allowed), and look for renames to a name that already exists in the file, which can change what a name refers to and still compile. (2026-11-18)
+- Agents fill gaps with plausible inventions: a log tag that never existed, English game texts quoted for a check made in a French game. Reread every historical statement of a translated document: a fact must stay true, even when the wording changes. (2026-11-18)
+
