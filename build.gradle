@@ -17,7 +17,7 @@ tasks.named('wrapper', Wrapper).configure {
 version = mod_version
 group = mod_group_id
 
-// Tests en jeu automatiques (GameTest) et commande /netcraft test : chargés par les runs de
+// Tests en jeu automatiques (GameTest) et commande /worldwideblocks test : chargés par les runs de
 // développement, jamais dans le jar distribué (le jar ne contient que sourceSets.main).
 sourceSets {
     gametest {
@@ -39,7 +39,7 @@ repositories {
 }
 
 base {
-    // Le nom du jar porte la version de Minecraft : netcraft-26.3-0.1.0-alpha.1.jar
+    // Le nom du jar porte la version de Minecraft : worldwideblocks-26.3-0.1.0-alpha.1.jar
     archivesName = "${mod_id}-${minecraft_version}"
 }
 

@@ -1,0 +1,841 @@
+{
+  "parent": "minecraft:block/block",
+  "texture_size": [
+    64,
+    64
+  ],
+  "textures": {
+    "particle": "worldwideblocks:block/pc_tower",
+    "tower": "worldwideblocks:block/pc_tower"
+  },
+  "elements": [
+    {
+      "name": "boitier",
+      "from": [
+        4,
+        1,
+        1
+      ],
+      "to": [
+        12,
+        15,
+        15
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            6.0,
+            7.0,
+            7.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "east": {
+          "uv": [
+            7.0,
+            0.0,
+            0.0,
+            7.0
+          ],
+          "texture": "#tower"
+        },
+        "south": {
+          "uv": [
+            10.5,
+            0.0,
+            14.5,
+            7.0
+          ],
+          "texture": "#tower"
+        },
+        "west": {
+          "uv": [
+            0.0,
+            0.0,
+            7.0,
+            7.0
+          ],
+          "texture": "#tower"
+        },
+        "up": {
+          "uv": [
+            0.0,
+            7.0,
+            4.0,
+            14.0
+          ],
+          "texture": "#tower"
+        },
+        "down": {
+          "uv": [
+            6.0,
+            7.0,
+            7.0,
+            8.0
+          ],
+          "texture": "#tower"
+        }
+      }
+    },
+    {
+      "name": "pied_avant_gauche",
+      "from": [
+        4.5,
+        0,
+        2
+      ],
+      "to": [
+        6,
+        1,
+        4
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "east": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "south": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "up": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "down": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        }
+      }
+    },
+    {
+      "name": "pied_avant_droit",
+      "from": [
+        10,
+        0,
+        2
+      ],
+      "to": [
+        11.5,
+        1,
+        4
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "east": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "south": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "up": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "down": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        }
+      }
+    },
+    {
+      "name": "pied_arriere_gauche",
+      "from": [
+        4.5,
+        0,
+        12
+      ],
+      "to": [
+        6,
+        1,
+        14
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "east": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "south": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "up": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "down": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        }
+      }
+    },
+    {
+      "name": "pied_arriere_droit",
+      "from": [
+        10,
+        0,
+        12
+      ],
+      "to": [
+        11.5,
+        1,
+        14
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "east": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "south": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "up": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "down": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        }
+      }
+    },
+    {
+      "name": "facade",
+      "from": [
+        4.5,
+        1.5,
+        0.5
+      ],
+      "to": [
+        11.5,
+        14.5,
+        1
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            7.0,
+            0.0,
+            10.5,
+            6.5
+          ],
+          "texture": "#tower"
+        },
+        "east": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "south": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "up": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "down": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        }
+      }
+    },
+    {
+      "name": "bouton_power",
+      "from": [
+        7.5,
+        13,
+        0.25
+      ],
+      "to": [
+        8.5,
+        14,
+        0.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4.0,
+            10.0,
+            4.5,
+            10.5
+          ],
+          "texture": "#tower"
+        },
+        "east": {
+          "uv": [
+            5.0,
+            7.0,
+            6.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "west": {
+          "uv": [
+            5.0,
+            7.0,
+            6.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "up": {
+          "uv": [
+            5.0,
+            7.0,
+            6.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "down": {
+          "uv": [
+            5.0,
+            7.0,
+            6.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "south": {
+          "uv": [
+            5.0,
+            7.0,
+            6.0,
+            8.0
+          ],
+          "texture": "#tower"
+        }
+      }
+    },
+    {
+      "name": "lecteur",
+      "from": [
+        5,
+        11,
+        0.25
+      ],
+      "to": [
+        11,
+        12,
+        0.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4.0,
+            10.5,
+            7.0,
+            11.0
+          ],
+          "texture": "#tower"
+        },
+        "east": {
+          "uv": [
+            5.0,
+            7.0,
+            6.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "west": {
+          "uv": [
+            5.0,
+            7.0,
+            6.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "up": {
+          "uv": [
+            5.0,
+            7.0,
+            6.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "down": {
+          "uv": [
+            5.0,
+            7.0,
+            6.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "south": {
+          "uv": [
+            5.0,
+            7.0,
+            6.0,
+            8.0
+          ],
+          "texture": "#tower"
+        }
+      }
+    },
+    {
+      "name": "ports_usb",
+      "from": [
+        5.5,
+        3,
+        0.25
+      ],
+      "to": [
+        8,
+        3.5,
+        0.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4.0,
+            11.0,
+            5.25,
+            11.25
+          ],
+          "texture": "#tower"
+        },
+        "east": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "up": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "down": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "south": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        }
+      }
+    },
+    {
+      "name": "alimentation",
+      "from": [
+        5,
+        11,
+        15
+      ],
+      "to": [
+        11,
+        14.5,
+        15.25
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            4.0,
+            8.0,
+            7.0,
+            9.75
+          ],
+          "texture": "#tower"
+        },
+        "east": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "up": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "down": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "north": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        }
+      }
+    },
+    {
+      "name": "prise_secteur",
+      "from": [
+        6,
+        12,
+        15.25
+      ],
+      "to": [
+        8,
+        13.5,
+        15.5
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            7.0,
+            8.0,
+            8.0,
+            8.75
+          ],
+          "texture": "#tower"
+        },
+        "east": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "up": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "down": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "north": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        }
+      }
+    },
+    {
+      "name": "port_rj45",
+      "from": [
+        6,
+        6,
+        15
+      ],
+      "to": [
+        7.5,
+        7.5,
+        15.25
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            8.0,
+            8.0,
+            8.75,
+            8.75
+          ],
+          "texture": "#tower"
+        },
+        "east": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "up": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "down": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        },
+        "north": {
+          "uv": [
+            4.0,
+            7.0,
+            5.0,
+            8.0
+          ],
+          "texture": "#tower"
+        }
+      }
+    }
+  ]
+}

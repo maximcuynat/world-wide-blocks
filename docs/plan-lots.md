@@ -1,4 +1,4 @@
-# NetCraft : plan par lots
+# World Wide Blocks : plan par lots
 
 Établi le 2026-11-17, révisé le même jour après relecture. Statut : proposé, en attente de validation. Lots codés : 0 et 1a (voir l'état de chaque lot).
 
@@ -99,7 +99,7 @@ Contrainte technique à tenir dès ce sous-lot : un lien doit continuer d'existe
 
 #### État du lot 1a
 
-Codé le 2026-11-17 sur la branche `developement`. Build et 34 tests unitaires au vert, panneau d'état compris. Essais en jeu du même jour : branchement et câble visible jugés bons par Max ; d'après le log, le lien posé avant le redémarrage est toujours listé par `/netcraft liens` après relance du jeu, et encore listé depuis x ≈ 380, zone non chargée. Panneau d'état et consommation du cordon en survie validés par Max. Ajouté ensuite à sa demande et validé en jeu : retirer un seul bout du câble main vide, puis le débrancher de l'autre appareil pour récupérer le cordon (étapes 5 et 10). Lot 1a terminé.
+Codé le 2026-11-17 sur la branche `developement`. Build et 34 tests unitaires au vert, panneau d'état compris. Essais en jeu du même jour : branchement et câble visible jugés bons par Max ; d'après le log, le lien posé avant le redémarrage est toujours listé par `/worldwideblocks liens` après relance du jeu, et encore listé depuis x ≈ 380, zone non chargée. Panneau d'état et consommation du cordon en survie validés par Max. Ajouté ensuite à sa demande et validé en jeu : retirer un seul bout du câble main vide, puis le débrancher de l'autre appareil pour récupérer le cordon (étapes 5 et 10). Lot 1a terminé.
 
 | Type | Équipement | État |
 |---|---|---|
@@ -119,12 +119,12 @@ Comportement retenu :
 
 Socle technique pour les lots suivants :
 
-- Le moteur (`dev.netcraft.network`) est un graphe d'appareils et de câbles en Java pur, testé sans lancer le jeu. Au lot 1a, il ne fait voyager aucun message ; depuis le lot 1b, de vraies trames y circulent (voir les principes).
-- Il est sauvegardé dans le stockage global du serveur (`data/netcraft/network.dat` du monde), indépendant des chunks chargés. Aucune donnée réseau n'est en mémoire statique : en solo, deux mondes ne se mélangent pas.
+- Le moteur (`io.github.maximcuynat.worldwideblocks.network`) est un graphe d'appareils et de câbles en Java pur, testé sans lancer le jeu. Au lot 1a, il ne fait voyager aucun message ; depuis le lot 1b, de vraies trames y circulent (voir les principes).
+- Il est sauvegardé dans le stockage global du serveur (`data/worldwideblocks/network.dat` du monde), indépendant des chunks chargés. Aucune donnée réseau n'est en mémoire statique : en solo, deux mondes ne se mélangent pas.
 - Chaque appareil connu du moteur garde son nombre de ports. C'est là que s'ajouteront l'adresse matérielle des ports (1b) et l'état de chaque appareil.
 - Chaque lien retient son support (`copper_ethernet`, 100 blocs au plus) : la fibre et la ligne téléphonique s'y ajouteront.
 - Toute la logique tourne sur le serveur. Un joueur ne reçoit que les câbles dont une extrémité est dans un chunk que son client a reçu, pour ne pas révéler l'emplacement d'appareils hors de vue.
-- Commande `/netcraft liens` (opérateurs) : liste les liens tels que le serveur les connaît, même quand leur zone n'est pas chargée.
+- Commande `/worldwideblocks liens` (opérateurs) : liste les liens tels que le serveur les connaît, même quand leur zone n'est pas chargée.
 
 Limites connues, à reprendre plus tard :
 
@@ -135,13 +135,13 @@ Limites connues, à reprendre plus tard :
 
 Procédure de test en jeu :
 
-1. `./gradlew runClient`, monde « Netcraft » en créatif. Le cordon est dans l'onglet NetCraft.
+1. `./gradlew runClient`, monde « World Wide Blocks » en créatif. Le cordon est dans l'onglet World Wide Blocks.
 2. Poser une tour PC et un PC portable à une vingtaine de blocs l'un de l'autre. En visant chacun, le panneau en haut au centre affiche « Port 1 : libre » avec un voyant gris.
-3. Cordon en main, clic droit sur la tour (message « Extrémité 1 : Tour PC, port 1… », le cordon brille), puis clic droit sur le portable (message « Connecté… », l'écran du portable ne bascule pas). Un câble bleu relie les deux appareils ; en visant chacun, le panneau affiche « Port 1 : connecté » avec un voyant vert. `/netcraft liens` liste le lien.
+3. Cordon en main, clic droit sur la tour (message « Extrémité 1 : Tour PC, port 1… », le cordon brille), puis clic droit sur le portable (message « Connecté… », l'écran du portable ne bascule pas). Un câble bleu relie les deux appareils ; en visant chacun, le panneau affiche « Port 1 : connecté » avec un voyant vert. `/worldwideblocks liens` liste le lien.
 4. Accroupi + clic droit sur l'un des deux avec le cordon : message « port 1 débranché », le câble disparaît, les deux repassent à « libre ». Rebrancher.
 5. Accroupi + clic droit main vide sur le portable : le bout est retiré et reste en main, une ligne relie la tour à la main. Clic droit sur un troisième appareil : le câble relie la tour à ce nouvel appareil. Recommencer, puis clic droit sur la tour : le câble en est débranché, le cordon reste libre en main et la tour repasse à « libre ».
-6. S'éloigner : `/tp ~400 ~ ~`. Taper `/netcraft liens` : le lien est toujours listé alors que sa zone n'est plus chargée. Revenir : `/tp ~-400 ~ ~`. Le câble est de nouveau visible et les deux appareils affichent « connecté ».
-7. Sauvegarder et redémarrer : quitter vers le menu, fermer le jeu, relancer `./gradlew runClient`, rouvrir le monde. Le câble est visible, les deux appareils affichent « connecté » et `/netcraft liens` liste le lien.
+6. S'éloigner : `/tp ~400 ~ ~`. Taper `/worldwideblocks liens` : le lien est toujours listé alors que sa zone n'est plus chargée. Revenir : `/tp ~-400 ~ ~`. Le câble est de nouveau visible et les deux appareils affichent « connecté ».
+7. Sauvegarder et redémarrer : quitter vers le menu, fermer le jeu, relancer `./gradlew runClient`, rouvrir le monde. Le câble est visible, les deux appareils affichent « connecté » et `/worldwideblocks liens` liste le lien.
 8. Refus : relier un appareil à plus de 100 blocs (« Trop loin… »), puis un appareil dont le port est occupé (« Aucun port libre… »).
 9. Casse : casser la tour branchée. Le câble disparaît et le portable repasse à « libre ».
 10. Survie (`/gamemode survival`, avec un seul cordon dans l'inventaire) : brancher consomme le cordon. Main vide, accroupi + clic droit sur un appareil : le bout revient en main ; clic droit sur l'autre appareil : le cordon est libre en main, prêt à resservir. Casser un appareil relié en créatif ne fait tomber aucun cordon.
@@ -203,7 +203,7 @@ Résultat de la vérification : la colonne « Vu » est prouvée par les capture
 | 3. 2 MAC sur un port (« chaine ») | Box de gauche : « Port 1 : connecté, 02:… (+1) » | Box de droite détaillée |
 | 4. Portable au bout des 99 blocs | Portable « Connecté », câble arrivant au portable | Câble sur toute sa longueur, panneau détaillé du portable |
 | 5. Message de boucle | Un seul message jaune « ⚠ Boucle réseau près de Box internet [x, y, z]… », de nouveau un seul plus tard ; une ligne « Network loop » en anglais par message | Écart d'une minute de jeu (jeu mis en pause entre les deux, prouvé par le test en jeu) ; arrêt des messages après le retrait d'un câble (aucun câble retiré) |
-| 6. Textes français | Tous les textes vus sont en français et au vouvoiement ; symboles ✖ et ⚠ bien rendus | `/netcraft liens` (non lancé) ; rendu de ✔ et ℹ ; repli `messageSymbols = false` (non essayé) |
+| 6. Textes français | Tous les textes vus sont en français et au vouvoiement ; symboles ✖ et ⚠ bien rendus | `/worldwideblocks liens` (non lancé) ; rendu de ✔ et ℹ ; repli `messageSymbols = false` (non essayé) |
 
 | Sujet | État |
 |---|---|
@@ -220,8 +220,8 @@ Données séparées du dessin : le serveur envoie clé, valeurs et niveau ; le c
 Méthode de test (depuis le lot 1b-1) : la logique est prouvée par des tests automatiques ; les essais à la main ne servent plus qu'à ce qui demande des yeux. La sauvegarde de Max n'est jamais modifiée.
 
 1. `./gradlew build test` : compilation (jeu de sources `gametest` compris) et tests unitaires du moteur, en Java pur.
-2. `./gradlew runGameTestServer` : tests en jeu automatiques, sans fenêtre, dans un monde jetable (`run-gametest/`, ignoré par git). Le résultat est en fin de `run-gametest/logs/latest.log` (« All N required tests passed »). Ils couvrent : cordon dont le départ est cassé ou détruit par une explosion (créatif et survie, compte des cordons), changement de dimension et déconnexion pendant un branchement en attente, ports pleins, expiration des MAC (bornes exactes), sauvegarde et relecture du réseau, boucle signalée par un seul message par minute pour deux box (écart exact de 1 200 ticks) et limite oubliée seulement pour le réseau qui change (lot à part, car ils touchent les limites globales du moteur), construction de chaque décor d'essai, refus de `/netcraft test` hors d'un monde d'essai. Les messages se vérifient par l'écouteur du module (canal, clé, valeurs, destinataire), sans passer par le chat d'un joueur.
-3. Vérification à l'œil avec `/netcraft test <décor>` : `./gradlew runClient`, monde créatif dont le nom commence par « Essais » (la commande est refusée ailleurs ; elle n'existe qu'en développement et seulement pour les opérateurs). Se placer face à un terrain dégagé : le décor est construit 3 blocs devant soi, tourné vers soi, et refusé si la zone n'est pas vide. Viser chaque appareil avant la capture (F2) pour afficher son panneau, debout (compact) puis accroupi (détaillé). `/netcraft test effacer` retire le dernier décor.
+2. `./gradlew runGameTestServer` : tests en jeu automatiques, sans fenêtre, dans un monde jetable (`run-gametest/`, ignoré par git). Le résultat est en fin de `run-gametest/logs/latest.log` (« All N required tests passed »). Ils couvrent : cordon dont le départ est cassé ou détruit par une explosion (créatif et survie, compte des cordons), changement de dimension et déconnexion pendant un branchement en attente, ports pleins, expiration des MAC (bornes exactes), sauvegarde et relecture du réseau, boucle signalée par un seul message par minute pour deux box (écart exact de 1 200 ticks) et limite oubliée seulement pour le réseau qui change (lot à part, car ils touchent les limites globales du moteur), construction de chaque décor d'essai, refus de `/worldwideblocks test` hors d'un monde d'essai. Les messages se vérifient par l'écouteur du module (canal, clé, valeurs, destinataire), sans passer par le chat d'un joueur.
+3. Vérification à l'œil avec `/worldwideblocks test <décor>` : `./gradlew runClient`, monde créatif dont le nom commence par « Essais » (la commande est refusée ailleurs ; elle n'existe qu'en développement et seulement pour les opérateurs). Se placer face à un terrain dégagé : le décor est construit 3 blocs devant soi, tourné vers soi, et refusé si la zone n'est pas vide. Viser chaque appareil avant la capture (F2) pour afficher son panneau, debout (compact) puis accroupi (détaillé). `/worldwideblocks test effacer` retire le dernier décor.
 
 | Décor | À regarder |
 |---|---|
@@ -238,12 +238,12 @@ Les captures vont dans `run/screenshots`, les messages dans `run/logs/latest.log
 
 Préparation : `./gradlew runClient`, puis Options, Langue : Français. Ouvrir (ou créer) un monde créatif dont le nom commence par « Essais », se placer face à un terrain dégagé. Prendre une capture (F2) à chaque point marqué 📷.
 
-1. **Infobulle et barre d'action.** Prendre un cordon Ethernet dans l'onglet NetCraft et le survoler dans l'inventaire : 3 lignes grises (« Clic droit sur deux appareils : les relier. », etc.) 📷. `/netcraft test ports_pleins`, cordon en main, clic droit sur la box : « ✖ Box internet : aucun port libre. » en rouge au-dessus de la barre d'objets 📷. `/netcraft test effacer`.
-2. **Panneau compact puis détaillé (box).** `/netcraft test box_postes`. Viser la box debout : « Box internet », « 3/4 ports connectés » avec un voyant vert, « Accroupi : détails » en gris 📷. S'accroupir en la visant : « Port 1 : connecté, 02:… » (MAC en entier) pour les ports 1 à 3, « Port 4 : libre », « Port 5 (ligne) : inactif » 📷. Viser un poste : « Connecté », puis accroupi « Port 1 : connecté » et « MAC 02:… » 📷. `/netcraft test effacer`.
-3. **2 MAC sur le port 1 de la box de gauche.** `/netcraft test chaine`. Viser la box de gauche accroupi : « Port 1 : connecté, 02:… (+1) » 📷. La box de droite, accroupi : port 1 avec une seule MAC (le poste de gauche), ports 2 et 3 avec la MAC de leur poste. `/netcraft test effacer`.
-4. **Portable au bout du câble de 99 blocs.** `/netcraft test distance`. Viser la tour : « Connecté ». Marcher jusqu'au portable, 99 blocs devant : le câble est dessiné tout du long ; viser le portable : « Connecté », puis accroupi son port et sa MAC 📷. `/netcraft test effacer`.
-5. **Message de boucle, unique et lisible.** `/netcraft test boucle`, rester à côté (moins de 32 blocs). Dans le chat : un seul message, « ⚠ Boucle réseau près de Box internet [x, y, z]. Retirez un câble de la boucle. » en jaune 📷. Une minute plus tard : de nouveau un seul message, pas deux. Retirer un des deux câbles entre les box (main vide, accroupi + clic droit sur la box de gauche) : plus aucun message. Dans `run/logs/latest.log`, une ligne en anglais « Network loop: … » par message. `/netcraft test effacer`.
-6. **Textes français et repli des symboles.** Tout ce qui précède est en français et au vouvoiement ; `/netcraft liens` écrit « Box internet [x, y, z] (minecraft:overworld) » et des longueurs entières. Si un symbole (ℹ ✔ ⚠ ✖) s'affiche mal : dans `run/config/netcraft-client.toml`, mettre `messageSymbols = false` (relu sans relancer le jeu) et refaire le point 1 : « Erreur : Box internet : aucun port libre. ». Remettre `true` ensuite.
+1. **Infobulle et barre d'action.** Prendre un cordon Ethernet dans l'onglet World Wide Blocks et le survoler dans l'inventaire : 3 lignes grises (« Clic droit sur deux appareils : les relier. », etc.) 📷. `/worldwideblocks test ports_pleins`, cordon en main, clic droit sur la box : « ✖ Box internet : aucun port libre. » en rouge au-dessus de la barre d'objets 📷. `/worldwideblocks test effacer`.
+2. **Panneau compact puis détaillé (box).** `/worldwideblocks test box_postes`. Viser la box debout : « Box internet », « 3/4 ports connectés » avec un voyant vert, « Accroupi : détails » en gris 📷. S'accroupir en la visant : « Port 1 : connecté, 02:… » (MAC en entier) pour les ports 1 à 3, « Port 4 : libre », « Port 5 (ligne) : inactif » 📷. Viser un poste : « Connecté », puis accroupi « Port 1 : connecté » et « MAC 02:… » 📷. `/worldwideblocks test effacer`.
+3. **2 MAC sur le port 1 de la box de gauche.** `/worldwideblocks test chaine`. Viser la box de gauche accroupi : « Port 1 : connecté, 02:… (+1) » 📷. La box de droite, accroupi : port 1 avec une seule MAC (le poste de gauche), ports 2 et 3 avec la MAC de leur poste. `/worldwideblocks test effacer`.
+4. **Portable au bout du câble de 99 blocs.** `/worldwideblocks test distance`. Viser la tour : « Connecté ». Marcher jusqu'au portable, 99 blocs devant : le câble est dessiné tout du long ; viser le portable : « Connecté », puis accroupi son port et sa MAC 📷. `/worldwideblocks test effacer`.
+5. **Message de boucle, unique et lisible.** `/worldwideblocks test boucle`, rester à côté (moins de 32 blocs). Dans le chat : un seul message, « ⚠ Boucle réseau près de Box internet [x, y, z]. Retirez un câble de la boucle. » en jaune 📷. Une minute plus tard : de nouveau un seul message, pas deux. Retirer un des deux câbles entre les box (main vide, accroupi + clic droit sur la box de gauche) : plus aucun message. Dans `run/logs/latest.log`, une ligne en anglais « Network loop: … » par message. `/worldwideblocks test effacer`.
+6. **Textes français et repli des symboles.** Tout ce qui précède est en français et au vouvoiement ; `/worldwideblocks liens` écrit « Box internet [x, y, z] (minecraft:overworld) » et des longueurs entières. Si un symbole (ℹ ✔ ⚠ ✖) s'affiche mal : dans `run/config/worldwideblocks-client.toml`, mettre `messageSymbols = false` (relu sans relancer le jeu) et refaire le point 1 : « Erreur : Box internet : aucun port libre. ». Remettre `true` ensuite.
 
 À rapporter : les captures, et tout texte coupé, débordant du panneau, mal traduit ou dont le symbole s'affiche mal.
 

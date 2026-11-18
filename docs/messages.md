@@ -5,7 +5,7 @@ Audit des messages des lots 1a et 1b-1 (2026-11-18), puis conception du module d
 - Réseau saturé : prévenir les opérateurs connectés, plus le propriétaire du monde en solo.
 - Symboles des niveaux : d'accord, à vérifier à l'œil, avec un repli en texte simple (réglage du client).
 - Ligne « Accroupi : détails » gardée dans le panneau compact.
-- Textes de `/netcraft test` en dur et en français.
+- Textes de `/worldwideblocks test` en dur et en français.
 - Vouvoiement partout, comme la traduction française de Minecraft.
 - Distances arrondies à l'entier le plus proche (« 4 blocs »), dans toutes les langues.
 - **Données séparées du dessin** : le serveur envoie clé, valeurs et niveau ; le client décide seul de l'apparence (symbole, couleur, place). Une future interface HUD soignée (lot de finition) doit pouvoir remplacer le dessin sans toucher au moteur ni aux messages.
@@ -16,7 +16,7 @@ Audit des messages des lots 1a et 1b-1 (2026-11-18), puis conception du module d
 
 Tous envoyés par `EthernetCableItem.tell()` (`player.sendOverlayMessage`), au seul joueur qui fait le geste, une fois par geste. Chaque envoi est aussi tracé en `[ESSAI 1b-1]` (DEBUG, en français, texte rendu par le serveur).
 
-| Clé (`message.netcraft.cable.…`) | Texte français actuel | Déclencheur |
+| Clé (`message.worldwideblocks.cable.…`) | Texte français actuel | Déclencheur |
 |---|---|---|
 | `start` | Extrémité 1 : %s, port %s. Clic droit sur le second appareil (accroupi + clic dans le vide pour annuler). | Premier clic, cordon en main |
 | `no_free_port` | %s : aucun port libre. | Premier clic sur un appareil plein |
@@ -41,15 +41,15 @@ Tous envoyés par `EthernetCableItem.tell()` (`player.sendOverlayMessage`), au s
 
 | Clé | Texte français actuel | Déclencheur, destinataire, fréquence |
 |---|---|---|
-| `message.netcraft.network.loop` | Boucle réseau : une trame diffusée revient à %s [%s, %s, %s] par le port %s. Elle a été supprimée ; retirez un des câbles de la boucle. | Trame revenue à un switch (`SimulationEvent.LoopDetected`). Joueurs à moins de 32 blocs de l'appareil qui la voit. Au plus une fois par minute **et par appareil** |
-| `commands.netcraft.links.*` | %s lien(s) réseau : … | Réponse à `/netcraft liens`, à qui a tapé la commande |
-| (texte en dur) | Décor « … » : …, Commande réservée aux mondes d'essai : ce monde s'appelle « … », Aucun décor à retirer depuis ta connexion., … | Réponses à `/netcraft test`, développement seulement (jeu de sources `gametest`) |
+| `message.worldwideblocks.network.loop` | Boucle réseau : une trame diffusée revient à %s [%s, %s, %s] par le port %s. Elle a été supprimée ; retirez un des câbles de la boucle. | Trame revenue à un switch (`SimulationEvent.LoopDetected`). Joueurs à moins de 32 blocs de l'appareil qui la voit. Au plus une fois par minute **et par appareil** |
+| `commands.worldwideblocks.links.*` | %s lien(s) réseau : … | Réponse à `/worldwideblocks liens`, à qui a tapé la commande |
+| (texte en dur) | Décor « … » : …, Commande réservée aux mondes d'essai : ce monde s'appelle « … », Aucun décor à retirer depuis ta connexion., … | Réponses à `/worldwideblocks test`, développement seulement (jeu de sources `gametest`) |
 
 ### Panneau d'état (client, appareil visé)
 
 Toujours détaillé : le nom, puis une ligne par port avec un voyant (vert connecté, gris libre, gris foncé inactif), et pour un poste une ligne `MAC …` sous chaque port.
 
-| Clé (`hud.netcraft.…`) | Texte français |
+| Clé (`hud.worldwideblocks.…`) | Texte français |
 |---|---|
 | `port.connected` | Port %s : connecté |
 | `port.free` | Port %s : libre |
@@ -62,7 +62,7 @@ Toujours détaillé : le nom, puis une ligne par port avec un voyant (vert conne
 
 | Niveau | Texte | Où |
 |---|---|---|
-| INFO | NetCraft chargé | `NetCraft` |
+| INFO | World Wide Blocks chargé | `WorldWideBlocks` |
 | WARN | Lien réseau incohérent ignoré au chargement : {} | `NetworkSavedData` |
 | WARN | Réseau saturé : plus de {} trames en attente, de nouvelles trames ont été perdues. | `NetworkManager`, au plus une par minute ; aucun joueur prévenu |
 | WARN | Boucle réseau : une trame diffusée revient à {} ({}) par le port {}. Copie supprimée. | `NetworkManager`, une par appareil et par minute |
@@ -86,7 +86,7 @@ Toujours détaillé : le nom, puis une ligne par port avec un voyant (vert conne
 7. **Aucun niveau** : un refus et une réussite ont la même apparence dans la barre d'action.
 8. **Panneau toujours détaillé** : 6 lignes pour la box, une ligne de MAC par port pour un poste.
 9. **Réseau saturé** : seulement dans le log, le joueur n'en sait rien.
-10. **Format des appareils** : `%s [%s, %s, %s]` recopié dans chaque texte (boucle, `/netcraft liens`), autrement dans les traces.
+10. **Format des appareils** : `%s [%s, %s, %s]` recopié dans chaque texte (boucle, `/worldwideblocks liens`), autrement dans les traces.
 11. **Tests** : les messages ne sont captés qu'en surchargeant le joueur de test (`TestPlayer.sendSystemMessage`). Le log n'est pas vérifiable, et le test de boucle lit les coordonnées par position dans les arguments.
 
 ## 2. Conception proposée
@@ -103,7 +103,7 @@ Chaque message déclare un **usage** et un **niveau** ; le canal en découle, le
 | Diagnostic | (aucun) | Log, DEBUG |
 | Appareil visé | (voyants) | Panneau d'état, côté client |
 
-Exception assumée : la réponse à une commande (`/netcraft liens`, `/netcraft test`) reste dans le chat de qui l'a tapée, comme toutes les commandes de Minecraft. Les textes de `/netcraft test` restent en dur, en français : la commande n'existe qu'en développement (jeu de sources `gametest`, absent du jar), et ses clés n'ont pas leur place dans les fichiers de langue distribués. Seul « ta connexion » passe au vouvoiement.
+Exception assumée : la réponse à une commande (`/worldwideblocks liens`, `/worldwideblocks test`) reste dans le chat de qui l'a tapée, comme toutes les commandes de Minecraft. Les textes de `/worldwideblocks test` restent en dur, en français : la commande n'existe qu'en développement (jeu de sources `gametest`, absent du jar), et ses clés n'ont pas leur place dans les fichiers de langue distribués. Seul « ta connexion » passe au vouvoiement.
 
 Niveau d'un geste : la réussite est un **succès** ; une étape ou une annulation voulue par le joueur, une **information** ; une annulation causée par autre chose (départ disparu, changement de dimension, port pris entre-temps), un **avertissement** ; un geste refusé, une **erreur**.
 
@@ -114,13 +114,13 @@ Niveau d'un geste : la réussite est un **succès** ; une étape ou une annulati
 | Avertissement | jaune | ⚠ |
 | Erreur | rouge | ✖ |
 
-Le symbole et la couleur sont choisis par le client à partir du niveau reçu : ils ne sont ni dans les fichiers de langue ni envoyés par le serveur. Repli : un réglage du client (`netcraft-client.toml`, `messageSymbols = false`) remplace le symbole par un mot traduit (« Info », « OK », « Attention », « Erreur »). Rendu des symboles à vérifier à l'œil.
+Le symbole et la couleur sont choisis par le client à partir du niveau reçu : ils ne sont ni dans les fichiers de langue ni envoyés par le serveur. Repli : un réglage du client (`worldwideblocks-client.toml`, `messageSymbols = false`) remplace le symbole par un mot traduit (« Info », « OK », « Attention », « Erreur »). Rendu des symboles à vérifier à l'œil.
 
 ### Anti-répétition
 
 - Un événement réseau porte une **clé de problème**. Le module ne le transmet qu'une fois par minute de jeu pour une même clé (valeur déjà validée), quel que soit le nombre d'appareils qui le voient. Le temps est celui du tick de la simulation (pas d'écart possible avec l'horloge corrigée le 2026-11-18).
 - La boucle a pour clé le **réseau** où elle se trouve (l'ensemble des appareils reliés par des câbles, désigné par son plus petit identifiant d'appareil). Le moteur regroupe toutes les détections d'un même tick par réseau et émet un seul événement, avec la liste des appareils et ports où les trames sont revenues. La limite par minute passe du moteur au module : le moteur constate, le module décide qui prévenir et quand.
-- **Oubli des clés de boucle** : à chaque changement d'un réseau (appareil posé ou retiré, câble branché ou débranché), la clé de boucle de ce réseau est oubliée, avant comme après le changement (un câble retiré peut le couper en deux, un câble ajouté en réunir deux). Les autres réseaux gardent leur limite : un joueur qui bricole ailleurs ne relance pas les messages d'une boucle qu'il ne touche pas. Retirer un câble est justement le geste qui répare une boucle : si elle est toujours là, le joueur le sait au signalement suivant au lieu d'attendre la minute. Cela couvre aussi `/netcraft test effacer` puis `boucle` au même endroit, et un réseau dont le plus petit identifiant change (ce qui n'arrive que par un changement du réseau). Fréquence maximale : une fois par minute, plus une fois par geste du joueur.
+- **Oubli des clés de boucle** : à chaque changement d'un réseau (appareil posé ou retiré, câble branché ou débranché), la clé de boucle de ce réseau est oubliée, avant comme après le changement (un câble retiré peut le couper en deux, un câble ajouté en réunir deux). Les autres réseaux gardent leur limite : un joueur qui bricole ailleurs ne relance pas les messages d'une boucle qu'il ne touche pas. Retirer un câble est justement le geste qui répare une boucle : si elle est toujours là, le joueur le sait au signalement suivant au lieu d'attendre la minute. Cela couvre aussi `/worldwideblocks test effacer` puis `boucle` au même endroit, et un réseau dont le plus petit identifiant change (ce qui n'arrive que par un changement du réseau). Fréquence maximale : une fois par minute, plus une fois par geste du joueur.
 - Réseau saturé : clé unique, au plus un message par minute, jamais oubliée avant.
 - La barre d'action n'a pas besoin d'anti-répétition : un message remplace le précédent, et chacun répond à un clic.
 
@@ -131,8 +131,8 @@ Le symbole et la couleur sont choisis par le client à partir du niveau reçu : 
 
 ### Textes
 
-- Le serveur n'envoie que des clés et des valeurs : nombres entiers, coordonnées, et noms d'appareils sous forme de clé (`block.netcraft.…`).
-- Un appareil s'écrit partout avec la même clé `message.netcraft.device` : `%s [%s, %s, %s]`, par exemple « Box internet [12, 64, -5] ».
+- Le serveur n'envoie que des clés et des valeurs : nombres entiers, coordonnées, et noms d'appareils sous forme de clé (`block.worldwideblocks.…`).
+- Un appareil s'écrit partout avec la même clé `message.worldwideblocks.device` : `%s [%s, %s, %s]`, par exemple « Box internet [12, 64, -5] ».
 - Longueurs en blocs entiers, arrondies à l'entier le plus proche (plus de séparateur décimal, dans aucune langue).
 - Vouvoiement partout, ou tournure impersonnelle.
 - Doublon fusionné (`result.port_in_use` remplacé par `no_free_port`), `result.ok` retiré.
@@ -150,7 +150,7 @@ Textes réécrits (français, avec la longueur du cas le plus long ; l'anglais s
 | `cable.connected` | Connecté : %s port %s ↔ %s port %s (%s blocs). | 66 |
 | `network.loop` | Boucle réseau près de %s. Retirez un câble de la boucle. | 85 |
 | `network.saturated` | Réseau saturé : des trames sont perdues. Cherchez une boucle. | 60 |
-| `item.netcraft.ethernet_cable.tooltip` (3 lignes) | Clic droit sur deux appareils : les relier. / Accroupi + clic sur un appareil : débrancher. / Accroupi + clic dans le vide : annuler. | 45 par ligne |
+| `item.worldwideblocks.ethernet_cable.tooltip` (3 lignes) | Clic droit sur deux appareils : les relier. / Accroupi + clic sur un appareil : débrancher. / Accroupi + clic dans le vide : annuler. | 45 par ligne |
 
 ### Panneau d'état
 
@@ -177,7 +177,7 @@ Les MAC restent affichées en entier (42 caractères pour la ligne la plus longu
 
 ### Log
 
-- Entièrement en anglais, textes écrits dans le code (le serveur ne traduit rien) ; un appareil s'y écrit `netcraft:internet_box [12, 64, -5] minecraft:overworld`.
+- Entièrement en anglais, textes écrits dans le code (le serveur ne traduit rien) ; un appareil s'y écrit `worldwideblocks:internet_box [12, 64, -5] minecraft:overworld`.
 - Chaque message envoyé à un joueur y est tracé en DEBUG : canal, clé, valeurs, destinataire.
 - Événements réseau en WARN (boucle : tous les appareils et ports touchés, en une ligne).
 
@@ -188,7 +188,7 @@ Les MAC restent affichées en entier (42 caractères pour la ligne la plus longu
 | Message du cordon | Remplacée par la trace DEBUG de tout message envoyé |
 | Appareil enregistré ou retiré, câble branché ou débranché | Gardée, en anglais, DEBUG, par le module |
 | Chargement : résumé | Gardée (nombre d'appareils et de câbles, MAC générées) |
-| Chargement : une ligne par appareil et par câble | Retirée (illisible sur un grand monde ; `/netcraft liens` existe) |
+| Chargement : une ligne par appareil et par câble | Retirée (illisible sur un grand monde ; `/worldwideblocks liens` existe) |
 | Indicateur de chaque joueur | Retirée |
 | Pose d'un bloc | Retirée (l'enregistrement de l'appareil la couvre) |
 | MAC apprises et oubliées chaque seconde | Retirée |

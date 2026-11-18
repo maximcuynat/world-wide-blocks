@@ -1,6 +1,6 @@
 # Équipements réseau : du domicile à l'opérateur
 
-Inventaire des équipements à modéliser dans NetCraft, avec leurs dimensions réelles quand elles sont connues. Ce document sert à dimensionner les blocs. Il ne décide pas encore de l'ordre de développement ni de la taille en jeu de chaque objet.
+Inventaire des équipements à modéliser dans World Wide Blocks, avec leurs dimensions réelles quand elles sont connues. Ce document sert à dimensionner les blocs. Il ne décide pas encore de l'ordre de développement ni de la taille en jeu de chaque objet.
 
 Établi le 2026-11-17.
 
