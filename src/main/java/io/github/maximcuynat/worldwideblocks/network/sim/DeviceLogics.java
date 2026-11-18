@@ -5,17 +5,21 @@ import java.util.List;
 
 import io.github.maximcuynat.worldwideblocks.network.NetworkNode;
 import io.github.maximcuynat.worldwideblocks.network.PortKind;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpServer;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpServerConfig;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpStore;
 
-/** Creates the behavior of a device from its role. */
+/** Creates the behavior of a device from its role, with what it remembers of DHCP. */
 final class DeviceLogics {
 
     private DeviceLogics() {
     }
 
-    static DeviceLogic create(NetworkNode node) {
+    static DeviceLogic create(NetworkNode node, DhcpStore dhcp) {
         return switch (node.role()) {
             case HOST -> new HostLogic(node.portCount());
-            case BOX -> new BoxLogic(portsOfKind(node, PortKind.ETHERNET));
+            case BOX -> new BoxLogic(portsOfKind(node, PortKind.ETHERNET),
+                    new DhcpServer(DhcpServerConfig.INTERNET_BOX, dhcp.server(node.id())));
         };
     }
 

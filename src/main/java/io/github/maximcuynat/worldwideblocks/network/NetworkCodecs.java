@@ -7,6 +7,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpBinding;
+import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Address;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 
 import net.minecraft.core.UUIDUtil;
@@ -47,9 +49,16 @@ final class NetworkCodecs {
                     .orElseGet(() -> DataResult.error(() -> "Adresse MAC illisible : " + text)),
             MacAddress::toString);
 
+    /** Written as text ({@code 192.168.1.10}), like the MAC addresses. */
+    static final Codec<Ipv4Address> IPV4 = Codec.STRING.comapFlatMap(
+            text -> Ipv4Address.parse(text)
+                    .map(DataResult::success)
+                    .orElseGet(() -> DataResult.error(() -> "Unreadable IPv4 address: " + text)),
+            Ipv4Address::toString);
+
     /**
-     * {@code role}, {@code port_kinds} and {@code macs} only exist since lot 1b: they are optional to
-     * reread older worlds (see {@link SavedNode#decode}).
+     * {@code role}, {@code port_kinds} and {@code macs} only exist since lot 1b, {@code service_mac} since lot 1b-2:
+     * they are optional to reread older worlds (see {@link SavedNode#decode}).
      */
     static final Codec<SavedNode> NODE = RecordCodecBuilder.create(i -> i.group(
             DEVICE_ID.fieldOf("id").forGetter(saved -> saved.node().id()),
@@ -57,8 +66,24 @@ final class NetworkCodecs {
             ROLE.optionalFieldOf("role").forGetter(saved -> Optional.of(saved.node().role())),
             Codec.INT.fieldOf("ports").forGetter(saved -> saved.node().portCount()),
             PORT_KIND.listOf().optionalFieldOf("port_kinds").forGetter(saved -> Optional.of(saved.node().ports())),
-            MAC.listOf().optionalFieldOf("macs", List.of()).forGetter(SavedNode::macs)
+            MAC.listOf().optionalFieldOf("macs", List.of()).forGetter(SavedNode::macs),
+            MAC.optionalFieldOf("service_mac").forGetter(SavedNode::serviceMac)
     ).apply(i, SavedNode::decode));
+
+    static final Codec<DhcpBinding> DHCP_BINDING = RecordCodecBuilder.create(i -> i.group(
+            MAC.fieldOf("client").forGetter(DhcpBinding::client),
+            IPV4.fieldOf("address").forGetter(DhcpBinding::address),
+            Codec.LONG.fieldOf("expires_at").forGetter(DhcpBinding::expiresAt),
+            Codec.LONG.fieldOf("assigned_at").forGetter(DhcpBinding::assignedAt),
+            Codec.BOOL.fieldOf("offered").forGetter(DhcpBinding::offered)
+    ).apply(i, DhcpBinding::new));
+
+    /** Memory of a box's DHCP server, since lot 1b-2. */
+    static final Codec<SavedDhcpServer> DHCP_SERVER = RecordCodecBuilder.create(i -> i.group(
+            DEVICE_ID.fieldOf("box").forGetter(SavedDhcpServer::box),
+            Codec.BOOL.fieldOf("enabled").forGetter(SavedDhcpServer::enabled),
+            DHCP_BINDING.listOf().fieldOf("bindings").forGetter(SavedDhcpServer::bindings)
+    ).apply(i, SavedDhcpServer::new));
 
     static final Codec<LinkMedium> MEDIUM = Codec.STRING.comapFlatMap(
             name -> LinkMedium.bySerializedName(name)

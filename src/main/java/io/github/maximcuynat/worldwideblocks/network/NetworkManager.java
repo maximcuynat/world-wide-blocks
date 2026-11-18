@@ -106,6 +106,7 @@ public final class NetworkManager {
         Set<DeviceId> touched = this.withNeighbours(node.id());
         Set<DeviceId> networks = this.networksOf(touched);
         List<Link> removed = this.graph().putNode(node);
+        this.data.dhcp().forget(node.id()); // new or replaced device: it remembers nothing
         networks.addAll(this.networksOf(touched));
         this.forgetLoops(networks);
         if (Diagnostics.enabled()) {
@@ -169,6 +170,7 @@ public final class NetworkManager {
         Set<DeviceId> touched = this.withNeighbours(device);
         Set<DeviceId> networks = this.networksOf(touched);
         List<Link> removed = this.graph().removeDevice(device);
+        this.data.dhcp().forget(device); // a broken box starts from zero
         if (known || !removed.isEmpty()) {
             networks.addAll(this.networksOf(touched));
             this.forgetLoops(networks);
@@ -187,6 +189,9 @@ public final class NetworkManager {
         // Overworld game time: saved with the world, it never goes backwards.
         long gameTime = this.server.overworld().getGameTime();
         this.simulation().tick(gameTime);
+        if (this.data.dhcp().consumeChanged()) {
+            this.data.setDirty(); // a lease given or extended, a setting changed: saved with the network
+        }
         for (SimulationEvent event : this.simulation().drainEvents()) {
             switch (event) {
                 case SimulationEvent.LoopDetected loop -> this.reportLoop(loop);

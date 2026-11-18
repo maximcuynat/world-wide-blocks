@@ -9,7 +9,7 @@ import java.util.Optional;
 public enum DeviceRole {
     /** Computer: a network card that sends and receives for itself (PC tower, laptop). */
     HOST("host"),
-    /** Internet box: a switch on its local network ports, then its services (DHCP in lot 1b-2). */
+    /** Internet box: a switch on its local network ports, and its own services on the local point (DHCP server). */
     BOX("box");
 
     private final String serializedName;
@@ -21,6 +21,14 @@ public enum DeviceRole {
     /** Name stored in the save: never change it once published. */
     public String serializedName() {
         return this.serializedName;
+    }
+
+    /**
+     * True for a device with its own service on the network (the DHCP server of the box): it has, besides the
+     * MAC of each port, a MAC for this service.
+     */
+    public boolean hasService() {
+        return this == BOX;
     }
 
     public static Optional<DeviceRole> bySerializedName(String name) {
