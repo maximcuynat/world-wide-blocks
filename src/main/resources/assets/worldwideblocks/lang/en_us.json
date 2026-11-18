@@ -43,6 +43,7 @@
   "item.worldwideblocks.ethernet_cable.tooltip.unplug": "Sneak + click a device: unplug.",
   "item.worldwideblocks.ethernet_cable.tooltip.cancel": "Sneak + click in the air: cancel.",
   "message.worldwideblocks.network.saturated": "Network saturated: frames are being lost. Look for a loop.",
+  "message.worldwideblocks.network.dhcp_conflict": "Two DHCP servers on the network of %s. Keep only one.",
   "hud.worldwideblocks.ports_connected": "%s/%s ports connected",
   "hud.worldwideblocks.connected": "Connected",
   "hud.worldwideblocks.not_connected": "Not connected",

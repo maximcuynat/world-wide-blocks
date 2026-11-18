@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.SplittableRandom;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -300,6 +301,29 @@ class DhcpSimulationTest {
         assertEquals(List.of(2L), sentBy(tower, DhcpMessageType.DISCOVER));
     }
 
+    // ---- Two DHCP servers on the same network ----
+
+    @Test
+    void twoBoxesWithTheirServerOnAreReportedOnceWithBothServers() {
+        DeviceId first = box(0);
+        DeviceId second = box(20);
+        DeviceId tower = host(25);
+        plug(first, 0, second, 0);
+        plug(second, 1, tower, 0);
+
+        sim.tick(0);
+
+        List<SimulationEvent> events = sim.drainEvents();
+        assertEquals(1, events.size(), events.toString());
+        SimulationEvent.DhcpConflict conflict = (SimulationEvent.DhcpConflict) events.getFirst();
+        assertEquals(tower, conflict.client());
+        assertEquals(Set.of(graph.serviceMacOf(first).orElseThrow(), graph.serviceMacOf(second).orElseThrow()),
+                Set.copyOf(conflict.servers()));
+        assertEquals(DhcpClientState.BOUND, client(tower).state(), "the computer still gets an address");
+        tickUntil(1, LEASE / 2 - 1);
+        assertTrue(sim.drainEvents().isEmpty(), "nothing more until the next broadcast");
+    }
+
     @Test
     void aComputerPluggedOnASecondBoxWithItsServerDisabledGetsItsAddressFromTheFirst() {
         DeviceId first = box(0);
@@ -314,5 +338,6 @@ class DhcpSimulationTest {
         assertEquals(graph.serviceMacOf(first).orElseThrow(), client(tower).lease().orElseThrow().serverMac());
         MacAddress secondServer = graph.serviceMacOf(second).orElseThrow();
         assertTrue(dhcpSent.stream().noneMatch(s -> s.source().equals(secondServer)), "the second box relays, it does not answer");
+        assertTrue(sim.drainEvents().isEmpty(), "no conflict");
     }
 }

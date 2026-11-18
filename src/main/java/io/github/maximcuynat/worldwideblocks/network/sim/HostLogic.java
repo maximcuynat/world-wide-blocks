@@ -1,5 +1,6 @@
 package io.github.maximcuynat.worldwideblocks.network.sim;
 
+import java.util.List;
 import java.util.function.IntFunction;
 import java.util.random.RandomGenerator;
 
@@ -105,6 +106,11 @@ public final class HostLogic implements DeviceLogic {
         @Override
         public void schedule(long delayTicks, DhcpClient.Timer timer) {
             this.context.schedule(delayTicks, new DhcpTimer(this.index, timer));
+        }
+
+        @Override
+        public void conflict(List<MacAddress> servers) {
+            this.context.report(new SimulationEvent.DhcpConflict(this.context.device(), servers));
         }
     }
 }

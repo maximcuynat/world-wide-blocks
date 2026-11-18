@@ -22,6 +22,7 @@ import io.github.maximcuynat.worldwideblocks.network.NetworkGraph;
 import io.github.maximcuynat.worldwideblocks.network.NetworkNode;
 import io.github.maximcuynat.worldwideblocks.network.PortKind;
 import io.github.maximcuynat.worldwideblocks.network.PortRef;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpStore;
 import io.github.maximcuynat.worldwideblocks.network.protocol.EtherType;
 import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
@@ -37,17 +38,19 @@ class NetworkSimulationTest {
     }
 
     private NetworkGraph graph;
+    private DhcpStore dhcp;
     private NetworkSimulation sim;
     private final List<Seen> seen = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
         this.graph = new NetworkGraph(new SplittableRandom(7));
+        this.dhcp = new DhcpStore();
         this.useLimits(SimulationLimits.DEFAULT);
     }
 
     private void useLimits(SimulationLimits limits) {
-        this.sim = new NetworkSimulation(this.graph, limits);
+        this.sim = new NetworkSimulation(this.graph, this.dhcp, limits);
         this.sim.setTap((now, port, direction, frame) -> this.seen.add(new Seen(now, port, direction, frame)));
     }
 
@@ -270,6 +273,7 @@ class NetworkSimulationTest {
         DeviceId box1 = box(0);
         DeviceId box2 = box(20);
         DeviceId tower = host(5);
+        dhcp.server(box2).setEnabled(false); // one DHCP server per network, as in the loop scene
         plug(box1, 1, box2, 1);
         plug(box1, 2, box2, 2);
         plug(box1, 0, tower, 0);
@@ -319,11 +323,13 @@ class NetworkSimulationTest {
     void twoLoopsInTwoNetworksGiveTwoEvents() {
         DeviceId a1 = box(0);
         DeviceId a2 = box(20);
+        dhcp.server(a2).setEnabled(false); // one DHCP server per network, as in the loop scene
         plug(a1, 1, a2, 1);
         plug(a1, 2, a2, 2);
         plug(a1, 0, host(5), 0);
         DeviceId b1 = box(100);
         DeviceId b2 = box(120);
+        dhcp.server(b2).setEnabled(false);
         plug(b1, 1, b2, 1);
         plug(b1, 2, b2, 2);
         plug(b1, 0, host(105), 0);

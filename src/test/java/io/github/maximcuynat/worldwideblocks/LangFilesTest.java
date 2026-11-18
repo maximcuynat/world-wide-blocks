@@ -68,6 +68,7 @@ class LangFilesTest {
         // A device is written "name [x, y, z]" (key message.worldwideblocks.device).
         samples.put("message.worldwideblocks.network.loop", List.of(name + " [" + X + ", " + Y + ", " + Z + "]"));
         samples.put("message.worldwideblocks.network.saturated", List.of());
+        samples.put("message.worldwideblocks.network.dhcp_conflict", List.of(name + " [" + X + ", " + Y + ", " + Z + "]"));
         samples.put("hud.worldwideblocks.port.connected", List.of(PORT));
         samples.put("hud.worldwideblocks.port.free", List.of(PORT));
         samples.put("hud.worldwideblocks.port.line", List.of(PORT));

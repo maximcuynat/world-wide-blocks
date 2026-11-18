@@ -1,6 +1,9 @@
 package io.github.maximcuynat.worldwideblocks.network.dhcp;
 
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.random.RandomGenerator;
 
 import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpMessage;
@@ -35,6 +38,11 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
  * for each new transaction (4.1); a retransmission keeps it. A reply whose xid is not the current one is
  * ignored (4.4.1, 4.4.5).
  *
+ * <p>Two DHCP servers on the same network: both boxes are 192.168.1.1, so their server identifiers are the same.
+ * The client tells them apart by the source MAC of their frames: when two different servers answer the same
+ * transaction, it reports the conflict once ({@link Port#conflict}). It keeps the first offer, and ignores a second
+ * acknowledgement once bound (figure 5).
+ *
  * <p>A single timer is pending at a time; each change of state makes the previous one stale.
  *
  * <p>Plain Java, no Minecraft class.
@@ -60,6 +68,9 @@ public final class DhcpClient {
 
         /** Calls {@link DhcpClient#onTimer} with {@code timer} in {@code delayTicks} ticks. */
         void schedule(long delayTicks, Timer timer);
+
+        /** Two DHCP servers answered the same transaction: their MAC addresses, in the order they answered. */
+        void conflict(List<MacAddress> servers);
     }
 
     /**
@@ -101,6 +112,8 @@ public final class DhcpClient {
     private DhcpLease lease;
     /** Address asked for again in REBOOTING. */
     private Ipv4Address previous;
+    /** Servers that answered the current transaction, by the source MAC of their frames. */
+    private final Set<MacAddress> answering = new LinkedHashSet<>();
     private long epoch;
 
     /** Client whose lease is not saved. */
@@ -151,6 +164,9 @@ public final class DhcpClient {
     public void receive(Port port, MacAddress serverMac, DhcpMessage message) {
         if (this.state == DhcpClientState.UNPLUGGED || !message.clientMac().equals(port.mac()) || message.xid() != this.xid) {
             return;
+        }
+        if (this.answering.add(serverMac) && this.answering.size() == 2) {
+            port.conflict(List.copyOf(this.answering));
         }
         switch (this.state) {
             case SELECTING -> {
@@ -278,6 +294,7 @@ public final class DhcpClient {
     private void newTransaction() {
         this.xid++;
         this.sends = 0;
+        this.answering.clear();
     }
 
     // ---- Sending ----

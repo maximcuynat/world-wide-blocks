@@ -149,6 +149,16 @@ public final class NetworkGraph {
         return Optional.ofNullable(this.serviceMacs.get(device));
     }
 
+    /** The device whose service has this MAC (the box of a DHCP server), if it is still in the graph. */
+    public Optional<DeviceId> deviceWithServiceMac(MacAddress mac) {
+        for (Map.Entry<DeviceId, MacAddress> entry : this.serviceMacs.entrySet()) {
+            if (entry.getValue().equals(mac)) {
+                return Optional.of(entry.getKey());
+            }
+        }
+        return Optional.empty();
+    }
+
     // ---- Modification ----
 
     /**

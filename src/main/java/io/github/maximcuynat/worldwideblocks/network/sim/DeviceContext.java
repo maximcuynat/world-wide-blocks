@@ -35,4 +35,7 @@ public interface DeviceContext {
 
     /** Requests a call to {@link DeviceLogic#onTimer} with this key, in {@code delayTicks} ticks. */
     void schedule(long delayTicks, Object key);
+
+    /** Reports something the game turns into a message (see {@link NetworkSimulation#drainEvents()}). */
+    void report(SimulationEvent event);
 }

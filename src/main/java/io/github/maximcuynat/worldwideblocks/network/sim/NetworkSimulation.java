@@ -335,6 +335,11 @@ public final class NetworkSimulation {
         }
 
         @Override
+        public void report(SimulationEvent event) {
+            events.add(event);
+        }
+
+        @Override
         public void schedule(long delayTicks, Object key) {
             if (delayTicks <= 0) {
                 throw new IllegalArgumentException("Non-positive delay: " + delayTicks);

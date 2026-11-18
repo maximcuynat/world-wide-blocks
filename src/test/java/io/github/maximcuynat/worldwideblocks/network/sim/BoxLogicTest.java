@@ -72,7 +72,14 @@ class BoxLogicTest {
         @Override
         public void schedule(long delayTicks, Object key) {
         }
+
+        @Override
+        public void report(SimulationEvent event) {
+            BoxLogicTest.this.events.add(event);
+        }
     }
+
+    private final List<SimulationEvent> events = new ArrayList<>();
 
     private final List<Sent> sent = new ArrayList<>();
     private final List<Sent> relayed = new ArrayList<>();

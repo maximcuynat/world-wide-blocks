@@ -43,6 +43,7 @@
   "item.worldwideblocks.ethernet_cable.tooltip.unplug": "Accroupi + clic sur un appareil : débrancher.",
   "item.worldwideblocks.ethernet_cable.tooltip.cancel": "Accroupi + clic dans le vide : annuler.",
   "message.worldwideblocks.network.saturated": "Réseau saturé : des trames sont perdues. Cherchez une boucle.",
+  "message.worldwideblocks.network.dhcp_conflict": "Deux serveurs DHCP sur le réseau de %s. N'en gardez qu'un.",
   "hud.worldwideblocks.ports_connected": "%s/%s ports connectés",
   "hud.worldwideblocks.connected": "Connecté",
   "hud.worldwideblocks.not_connected": "Non connecté",

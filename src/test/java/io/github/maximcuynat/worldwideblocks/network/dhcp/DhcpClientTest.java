@@ -37,6 +37,7 @@ class DhcpClientTest {
         long now;
         final List<EthernetFrame> sent = new ArrayList<>();
         final List<Long> sentAt = new ArrayList<>();
+        final List<List<MacAddress>> conflicts = new ArrayList<>();
         Scheduled timer;
 
         @Override
@@ -59,6 +60,11 @@ class DhcpClientTest {
         public void schedule(long delayTicks, DhcpClient.Timer timer) {
             assertTrue(delayTicks > 0, "delay " + delayTicks);
             this.timer = new Scheduled(this.now + delayTicks, timer);
+        }
+
+        @Override
+        public void conflict(List<MacAddress> servers) {
+            this.conflicts.add(servers);
         }
 
         /** Advances to the pending timer and fires it. */
@@ -419,6 +425,50 @@ class DhcpClientTest {
 
         assertEquals(DhcpMessageType.DISCOVER, this.port.last().type());
         assertTrue(memory.lease.isEmpty());
+    }
+
+    // ---- Two servers on the same network ----
+
+    @Test
+    void twoServersAnsweringTheSameDiscoverAreReportedOnceAndTheFirstOfferIsKept() {
+        this.client.linkUp(this.port);
+        DhcpMessage discover = this.port.last();
+
+        this.reply(SERVICE, DhcpMessage.offer(discover, ADDRESS, LEASE));
+        // The other box is also 192.168.1.1: only its MAC tells it apart.
+        this.reply(OTHER_SERVICE, DhcpMessage.offer(discover, Ipv4Address.of(192, 168, 1, 11), LEASE));
+        DhcpMessage request = this.port.last();
+        this.reply(SERVICE, DhcpMessage.ack(request, ADDRESS, LEASE));
+        this.reply(OTHER_SERVICE, DhcpMessage.ack(request, Ipv4Address.of(192, 168, 1, 11), LEASE));
+
+        assertEquals(List.of(List.of(SERVICE, OTHER_SERVICE)), this.port.conflicts);
+        assertEquals(DhcpMessage.requestSelected(discover.xid(), PC, SERVER, ADDRESS), request, "first offer kept");
+        assertEquals(ADDRESS, this.client.lease().orElseThrow().address(), "first acknowledgement kept");
+    }
+
+    @Test
+    void theSameServerAnsweringSeveralTimesIsNoConflict() {
+        this.bindAtZero();
+        this.port.fire(); // T1: new transaction
+        this.reply(SERVICE, DhcpMessage.ack(this.port.last(), ADDRESS, LEASE));
+        this.reply(SERVICE, DhcpMessage.ack(this.port.last(), ADDRESS, LEASE));
+
+        assertTrue(this.port.conflicts.isEmpty());
+    }
+
+    @Test
+    void eachTransactionIsCheckedAgain() {
+        this.client.linkUp(this.port);
+        DhcpMessage first = this.port.last();
+        this.reply(SERVICE, DhcpMessage.offer(first, ADDRESS, LEASE));
+        this.reply(OTHER_SERVICE, DhcpMessage.offer(first, ADDRESS, LEASE));
+        this.reply(SERVICE, DhcpMessage.nak(this.port.last(), SERVER)); // back to DISCOVER, new xid
+
+        DhcpMessage second = this.port.last();
+        this.reply(OTHER_SERVICE, DhcpMessage.offer(second, ADDRESS, LEASE));
+        this.reply(SERVICE, DhcpMessage.offer(second, ADDRESS, LEASE));
+
+        assertEquals(List.of(List.of(SERVICE, OTHER_SERVICE), List.of(OTHER_SERVICE, SERVICE)), this.port.conflicts);
     }
 
     @Test
