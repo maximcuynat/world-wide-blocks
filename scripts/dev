@@ -5,8 +5,9 @@
 #
 #   status                      branch, version, unpushed commits, open issues of the current lot
 #   lot start <id>              update developement, create lot/<id>, list the issues of its milestone
+#                               and ask which ones go to In Progress on the board
 #   lot finish [--except n,m]   check, push and open the pull request to developement, closing the
-#                               open issues of the lot's milestone (except n, m)
+#                               open issues of the lot's milestone (except n, m), moved to In review
 #   release prepare <version>   version, changelog and checks on release/v<version> (from developement)
 #                               or on hotfix/<version>, then pull request to main
 #                               [--allow-features: release features despite the beta freeze]

@@ -46,6 +46,9 @@ cmd_lot_start() {
         [ "$ahead" -eq 0 ] ||
             warn "developement has $ahead commit(s) not pushed: they will be part of $branch."
     fi
+    if board_configured; then
+        plan "then ask which open issues of the milestone go to In Progress on the board $(board_label)"
+    fi
     phase="$(dev_phase)"
     case "$phase" in
         freeze*) warn "feature freeze for ${phase#freeze }: the lot can be developed, but its pull request should wait for that release." ;;
@@ -58,7 +61,37 @@ cmd_lot_start() {
     git merge --quiet --ff-only origin/developement ||
         die "developement has diverged from origin/developement: sort it out (git status), then run the command again."
     git switch --quiet --create "$branch"
-    say "on $branch. When the lot is done: scripts/dev lot finish --dry-run, then scripts/dev lot finish."
+    say "on $branch."
+    lot_start_board "$title"
+    say "when the lot is done: scripts/dev lot finish --dry-run, then scripts/dev lot finish."
+}
+
+# Asks which open issues of the milestone go to In Progress on the board, then moves them. A board
+# problem is only a warning: the branch is already created.
+lot_start_board() {
+    local title="$1" all answer numbers="" num
+    board_ready_for_lot || return 0
+    all="$(milestone_open_issues "$title" | sed -n 's/^#\([0-9]*\) .*/\1/p')"
+    [ -n "$all" ] || return 0
+    echo
+    answer="$(ask "Issues to move to In Progress on the board (numbers separated by commas, all, or empty for none):")"
+    answer="$(printf '%s' "$answer" | tr -d '#' | tr ' ' ',')"
+    case "$answer" in
+        "") say "board unchanged."; return 0 ;;
+        all | ALL | All) numbers="$(printf '%s\n' "$all" | paste -s -d ',' -)" ;;
+        *)
+            for num in $(printf '%s' "$answer" | tr ',' ' '); do
+                if printf '%s\n' "$all" | grep -F -x -q -- "$num"; then
+                    numbers="${numbers:+$numbers,}$num"
+                else
+                    warn "#$num is not an open issue of the milestone \"$title\": left alone."
+                fi
+            done
+            ;;
+    esac
+    [ -n "$numbers" ] || { say "board unchanged."; return 0; }
+    ( board_move "In Progress" "$numbers" ) ||
+        warn "the board was not updated. Once the problem is fixed: scripts/dev project board --start $numbers"
 }
 
 # Exact title of a GitHub milestone if it exists, empty otherwise.
@@ -73,7 +106,7 @@ label_exists() {
 }
 
 cmd_lot_finish() {
-    local except="" branch id title range commits breaking issues closes slug pr_url body labels milestone n verb
+    local except="" branch id title range commits breaking issues closes slug pr_url body labels milestone n verb review
     while [ $# -gt 0 ]; do
         case "$1" in
             --except)
@@ -168,6 +201,12 @@ cmd_lot_finish() {
     else
         plan "open the pull request $branch -> developement \"$title\"${milestone:+, milestone \"$milestone\"}${labels:+, label \"$labels\"}"
     fi
+    # Issues moved to In review on the board after the pull request (none without a board).
+    review=""
+    board_configured && review="$(printf '%s\n' "$closes" | sed -n 's/^Closes #//p' | paste -s -d ',' -)"
+    if [ -n "$review" ]; then
+        plan "move #$(printf '%s' "$review" | sed 's/,/, #/g') to In review on the board $(board_label)"
+    fi
     [ -n "$milestone" ] || warn "no milestone \"$title\" on GitHub (scripts/dev project sync): pull request without milestone."
     [ -n "$closes" ] || warn "no open issue to close in the milestone \"$title\"."
     [ -z "$breaking" ] || warn "commits marked \"!\": this lot breaks existing worlds."
@@ -195,6 +234,11 @@ cmd_lot_finish() {
         # shellcheck disable=SC2046 # optional flags, each one word or a quoted value
         gh pr create --repo "$slug" --base developement --head "$branch" --title "$title" \
             --body-file "$body" ${milestone:+--milestone "$milestone"} ${labels:+--label "$labels"}
+    fi
+    if [ -n "$review" ] && board_ready_for_lot; then
+        # The push is done: a board problem is only a warning.
+        ( board_move "In review" "$review" ) ||
+            warn "the board was not updated. Once the problem is fixed: scripts/dev project board --review $review"
     fi
     say "after the merge on GitHub (Create a merge commit): git switch developement && git pull --ff-only"
 }
