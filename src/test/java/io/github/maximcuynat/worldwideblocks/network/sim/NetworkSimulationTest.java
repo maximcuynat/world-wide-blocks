@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.SplittableRandom;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -95,9 +97,19 @@ class NetworkSimulationTest {
         return this.learned(box).stream().filter(e -> e.mac().equals(mac)).map(MacTable.Entry::port).toList();
     }
 
+    /** Every frame the device sent between these ticks (presence, DHCP…). */
+    private long framesSentBy(DeviceId host, long from, long to) {
+        return this.seen.stream()
+                .filter(s -> s.direction() == FrameDirection.SENT && s.port().device().equals(host))
+                .filter(s -> s.now() >= from && s.now() <= to)
+                .count();
+    }
+
+    /** Only the presence frames (since lot 1b-2, a computer also sends DHCP). */
     private long presencesSentBy(DeviceId host, long from, long to) {
         return this.seen.stream()
                 .filter(s -> s.direction() == FrameDirection.SENT && s.port().device().equals(host))
+                .filter(s -> s.frame().type() == EtherType.LOCAL_EXPERIMENTAL)
                 .filter(s -> s.now() >= from && s.now() <= to)
                 .count();
     }
@@ -146,6 +158,7 @@ class NetworkSimulationTest {
         List<Integer> boxOutputs = seen.stream()
                 .filter(s -> s.direction() == FrameDirection.SENT && s.port().device().equals(box))
                 .filter(s -> s.frame().source().equals(mac(tower, 0)))
+                .filter(s -> s.frame().type() == EtherType.LOCAL_EXPERIMENTAL)
                 .map(s -> s.port().index()).toList();
         assertEquals(List.of(1, 2, 3), boxOutputs);
     }
@@ -176,7 +189,7 @@ class NetworkSimulationTest {
         assertTrue(learnedPorts(box, mac(tower, 0)).isEmpty());
         assertEquals(List.of(1), learnedPorts(box, mac(laptop, 0)));
         tickUntil(2, 700);
-        assertEquals(0, presencesSentBy(tower, 1, 700));
+        assertEquals(0, framesSentBy(tower, 1, 700));
     }
 
     @Test
@@ -203,7 +216,7 @@ class NetworkSimulationTest {
 
     @Test
     void aFrameInTransitOnARemovedCableIsNotDelivered() {
-        // Only one delivery per tick: the laptop's presence stays in the queue after tick 0.
+        // Only one delivery per tick: the laptop's frames stay in the queue after tick 0.
         useLimits(new SimulationLimits(1, 50_000, 1200));
         DeviceId box = box(0);
         DeviceId tower = host(5);
@@ -215,7 +228,7 @@ class NetworkSimulationTest {
         assertTrue(sim.pendingFrames() > 0);
 
         unplug(box, 1);
-        tickUntil(1, 2);
+        tickUntil(1, 20); // one frame per tick, the DHCP frames too
 
         assertEquals(List.of(0), learnedPorts(box, mac(tower, 0)));
         assertTrue(learnedPorts(box, mac(laptop, 0)).isEmpty());
@@ -232,7 +245,7 @@ class NetworkSimulationTest {
         remove(tower);
         tickUntil(1, 700);
 
-        assertEquals(0, presencesSentBy(tower, 1, 700));
+        assertEquals(0, framesSentBy(tower, 1, 700));
         assertTrue(learned(box).isEmpty());
         assertTrue(sim.logic(tower).isEmpty());
     }
@@ -264,8 +277,12 @@ class NetworkSimulationTest {
         sim.tick(0);
 
         assertEquals(0, sim.pendingFrames());
+        long presenceReceptions = seen.stream().filter(s -> s.direction() == FrameDirection.RECEIVED)
+                .filter(s -> s.frame().type() == EtherType.LOCAL_EXPERIMENTAL).count();
+        assertTrue(presenceReceptions < 10, "receptions of the presence: " + presenceReceptions);
+        // With the DHCP exchange of the computer (DISCOVER, two offers, REQUEST, two ACK), still bounded.
         long receptions = seen.stream().filter(s -> s.direction() == FrameDirection.RECEIVED).count();
-        assertTrue(receptions < 10, "receptions: " + receptions);
+        assertTrue(receptions < 40, "receptions: " + receptions);
         // Both boxes see the loop: a single event, which names both of them.
         List<SimulationEvent> events = sim.drainEvents();
         assertEquals(1, events.size(), events.toString());
@@ -331,10 +348,14 @@ class NetworkSimulationTest {
         sim.tick(0);
         assertTrue(sim.pendingFrames() > 0);
 
-        sim.tick(1);
-        sim.tick(2);
+        tickUntil(1, 20);
         assertEquals(0, sim.pendingFrames());
         assertEquals(2, learned(box).size());
+        // Never more than 2 deliveries in one tick.
+        Map<Long, Long> perTick = seen.stream().filter(s -> s.direction() == FrameDirection.RECEIVED)
+                .collect(Collectors.groupingBy(Seen::now, Collectors.counting()));
+        assertTrue(perTick.values().stream().allMatch(count -> count <= 2), perTick.toString());
+        assertTrue(perTick.size() > 2, "the frames were spread over several ticks: " + perTick);
     }
 
     @Test
@@ -364,10 +385,17 @@ class NetworkSimulationTest {
         assertEquals(101L, learned(box).getFirst().lastSeen());
         tickUntil(102, 800);
 
-        List<Long> sends = seen.stream()
+        List<Long> presences = seen.stream()
                 .filter(s -> s.direction() == FrameDirection.SENT && s.port().device().equals(tower))
+                .filter(s -> s.frame().type() == EtherType.LOCAL_EXPERIMENTAL)
                 .map(Seen::now).toList();
-        assertEquals(List.of(101L, 701L), sends);
+        assertEquals(List.of(101L, 701L), presences);
+        // The DHCP exchange (DISCOVER then REQUEST) also starts at tick 101, then nothing until T1.
+        List<Long> dhcp = seen.stream()
+                .filter(s -> s.direction() == FrameDirection.SENT && s.port().device().equals(tower))
+                .filter(s -> s.frame().type() == EtherType.IPV4)
+                .map(Seen::now).toList();
+        assertEquals(List.of(101L, 101L), dhcp);
     }
 
     @Test
@@ -434,7 +462,7 @@ class NetworkSimulationTest {
 
         sim.tick(1);
 
-        assertEquals(0, presencesSentBy(tower, 0, 1));
+        assertEquals(0, framesSentBy(tower, 0, 1));
         assertTrue(learned(box).isEmpty());
         assertTrue(sim.logic(tower).isEmpty());
     }
@@ -449,7 +477,7 @@ class NetworkSimulationTest {
 
         tickUntil(1, 700);
 
-        assertEquals(0, presencesSentBy(tower, 1, 700));
+        assertEquals(0, framesSentBy(tower, 1, 700));
         assertTrue(learned(box).isEmpty());
     }
 

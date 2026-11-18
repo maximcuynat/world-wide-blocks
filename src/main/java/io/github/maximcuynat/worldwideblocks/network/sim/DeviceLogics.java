@@ -2,6 +2,7 @@ package io.github.maximcuynat.worldwideblocks.network.sim;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.random.RandomGenerator;
 
 import io.github.maximcuynat.worldwideblocks.network.NetworkNode;
 import io.github.maximcuynat.worldwideblocks.network.PortKind;
@@ -17,7 +18,8 @@ final class DeviceLogics {
 
     static DeviceLogic create(NetworkNode node, DhcpStore dhcp) {
         return switch (node.role()) {
-            case HOST -> new HostLogic(node.portCount());
+            // The xid of the DHCP transactions starts at random (RFC 2131, 4.1).
+            case HOST -> new HostLogic(node.portCount(), RandomGenerator.getDefault());
             case BOX -> new BoxLogic(portsOfKind(node, PortKind.ETHERNET),
                     new DhcpServer(DhcpServerConfig.INTERNET_BOX, dhcp.server(node.id())));
         };
