@@ -31,7 +31,8 @@ Steps, one commit each after Max's green build:
 Review of lot 1b-2 (2026-11-18):
 
 - Checked for real: each step built and tested by Max (`./gradlew build test`, `./gradlew runGameTestServer`), commits made only after; the plain-Java code also compiled and tested locally before each handover; the 6 simulation tests and 2 loop tests that changed were shown to Max with what they checked before and after.
-- Not checked: the drawing of the panel on the client (game tests run a dedicated server); the check by eye of `docs/lot-plan.md`, lot 1b-2, is left to Max; the package-private access of the `gametest` source set to the engine (`NetworkTestAccess`) at run time, proved only by the game test run.
+- Check by eye done by Max on 2026-11-18 ("Trials DHCP" world, game in French), analysed from the screenshots and the log: points 1, 2, 3, 7 and 8 passed; points 4, 5 and 6 passed for what the screenshots show, the rest covered by tests (table in `docs/lot-plan.md`); points 9 (restart) and 10 (loop) not seen by eye, resting on the game tests, as decided by Max.
+- Not checked: the client display after a real quit and reopen of a world (point 9); the absence of a conflict message in the `loop` scene in game (point 10, proved at engine level only); the addresses of the `chain` computers in game (unit test only). The package-private access of the `gametest` source set (`NetworkTestAccess`) works at run time: 30 game tests green.
 - Choices made by Claude and reported to Max: the conflict message names the nearest box (two devices do not fit in a chat line), French names of the DHCP states, colour of the waiting light, the four DHCP scenes.
 - Documentation commits of the same session: results of going public; plan revised by Max (lot 1e, 6c split, ideas as issues); TCP lot 1f, shared console and terminal decisions.
 

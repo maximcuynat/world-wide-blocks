@@ -261,7 +261,7 @@ To report: the screenshots, and any text that is cut off, overflows the panel, i
 
 #### Status of lot 1b-2
 
-Coded on 2026-11-18 on the `lot/1b-2` branch (issues #3 to #9), in 7 steps, one commit each after a green build (`./gradlew build test` and `./gradlew runGameTestServer`). Protocol checked in the text of RFC 2131 and RFC 2132.
+Coded on 2026-11-18 on the `lot/1b-2` branch (issues #3 to #9), in 7 steps, one commit each after a green build (`./gradlew build test` and `./gradlew runGameTestServer`: 30 game tests). Protocol checked in the text of RFC 2131 and RFC 2132. Check by eye done by Max on 2026-11-18, below (points 9 and 10 rest on automatic tests).
 
 | Type | Equipment | Status |
 |---|---|---|
@@ -287,7 +287,22 @@ Automatic tests: unit tests of the layers, of the server, of the client at the e
 
 #### Check by eye of lot 1b-2 (game in French)
 
-Not done yet: to do by Max. Preparation: `./gradlew runClient`, Options, Language: French, a creative world with cheats whose name starts with "Trials", standing facing a clear area. Aim at each device standing (compact panel) then sneaking (detailed panel), screenshot (F2) at each point marked 📷. `/worldwideblocks test clear` after each scene.
+**Done by Max on 2026-11-18** (game in French, "Trials DHCP" world, screenshots `run/screenshots` from 17.09.29 to 17.16.23, log `run/logs/latest.log`), analysed by Claude. No text cut off, overflowing or badly translated; the waiting light is the expected yellow-orange. Points 9 and 10 were not seen by eye: they rest on the automatic tests named below.
+
+| Point | Result | Proof |
+|---|---|---|
+| 1. Address of the computers | Passed | 17.09.29 compact "192.168.1.10 (DHCP : obtenue)", green light; 17.09.40 detailed (MAC, address and mask, gateway, DNS server, "Bail : encore 19:14", state); 17.09.44 box "Adresses prêtées : 3" and three lines |
+| 2. Unplugged, plugged again | Passed | Log 17:10:01 cable disconnected, end in hand; 17.10.06 "Non connecté"; log 17:10:14 cable connected; 17.10.23 same address 192.168.1.10 |
+| 3. Renewal | Passed | 17.10.23 "19:52"; `/tick sprint 600s` from 17:10:39 to 17:10:57; 17.11.07 "19:25", state "obtenue" (without renewal, about 9:25) |
+| 4. Chain, one server | Passed for what is shown | No conflict message (17.16.23, and the only conflict line of the log belongs to `dhcp_conflict`). Not captured: the addresses of the computers and the right box's "Serveur DHCP : arrêté", covered by the unit test `DhcpSimulationTest.aComputerPluggedOnASecondBoxWithItsServerDisabledGetsItsAddressFromTheFirst` (no game test) and the panel test `StatusPanelTest.aBoxWhoseServerIsOffSaysSo`; the panel line itself is seen at point 8 |
+| 5. No box | Passed for what is shown | 17.12.10 and 17.12.11: tower "Pas d'adresse (DHCP : recherche)", yellow-orange light. Not captured: the laptop, covered by the game test `dhcp_no_box` |
+| 6. Conflict | Passed for what is shown | 17.12.30 and log line 294: a single message "⚠ Deux serveurs DHCP sur le réseau de Box internet [0, -60, -2]. N'en gardez qu'un."; log line 293 names both boxes. Not captured: the address of the computer, covered by the game test `dhcp_conflict_of_two_boxes` |
+| 7. Full pool | Passed | 17.15.06, 17.15.07 computer searching; 17.15.15 "Adresses prêtées : 191", four lines, "+187 autres" |
+| 8. Server off | Passed | 17.15.56 "Serveur DHCP : arrêté"; 17.16.01, 17.16.02 computer without address |
+| 9. Restart | Not seen by eye | Game test `dhcp_restart_asks_for_the_same_address` (network.dat read back, INIT-REBOOT, same address); the client display after a real quit and reopen is not proved |
+| 10. Loop | Not seen by eye | Game tests `loop_reported_once_per_minute` and `loop_forgotten_only_for_changed_network` (one loop message per minute); "no conflict message" in the `loop` scene is proved only at engine level, by the unit tests `NetworkSimulationTest.twoBoxesInALoop…` and `twoLoopsInTwoNetworks…` (second server off: a single loop event, no conflict) |
+
+Procedure, kept for the next checks. Preparation: `./gradlew runClient`, Options, Language: French, a creative world with cheats whose name starts with "Trials", standing facing a clear area. Aim at each device standing (compact panel) then sneaking (detailed panel), screenshot (F2) at each point marked 📷. `/worldwideblocks test clear` after each scene.
 
 1. **Address of the computers.** `/worldwideblocks test box_hosts`. Each computer, compact: "192.168.1.1x (DHCP : obtenue)" with a green light 📷; sneaking: "Port 1 : connecté", "MAC 02:…", "Adresse 192.168.1.1x / 255.255.255.0", "Passerelle 192.168.1.1", "Serveur DNS 192.168.1.1", "Bail : encore 19:5x" (it counts down), "DHCP : obtenue" 📷. The box, sneaking: under the ports, "Adresses prêtées : 3" and three lines "192.168.1.1x → 02:…" 📷.
 2. **Unplugged, plugged again.** In the same scene, empty hand, sneak + right-click on a computer: the end of its cable comes into your hand ("Bout retiré de Tour PC…") and the computer shows "Non connecté". Right-click the same computer with that cord: it is plugged in again and shows the same address as before 📷.
