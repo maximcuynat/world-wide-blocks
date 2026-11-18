@@ -1,0 +1,32 @@
+name: Idea
+description: Suggest a device, a protocol or a gameplay improvement.
+title: "[Idea] "
+labels: ["type: idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The mod aims to be faithful to real networks. Ideas are triaged by the maintainer and, when kept, planned in a lot (see docs/plan-lots.md).
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What you would like to see in the game.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: What it would let players do or learn.
+    validations:
+      required: true
+  - type: textarea
+    id: real-world
+    attributes:
+      label: How it works for real
+      description: The real device, protocol or standard it is based on, with sources if you have them.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
