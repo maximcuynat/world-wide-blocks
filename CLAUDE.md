@@ -1,95 +1,70 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) in this repository.
 
-## Projet
+**Always answer the maintainer in French.**
 
-NetCraft est un mod Minecraft (NeoForge) de simulation de réseau informatique réaliste, « un Packet Tracer en blocs ». Lots faits : 0 (tour PC, PC portable), 1a (cordon Ethernet, ports, indicateur d'état, moteur réseau), 1b-1 (box internet, adresses MAC, commutation) et le module des messages.
+## Project
 
-À lire en début de session :
-- `docs/plan-lots.md` : plan par lots, état de chaque lot, décisions à trancher, procédures de test en jeu ;
-- `docs/equipements-reseau.md` : inventaire des équipements et dimensions réelles ;
-- `docs/messages.md` : audit et règles du module des messages ;
-- les tâches : issues GitHub, une milestone par lot (`scripts/dev status` montre celles du lot en cours ; organisation dans `docs/project-management.md`) ;
-- `tasks/todo.md` (notes de session seulement) et `tasks/lessons.md` (erreurs à ne pas refaire).
+A NeoForge Minecraft mod that simulates realistic computer networks, "a Packet Tracer made of blocks". Done: lots 0 (PC tower, laptop), 1a (Ethernet cable, ports, status panel, network engine), 1b-1 (internet box, MAC addresses, switching) and the message module.
 
-Langue : objectif d'un dépôt entièrement en anglais. Tout ce qui est nouveau sur GitHub est en anglais : messages de commit, changelog, tickets, pull requests, labels, milestones, modèles, nouveaux documents. Le code, ses commentaires et les documents existants (`docs/plan-lots.md`, `docs/messages.md`, `docs/securite-depot.md`…) restent en français jusqu'à leur traduction, prévue à la session de renommage : y écrire en français d'ici là. Réponses à Max toujours en français. Identifiants (classes, registres, ressources) en anglais. Les deux langues `fr_fr.json` et `en_us.json` sont maintenues (même jeu de clés, vérifié par `LangFilesTest`). Exception : tout ce qui peut finir dans le log (lignes de log, messages d'exception) est en anglais, comme le reste des logs de Minecraft.
+Read first:
+- [`CONTRIBUTING.md`](CONTRIBUTING.md): branches, commits, hooks, versions and releases, `scripts/dev`;
+- [`docs/project-management.md`](docs/project-management.md): roadmap, issues, labels, milestones, GitHub settings;
+- [`docs/plan-lots.md`](docs/plan-lots.md): design of each lot, decisions, in-game check procedures;
+- [`docs/messages.md`](docs/messages.md) and [`docs/equipements-reseau.md`](docs/equipements-reseau.md) when the task touches them;
+- [`tasks/lessons.md`](tasks/lessons.md): mistakes not to repeat.
 
-## Versions
+## How work is organised
 
-- Minecraft 26.3, NeoForge 26.3.0.103, plugin `net.neoforged.moddev` 2.0.148, Gradle 9.2.1, Java 25 (téléchargé par la toolchain).
-- Versions et identité du mod dans `gradle.properties`, injectées dans `neoforge.mods.toml` : rien en dur dans le template.
-- Version du mod : SemVer en 0.x, `mod_version` dans `gradle.properties` seule source de vérité (`0.1.0-alpha.1` ; canal déduit du suffixe : alpha, beta, rien = release). Jar `<mod_id>-<minecraft>-<version>.jar`. Licence LGPL-3.0-only (`COPYING.LESSER`, `COPYING`).
-- Les API ont beaucoup bougé depuis la 1.21 (rendu, interface, noms de constantes). Vérifier chaque nom de classe, de méthode, d'enum et chaque package d'import dans les sources : Minecraft dans `build/moddev/artifacts/minecraft-patched-*-sources.jar`, NeoForge dans le jar `-sources` de maven.neoforged.net.
+1. **Tasks are GitHub issues**, grouped by milestone (one per lot, one per version) and shown on the "Roadmap" Projects board. Their definitions are in `scripts/project/issues/` (one folder per lot or version, plus `backlog/` and `ideas/`). `docs/plan-lots.md` stays the design document; `tasks/todo.md` only holds session notes.
+2. **A lot starts with `scripts/dev lot start <id>`, run by the maintainer.** At the start of a session, read the issue definitions of the lot's milestone in `scripts/project/issues/<id>/`; for their state on GitHub, ask the maintainer to run `scripts/dev status` or `gh issue list --milestone "<milestone title>" --state all`. One commit per step, in English, only after the maintainer's green build. The maintainer ends the lot with `scripts/dev lot finish`.
+3. **To propose an issue**, add its definition file in `scripts/project/issues/` (format at the top of `scripts/lib/project.sh`) and ask the maintainer to run `scripts/dev project sync`. Never create anything on GitHub.
+4. **Never push, merge, tag, release or change GitHub settings.** These actions go through the maintainer and `scripts/dev`. Commands that ask for a confirmation (`scripts/dev`, `gh auth`) must be run by the maintainer in a real terminal: through the assistant's shell, the answer is always no.
+5. **Nothing personal or secret in the repository** (no local paths, no personal data, no credentials). All new content is in English: commits, changelog, issues, docs, code and comments. The existing French content (`docs/`, `tasks/`, code comments) will be translated in the renaming session; until then, new text in those files is in English too.
 
-## Commandes
+## Constraints of the sandbox
+
+- Gradle cannot run in Claude Code's sandbox: the maintainer runs `./gradlew build test`, `./gradlew runGameTestServer` and in-game checks, and reports the result. Never claim a build or a test passed without that report.
+- The sandbox reads neither `~/.gitconfig` nor `~/.ssh`. Prefix git commands with `GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=$TMPDIR/xdg` (otherwise gitleaks sees git's warning and blocks the commit), and commit with the identity of the existing commits passed explicitly (`git log -1 --format='%an <%ae>'`, then `git -c user.name=… -c user.email=… commit`), never an identity guessed from the machine. These commits are unsigned (`docs/securite-depot.md`, section 3.8).
+- Commit messages: Conventional Commits, checked by the `commit-msg` hook; `!` marks a change that breaks existing worlds.
+
+## Versions and API
+
+- Minecraft 26.3, NeoForge 26.3.0.103, `net.neoforged.moddev` 2.0.148, Gradle 9.2.1, Java 25 (downloaded by the toolchain). Mod identity and version only in `gradle.properties`, injected into `neoforge.mods.toml`.
+- The APIs changed a lot since 1.21. Check every class, method, enum constant and import package in the sources before using it: Minecraft in `build/moddev/artifacts/minecraft-patched-*-sources.jar`, NeoForge in its `-sources` jar on maven.neoforged.net.
 
 ```bash
-./gradlew build test   # compile, puis tests JUnit du moteur (Java pur, sans lancer le jeu)
-./gradlew runClient    # client de dev, monde de test « Netcraft » (créatif, superflat)
-./gradlew runServer    # serveur dédié sans interface
-./gradlew runGameTestServer  # tests en jeu automatiques (src/gametest), monde jetable run-gametest/
+./gradlew build test         # build, then JUnit tests of the engine (plain Java)
+./gradlew runClient          # development client
+./gradlew runGameTestServer  # automatic game tests (src/gametest), throwaway world run-gametest/
 ```
 
-Outillage du dépôt (détails dans `CONTRIBUTING.md`, réglages GitHub dans `docs/securite-depot.md` et `docs/project-management.md`) :
+## Network engine rules
 
-```bash
-scripts/install-hooks.sh          # hooks versionnés de .githooks/ : convention des commits, gitleaks, build et tests avant push (log dans build/pre-push.log)
-scripts/dev status                # branche, version, commits non poussés, tickets du lot en cours (lecture seule)
-scripts/dev lot start|finish      # branche lot/<id> depuis developement ; pull request vers developement avec « Closes # »
-scripts/dev release prepare|publish <version>   # version, changelog, PR vers main ; tag signé et release en brouillon (lancés par Max)
-scripts/dev hotfix start <X.Y.Z>  # correctif d'une version publiée, depuis main
-scripts/dev project sync          # labels, milestones et tickets de scripts/project/ sur GitHub (lancé par Max)
-git-cliff --offline --github-repo <owner/repo> -o CHANGELOG.md   # changelog généré depuis les commits (cliff.toml), jamais écrit à la main ; sans --github-repo, liens de comparaison vides ; release prepare le fait
-```
+- `network/` (graph, devices, cables, ports, chunk index, `sync/PlayerLinkView`) is plain Java, tested in `src/test`. `NetworkSavedData` saves it in the server's global storage, independently of loaded chunks. `NetworkManager.of(server)` is a stateless facade; `NetworkDevices` links the world to the engine.
+- The server decides, the client displays: no network logic on the client, no `client/` class loaded on a dedicated server.
+- No static state: data lives in the running server (global storage, player attachment) or in the client instance.
+- Every change to the network goes through `NetworkManager`, which marks the save dirty and notifies clients.
+- A player only receives the cables with one end in a chunk their client has received (`PlayerLinkView`).
+- Real protocol exchanges: real Ethernet frames (then DHCP, ARP, ICMP) travel through the engine, delivered instantly through a queue processed each server tick, with a limit of frames per tick.
 
-Chaque commande de `scripts/dev` a un mode `--dry-run` et demande confirmation au terminal avant toute action publique. Rien n'y est écrit en dur : dépôt déduit de la remote, mod et version lus dans `gradle.properties`.
+## Messages to players
 
-## Façon de travailler
+Every message goes through the message module (`message/`, full rules in `docs/messages.md`):
 
-- Toujours répondre à Max en français.
-- Modèle de branches (`CONTRIBUTING.md`) : `developement` (branche par défaut, intégration, toujours au vert), `lot/<id>` pour un lot, `release/v<version>` et `hotfix/<version>` créées par `scripts/dev`. Les petits travaux (outillage, docs) se font sur `developement`. Rien vers `main` sans l'accord de Max.
-- Petits commits, un par étape logique.
-- Messages de commit en anglais, en Conventional Commits, vérifiés par le hook `commit-msg` ; les types `feat`, `fix`, `refactor` et `perf` alimentent le changelog des joueurs ; `!` marque ce qui casse les mondes existants (section « Breaks existing worlds » du changelog, label `breaking`).
-- `main` ne reçoit que les versions publiées, par une pull request `release/v<version>` (ou `hotfix/<version>`) fusionnée avec un commit de fusion, que `scripts/dev release publish` tague. Claude ne crée rien sur GitHub (tickets, pull requests, tags, releases) et ne rend pas le dépôt public : il prépare, Max lance `scripts/dev`.
-- Une nouvelle tâche devient un ticket GitHub (fichier dans `scripts/project/issues/` quand un lot est planifié, puis `scripts/dev project sync` par Max), pas une case de `tasks/todo.md`.
-- Le bac à sable ne lit ni `~/.gitconfig` ni `~/.ssh` : préfixer les commandes git par `GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=$TMPDIR/xdg` (sinon gitleaks voit l'avertissement de git et bloque le commit) et commiter avec l'identité masquée passée explicitement (`git -c user.name=maximcuynat -c user.email=93578199+maximcuynat@users.noreply.github.com commit …`), jamais une identité déduite du poste. Ces commits ne sont pas signés (voir `docs/securite-depot.md`, section 3.8).
-- Le bac à sable de Claude Code ne peut pas lancer Gradle : c'est Max qui lance les builds et les essais en jeu (préfixe `!`) et rapporte le résultat. Ne jamais annoncer un build ou un essai comme réussi sans ce retour.
+- Server side, `MessageCenter.of(server)`: `gesture(player, message)` answers a gesture, `event(problem key, …)` reports a network event. The caller gives a level, a language key and values; the channel follows from the use and the level, never from the caller.
+- The server never sends written text or formatting: key, values and level only. The client alone decides how it looks (`client/ClientMessages`, `client/PortStatusLayer`).
+- A problem is reported once per minute at most; the limit of a network is forgotten when that network changes.
+- Status panel content is built in plain Java (`StatusPanel`). Technical details go to the log, in English, at DEBUG level (`Diagnostics`).
+- Both language files `en_us.json` and `fr_fr.json` keep the same keys (`LangFilesTest`); a new key of a checked family needs its sample values in `LangFilesTest` (80 characters for the action bar, 45 for the panel and tooltip, 90 for the chat).
+- Tests capture messages with `NetworkScene.messages()`, never through a player's chat.
 
-## Architecture du moteur réseau
+## Adding a block
 
-- `network/` : `NetworkGraph` (appareils, câbles, index par port et par chunk), les records `DeviceId`, `PortRef`, `Link`, `NetworkNode`, `ChunkKey`, et `sync/PlayerLinkView`. Tout cela est en Java pur, testé dans `src/test`.
-- `NetworkSavedData` sauvegarde le graphe dans le stockage global du serveur (`data/netcraft/network.dat`), indépendamment des chunks chargés.
-- `NetworkManager.of(server)` est une façade sans état sur ces données ; `NetworkDevices` fait le lien entre le monde (niveaux, positions, blocs) et le moteur.
-- `block/NetworkDeviceBlock` : base des appareils (nombre de ports fixe, enregistrement à la pose, retrait des câbles à la casse, refus des pistons).
-- `item/EthernetCableItem` : branchement, débranchement, bout tenu en main.
-- `network/sync/` : paquets vers le client. `client/` : cache en lecture seule, panneau d'état, rendu des câbles.
+Hand-written files under the same `<id>` (no datagen):
+- Java: class in `block/` (extend `NetworkDeviceBlock` for a network device), `ModBlocks`, `ModItems`, `ModCreativeTabs`; new registries go in the constructor of the main mod class.
+- `assets/<mod_id>/`: `blockstates/<id>.json`, `models/block/<id>.json`, `textures/block/<id>.png`, `items/<id>.json`, keys `block.<mod_id>.<id>` in both language files.
+- `data/`: `<mod_id>/loot_table/blocks/<id>.json` and the id in `minecraft/tags/block/mineable/pickaxe.json`.
 
-Règles à ne jamais casser :
-- Le serveur décide, le client affiche. Aucune logique réseau côté client, et aucune classe de `client/` chargée sur un serveur dédié.
-- Aucun état statique : les données vivent dans le serveur en cours (stockage global, attachement par joueur) ou dans l'instance client.
-- La logique réseau reste en Java pur et testable, sans classe Minecraft.
-- Toute modification du réseau passe par `NetworkManager`, qui marque la sauvegarde et prévient les clients.
-- Un joueur ne reçoit que les câbles dont une extrémité est dans un chunk que son client a reçu (`PlayerLinkView`).
-- Vrais échanges de protocoles : de vraies trames Ethernet (puis DHCP, ARP, ICMP) circulent dans le moteur. Elles sont livrées instantanément par une file d'attente que le serveur traite à chaque tick, sans temps de trajet bloc par bloc, et le nombre de trames traitées par tick est limité.
-
-## Messages aux joueurs
-
-Tout message passe par le module des messages (`message/`, règles complètes dans `docs/messages.md`) :
-
-- Côté serveur, `MessageCenter.of(server)` : `gesture(joueur, message)` pour la réponse à un geste, `event(clé du problème, …)` pour un événement réseau. L'appelant donne un niveau (`MessageLevel`), une clé de langue et des valeurs (`MessageArg`) ; le canal découle de l'usage et du niveau (`MessageRouting`), jamais de l'appelant.
-- Le serveur n'envoie jamais de texte rédigé ni de mise en forme : clé, valeurs et niveau seulement (`MessagePayload`). Le client décide seul de l'apparence (`client/ClientMessages`, `client/PortStatusLayer`), pour qu'une future interface HUD remplace le dessin sans toucher au reste.
-- Un même problème n'est signalé qu'une fois par minute, quel que soit le nombre d'appareils qui le voient ; la limite d'un réseau est oubliée quand ce réseau change.
-- Le contenu du panneau d'état est construit en Java pur (`StatusPanel`) : compact par défaut, détaillé quand le joueur est accroupi.
-- Le détail technique va dans le log, en anglais, au niveau DEBUG (`Diagnostics`).
-- Toute nouvelle clé de langue des familles vérifiées doit avoir ses valeurs d'exemple dans `LangFilesTest` (longueurs : 80 caractères pour la barre d'action, 45 pour le panneau et l'infobulle, 90 pour le chat).
-- Tests : `NetworkScene.messages()` capte chaque message envoyé (canal, clé, valeurs, destinataire) ; ne pas passer par le chat d'un joueur.
-
-## Ajouter un bloc
-
-Un bloc touche plusieurs fichiers au même identifiant `<id>`, écrits à la main (le datagen n'est pas utilisé) :
-- Java : classe dans `block/` (étendre `NetworkDeviceBlock` pour un appareil réseau), `ModBlocks`, `ModItems`, `ModCreativeTabs`. Tout nouveau registre s'ajoute dans le constructeur de `NetCraft`.
-- `assets/netcraft/` : `blockstates/<id>.json`, `models/block/<id>.json`, `textures/block/<id>.png`, `items/<id>.json` (obligatoire depuis 1.21.4), clés `block.netcraft.<id>` dans les deux fichiers de langue.
-- `data/` : `netcraft/loot_table/blocks/<id>.json` et l'identifiant dans `minecraft/tags/block/mineable/pickaxe.json`.
-
-Les `.bbmodel` peuvent rester à côté des ressources : ils sont exclus du jar.
+`.bbmodel` files may stay next to the resources: they are excluded from the jar.
