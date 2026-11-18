@@ -3,3 +3,8 @@
 # are changed when only line endings change.
 src/generated/**/.cache/* text eol=lf
 src/generated/**/*.json text eol=lf
+
+# Scripts du wrapper Gradle : fins de ligne fixes quel que soit le système (recommandation de Gradle)
+/gradlew        text eol=lf
+*.bat           text eol=crlf
+*.jar           binary
