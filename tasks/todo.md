@@ -20,13 +20,20 @@ Decisions:
 
 Steps, one commit each after Max's green build:
 
-- [ ] 1. IPv4, UDP and DHCP layers (#3)
-- [ ] 2. DHCP server, service MAC, local point of the box, "server enabled" setting (#4)
-- [ ] 3. DHCP client and its timers (#5)
-- [ ] 4. Saved leases and INIT-REBOOT (#6)
-- [ ] 5. Conflict between two servers (#8)
-- [ ] 6. Status panel, language keys (#7)
-- [ ] 7. Game tests, scenes, check procedure and status in `docs/lot-plan.md` (#9)
+- [x] 1. IPv4, UDP and DHCP layers (#3)
+- [x] 2. DHCP server, service MAC, local point of the box, "server enabled" setting (#4)
+- [x] 3. DHCP client and its timers (#5)
+- [x] 4. Saved leases and INIT-REBOOT (#6)
+- [x] 5. Conflict between two servers (#8)
+- [x] 6. Status panel, language keys (#7)
+- [x] 7. Game tests, scenes, check procedure and status in `docs/lot-plan.md` (#9)
+
+Review of lot 1b-2 (2026-11-18):
+
+- Checked for real: each step built and tested by Max (`./gradlew build test`, `./gradlew runGameTestServer`), commits made only after; the plain-Java code also compiled and tested locally before each handover; the 6 simulation tests and 2 loop tests that changed were shown to Max with what they checked before and after.
+- Not checked: the drawing of the panel on the client (game tests run a dedicated server); the check by eye of `docs/lot-plan.md`, lot 1b-2, is left to Max; the package-private access of the `gametest` source set to the engine (`NetworkTestAccess`) at run time, proved only by the game test run.
+- Choices made by Claude and reported to Max: the conflict message names the nearest box (two devices do not fit in a chat line), French names of the DHCP states, colour of the waiting light, the four DHCP scenes.
+- Documentation commits of the same session: results of going public; plan revised by Max (lot 1e, 6c split, ideas as issues); TCP lot 1f, shared console and terminal decisions.
 
 ## Blocking for publication
 

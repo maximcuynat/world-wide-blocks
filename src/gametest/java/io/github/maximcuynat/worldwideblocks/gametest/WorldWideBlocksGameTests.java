@@ -70,7 +70,17 @@ public final class WorldWideBlocksGameTests {
             new Case("mac_expires_after_300_seconds", Batch.SHARED, 6200, NetworkTests::macExpiresAfter300Seconds),
             new Case("loop_reported_once_per_minute", Batch.ENGINE_LIMITS, 4200, NetworkTests::loopReportedOncePerMinute),
             new Case("loop_forgotten_only_for_changed_network", Batch.ENGINE_LIMITS, 1000, NetworkTests::loopForgottenOnlyForChangedNetwork),
-            new Case("trial_command_refused_outside_trial_world", Batch.SHARED, 20, SceneTests::commandRefusedOutsideTrialWorld)),
+            new Case("trial_command_refused_outside_trial_world", Batch.SHARED, 20, SceneTests::commandRefusedOutsideTrialWorld),
+            // DHCP (lot 1b-2). The lease is 24,000 ticks: the test server does not pause between ticks, so a few real seconds.
+            new Case("dhcp_address_obtained", Batch.SHARED, 40, DhcpTests::addressObtained),
+            new Case("dhcp_address_lost_when_unplugged", Batch.SHARED, 40, DhcpTests::addressLostWhenUnplugged),
+            new Case("dhcp_same_address_when_plugged_again", Batch.SHARED, 100, DhcpTests::sameAddressWhenPluggedAgain),
+            new Case("dhcp_renewal_at_half_lease", Batch.SHARED, 12_100, DhcpTests::renewalAtHalfLease),
+            new Case("dhcp_lease_expires", Batch.SHARED, 24_100, DhcpTests::leaseExpires),
+            new Case("dhcp_no_box", Batch.SHARED, 420, DhcpTests::noBox),
+            new Case("dhcp_conflict_of_two_boxes", Batch.SHARED, 220, DhcpTests::conflictOfTwoBoxes),
+            new Case("dhcp_restart_asks_for_the_same_address", Batch.SHARED, 40, DhcpTests::restartAsksForTheSameAddress),
+            new Case("dhcp_pool_full", Batch.SHARED, 420, DhcpTests::poolFull)),
             // Scenes of /worldwideblocks test, except "distance" (99 blocks, larger than the test area).
             // The loop scene hits the engine's global limits: separate batch.
             Arrays.stream(TrialScenario.values())

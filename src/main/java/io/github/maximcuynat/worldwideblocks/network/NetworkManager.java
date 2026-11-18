@@ -15,6 +15,7 @@ import io.github.maximcuynat.worldwideblocks.message.MessageArg;
 import io.github.maximcuynat.worldwideblocks.message.MessageLevel;
 import io.github.maximcuynat.worldwideblocks.message.server.Diagnostics;
 import io.github.maximcuynat.worldwideblocks.message.server.MessageCenter;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpStore;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 import io.github.maximcuynat.worldwideblocks.network.sim.DeviceLogic;
 import io.github.maximcuynat.worldwideblocks.network.sim.NetworkSimulation;
@@ -352,6 +353,15 @@ public final class NetworkManager {
             messages.forgetProblem(loopProblem(network));
             messages.forgetProblem(dhcpConflictProblem(network));
         });
+    }
+
+    /**
+     * What the devices remember of DHCP, with the "DHCP server enabled" setting of each box. Package visibility:
+     * the setting has no interface yet (lot 1b-2); the trial scenes and the game tests reach it from this package.
+     * A change is saved at the next tick.
+     */
+    DhcpStore dhcp() {
+        return this.data.dhcp();
     }
 
     private NetworkGraph graph() {

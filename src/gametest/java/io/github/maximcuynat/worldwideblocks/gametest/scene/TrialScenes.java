@@ -10,9 +10,11 @@ import io.github.maximcuynat.worldwideblocks.network.LinkMedium;
 import io.github.maximcuynat.worldwideblocks.network.NetworkDevice;
 import io.github.maximcuynat.worldwideblocks.network.NetworkDevices;
 import io.github.maximcuynat.worldwideblocks.network.NetworkManager;
+import io.github.maximcuynat.worldwideblocks.network.NetworkTestAccess;
 import io.github.maximcuynat.worldwideblocks.network.PortRef;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
@@ -66,7 +68,15 @@ public final class TrialScenes {
             level.setBlockAndUpdate(pos, state);
             placed.add(pos);
         }
-        NetworkManager network = NetworkManager.of(level.getServer());
+        // DHCP settings of the boxes, before the cables: they apply from the first exchange.
+        MinecraftServer server = level.getServer();
+        for (int box : scenario.dhcp().serverOff()) {
+            NetworkTestAccess.setDhcpServerEnabled(server, NetworkDevices.idOf(level, placed.get(box)), false);
+        }
+        for (int box : scenario.dhcp().poolFull()) {
+            NetworkTestAccess.fillDhcpPool(server, NetworkDevices.idOf(level, placed.get(box)), server.overworld().getGameTime());
+        }
+        NetworkManager network = NetworkManager.of(server);
         int cables = 0;
         for (TrialScenario.Cable cable : scenario.cables()) {
             DeviceId from = NetworkDevices.idOf(level, placed.get(cable.from()));

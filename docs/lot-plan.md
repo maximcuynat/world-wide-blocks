@@ -259,6 +259,49 @@ The game texts below are quoted in English (`en_us.json`); in this French game, 
 
 To report: the screenshots, and any text that is cut off, overflows the panel, is badly translated or whose symbol is displayed badly.
 
+#### Status of lot 1b-2
+
+Coded on 2026-11-18 on the `lot/1b-2` branch (issues #3 to #9), in 7 steps, one commit each after a green build (`./gradlew build test` and `./gradlew runGameTestServer`). Protocol checked in the text of RFC 2131 and RFC 2132.
+
+| Type | Equipment | Status |
+|---|---|---|
+| Mechanic | Protocol layers | Done: IPv4 packet in the Ethernet frame (0x0800), UDP datagram (protocol 17), DHCP message (ports 67 and 68), each a variant of the layer below |
+| Mechanic | DHCP server of the box | Done: on the local point of the box's switch, with its own saved MAC; pool 192.168.1.10 to .200 in /24, gateway and name server 192.168.1.1, lease of one game day; same address for the same MAC; expired leases reused, the oldest first, when the pool is full |
+| Mechanic | DHCP client of the computers | Done: DISCOVER, OFFER, REQUEST, ACK and NAK with a transaction id; renewal at T1 to the server alone, at T2 by broadcast; address lost at the end of the lease or when the cable is unplugged |
+| Mechanic | Restart | Done: leases of the box and of the computers saved in `network.dat` (optional fields, lot 1b-1 worlds still load); a computer still plugged in asks for its address again (INIT-REBOOT) |
+| Mechanic | Two DHCP servers | Done: detected by the computer (two answers from different MACs, both boxes being 192.168.1.1); chat warning to the players within 32 blocks, once per minute per network |
+| Setting | "DHCP server enabled" | Done, saved, on by default, without interface: used by the `chain`, `loop` and `dhcp_server_off` scenes and by the game tests |
+| Mechanic | Status indicator | Done: address and DHCP state of a computer, details when sneaking (MAC, mask, gateway, name server, time left on the lease), addresses lent by a box (four lines at most) |
+
+Deviations from RFC 2131, approved by Max on 2026-11-18:
+
+- No random +/-1 s on retransmissions (4.1), for exact timings: DISCOVER after 4, 8, 16, 32 and 64 s, then every 64 s; REQUEST after 4, 8 and 16 s, then back to INIT 60 s after the first one (3.1).
+- INIT-REBOOT without an answer goes back to INIT (4.4.2 also allows keeping the address).
+- The renewal is unicast to the MAC of the server taken from its acknowledgement: no ARP before lot 1c.
+- No DECLINE, RELEASE or ARP probe of the offered address (4.4.1).
+- Lease time in seconds in the message (1,200 s), 24,000 ticks in the engine; an offered address is held 60 s.
+
+Presence frame: still needed until lot 1c (issue #15): a computer with an address is silent until T1 (600 s), while a switch forgets a MAC after 300 s.
+
+Automatic tests: unit tests of the layers, of the server, of the client at the exact tick (renewal, rebinding, expiry, retransmissions, INIT-REBOOT, conflict), of the simulation with boxes and computers, of the panel and of the language files. Game tests `dhcp_*`: address obtained, lost when unplugged, same address when plugged again, renewal at T1, expiry at the exact tick (server turned off), computers without a box, conflict of two boxes, restart through `network.dat` read back (INIT-REBOOT), full pool; plus the build of each new scene.
+
+#### Check by eye of lot 1b-2 (game in French)
+
+Not done yet: to do by Max. Preparation: `./gradlew runClient`, Options, Language: French, a creative world with cheats whose name starts with "Trials", standing facing a clear area. Aim at each device standing (compact panel) then sneaking (detailed panel), screenshot (F2) at each point marked 📷. `/worldwideblocks test clear` after each scene.
+
+1. **Address of the computers.** `/worldwideblocks test box_hosts`. Each computer, compact: "192.168.1.1x (DHCP : obtenue)" with a green light 📷; sneaking: "Port 1 : connecté", "MAC 02:…", "Adresse 192.168.1.1x / 255.255.255.0", "Passerelle 192.168.1.1", "Serveur DNS 192.168.1.1", "Bail : encore 19:5x" (it counts down), "DHCP : obtenue" 📷. The box, sneaking: under the ports, "Adresses prêtées : 3" and three lines "192.168.1.1x → 02:…" 📷.
+2. **Unplugged, plugged again.** In the same scene, empty hand, sneak + right-click on a computer: compact "Non connecté". Plug it again with a cord: same address as before 📷.
+3. **Renewal.** In the same scene, note the time left on a computer, then `/tick sprint 600s` (half of the lease): the time left starts again from about 20:00 📷.
+4. **Chain, one server.** `/worldwideblocks test chain`: the three computers have an address from the left box; the right box, sneaking: "Serveur DHCP : arrêté" 📷. No conflict message in the chat.
+5. **No box.** `/worldwideblocks test dhcp_no_box`: both computers "Pas d'adresse (DHCP : recherche)" with a yellow light 📷.
+6. **Conflict.** `/worldwideblocks test dhcp_conflict`: a single yellow message in the chat, "⚠ Deux serveurs DHCP sur le réseau de Box internet [x, y, z]. N'en gardez qu'un." 📷; the computer still has an address. In `run/logs/latest.log`, one line "Two DHCP servers on one network: …" naming both boxes.
+7. **Full pool.** `/worldwideblocks test dhcp_pool_full`: the computer "Pas d'adresse (DHCP : recherche)"; the box, sneaking: "Adresses prêtées : 191", four lines then "+187 autres" 📷.
+8. **Server off.** `/worldwideblocks test dhcp_server_off`: the box, sneaking, "Serveur DHCP : arrêté"; the computer without address 📷.
+9. **Restart.** Build `box_hosts`, note the addresses, save and quit to the title screen, open the world again: the computers show the same addresses at once, state "obtenue" 📷. Then remove the scene by hand: `/worldwideblocks test clear` only knows the scenes built since you joined.
+10. **Loop.** `/worldwideblocks test loop`: still a single loop message per minute, and no conflict message.
+
+To report: the screenshots, and any text cut off, overflowing the panel, badly translated, or a time left that does not count down.
+
 ### 1c: screen on the computer and ping command
 
 | Type | Equipment | Role |
