@@ -1,6 +1,6 @@
 Title: Address resolution (ARP)
 Labels: type: feature, area: protocols, priority: high
-Milestone: lot 1c
+Milestone: lot 1c-1
 
 Before sending, a PC asks the network which hardware address matches the IP address it targets.
 
