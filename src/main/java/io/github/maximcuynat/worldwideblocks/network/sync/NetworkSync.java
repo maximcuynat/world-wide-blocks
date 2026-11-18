@@ -2,6 +2,7 @@ package io.github.maximcuynat.worldwideblocks.network.sync;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import io.github.maximcuynat.worldwideblocks.network.ChunkKey;
@@ -10,8 +11,13 @@ import io.github.maximcuynat.worldwideblocks.network.Link;
 import io.github.maximcuynat.worldwideblocks.network.NetworkDevice;
 import io.github.maximcuynat.worldwideblocks.network.NetworkDevices;
 import io.github.maximcuynat.worldwideblocks.network.NetworkManager;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpBinding;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpClient;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpServerState;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
+import io.github.maximcuynat.worldwideblocks.network.sim.BoxLogic;
 import io.github.maximcuynat.worldwideblocks.network.sim.DeviceLogic;
+import io.github.maximcuynat.worldwideblocks.network.sim.HostLogic;
 import io.github.maximcuynat.worldwideblocks.network.switching.MacTable;
 import io.github.maximcuynat.worldwideblocks.registry.ModAttachments;
 import net.minecraft.core.BlockPos;
@@ -32,7 +38,7 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
  * reach. The server stays the only judge: the client receives only a copy and sends nothing back.
  */
 public final class NetworkSync {
-    private static final String PROTOCOL_VERSION = "3";
+    private static final String PROTOCOL_VERSION = "4"; // 4: DHCP state in the device status (lot 1b-2)
     /** The device each player aims at is sampled every 5 ticks (a quarter of a second). */
     private static final int STATUS_INTERVAL_TICKS = 5;
 
@@ -119,7 +125,31 @@ public final class NetworkSync {
         for (MacTable.Entry entry : network.logic(id).map(DeviceLogic::learnedMacs).orElse(List.of())) {
             learned.add(new LearnedMac(entry.port(), entry.mac().value()));
         }
-        return new DeviceStatusPayload(pos, switching, portMacs, learned);
+        List<DhcpPortStatus> dhcp = new ArrayList<>();
+        Optional<Boolean> dhcpServer = Optional.empty();
+        List<DhcpLeaseStatus> leases = new ArrayList<>();
+        Optional<DeviceLogic> logic = network.logic(id);
+        if (logic.isPresent() && logic.get() instanceof HostLogic host) {
+            for (int port = 0; port < macs.size(); port++) {
+                dhcp.add(dhcpStatus(port, host.dhcpClient(port)));
+            }
+        } else if (logic.isPresent() && logic.get() instanceof BoxLogic box) {
+            DhcpServerState server = box.dhcpServer().state();
+            dhcpServer = Optional.of(server.enabled());
+            long now = level.getServer().overworld().getGameTime();
+            for (DhcpBinding lease : server.leasesAt(now)) {
+                leases.add(new DhcpLeaseStatus(lease.address().value(), lease.client().value()));
+            }
+        }
+        return new DeviceStatusPayload(pos, switching, portMacs, learned, dhcp, dhcpServer, leases);
+    }
+
+    private static DhcpPortStatus dhcpStatus(int port, DhcpClient client) {
+        int state = client.state().ordinal();
+        return client.lease()
+                .map(lease -> new DhcpPortStatus(port, state, lease.address().value(), lease.subnetMask().value(),
+                        lease.router().value(), lease.dnsServer().value(), lease.expiresAt()))
+                .orElseGet(() -> new DhcpPortStatus(port, state, 0, 0, 0, 0, 0L));
     }
 
     // ---- Network changes ----

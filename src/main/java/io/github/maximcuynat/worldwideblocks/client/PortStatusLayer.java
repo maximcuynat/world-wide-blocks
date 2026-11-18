@@ -4,11 +4,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import io.github.maximcuynat.worldwideblocks.message.StatusPanel;
 import io.github.maximcuynat.worldwideblocks.network.NetworkDevice;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpClientState;
+import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Address;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 import io.github.maximcuynat.worldwideblocks.network.sync.DeviceStatusPayload;
+import io.github.maximcuynat.worldwideblocks.network.sync.DhcpPortStatus;
 import io.github.maximcuynat.worldwideblocks.network.sync.LearnedMac;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -45,6 +49,7 @@ final class PortStatusLayer implements GuiLayer {
     private static final int COLOR_TEXT = 0xFFDDDDDD;
     private static final int COLOR_DETAIL = 0xFFA0A8B0;
     private static final int COLOR_CONNECTED = 0xFF55FF55;
+    private static final int COLOR_WAITING = 0xFFFFC040;
     private static final int COLOR_FREE = 0xFF707070;
     private static final int COLOR_INACTIVE = 0xFF383838;
 
@@ -71,8 +76,9 @@ final class PortStatusLayer implements GuiLayer {
 
         Component name = state.getBlock().getName();
         boolean detailed = minecraft.player != null && minecraft.player.isShiftKeyDown();
+        // Same game time as the server's, which the client receives and advances: the time left on a lease.
         List<StatusPanel.Line> panel = StatusPanel.lines(device.ports(), port -> this.cache.isConnected(pos, port),
-                toStatus(this.deviceStatus.at(pos)), detailed);
+                toStatus(this.deviceStatus.at(pos)), detailed, minecraft.level.getGameTime());
         List<Component> texts = panel.stream().map(line -> (Component) ClientText.of(line.key(), line.args())).toList();
 
         Font font = minecraft.font;
@@ -106,6 +112,7 @@ final class PortStatusLayer implements GuiLayer {
     private static Integer color(StatusPanel.Light light) {
         return switch (light) {
             case CONNECTED -> COLOR_CONNECTED;
+            case WAITING -> COLOR_WAITING;
             case FREE -> COLOR_FREE;
             case INACTIVE -> COLOR_INACTIVE;
             case NONE -> null;
@@ -122,6 +129,21 @@ final class PortStatusLayer implements GuiLayer {
         for (LearnedMac entry : status.learned()) {
             learned.computeIfAbsent(entry.port(), port -> new ArrayList<>()).add(new MacAddress(entry.mac()));
         }
-        return new StatusPanel.DeviceStatus(status.switching(), portMacs, learned);
+        Map<Integer, StatusPanel.PortAddress> dhcp = new HashMap<>();
+        DhcpClientState[] states = DhcpClientState.values();
+        for (DhcpPortStatus port : status.dhcp()) {
+            if (port.state() < 0 || port.state() >= states.length) {
+                continue;
+            }
+            Optional<StatusPanel.Address> address = port.address() == 0 ? Optional.empty()
+                    : Optional.of(new StatusPanel.Address(new Ipv4Address(port.address()), new Ipv4Address(port.subnetMask()),
+                            new Ipv4Address(port.router()), new Ipv4Address(port.dnsServer()), port.expiresAt()));
+            dhcp.put(port.port(), new StatusPanel.PortAddress(states[port.state()], address));
+        }
+        Optional<StatusPanel.ServerStatus> server = status.dhcpServer().map(enabled -> new StatusPanel.ServerStatus(enabled,
+                status.leases().stream()
+                        .map(lease -> new StatusPanel.Lent(new Ipv4Address(lease.address()), new MacAddress(lease.client())))
+                        .toList()));
+        return new StatusPanel.DeviceStatus(status.switching(), portMacs, learned, dhcp, server);
     }
 }
