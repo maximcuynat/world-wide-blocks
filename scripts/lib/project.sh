@@ -35,6 +35,25 @@ issue_milestone_title() {
     milestone_field "$kind" "$key" 4
 }
 
+# Key of an issue file: its path under issues/, without .md (written at the end of the issue body).
+issue_key() {
+    local key="${1#"$(project_dir)/issues/"}"
+    echo "${key%.md}"
+}
+
+# Body of the issue described by a file, as created on GitHub: the text after the header, then the
+# hidden key that recognises the issue.
+issue_body() {
+    sed '1,/^$/d' "$1"
+    echo
+    echo "<!-- project-key: $(issue_key "$1") -->"
+}
+
+# Text compared between GitHub and the files: line endings and trailing blank space left out.
+normalized_text() {
+    tr -d '\r' <"$1" | sed -e 's/[[:space:]]*$//' | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}'
+}
+
 # Checks the data files before anything is sent: known labels, known milestones, titles.
 project_validate() {
     local file label ref errors=0 labels
@@ -134,8 +153,7 @@ cmd_project_sync() {
     echo
     echo "Issues:"
     for file in $(find "$(project_dir)/issues" -name '*.md' | sort); do
-        key="${file#"$(project_dir)/issues/"}"
-        key="${key%.md}"
+        key="$(issue_key "$file")"
         title="$(issue_field "$file" Title)"
         number="$(printf '%s\n' "$existing_keys" | awk -v k="$key" '$1 == k { print $2; exit }')"
         if [ -n "$number" ]; then
@@ -173,14 +191,8 @@ cmd_project_sync() {
                 gh api --method PATCH "repos/$slug/milestones/$a" -f description="$b" >/dev/null
                 ;;
             issue-create)
-                key="${a#"$(project_dir)/issues/"}"
-                key="${key%.md}"
                 body="$DEV_TMPDIR/issue-body.md"
-                {
-                    sed '1,/^$/d' "$a"
-                    echo
-                    echo "<!-- project-key: $key -->"
-                } >"$body"
+                issue_body "$a" >"$body"
                 set -- --repo "$slug" --title "$(issue_field "$a" Title)" --body-file "$body"
                 ms="$(issue_milestone_title "$a")"
                 [ -z "$ms" ] || set -- "$@" --milestone "$ms"
@@ -194,4 +206,69 @@ cmd_project_sync() {
         say "done: $kind $a"
     done 3<"$actions" </dev/null
     say "$n_actions change(s) applied on $slug."
+}
+
+# Rewrites the body of the issues already on GitHub from their definition files, for example after a
+# document they link to was renamed. Only the body changes: title, labels, milestone, state and
+# comments are left alone. An issue whose GitHub body has a ticked box ("- [x]") is skipped, since
+# its body was edited on GitHub and rewriting it would untick the box: update it by hand.
+cmd_project_update_issues() {
+    [ $# -eq 0 ] || die "usage: scripts/dev project update-issues"
+    local slug existing_keys file key number title current expected n_updates=0 n_skipped=0
+    require_gh
+    slug="$(repo_slug)"
+    project_validate
+
+    say "reading the issues of $slug"
+    existing_keys="$(gh issue list --repo "$slug" --state all --limit 1000 --json number,body \
+        --jq '.[] | select(.body | test("<!-- project-key: [^ ]+ -->")) | "\(.body | capture("<!-- project-key: (?<k>[^ ]+) -->").k) #\(.number)"')"
+
+    mkdir -p "$DEV_TMPDIR/update"
+    : >"$DEV_TMPDIR/update/list"
+    echo
+    for file in $(find "$(project_dir)/issues" -name '*.md' | sort); do
+        key="$(issue_key "$file")"
+        number="$(printf '%s\n' "$existing_keys" | awk -v k="$key" '$1 == k { print $2; exit }')"
+        number="${number#\#}"
+        title="$(issue_field "$file" Title)"
+        if [ -z "$number" ]; then
+            echo "  ? $title: not on GitHub yet (scripts/dev project sync creates it)"
+            continue
+        fi
+        current="$DEV_TMPDIR/update/$number.current"
+        expected="$DEV_TMPDIR/update/$number.expected"
+        gh issue view "$number" --repo "$slug" --json body --jq '.body' >"$current"
+        issue_body "$file" >"$expected"
+        if [ "$(normalized_text "$current")" = "$(normalized_text "$expected")" ]; then
+            echo "  = #$number $title"
+            continue
+        fi
+        if grep -q -i -E '^[[:space:]]*[-*] \[x\]' "$current"; then
+            echo "  ! #$number $title: ticked boxes on GitHub, skipped (update it by hand)"
+            n_skipped=$((n_skipped + 1))
+            continue
+        fi
+        echo "  ~ #$number $title"
+        diff -u --label "GitHub #$number" --label "$file" \
+            <(normalized_text "$current") <(normalized_text "$expected") | sed 's/^/      /' || true
+        printf '%s\t%s\n' "$number" "$expected" >>"$DEV_TMPDIR/update/list"
+        n_updates=$((n_updates + 1))
+    done
+
+    echo
+    [ "$n_skipped" -eq 0 ] || warn "$n_skipped issue(s) skipped: their body has ticked boxes."
+    if [ "$n_updates" -eq 0 ]; then
+        say "no issue body to update on $slug."
+        return 0
+    fi
+    stop_if_dry_run
+    if ! confirm "Rewrite the body of these $n_updates issue(s) on GitHub ($slug)?"; then
+        say "nothing was sent."
+        exit 0
+    fi
+    while IFS="$(printf '\t')" read -r number expected <&3; do
+        gh issue edit "$number" --repo "$slug" --body-file "$expected" >/dev/null
+        say "done: #$number"
+    done 3<"$DEV_TMPDIR/update/list" </dev/null
+    say "$n_updates issue(s) updated on $slug."
 }

@@ -126,6 +126,7 @@ Bypassing a hook (`--no-verify`) is kept for cases where the same checks have ju
 | `scripts/dev release publish <version>` | After the merge: signed tag on the merge commit of `main`, jar built from it in a temporary worktree, **draft** GitHub release (pre-release for alpha and beta), `main` brought back into `developement`, finished milestones closed. |
 | `scripts/dev hotfix start <version>` | Creates `hotfix/<version>` from `main`, which must be at the previous release. |
 | `scripts/dev project sync` | Creates the labels, milestones and issues of `scripts/project/` on GitHub. Can be run again: nothing is created twice. |
+| `scripts/dev project update-issues` | Rewrites the body of the issues already on GitHub from their files in `scripts/project/issues/`, for example after a linked document was renamed. Shows the difference for each issue first. Title, labels, milestone, state and comments are left alone; an issue with ticked boxes on GitHub is skipped. |
 
 ### Publish a version
 

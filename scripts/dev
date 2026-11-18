@@ -15,6 +15,8 @@
 #   hotfix start <X.Y.Z>        create hotfix/<X.Y.Z> from main, which must be at the previous release
 #   project sync                create the labels, milestones and issues of scripts/project/ on GitHub
 #                               (can be run again: nothing is created twice)
+#   project update-issues       rewrite the body of the issues already on GitHub from their files
+#                               (issues with ticked boxes are skipped)
 #
 # --dry-run (or -n): run every check and show what would be done, without changing anything.
 # Every public action (push, pull request, tag, release) asks for confirmation on the terminal first.
@@ -59,6 +61,7 @@ main() {
         "release publish") shift 2; cmd_release_publish "$@" ;;
         "hotfix start") shift 2; cmd_hotfix_start "$@" ;;
         "project sync") shift 2; cmd_project_sync "$@" ;;
+        "project update-issues") shift 2; cmd_project_update_issues "$@" ;;
         "help "*) usage ;;
         *) echo "dev: unknown command \"$*\"." >&2; echo >&2; usage >&2; return 2 ;;
     esac
