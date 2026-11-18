@@ -19,7 +19,7 @@ Un commit par sujet, après le build vert de Max (Gradle ne tourne pas dans le b
 - [x] 5. Hooks versionnés (`.githooks/`) et `scripts/install-hooks.sh` : messages de commit (rejoués sur les 57 sujets existants), gitleaks avant commit, build et tests en jeu avant push (sauf `.md` et `docs/` seuls ; arbre propre exigé). Hook avant push testé dans un clone jetable avec un faux `gradlew` (11 scénarios). Le hook avant commit bloque aussi quand gitleaks signale une erreur : en essai, gitleaks répondait « no leaks found » alors que git avait échoué. Installés et vérifiés chez Max.
 - [x] 6. Releases : `cliff.toml` (Keep a Changelog en français : Ajouté, Modifié, Corrigé), `CHANGELOG.md`, `scripts/release.sh` (mode `--dry-run`, commit et tag signés, confirmation avant tout envoi, release GitHub en brouillon). Déroulé complet essayé dans un clone jetable avec de faux `gradlew` et `gh` (refus, envoi atomique, pull request, garde-fous de `--publish`, brouillon en pré-version, pas de terminal = non). Premier vrai essai : `scripts/release.sh --dry-run 0.1.0-alpha.1` par Max.
 - [x] 7. `README.md` (français et anglais), `SECURITY.md` (signalement privé par GitHub), `CONTRIBUTING.md` (commits, branches, hooks, tests, releases).
-- [ ] 8. `docs/securite-depot.md` : réglages GitHub à faire par Max, chemins de l'interface, ordre des opérations, signature SSH des commits et des tags.
+- [x] 8. `docs/securite-depot.md` : réglages GitHub à faire par Max, chemins de l'interface, ordre des opérations, signature SSH des commits et des tags.
 - [ ] 9. `CLAUDE.md` : hooks, script de release, modèle de branches. Revue de la session ci-dessous.
 
 ## Étape 1 : environnement de dev
