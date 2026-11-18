@@ -16,7 +16,7 @@ import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 /**
- * Network control commands, reserved for operators. {@code /worldwideblocks liens} reads the
+ * Network control commands, reserved for operators. {@code /worldwideblocks links} reads the
  * server state directly: it is used to check that a link still exists when its area is not loaded
  * or after a restart.
  */
@@ -29,7 +29,7 @@ public final class WorldWideBlocksCommands {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         dispatcher.register(Commands.literal("worldwideblocks")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
-                .then(Commands.literal("liens").executes(WorldWideBlocksCommands::listLinks)));
+                .then(Commands.literal("links").executes(WorldWideBlocksCommands::listLinks)));
         // Short alias /wwb. It redirects to the node actually in the tree: Brigadier merges every later
         // "worldwideblocks" registration into that node (/worldwideblocks test in development), so the
         // alias sees those subcommands too, whatever the registration order.

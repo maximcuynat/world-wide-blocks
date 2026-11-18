@@ -24,20 +24,20 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
 /**
- * {@code /worldwideblocks test <scénario>} construit devant le joueur le décor d'un essai à l'œil (panneau
- * d'état, câble dessiné, lisibilité des messages) ; {@code /worldwideblocks test effacer} retire le dernier
- * décor qu'il a construit.
+ * {@code /worldwideblocks test <scene>} builds in front of the player the scene of a check by eye (status
+ * panel, drawn cable, readability of the messages); {@code /worldwideblocks test clear} removes the last
+ * scene they built. The short alias {@code /wwb} works too.
  *
- * <p>Outil de développement : jeu de sources {@code gametest}, absent du mod distribué. Réservé aux
- * opérateurs, et seulement dans un monde dont le nom commence par {@value #TRIAL_WORLD_PREFIX}, pour
- * ne jamais poser de blocs dans un monde de jeu. Messages en français seulement : ils ne sont pas
- * dans les fichiers de langue du mod, qui partent dans le jar.
+ * <p>Development tool: {@code gametest} source set, absent from the released mod. Operators only, and
+ * only in a world whose name starts with {@value #TRIAL_WORLD_PREFIX}, so that no block is ever placed
+ * in a world that is played. Messages in English only: they are not in the mod's language files,
+ * which ship in the jar.
  */
 @EventBusSubscriber(modid = WorldWideBlocks.MODID)
 public final class TrialSceneCommand {
-    public static final String TRIAL_WORLD_PREFIX = "Essais";
+    public static final String TRIAL_WORLD_PREFIX = "Trials";
 
-    /** Décors construits par le joueur depuis sa connexion, le plus récent en tête. Non sauvegardé. */
+    /** Scenes built by the player since they joined, the most recent first. Not saved. */
     public static final class BuiltScenes {
         private final Deque<List<BlockPos>> scenes = new ArrayDeque<>();
     }
@@ -57,12 +57,12 @@ public final class TrialSceneCommand {
     static void registerCommand(RegisterCommandsEvent event) {
         LiteralArgumentBuilder<CommandSourceStack> test = Commands.literal("test")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
-                .then(Commands.literal("effacer").executes(TrialSceneCommand::erase));
+                .then(Commands.literal("clear").executes(TrialSceneCommand::clear));
         for (TrialScenario scenario : TrialScenario.values()) {
             test.then(Commands.literal(scenario.id()).executes(context -> build(context, scenario)));
         }
-        // Même nœud « worldwideblocks » que /worldwideblocks liens : Brigadier fusionne les deux. Même exigence
-        // d'opérateur, quel que soit l'ordre d'enregistrement.
+        // Same "worldwideblocks" node as /worldwideblocks links: Brigadier merges the two. Same operator
+        // requirement, whatever the registration order.
         event.getDispatcher().register(Commands.literal("worldwideblocks")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(test));
@@ -84,13 +84,13 @@ public final class TrialSceneCommand {
             source.sendFailure(Component.literal(result.refusal().get()));
             return 0;
         }
-        source.sendSuccess(() -> Component.literal("Décor « " + scenario.id() + " » (" + scenario.description() + ") : "
-                + result.devices().size() + " appareil(s), " + result.cables() + " câble(s). "
-                + "/worldwideblocks test effacer pour le retirer."), false);
+        source.sendSuccess(() -> Component.literal("Scene \"" + scenario.id() + "\" (" + scenario.description() + "): "
+                + result.devices().size() + " device(s), " + result.cables() + " cable(s). "
+                + "/worldwideblocks test clear to remove it."), false);
         return 1;
     }
 
-    private static int erase(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+    private static int clear(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         CommandSourceStack source = context.getSource();
         if (!isTrialWorld(source)) {
             return 0;
@@ -98,17 +98,18 @@ public final class TrialSceneCommand {
         ServerPlayer player = source.getPlayerOrException();
         List<BlockPos> last = player.getData(BUILT_SCENES).scenes.poll();
         if (last == null) {
-            source.sendFailure(Component.literal("Aucun décor à retirer depuis votre connexion."));
+            source.sendFailure(Component.literal("No scene to remove since you joined."));
             return 0;
         }
         int removed = TrialScenes.remove(player.level(), last);
-        source.sendSuccess(() -> Component.literal("Décor retiré : " + removed + " appareil(s)."), false);
+        source.sendSuccess(() -> Component.literal("Scene removed: " + removed + " device(s)."), false);
         return 1;
     }
 
     /**
-     * Règle des mondes d'essai : le nom commence par {@value #TRIAL_WORLD_PREFIX}, majuscule comprise.
-     * « Essais 1b-1 » est accepté ; « World Wide Blocks », « Mes Essais » et « essais » sont refusés.
+     * Rule of the trial worlds: the name starts with {@value #TRIAL_WORLD_PREFIX}, capital letter included.
+     * "Trials 1b-1" is accepted; "World Wide Blocks", "My Trials", "trials" and "Test Level" (the world
+     * of the game test server) are refused. Not "Test": the game test world would then be accepted.
      */
     public static boolean isTrialWorldName(String name) {
         return name.startsWith(TRIAL_WORLD_PREFIX);
@@ -119,8 +120,8 @@ public final class TrialSceneCommand {
         if (isTrialWorldName(name)) {
             return true;
         }
-        source.sendFailure(Component.literal("Commande réservée aux mondes d'essai : ce monde s'appelle « " + name
-                + " ». Créez un monde dont le nom commence par « " + TRIAL_WORLD_PREFIX + " »."));
+        source.sendFailure(Component.literal("Command reserved for trial worlds: this world is called \"" + name
+                + "\". Create a world whose name starts with \"" + TRIAL_WORLD_PREFIX + "\"."));
         return false;
     }
 }

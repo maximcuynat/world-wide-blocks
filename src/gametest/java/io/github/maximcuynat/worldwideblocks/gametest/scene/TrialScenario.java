@@ -7,51 +7,51 @@ import io.github.maximcuynat.worldwideblocks.registry.ModBlocks;
 import net.minecraft.world.level.block.Block;
 
 /**
- * Décors des essais à l'œil, construits devant le joueur par {@code /worldwideblocks test <scénario>}.
+ * Scenes of the checks by eye, built in front of the player by {@code /worldwideblocks test <scene>}.
  *
- * <p>Coordonnées locales : {@code right} vers la droite du joueur, {@code forward} droit devant lui,
- * à partir d'un point situé 3 blocs devant ses pieds.
+ * <p>Local coordinates: {@code right} towards the player's right, {@code forward} straight ahead,
+ * from a point 3 blocks in front of their feet.
  */
 public enum TrialScenario {
-    /** Box seule : 4 ports réseau local libres, arrivée de ligne inactive, façade vers le joueur. */
-    BOX("box", "box seule",
+    /** Box alone: 4 free local network ports, inactive line input, front facing the player. */
+    BOX("box", "box alone",
             List.of(device(0, 0, ModBlocks.INTERNET_BOX::get)),
             List.of()),
-    /** Box et 3 postes : MAC de chaque poste, MAC apprises par la box sur 3 ports. */
-    BOX_POSTES("box_postes", "box et 3 postes branchés",
+    /** Box and 3 computers: MAC of each computer, MACs learned by the box on 3 ports. */
+    BOX_HOSTS("box_hosts", "box and 3 connected computers",
             List.of(device(0, 0, ModBlocks.INTERNET_BOX::get), device(-3, 3, ModBlocks.PC_TOWER::get),
                     device(0, 4, ModBlocks.LAPTOP::get), device(3, 3, ModBlocks.PC_TOWER::get)),
             List.of(cable(0, 1), cable(0, 2), cable(0, 3))),
     /**
-     * Deux box reliées, un poste sur celle de gauche et deux sur celle de droite : chaque box apprend
-     * aussi les postes de l'autre, et le port 1 de la box de gauche porte 2 MAC (lisibilité du panneau).
+     * Two linked boxes, one computer on the left box and two on the right one: each box also learns
+     * the computers of the other, and port 1 of the left box carries 2 MACs (readability of the panel).
      */
-    CHAINE("chaine", "deux box reliées, un poste à gauche, deux à droite",
+    CHAIN("chain", "two linked boxes, one computer on the left, two on the right",
             List.of(device(-3, 0, ModBlocks.INTERNET_BOX::get), device(3, 0, ModBlocks.INTERNET_BOX::get),
                     device(-3, 3, ModBlocks.PC_TOWER::get), device(3, 3, ModBlocks.LAPTOP::get),
                     device(6, 3, ModBlocks.PC_TOWER::get)),
             List.of(cable(0, 1), cable(0, 2), cable(1, 3), cable(1, 4))),
-    /** Deux box reliées par deux câbles, un poste : message de boucle dans le chat, une fois par minute. */
-    BOUCLE("boucle", "deux box reliées par deux câbles, un poste",
+    /** Two boxes linked by two cables, one computer: loop message in the chat, once per minute. */
+    LOOP("loop", "two boxes linked by two cables, one computer",
             List.of(device(-3, 0, ModBlocks.INTERNET_BOX::get), device(3, 0, ModBlocks.INTERNET_BOX::get),
                     device(-3, 3, ModBlocks.PC_TOWER::get)),
             List.of(cable(0, 1), cable(0, 1), cable(0, 2))),
-    /** Box aux 4 ports réseau local occupés : un cordon de plus affiche « aucun port libre ». */
-    PORTS_PLEINS("ports_pleins", "box aux 4 ports occupés",
+    /** Box with its 4 local network ports in use: one more cord shows "no free port". */
+    FULL_PORTS("full_ports", "box with its 4 ports in use",
             List.of(device(0, 0, ModBlocks.INTERNET_BOX::get), device(-3, 3, ModBlocks.PC_TOWER::get),
                     device(-1, 4, ModBlocks.PC_TOWER::get), device(1, 4, ModBlocks.LAPTOP::get),
                     device(3, 3, ModBlocks.LAPTOP::get)),
             List.of(cable(0, 1), cable(0, 2), cable(0, 3), cable(0, 4))),
-    /** Câble de 99 blocs, juste sous la limite de 100 : dessin d'un long câble. */
-    DISTANCE("distance", "câble de 99 blocs",
+    /** Cable of 99 blocks, just under the limit of 100: drawing of a long cable. */
+    DISTANCE("distance", "cable of 99 blocks",
             List.of(device(0, 0, ModBlocks.PC_TOWER::get), device(0, 99, ModBlocks.LAPTOP::get)),
             List.of(cable(0, 1)));
 
-    /** Un appareil du décor. */
+    /** A device of the scene. */
     public record Device(int right, int forward, Supplier<Block> block) {
     }
 
-    /** Un câble entre deux appareils, désignés par leur rang dans la liste. */
+    /** A cable between two devices, given by their rank in the list. */
     public record Cable(int from, int to) {
     }
 

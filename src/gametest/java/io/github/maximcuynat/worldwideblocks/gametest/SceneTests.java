@@ -61,20 +61,23 @@ final class SceneTests {
     }
 
     /**
-     * Règle du nom de monde, puis la vraie commande sur le serveur de tests, dont le monde ne s'appelle
-     * pas « Essais… » : refus avec un message, aucun bloc posé.
+     * Rule of the world name, then the real command on the game test server, whose world ("Test Level")
+     * does not start with "Trials": refusal with a message, no block placed, through the full command
+     * and through the /wwb alias.
      */
     static void commandRefusedOutsideTrialWorld(GameTestHelper helper) {
-        helper.assertTrue(TrialSceneCommand.isTrialWorldName("Essais 1b-1"), "« Essais 1b-1 » doit être un monde d'essai");
-        helper.assertTrue(TrialSceneCommand.isTrialWorldName("Essais"), "« Essais » doit être un monde d'essai");
-        helper.assertFalse(TrialSceneCommand.isTrialWorldName("World Wide Blocks"), "« World Wide Blocks » ne doit pas être un monde d'essai");
-        helper.assertFalse(TrialSceneCommand.isTrialWorldName("Mes Essais"), "« Mes Essais » ne doit pas être un monde d'essai");
-        helper.assertFalse(TrialSceneCommand.isTrialWorldName("essais 1b-1"), "« essais 1b-1 » ne doit pas être un monde d'essai");
+        for (String accepted : List.of("Trials 1b-1", "Trials")) {
+            helper.assertTrue(TrialSceneCommand.isTrialWorldName(accepted), "\"" + accepted + "\" must be a trial world");
+        }
+        // "Test Level" is the world of the game test server: it must never count as a trial world.
+        for (String refused : List.of("World Wide Blocks", "My Trials", "trials 1b-1", "Test Level")) {
+            helper.assertFalse(TrialSceneCommand.isTrialWorldName(refused), "\"" + refused + "\" must not be a trial world");
+        }
 
         MinecraftServer server = helper.getLevel().getServer();
         String worldName = server.getWorldData().getLevelName();
         helper.assertFalse(TrialSceneCommand.isTrialWorldName(worldName),
-                "Le monde du serveur de tests s'appelle « " + worldName + " » : le test suppose un monde hors essai");
+                "The game test server's world is called \"" + worldName + "\": the test needs a world that is not a trial world");
 
         NetworkScene scene = NetworkScene.of(helper);
         TestPlayer player = scene.player(GameType.CREATIVE);
@@ -101,7 +104,7 @@ final class SceneTests {
                 return false;
             }
         };
-        // Opérateur, pour que seul le nom du monde puisse refuser la commande.
+        // Operator, so that only the world name can refuse the command.
         CommandSourceStack source = player.createCommandSourceStack()
                 .withPermission(LevelBasedPermissionSet.OWNER)
                 .withSource(capture);
@@ -113,15 +116,15 @@ final class SceneTests {
             try {
                 result = server.getCommands().getDispatcher().execute(command, source);
             } catch (CommandSyntaxException e) {
-                throw helper.assertionException(Component.literal("Commande non reconnue (" + command + ") : " + e.getMessage()));
+                throw helper.assertionException(Component.literal("Command not recognised (" + command + "): " + e.getMessage()));
             }
 
-            helper.assertValueEqual(result, 0, "résultat de la commande " + command);
-            helper.assertValueEqual(received.size(), 1, "messages reçus pour " + command);
+            helper.assertValueEqual(result, 0, "result of the command " + command);
+            helper.assertValueEqual(received.size(), 1, "messages received for " + command);
             String message = received.get(0).getString();
             helper.assertTrue(message.contains(worldName) && message.contains(TrialSceneCommand.TRIAL_WORLD_PREFIX),
-                    "Message de refus inattendu pour " + command + " : " + message);
-            helper.assertTrue(helper.getLevel().isEmptyBlock(wouldBeBox), "Un bloc a été posé malgré le refus en " + wouldBeBox);
+                    "Unexpected refusal message for " + command + ": " + message);
+            helper.assertTrue(helper.getLevel().isEmptyBlock(wouldBeBox), "A block was placed despite the refusal at " + wouldBeBox);
         }
         helper.succeed();
     }

@@ -76,7 +76,7 @@ public final class WorldWideBlocksGameTests {
             Arrays.stream(TrialScenario.values())
                     .filter(scenario -> scenario != TrialScenario.DISTANCE)
                     .map(scenario -> new Case("trial_scene_" + scenario.id(),
-                            scenario == TrialScenario.BOUCLE ? Batch.ENGINE_LIMITS : Batch.SHARED, 20,
+                            scenario == TrialScenario.LOOP ? Batch.ENGINE_LIMITS : Batch.SHARED, 20,
                             helper -> SceneTests.buildsScenario(helper, scenario))))
             .toList();
 
