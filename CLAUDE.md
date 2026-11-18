@@ -10,15 +10,16 @@ NetCraft est un mod Minecraft (NeoForge) de simulation de réseau informatique r
 - `docs/plan-lots.md` : plan par lots, état de chaque lot, décisions à trancher, procédures de test en jeu ;
 - `docs/equipements-reseau.md` : inventaire des équipements et dimensions réelles ;
 - `docs/messages.md` : audit et règles du module des messages ;
-- `tasks/todo.md` (suivi, idées non validées) et `tasks/lessons.md` (erreurs à ne pas refaire).
+- les tâches : issues GitHub, une milestone par lot (`scripts/dev status` montre celles du lot en cours ; organisation dans `docs/project-management.md`) ;
+- `tasks/todo.md` (notes de session seulement) et `tasks/lessons.md` (erreurs à ne pas refaire).
 
-Code, commentaires, messages de commit et textes en français ; identifiants (classes, registres, ressources) en anglais. Les deux langues `fr_fr.json` et `en_us.json` sont maintenues (même jeu de clés, vérifié par `LangFilesTest`). Exception : tout ce qui peut finir dans le log (lignes de log, messages d'exception) est en anglais, comme le reste des logs de Minecraft.
+Langue : objectif d'un dépôt entièrement en anglais. Tout ce qui est nouveau sur GitHub est en anglais : messages de commit, changelog, tickets, pull requests, labels, milestones, modèles, nouveaux documents. Le code, ses commentaires et les documents existants (`docs/plan-lots.md`, `docs/messages.md`, `docs/securite-depot.md`…) restent en français jusqu'à leur traduction, prévue à la session de renommage : y écrire en français d'ici là. Réponses à Max toujours en français. Identifiants (classes, registres, ressources) en anglais. Les deux langues `fr_fr.json` et `en_us.json` sont maintenues (même jeu de clés, vérifié par `LangFilesTest`). Exception : tout ce qui peut finir dans le log (lignes de log, messages d'exception) est en anglais, comme le reste des logs de Minecraft.
 
 ## Versions
 
 - Minecraft 26.3, NeoForge 26.3.0.103, plugin `net.neoforged.moddev` 2.0.148, Gradle 9.2.1, Java 25 (téléchargé par la toolchain).
 - Versions et identité du mod dans `gradle.properties`, injectées dans `neoforge.mods.toml` : rien en dur dans le template.
-- Version du mod : SemVer en 0.x, `mod_version` dans `gradle.properties` seule source de vérité (`0.1.0-alpha.1` ; canal déduit du suffixe : alpha, beta, rien = release). Jar `netcraft-<minecraft>-<version>.jar`. Licence LGPL-3.0-only (`COPYING.LESSER`, `COPYING`).
+- Version du mod : SemVer en 0.x, `mod_version` dans `gradle.properties` seule source de vérité (`0.1.0-alpha.1` ; canal déduit du suffixe : alpha, beta, rien = release). Jar `<mod_id>-<minecraft>-<version>.jar`. Licence LGPL-3.0-only (`COPYING.LESSER`, `COPYING`).
 - Les API ont beaucoup bougé depuis la 1.21 (rendu, interface, noms de constantes). Vérifier chaque nom de classe, de méthode, d'enum et chaque package d'import dans les sources : Minecraft dans `build/moddev/artifacts/minecraft-patched-*-sources.jar`, NeoForge dans le jar `-sources` de maven.neoforged.net.
 
 ## Commandes
@@ -30,21 +31,28 @@ Code, commentaires, messages de commit et textes en français ; identifiants (cl
 ./gradlew runGameTestServer  # tests en jeu automatiques (src/gametest), monde jetable run-gametest/
 ```
 
-Outillage du dépôt (détails dans `CONTRIBUTING.md`, réglages GitHub dans `docs/securite-depot.md`) :
+Outillage du dépôt (détails dans `CONTRIBUTING.md`, réglages GitHub dans `docs/securite-depot.md` et `docs/project-management.md`) :
 
 ```bash
-scripts/install-hooks.sh                   # hooks versionnés de .githooks/ : convention des commits, gitleaks, build et tests avant push
-scripts/release.sh --dry-run <version>     # release locale : essai à blanc, puis préparation et --publish (lancés par Max)
-git-cliff -o CHANGELOG.md                  # changelog généré depuis les commits (cliff.toml), jamais écrit à la main
+scripts/install-hooks.sh          # hooks versionnés de .githooks/ : convention des commits, gitleaks, build et tests avant push (log dans build/pre-push.log)
+scripts/dev status                # branche, version, commits non poussés, tickets du lot en cours (lecture seule)
+scripts/dev lot start|finish      # branche lot/<id> depuis developement ; pull request vers developement avec « Closes # »
+scripts/dev release prepare|publish <version>   # version, changelog, PR vers main ; tag signé et release en brouillon (lancés par Max)
+scripts/dev hotfix start <X.Y.Z>  # correctif d'une version publiée, depuis main
+scripts/dev project sync          # labels, milestones et tickets de scripts/project/ sur GitHub (lancé par Max)
+git-cliff --offline --github-repo <owner/repo> -o CHANGELOG.md   # changelog généré depuis les commits (cliff.toml), jamais écrit à la main ; sans --github-repo, liens de comparaison vides ; release prepare le fait
 ```
+
+Chaque commande de `scripts/dev` a un mode `--dry-run` et demande confirmation au terminal avant toute action publique. Rien n'y est écrit en dur : dépôt déduit de la remote, mod et version lus dans `gradle.properties`.
 
 ## Façon de travailler
 
 - Toujours répondre à Max en français.
-- Branche `developement` uniquement. Rien vers `main` sans l'accord de Max.
+- Modèle de branches (`CONTRIBUTING.md`) : `developement` (branche par défaut, intégration, toujours au vert), `lot/<id>` pour un lot, `release/v<version>` et `hotfix/<version>` créées par `scripts/dev`. Les petits travaux (outillage, docs) se font sur `developement`. Rien vers `main` sans l'accord de Max.
 - Petits commits, un par étape logique.
-- Messages de commit en Conventional Commits, vérifiés par le hook `commit-msg` ; les types `feat`, `fix`, `refactor` et `perf` alimentent le changelog des joueurs.
-- `main` ne reçoit que les versions publiées, par une pull request de release depuis `developement` fusionnée avec un commit de fusion (`scripts/release.sh`). Ne jamais publier de release ni rendre le dépôt public : c'est Max qui le fait.
+- Messages de commit en anglais, en Conventional Commits, vérifiés par le hook `commit-msg` ; les types `feat`, `fix`, `refactor` et `perf` alimentent le changelog des joueurs ; `!` marque ce qui casse les mondes existants (section « Breaks existing worlds » du changelog, label `breaking`).
+- `main` ne reçoit que les versions publiées, par une pull request `release/v<version>` (ou `hotfix/<version>`) fusionnée avec un commit de fusion, que `scripts/dev release publish` tague. Claude ne crée rien sur GitHub (tickets, pull requests, tags, releases) et ne rend pas le dépôt public : il prépare, Max lance `scripts/dev`.
+- Une nouvelle tâche devient un ticket GitHub (fichier dans `scripts/project/issues/` quand un lot est planifié, puis `scripts/dev project sync` par Max), pas une case de `tasks/todo.md`.
 - Le bac à sable ne lit ni `~/.gitconfig` ni `~/.ssh` : préfixer les commandes git par `GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=$TMPDIR/xdg` (sinon gitleaks voit l'avertissement de git et bloque le commit) et commiter avec l'identité masquée passée explicitement (`git -c user.name=maximcuynat -c user.email=93578199+maximcuynat@users.noreply.github.com commit …`), jamais une identité déduite du poste. Ces commits ne sont pas signés (voir `docs/securite-depot.md`, section 3.8).
 - Le bac à sable de Claude Code ne peut pas lancer Gradle : c'est Max qui lance les builds et les essais en jeu (préfixe `!`) et rapporte le résultat. Ne jamais annoncer un build ou un essai comme réussi sans ce retour.
 

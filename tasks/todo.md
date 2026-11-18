@@ -1,8 +1,36 @@
 # NetCraft : suivi
 
+Notes de session seulement. Les tâches sont des tickets GitHub, rangés par milestone (un lot, une version) : `scripts/dev status` et `docs/project-management.md`. Les tâches ouvertes et les idées qui étaient ici sont devenues des tickets le 2026-11-18 (`scripts/project/issues/`, créés par `scripts/dev project sync`).
+
 ## Bloquant pour la publication
 
 - [ ] **Renommer le mod avant de rendre le dépôt public.** « Netcraft » est le nom d'une société britannique (netcraft.com) qui travaille dans le même domaine que le mod (réseau, sécurité internet) : risque de conflit de nom. Max cherche un autre nom ; le renommage (nom affiché, `mod_id`, package `dev.netcraft`, ressources, dépôt GitHub, docs) fera l'objet d'une session dédiée. Rien ne sera rendu public, ni publié sur CurseForge ou Modrinth, avant. (décidé le 2026-11-18)
+
+## À faire dans la session de renommage
+
+- [ ] Traduire en anglais l'existant : `docs/plan-lots.md`, `docs/messages.md`, `docs/equipements-reseau.md`, `docs/securite-depot.md`, `tasks/`, `CLAUDE.md`, le code et ses commentaires, les messages des hooks. Objectif de Max : un dépôt entièrement en anglais. Depuis la session B, tout ce qui est nouveau est déjà en anglais (commits, changelog, modèles, labels, tickets, nouveaux documents). (décidé le 2026-11-18)
+
+## Session B : gestion de projet sur GitHub et commandes assistées (2026-11-18)
+
+Conception validée par Max le 2026-11-18 : `developement` branche par défaut (« Closes # » ne marche que vers elle), branches `lot/<id>`, `release/v<version>` et `hotfix/<version>`, tag signé posé sur le commit de fusion de `main` par `release publish`, feuille de route 0.1.0 à 1.0.0 dans l'ordre de `plan-lots.md`, milestones de 0.1.0 et 0.2.0 seulement, reste de ce fichier transformé en tickets (idées comprises, renommage exclu), notes de 0.1.0-alpha.1 réécrites à la main (relecture et modification prévues dans `release publish`). Rien n'est créé sur GitHub par Claude : Max lance les scripts.
+
+Un commit par sujet (en anglais), testé dans un clone jetable avec de faux `gradlew` et `gh` :
+
+- [x] 1. `cliff.toml` en anglais, section « Breaks existing worlds » en tête, `CHANGELOG.md` régénéré. Essayé sur un historique avec tags sur les commits de fusion de `main` : un commit de lot daté d'avant une version mais fusionné après tombe bien dans la version suivante, `docs!:` a sa section. Trouvé au passage : sans `--github-repo`, les liens de comparaison du changelog restaient vides (`release.sh` de la session A) ; `scripts/dev` passe le dépôt lu dans la remote.
+- [x] 2. Hook avant push : sortie de Gradle dans `build/pre-push.log`, 40 dernières lignes en cas d'échec, code dans `scripts/lib/checks.sh` (5 cas essayés).
+- [x] 3. Modèles GitHub : ticket de bug, ticket d'idée (`config.yml` sans ticket vide), pull request avec « Closes # » et la case « Breaks existing worlds ».
+- [x] 4. `scripts/dev` : socle, `status`, `lot start`, `lot finish`.
+- [x] 5. `scripts/dev` : `release prepare`, `release publish`, `hotfix start` ; `scripts/release.sh` retiré.
+- [x] 6. `scripts/dev project sync` et ses données : 16 labels, 10 milestones, 28 tickets (7 + 7 + 3 pour les lots 1b-2, 1c, 1d ; 4 tâches de ce fichier ; 7 idées).
+- [x] 7. `CONTRIBUTING.md` réécrit en anglais, `docs/project-management.md`, `docs/securite-depot.md` (section 4 et tableau), phrase en tête du `README.md`.
+- [x] 8. `CLAUDE.md` (langue, branches, outil, tickets), ce fichier réduit aux notes de session, renvoi dans `docs/plan-lots.md`.
+
+Revue de la session B (2026-11-18) :
+
+- Vérifié seulement dans des clones jetables, avec un faux `gradlew`, un faux `gh` (état en JSON, `--jq` passé au vrai `jq`), une clé de signature SSH jetable et un pseudo-terminal pour répondre aux questions : chaque commande en essai à blanc (aucun changement git, aucune écriture GitHub), sans terminal (réponse non), réponse non, échec des vérifications, réponse oui ; cas vide (aucun tag, ticket, milestone ni pull request) ; cycle complet alpha, beta (gel, `--allow-features`), release (milestone de version fermée), correctifs 0.1.1 à 0.1.3 (changement cassant refusé, report avec commit de fusion, conflit sur `CHANGELOG.md` gardé côté `developement`, autre conflit arrêté) ; `project sync` relancé : aucune écriture au second passage.
+- Pas vérifié : le vrai `gh` (API des milestones, renommage des labels, `capture` de gojq dans `--jq`), les automatismes du tableau Projects, la signature avec la clé de Max, le build Gradle dans un worktree neuf (durée du premier build), Gradle tout court (aucun code du mod touché). Premier essai réel de chaque commande par Max avec `--dry-run`.
+- Choix faits par Claude, signalés à Max : couleurs et descriptions des labels, label `type: idea` en plus des cinq types demandés, option `--allow-features`, notes de version gardées dans `build/release/` entre l'essai à blanc et la vraie publication, release toujours créée en brouillon, correctif possible seulement tant que la version à corriger est la dernière sur `main`, URL de clonage remplacée par un exemple dans `CONTRIBUTING.md` (renommage à venir).
+- Reste à faire par Max, dans l'ordre : réglages GitHub de `docs/project-management.md` (branche par défaut, fusions, tableau Projects et ses automatismes), puis `scripts/dev project sync --dry-run` et `scripts/dev project sync`, puis `scripts/dev status`.
 
 ## Session A : dépôt propre, sécurisé et outillé (2026-11-18)
 
@@ -44,11 +72,11 @@ Revue de la session A (2026-11-18) :
 ## Blocs
 
 - [x] Tour PC (`pc_tower`) : bloc, modèle, texture
-- [ ] PC portable (`laptop`) : code et ressources écrits le 2026-11-17 (modèles ouvert et fermé, blockstate, item, loot table, tag pioche, traductions). Texture provisoire générée par script. À vérifier : `./gradlew build` puis en jeu (inclinaison de l'écran dans les 4 orientations, clic droit ouvre/ferme, nom et icône dans l'onglet, drop à la pioche en survie, aucune erreur `netcraft:laptop` dans le log)
+- Ticket : PC portable (`laptop`), code et ressources écrits le 2026-11-17, vérification en jeu à faire (`scripts/project/issues/0.1.0/01-laptop-in-game.md`).
 
 ## Plan par lots
 
-Le découpage complet (lots, équipements, dépendances) est dans `docs/plan-lots.md`. Statut : proposé le 2026-11-17, en attente de validation par Max. Aucun code au-delà du lot 0 avant validation.
+Le découpage complet (lots, équipements, dépendances) et son statut de validation sont dans `docs/plan-lots.md` ; feuille de route des versions dans `docs/project-management.md`.
 
 Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
 
@@ -76,7 +104,7 @@ Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
   - [x] Procédure de test en jeu (ce qui demande des yeux) et état du lot dans `docs/plan-lots.md`
   - [x] Vérification à l'œil du module des messages : faite par Max le 2026-11-18 (jeu en français, monde « Essais messages »), aucun plantage, rendu validé comme base du futur HUD (lot F). Tableau des 6 points dans `docs/plan-lots.md`.
   - [x] Points sans capture (panneau détaillé d'un poste et du portable, box de droite du décor « chaine », câble de 99 blocs sur toute sa longueur, arrêt des messages de boucle après le retrait d'un câble, `/netcraft liens`, rendu de ✔ et ℹ, repli `messageSymbols = false`) : vus à l'œil par Max pendant la même session, validés sur son témoignage le 2026-11-18
-  - [ ] Lot F (interface HUD) : vérifier le rendu sur plusieurs tailles de fenêtre ; en 854 x 480, l'infobulle du cordon passe à la ligne
+  - Ticket : lot F (interface HUD), rendu sur plusieurs tailles de fenêtre (`scripts/project/issues/backlog/02-hud-window-sizes.md`).
   - [x] Module des messages, avant le 1b-2 : audit et conception validés par Max le 2026-11-18 (`docs/messages.md`), 7 étapes codées et commitées le même jour après des builds verts, vérification à l'œil faite le même jour (résultat dans `docs/plan-lots.md`). Étapes :
     - [x] 1. Noyau en Java pur (`message/`) : niveaux, usages, canaux, valeurs, routage, anti-répétition, message envoyé et écouteur ; tests unitaires du routage et de l'anti-répétition. Aucun changement visible.
     - [x] 2. Transport et affichage : `MessagePayload` (canal, niveau, clé, valeurs), `MessageCenter` porté par les données du serveur, affichage décidé par le client (symbole ou mot selon le réglage `messageSymbols`), messages du cordon migrés, tests en jeu du cordon par l'écouteur. `TestPlayer` capte encore le chat pour le test de boucle, jusqu'à l'étape 4.
@@ -85,36 +113,15 @@ Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
     - [x] 5. Log en anglais et nettoyage : traces utiles passées par le module (DEBUG, anglais), `TrialLog` et `graphForTrial` retirés, exceptions en anglais.
     - [x] 6. Panneau d'état : lignes construites en Java pur (compact, détaillé accroupi, ligne « Accroupi : détails »), le client ne fait que dessiner ; tests unitaires.
     - [x] 7. Documents : `CLAUDE.md` (log en anglais, règles du module, données séparées du dessin), état dans `docs/plan-lots.md`, procédure de vérification à l'œil.
-- [ ] Lot 1b-2 (DHCP) : architecture validée avec le 1b-1, pas commencé. Ne pas oublier l'état INIT-REBOOT (bail du poste sauvegardé).
+- Lot 1b-2 (DHCP) : architecture validée avec le 1b-1, pas commencé. Tâches : tickets de la milestone « Lot 1b-2: DHCP » (INIT-REBOOT compris).
 
-## Tests multijoueur (à faire plus tard, non prioritaire)
+## Tests multijoueur
 
-En attendant, garder la séparation client et serveur stricte dans le code (voir les règles du `CLAUDE.md`).
+Devenus des tickets le 2026-11-18 : fin du lot 1 (milestone « v0.1.0 », `scripts/project/issues/0.1.0/02-multiplayer-dedicated-server.md`) et deux joueurs vers la fin du lot 3 (`scripts/project/issues/backlog/01-multiplayer-two-players.md`). En attendant, garder la séparation client et serveur stricte dans le code (voir les règles du `CLAUDE.md`).
 
-- [ ] À la fin du lot 1 : serveur dédié avec un seul client sur le même PC.
-  1. `./gradlew runServer` (la première fois, accepter l'EULA dans `run/eula.txt` puis relancer).
-  2. Dans un autre terminal, `./gradlew runClient`, puis Multijoueur, connexion à `localhost`.
-  3. Dérouler la procédure du lot 1 dans `docs/plan-lots.md` : branchement, câble visible, indicateur d'état, débranchement, adresses et `ping` (lots 1b et 1c).
-  4. Arrêter puis relancer le serveur : les liens tiennent.
-  5. Vérifier dans les deux logs l'absence d'erreur, en particulier aucune classe client chargée par le serveur.
-- [ ] Vers la fin du lot 3 : deux joueurs.
-  1. Deux clients sur le même serveur (deux machines, ou deux instances avec des pseudos différents).
-  2. Filtrage par chunks : un câble posé loin du second joueur ne lui parvient pas ; il apparaît quand il s'en approche et disparaît quand il s'éloigne, sauf si l'autre bout reste dans sa zone.
-  3. Un joueur branche ou débranche : l'autre voit le câble apparaître ou disparaître et l'indicateur changer.
-  4. Changement de dimension (Nether) : aller-retour, les câbles de l'Overworld réapparaissent au retour et aucun câble d'une autre dimension n'est affiché.
+## Idées en vrac
 
-## Idées en vrac (dites par Max, non triées, non validées)
-
-Vision : un Packet Tracer en blocs, fidèle au réel, complet, pour tout le monde et pour les passionnés de réseau.
-
-- Postes : PC à poser et à câbler
-- Baies et armoires, serveurs en rack, datacenter
-- Switch réaliste (exemple : 32 ports = 32 vrais ports), firewall
-- Configuration des équipements comme en vrai
-- Câbles, rails de guidage des câbles
-- Extérieur : poteaux réseau, câbles aériens, points de distribution
-- Alimentation électrique compatible avec les autres mods (RF)
-- Très loin : un OS, des comptes utilisateurs, un annuaire type AD
+Devenues des tickets `type: idea` le 2026-11-18 (`scripts/project/issues/ideas/`). Vision de Max : un Packet Tracer en blocs, fidèle au réel, complet, pour tout le monde et pour les passionnés de réseau. « Postes : PC à poser et à câbler » est fait (lots 0 et 1a) et n'a pas de ticket.
 
 ## Faits vérifiés le 2026-11-17
 

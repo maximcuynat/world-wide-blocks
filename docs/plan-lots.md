@@ -28,6 +28,8 @@
 
 Les dimensions réelles de chaque équipement sont dans `docs/equipements-reseau.md`.
 
+Ce document décrit la conception. Les tâches de chaque lot sont des tickets GitHub, une milestone par lot ; la feuille de route des versions (0.1.0 pour le lot 1, 0.2.0 pour l'électricité et le lot 2, etc.) et l'organisation sont dans `docs/project-management.md`.
+
 ## Vue d'ensemble
 
 | Lot | Thème | Ce qui marche à la fin |
