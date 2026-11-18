@@ -8,7 +8,7 @@ No GitHub Actions: everything that checks runs locally (hooks, `scripts/dev`), a
 
 | What | Where |
 |---|---|
-| Design: content of each lot, architecture, decisions, check procedures in game | [`docs/plan-lots.md`](plan-lots.md) |
+| Design: content of each lot, architecture, decisions, check procedures in game | [`docs/lot-plan.md`](lot-plan.md) |
 | Tasks: one issue per step, in the milestone of its lot or version | GitHub issues, defined in `scripts/project/issues/` (one folder per lot or version, plus `backlog/` and `ideas/`) and created by `scripts/dev project sync` |
 | Progress | GitHub Projects board "Roadmap" |
 | Notes of a working session (plan, review) | [`tasks/todo.md`](../tasks/todo.md) |
@@ -18,12 +18,12 @@ A new task is either opened directly on GitHub (templates "Bug report" and "Idea
 
 ## Roadmap
 
-Minor versions follow the order of [`docs/plan-lots.md`](plan-lots.md). Each lot ends with an alpha; the beta freezes the content of the version; 1.0.0 is the first stable version.
+Minor versions follow the order of [`docs/lot-plan.md`](lot-plan.md). Each lot ends with an alpha; the beta freezes the content of the version; 1.0.0 is the first stable version.
 
 | Version | Lots | Content |
 |---|---|---|
 | 0.1.0 Wired home network | 0, 1a to 1d | PCs, Ethernet cable, internet box, DHCP, terminal and ping, desktop switches. 0.1.0-alpha.1 = lots 1a and 1b-1. |
-| 0.2.0 Power and home network | É, 2a to 2d | Electricity, Wi-Fi, fixed cabling, peripherals and local services, other home devices |
+| 0.2.0 Power and home network | E, 2a to 2d | Electricity, Wi-Fi, fixed cabling, peripherals and local services, other home devices |
 | 0.3.0 Subscriber line | 3a, 3b | Fibre and copper line inputs of the box |
 | 0.4.0 Street and neighbourhood | 4a, 4b, 5a, 5b | Aerial and underground lines, street cabinets |
 | 0.5.0 ISP | 6a to 6c | Rack, ISP premises, public address |
@@ -82,7 +82,7 @@ Or in the interface: Repository settings > **General** > section **Pull Requests
 - **Allow rebase merging**: unchecked. A rebase rewrites the commits: signatures lost.
 - **Automatically delete head branches**: checked. It deletes `lot/…`, `release/…` and `hotfix/…` after their merge. `developement` is never the head branch of a pull request in this model, and branch protection rules also prevent automatic deletion.
 
-This replaces section 4 of [`docs/securite-depot.md`](securite-depot.md), written when releases went from `developement` straight to `main`.
+This replaces section 4 of [`docs/repository-security.md`](repository-security.md), written when releases went from `developement` straight to `main`.
 
 ### 3. Projects board
 

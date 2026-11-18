@@ -6,4 +6,4 @@ The presence frame (EtherType 0x88B5, sent when the cable is plugged and every 3
 
 - [ ] Frame type and its timers removed
 - [ ] Tests of MAC learning still green with DHCP and ARP traffic only
-- [ ] `docs/plan-lots.md` updated
+- [ ] `docs/lot-plan.md` updated

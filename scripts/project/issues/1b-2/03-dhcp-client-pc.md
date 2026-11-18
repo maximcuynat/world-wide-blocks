@@ -9,4 +9,4 @@ A PC plugged into the box gets its address through a real DHCP exchange (RFC 213
 - [ ] Address dropped when the cable is unplugged or the lease expires
 - [ ] Unit tests on the simulation timers
 
-Design: `docs/plan-lots.md`, lot 1b.
+Design: `docs/lot-plan.md`, lot 1b.

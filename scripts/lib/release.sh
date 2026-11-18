@@ -132,7 +132,7 @@ $features"
     if signing_configured; then
         echo "Signing key: configured (format $(git config --get gpg.format || echo openpgp))."
     else
-        warn "no signing key (git config user.signingkey): the release commit and tag must be signed. See docs/securite-depot.md."
+        warn "no signing key (git config user.signingkey): the release commit and tag must be signed. See docs/repository-security.md."
     fi
     echo
     echo "Release notes:"
@@ -145,7 +145,7 @@ $features"
         stop_if_dry_run
     fi
 
-    signing_configured || die "no signing key: nothing was changed. See docs/securite-depot.md."
+    signing_configured || die "no signing key: nothing was changed. See docs/repository-security.md."
     require_gh
 
     [ "$source" = hotfix ] || git switch --quiet --create "$head_branch"
@@ -328,7 +328,7 @@ cmd_release_publish() {
         stop_if_dry_run
     fi
 
-    signing_configured || die "no signing key: the tag must be signed. See docs/securite-depot.md."
+    signing_configured || die "no signing key: the tag must be signed. See docs/repository-security.md."
     if confirm "Edit the release notes before publishing (\$VISUAL, \$EDITOR or vi)?"; then
         ${VISUAL:-${EDITOR:-vi}} "$notes" </dev/tty >/dev/tty
         echo "Release notes after editing:"

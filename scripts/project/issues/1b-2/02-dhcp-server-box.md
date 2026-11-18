@@ -10,4 +10,4 @@ The box answers DHCP requests on its local point (the switch of lot 1b-1 plus it
 - [ ] Leases saved with the network, and expired leases freed
 - [ ] Unit tests: OFFER and ACK, renewal, pool exhausted, same MAC gets the same address
 
-Design: `docs/plan-lots.md`, lot 1b.
+Design: `docs/lot-plan.md`, lot 1b.

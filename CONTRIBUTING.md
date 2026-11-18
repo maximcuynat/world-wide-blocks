@@ -2,7 +2,7 @@
 
 Thank you for your interest! This guide describes how the project is organised and checked.
 
-Language: the repository is moving to English. Everything new is written in English: commit messages, changelog, issues, pull requests, documents, code and comments, including additions to files still in French. The existing French content (code comments, design documents of `docs/`, `tasks/`) will be translated. The game itself stays available in English and French. Identifiers (classes, registries, resources) are in English. Log lines and exception messages are in English, like the rest of Minecraft's logs.
+Language: the repository is in English: commit messages, changelog, issues, pull requests, documents, code and comments. The game itself stays available in English and French (`en_us.json` and `fr_fr.json`). Commits and changelog entries older than the move to English stay in French: history is not rewritten. Identifiers (classes, registries, resources) are in English. Log lines and exception messages are in English, like the rest of Minecraft's logs.
 
 ## Set up the project
 
@@ -32,7 +32,7 @@ The default branch is `developement`: a fresh clone is already on it. `scripts/i
 |---|---|
 | `main` | Released versions only. Each commit is the merge commit of a release, tagged `v<version>` and signed. |
 | `developement` | Integration, default branch, always green. Pull requests target it. |
-| `lot/<id>` | One branch per lot of [`docs/plan-lots.md`](docs/plan-lots.md), created from `developement` and merged back by a pull request. |
+| `lot/<id>` | One branch per lot of [`docs/lot-plan.md`](docs/lot-plan.md), created from `developement` and merged back by a pull request. |
 | `release/v<version>` | Short-lived: carries the version commit to `main` through a pull request, deleted after the merge. |
 | `hotfix/<version>` | Fix of a released version, created from `main`, merged into `main`, then brought back into `developement`. |
 
@@ -42,7 +42,7 @@ External contribution: fork the repository, create a branch from `developement` 
 
 ## Issues and pull requests
 
-- The tasks of each lot are issues, grouped in the milestone of the lot; a milestone per version holds the beta fixes and the work shared by several lots. The design of each lot stays in [`docs/plan-lots.md`](docs/plan-lots.md).
+- The tasks of each lot are issues, grouped in the milestone of the lot; a milestone per version holds the beta fixes and the work shared by several lots. The design of each lot stays in [`docs/lot-plan.md`](docs/lot-plan.md).
 - Templates: bug report and idea for issues, and a pull request template with a "Breaks existing worlds" box.
 - A pull request into `developement` closes its issues with one `Closes #<number>` line per issue. A commit that reaches `developement` with `Fixes #<number>` in its message closes the issue too (useful for hotfixes). These keywords only work towards the default branch, `developement`.
 - Labels: `type: …`, `area: …`, `priority: …`, and `breaking` for anything that breaks existing worlds.
@@ -130,7 +130,7 @@ Bypassing a hook (`--no-verify`) is kept for cases where the same checks have ju
 
 ### Publish a version
 
-Requirements: git-cliff, the GitHub CLI logged in (`gh auth login`) and a signing key (see [`docs/securite-depot.md`](docs/securite-depot.md), section 3).
+Requirements: git-cliff, the GitHub CLI logged in (`gh auth login`) and a signing key (see [`docs/repository-security.md`](docs/repository-security.md), section 3).
 
 1. `scripts/dev release prepare <version> --dry-run`, then without `--dry-run`, from `developement` up to date with `origin`.
 2. On GitHub, merge the pull request "Release v<version>" with **Create a merge commit**.

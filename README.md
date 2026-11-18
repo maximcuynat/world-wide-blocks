@@ -21,7 +21,7 @@ World Wide Blocks est un mod Minecraft (NeoForge) de simulation de réseau infor
 - **Détection des boucles** réseau, signalées aux joueurs proches.
 - Interface en français et en anglais.
 
-Le plan complet par lots est dans [`docs/plan-lots.md`](docs/plan-lots.md).
+Le plan complet par lots est dans [`docs/lot-plan.md`](docs/lot-plan.md).
 
 ### Installation
 
@@ -105,7 +105,7 @@ The source code, comments and design documents are written in French; the game i
 - **Network loop detection**, reported to nearby players.
 - English and French interface.
 
-The full plan (in French) is in [`docs/plan-lots.md`](docs/plan-lots.md).
+The full plan (in French) is in [`docs/lot-plan.md`](docs/lot-plan.md).
 
 ### Installation
 

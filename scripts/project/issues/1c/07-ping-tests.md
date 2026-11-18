@@ -4,4 +4,4 @@ Milestone: lot 1c
 
 - [ ] Game test: two PCs on the box, `ping` from one to the other gets replies
 - [ ] Game test: ping to an absent address times out
-- [ ] Check procedure of lot 1c in `docs/plan-lots.md` (terminal display, checked with `./gradlew runClient`)
+- [ ] Check procedure of lot 1c in `docs/lot-plan.md` (terminal display, checked with `./gradlew runClient`)

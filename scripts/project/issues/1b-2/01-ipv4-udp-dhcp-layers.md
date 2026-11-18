@@ -9,4 +9,4 @@ Add the layers that carry DHCP inside Ethernet frames, each one as a variant of 
 - [ ] DHCP message (RFC 2131): DISCOVER, OFFER, REQUEST, ACK, NAK, transaction id, client MAC, offered address, options (subnet mask, router, DNS server, lease time, server id)
 - [ ] Unit tests, in plain Java
 
-Design: `docs/plan-lots.md`, lot 1b, "Architecture retenue".
+Design: `docs/lot-plan.md`, lot 1b, "Chosen architecture".
