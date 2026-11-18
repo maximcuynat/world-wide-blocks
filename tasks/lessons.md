@@ -1,37 +1,37 @@
-# Leçons
+# Lessons
 
 ## Git
 
-- Avant de créer une branche demandée, lister les branches existantes (`git branch -a`) : la branche de développement du projet est `developement`. Si la consigne et l'état du dépôt divergent (ex. `main` en retard), demander plutôt que créer une branche de plus. (2026-11-17)
+- Before creating a requested branch, list the existing branches (`git branch -a`): the development branch of the project is `developement`. If the instruction and the state of the repository differ (e.g. `main` is behind), ask instead of creating one more branch. (2026-11-17)
 
-- Ne commiter que du code qui a passé `./gradlew build test` chez Max. Découper un commit à la main (retirer des traces, scinder des fichiers) crée un état jamais compilé : le soumettre au build avant de commiter, ou commiter seulement l'état déjà compilé. Les commits c178668 et 5014267 ont été faits sans build. (2026-11-18)
+- Only commit code that passed `./gradlew build test` on Max's machine. Splitting a commit by hand (removing log lines, splitting files) creates a state that was never compiled: run it through the build before committing, or commit only the state that is already compiled. Commits c178668 and 5014267 were made without a build. (2026-11-18)
 
 ## Tests
 
-- Le moteur a des limites globales (trames par tick, taille de la file, limite des signalements) partagées par tout ce qui tourne sur le serveur. Un test automatique qui touche ces limites tourne à part, dans son propre lot, pour que son résultat ne dépende pas des autres tests ni de l'ordre d'exécution. (2026-11-18)
+- The engine has global limits (frames per tick, queue size, report limit) shared by everything that runs on the server. An automatic test that touches these limits runs apart, in its own batch, so that its result does not depend on the other tests or on the order of execution. (2026-11-18)
 
-- `runGameTestServer` tourne en serveur dédié : aucun code client (affichage des messages, panneau, réglages du client, infobulles) n'y est exécuté. Un build et des tests en jeu verts ne prouvent rien côté client : le dire à Max en livrant une étape qui en touche, et garder la logique d'affichage en Java pur testable (`StatusPanel`) pour que le client ne fasse que dessiner. (2026-11-18)
+- `runGameTestServer` runs a dedicated server: no client code (message display, panel, client settings, tooltips) runs there. A green build and green game tests prove nothing on the client side: tell Max so when delivering a step that touches it, and keep the display logic in plain, testable Java (`StatusPanel`) so that the client only draws. (2026-11-18)
 
-## Moteur réseau
+## Network engine
 
-- Différer un traitement (événement mis en attente jusqu'au tick suivant) ouvre une fenêtre où l'état a changé : revalider chaque changement en attente contre l'état courant (appareil ou câble encore présents) au moment de l'appliquer. Un poste posé, câblé et retiré dans le même tick a fait planter le serveur de tests (2026-11-18). Écrire le test « ajouté puis retiré avant le tick » avec toute mise en attente.
-- Une exception dans le tick de la simulation fait tomber tout le serveur : tout chemin appelé depuis le tick doit tolérer un appareil ou un câble disparu. (2026-11-18)
+- Deferring a task (an event held until the next tick) opens a window where the state has changed: revalidate each pending change against the current state (device or cable still present) when applying it. A computer placed, cabled and removed in the same tick crashed the test server (2026-11-18). Write the test "added then removed before the tick" with every kind of pending queue.
+- An exception in the simulation tick takes the whole server down: every path called from the tick must tolerate a device or a cable that has disappeared. (2026-11-18)
 
-## Shell partagé
+## Shared shell
 
-- Les commandes `!` de Max s'exécutent dans le dossier courant de ma session. Ne jamais terminer une commande dans un sous-dossier (`cd src/...`) : faire les `cd` dans un sous-shell `( cd … && … )` ou utiliser des chemins absolus, et vérifier que le shell est à la racine du projet avant de donner un point de contrôle. Un `./gradlew` a échoué pour cette raison. (2026-11-17)
+- Max's `!` commands run in the current folder of my session. Never end a command in a subfolder (`cd src/...`): do the `cd` in a subshell `( cd … && … )` or use absolute paths, and check that the shell is at the project root before giving a checkpoint. A `./gradlew` failed for this reason. (2026-11-17)
 
-## API Minecraft / NeoForge
+## Minecraft / NeoForge API
 
-- Ne jamais écrire de mémoire un nom de constante, d'enum ou de méthode Minecraft : le chercher dans les sources extraites (`build/moddev/artifacts/minecraft-patched-*-sources.jar`, et les sources NeoForge de maven.neoforged.net) avant de l'utiliser. Exemple : `PushReaction.BLOCK` est devenu `PushReaction.IMMOVEABLE` en 26.3, le build a échoué. (2026-11-17)
-- Vérifier aussi le package exact de chaque import, pas seulement l'existence de la classe : `RegisterClientPayloadHandlersEvent` est dans `neoforge.client.network.event`, pas dans `neoforge.network.event`. Avant un commit, contrôler tous les imports `net.neoforged.neoforge.*` contre les sources (un fichier par import). (2026-11-17)
+- Never write a Minecraft constant, enum or method name from memory: look it up in the extracted sources (`build/moddev/artifacts/minecraft-patched-*-sources.jar`, and the NeoForge sources from maven.neoforged.net) before using it. Example: `PushReaction.BLOCK` became `PushReaction.IMMOVEABLE` in 26.3, the build failed. (2026-11-17)
+- Also check the exact package of each import, not only that the class exists: `RegisterClientPayloadHandlersEvent` is in `neoforge.client.network.event`, not in `neoforge.network.event`. Before a commit, check all `net.neoforged.neoforge.*` imports against the sources (one file per import). (2026-11-17)
 
-- Dans une sous-classe d'une classe Minecraft, un type imbriqué hérité (de la classe ou de ses interfaces) masque l'import du même nom : dans une sous-classe de `ServerPlayer`, `Connection` désigne `WaypointTransmitter.Connection`. Avant d'étendre une classe du jeu, lister les types imbriqués de sa hiérarchie et qualifier entièrement tout nom en conflit. (2026-11-18)
+- In a subclass of a Minecraft class, an inherited nested type (from the class or its interfaces) hides an import of the same name: in a subclass of `ServerPlayer`, `Connection` means `WaypointTransmitter.Connection`. Before extending a game class, list the nested types of its hierarchy and fully qualify any name that conflicts. (2026-11-18)
 
-## Conception des interactions
+## Interaction design
 
-- Pour chaque geste qui consomme un objet en survie, vérifier que le geste inverse reste possible quand le joueur n'a plus cet objet : débrancher exigeait un cordon en main, impossible après avoir utilisé le dernier. Tester mentalement le parcours « survie, un seul exemplaire » avant de proposer une interaction. (2026-11-17)
-- Avant d'attribuer un geste (accroupi + clic droit, etc.), relire le plan pour les gestes déjà promis aux lots suivants (ici l'écran du portable au lot 1c). (2026-11-17)
+- For each gesture that consumes an item in survival, check that the reverse gesture stays possible when the player no longer has the item: unplugging required a cord in hand, impossible after using the last one. Walk through the "survival, a single copy" path in your head before proposing an interaction. (2026-11-17)
+- Before assigning a gesture (sneak + right-click, etc.), reread the plan for the gestures already promised to later lots (here the laptop screen in lot 1c). (2026-11-17)
 
 ## GitHub CLI and assisted commands
 
