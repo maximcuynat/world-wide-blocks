@@ -13,7 +13,7 @@ Décisions de Max : licence LGPL-3.0, titulaire « maximcuynat » ; version SemV
 Un commit par sujet, après le build vert de Max (Gradle ne tourne pas dans le bac à sable de Claude) :
 
 - [x] 1. Wrapper Gradle régénéré en 9.2.1 avec l'empreinte de l'archive (`distributionSha256Sum`). Le jar actuel est un wrapper officiel 8.14.x, authentique mais périmé. Commande lancée par Max, puis contrôle : SHA-256 du jar = `423cb469…` (wrapper officiel 9.2.1), `build test` vert (Max, 2026-11-18). Fins de ligne fixées dans `.gitattributes` (`gradlew` en LF, `*.bat` en CRLF, `*.jar` binaire). L'empreinte n'est contrôlée qu'au téléchargement de la distribution : la distribution 9.2.1 déjà en cache n'a pas été revérifiée.
-- [ ] 2. `.gitignore` complété (`.env`, logs, captures, rapports de plantage, fichiers macOS et éditeurs) ; `git ls-files -ci --exclude-standard` reste vide.
+- [x] 2. `.gitignore` complété (`.env`, logs, captures, rapports de plantage, fichiers macOS et éditeurs) ; `git ls-files -ci --exclude-standard` reste vide.
 - [ ] 3. Licence LGPL-3.0 : `COPYING.LESSER` (LGPL) et `COPYING` (GPL, à laquelle la LGPL renvoie), `mod_license=LGPL-3.0-only`. `TEMPLATE_LICENSE.txt` (MIT du MDK) conservé. Build vert.
 - [ ] 4. Version `0.1.0-alpha.1` et nom du jar avec la version de Minecraft. Build, tests en jeu verts (FML accepte la version) et nom du jar contrôlé dans `build/libs/`.
 - [ ] 5. Hooks versionnés (`.githooks/`) et `scripts/install-hooks.sh` : messages de commit (rejoués sur les 57 sujets existants), gitleaks avant commit, build et tests en jeu avant push (sauf `.md` et `docs/` seuls ; arbre propre exigé). Hook avant push testé dans un clone jetable avec un faux `gradlew`.

@@ -31,6 +31,16 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+
+### Éditeurs ###
+.fleet/
+*.swp
+*~
 
 ### Minecraft Modding ###
 run/
@@ -40,6 +50,21 @@ run-gametest/
 **/src/generated/**/.cache/
 repo/
 !**/src/**/repo/
+
+### Journaux, captures, plantages (normalement sous run/, ici partout) ###
+*.log
+logs/
+crash-reports/
+screenshots/
+hs_err_pid*.log
+*.hprof
+*.jfr
+
+### Secrets et réglages locaux ###
+.env
+.env.*
+*.pem
+*.key
 
 ### Local ###
 .claude/
