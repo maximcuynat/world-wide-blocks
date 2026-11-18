@@ -8,10 +8,10 @@ Keep these texts in line with what the mod does **today**: the description says 
 
 ### Description
 
-252 characters (the target is under 350):
+249 characters (the target is under 350; the part about the internet is the roadmap, said as such):
 
 ```text
-A Minecraft mod for NeoForge to learn how the internet works by building it, block by block: wire computers to an internet box, watch real Ethernet frames travel, and follow the physical path of a connection from the house to the internet. Early alpha.
+A Minecraft mod for NeoForge to learn how the internet works by building it, block by block: wire computers to an internet box, watch real Ethernet frames travel, then follow a connection from the house to the internet as the mod grows. Early alpha.
 ```
 
 ### Topics
@@ -26,11 +26,11 @@ Left out on purpose: `packet-tracer` and other product names (the mod has no lin
 
 ### Command
 
-Run from the clone, after the rename of the repository (`going-public.md`, step 2). `gh repo edit` applies to the repository of the current directory; `--add-topic` takes a comma-separated list and leaves the existing topics in place.
+Run from the clone, after the rename of the repository (`going-public.md`, step 2). `gh repo edit` applies to the repository of the current directory. `--add-topic` adds topics and leaves the existing ones in place. The comma-separated list below was not run **(to verify)**: if gh refuses it, repeat `--add-topic` once per topic.
 
 ```bash
 gh repo edit \
-  --description "A Minecraft mod for NeoForge to learn how the internet works by building it, block by block: wire computers to an internet box, watch real Ethernet frames travel, and follow the physical path of a connection from the house to the internet. Early alpha." \
+  --description "A Minecraft mod for NeoForge to learn how the internet works by building it, block by block: wire computers to an internet box, watch real Ethernet frames travel, then follow a connection from the house to the internet as the mod grows. Early alpha." \
   --add-topic minecraft,minecraft-mod,neoforge,neoforge-mod,networking,computer-networking,network-simulation,internet,ethernet,education,educational,learn-networking,simulation,java,minecraft-26,world-wide-blocks
 # check
 gh repo view --json description,repositoryTopics --jq '{description, topics: [.repositoryTopics[].name]}'
@@ -60,10 +60,10 @@ World Wide Blocks
 
 ### Summary
 
-Short text shown in search results. The length limits of the summary on Modrinth and CurseForge were not found in their documentation: **to verify** in the creation form. This one is 128 characters:
+Short text shown in search results. The length limits of the summary on Modrinth and CurseForge were not found in their documentation: **to verify** in the creation form. This one is 141 characters:
 
 ```text
-Learn how the internet works by building it: wire computers, watch real Ethernet frames travel, follow a connection to the internet.
+Learn how the internet works by building it: wire computers, watch real Ethernet frames travel, and soon follow a connection to the internet.
 ```
 
 ### Description

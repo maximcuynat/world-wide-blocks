@@ -1,6 +1,6 @@
 # World Wide Blocks
 
-**World Wide Blocks is a Minecraft mod for NeoForge to learn how the internet works by building it, block by block: a computer networking simulation where you wire real computers with real cables, watch real Ethernet frames travel between them, and follow a connection from your house all the way to the internet.**
+**World Wide Blocks is a Minecraft mod for NeoForge to learn how the internet works by building it, block by block: a computer networking simulation where you wire real computers with real cables, watch real Ethernet frames travel between them, and, as the mod grows, follow a connection from your house all the way to the internet.**
 
 <!-- Placeholder: hero animation (GIF or WebP, about 800 px wide, under 5 MB), shown here once recorded.
      Suggested shot: a player plugs an Ethernet cable from a PC tower into the internet box, then looks at the

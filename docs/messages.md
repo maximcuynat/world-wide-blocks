@@ -142,9 +142,9 @@ The symbol and the colour are chosen by the client from the received level: they
 - The permanent instructions ("sneak + click in the air to cancel", "right-click a device to plug it in again") leave the action bar, where they do not fit, for the cord's tooltip in the inventory.
 - Programming errors (exceptions) switch to English: they end up in the log.
 
-Rewritten texts (English, with the length of the longest case; the French follows the same meaning and the same limit):
+Rewritten texts (English, same meaning in French). The "Chars" column is the length of the longest case of the French text, measured at the design; `LangFilesTest` checks the current limits in both languages:
 
-| Key | Proposal | Chars |
+| Key | Proposal | Chars (French) |
 |---|---|---|
 | `cable.start` | %s, port %s: right-click the second device. | 58 |
 | `cable.end_taken` | End removed from %s, the other stays on %s, port %s. | 68 |
