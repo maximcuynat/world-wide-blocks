@@ -6,7 +6,7 @@ Audit of the messages of lots 1a and 1b-1 (2026-11-18), then design of the messa
 - Level symbols: agreed, to check by eye, with a plain-text fallback (client setting).
 - "Sneak: details" line kept in the compact panel.
 - Texts of `/worldwideblocks test` hard-coded and in English.
-- The French texts use the formal "vous" everywhere, like the French translation of Minecraft.
+- The French texts use formal address everywhere, like the French translation of Minecraft.
 - Distances rounded to the nearest integer ("4 blocks"), in all languages.
 - **Data separated from drawing**: the server sends key, values and level; the client alone decides how it looks (symbol, colour, place). A future polished HUD (finishing lot) must be able to replace the drawing without touching the engine or the messages.
 
@@ -83,7 +83,7 @@ Always detailed: the name, then one line per port with an indicator (green conne
 2. **Log in two languages.** French sentences, device name rendered by the server (in English, or the raw key), French trial traces.
 3. **Duplicate**: `no_free_port` and `result.port_in_use` say the same thing. `result.ok` is never shown.
 4. **Too long for the action bar**, which fades after 3 s: `end_taken` (about 150 characters), `start` (about 100).
-5. **Informal and formal address mixed** in the French texts: some used the informal "tu" (the cord "in your hand", "your connection"), others the formal "vous" ("Pick", "remove").
+5. **Informal and formal address mixed** in the French texts: some used informal address (the cord "in your hand", "your connection"), others formal address ("Pick", "remove").
 6. **Numbers**: lengths are formatted by the server with a point (`4.0 blocks`, even in a French-language game).
 7. **No level**: a refusal and a success look the same in the action bar.
 8. **Panel always detailed**: 6 lines for the box, one MAC line per port for a computer.
@@ -136,7 +136,7 @@ The symbol and the colour are chosen by the client from the received level: they
 - The server only sends keys and values: integers, coordinates, and device names as a key (`block.worldwideblocks.…`).
 - A device is written everywhere with the same key `message.worldwideblocks.device`: `%s [%s, %s, %s]`, for example "Internet Box [12, 64, -5]".
 - Lengths in whole blocks, rounded to the nearest integer (no more decimal separator, in any language).
-- The French texts use the formal "vous" everywhere, or an impersonal wording.
+- The French texts use formal address everywhere, or an impersonal wording.
 - Duplicate merged (`result.port_in_use` replaced by `no_free_port`), `result.ok` removed.
 - Maximum lengths, longest values included (device name in the longest language, one-digit port, 3-digit length, 5-character coordinates): **80 characters** for the action bar (with the automatic GUI scale on a 1920 x 1080 screen, it fits about 85 characters), **45** for a panel line, **90** for the chat (two chat lines). Checked by a test on both language files.
 - The permanent instructions ("sneak + click in the air to cancel", "right-click a device to plug it in again") leave the action bar, where they do not fit, for the cord's tooltip in the inventory.

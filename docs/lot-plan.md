@@ -203,14 +203,14 @@ Result of the check: the "Seen" column is proved by the screenshots (`run/screen
 | 3. 2 MACs on one port ("chain") | Left box: "Port 1: connected, 02:… (+1)" | Right box detailed |
 | 4. Laptop at the end of 99 blocks | Laptop "Connected", cable reaching the laptop | Cable over its whole length, detailed panel of the laptop |
 | 5. Loop message | A single yellow message "⚠ Network loop near Internet Box [x, y, z]…", again a single one later; one "Network loop" line in English per message | One game minute apart (game paused between the two, proved by the game test); messages stop after a cable is removed (no cable removed) |
-| 6. French texts | All the texts seen are in French and use the formal "vous"; symbols ✖ and ⚠ rendered well | `/worldwideblocks links` (not run); rendering of ✔ and ℹ; fallback `messageSymbols = false` (not tried) |
+| 6. French texts | All the texts seen are in French and use formal address; symbols ✖ and ⚠ rendered well | `/worldwideblocks links` (not run); rendering of ✔ and ℹ; fallback `messageSymbols = false` (not tried) |
 
 | Subject | Status |
 |---|---|
 | Channels | Done: the channel follows from the use and the level (gesture: action bar; event: chat; detail: DEBUG log) |
 | Levels | Done: information, success, warning, error; symbol (ℹ ✔ ⚠ ✖) or word (client setting `messageSymbols`), constant colour |
 | Throttling | Done: a problem once per minute; a loop seen by two boxes gives a single message; the limit of a network is forgotten when that network changes |
-| Texts | Done: keys and values only, the French texts use the formal "vous", whole-number distances, lengths checked by a test, cord tooltip |
+| Texts | Done: keys and values only, the French texts use formal address, whole-number distances, lengths checked by a test, cord tooltip |
 | Log | Done: entirely in English; temporary trial log lines removed, the useful ones moved to `Diagnostics` (DEBUG) |
 | Status panel | Done: compact by default, detailed when sneaking; content in plain Java (`StatusPanel`), the client only draws |
 | Saturated network | Done: message to operators and to the owner in singleplayer; recipients without an automatic test (the test server would have to be saturated) |
@@ -245,7 +245,7 @@ The game texts below are quoted in English (`en_us.json`); in this French game, 
 3. **2 MACs on port 1 of the left box.** `/worldwideblocks test chain`. Aim at the left box while sneaking: "Port 1: connected, 02:… (+1)" 📷. The right box, sneaking: port 1 with a single MAC (the left computer), ports 2 and 3 with the MAC of their computer. `/worldwideblocks test clear`.
 4. **Laptop at the end of the 99-block cable.** `/worldwideblocks test distance`. Aim at the tower: "Connected". Walk to the laptop, 99 blocks ahead: the cable is drawn all along; aim at the laptop: "Connected", then sneaking its port and its MAC 📷. `/worldwideblocks test clear`.
 5. **Loop message, single and readable.** `/worldwideblocks test loop`, stay next to it (less than 32 blocks). In the chat: a single message, "⚠ Network loop near Internet Box [x, y, z]. Remove one cable of the loop." in yellow 📷. One minute later: again a single message, not two. Remove one of the two cables between the boxes (empty hand, sneak + right-click on the left box): no more messages. In `run/logs/latest.log`, one line in English "Network loop: …" per message. `/worldwideblocks test clear`.
-6. **French texts and symbol fallback.** Everything above is in French and uses the formal "vous"; `/worldwideblocks links` writes the device as "Internet Box [x, y, z] (minecraft:overworld)" (in French: the name from `fr_fr.json`) and whole-number lengths. If a symbol (ℹ ✔ ⚠ ✖) is displayed badly: in `run/config/worldwideblocks-client.toml`, set `messageSymbols = false` (re-read without relaunching the game) and redo point 1: "Error: Internet Box: no free port.". Set it back to `true` afterwards.
+6. **French texts and symbol fallback.** Everything above is in French and uses formal address; `/worldwideblocks links` writes the device as "Internet Box [x, y, z] (minecraft:overworld)" (in French: the name from `fr_fr.json`) and whole-number lengths. If a symbol (ℹ ✔ ⚠ ✖) is displayed badly: in `run/config/worldwideblocks-client.toml`, set `messageSymbols = false` (re-read without relaunching the game) and redo point 1: "Error: Internet Box: no free port.". Set it back to `true` afterwards.
 
 To report: the screenshots, and any text that is cut off, overflows the panel, is badly translated or whose symbol is displayed badly.
 
