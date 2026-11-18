@@ -1,6 +1,6 @@
 Title: Remove the presence frame scaffolding
 Labels: type: chore, area: protocols, priority: medium
-Milestone: lot 1c
+Milestone: lot 1c-1
 
 The presence frame (EtherType 0x88B5, sent when the cable is plugged and every 30 s) was scaffolding so that the box learns the MAC of the PCs before DHCP existed. With DHCP and ARP producing real traffic, it goes.
 

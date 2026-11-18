@@ -1,6 +1,6 @@
 # Messages
 
-Audit of the messages of lots 1a and 1b-1 (2026-11-18), then design of the message module. Status: **approved by Max on 2026-11-18, coded the same day** (state and checks by eye in `docs/lot-plan.md`, lot 1b), with these decisions:
+Audit of the messages of lots 1a and 1b-1 (2026-11-18), then design of the message module; section 3 (terminal) added on 2026-11-19. Status: **approved by Max on 2026-11-18, coded the same day** (state and checks by eye in `docs/lot-plan.md`, lot 1b), with these decisions:
 
 - Saturated network: warn the connected operators, plus the world owner in single player.
 - Level symbols: agreed, to check by eye, with a plain-text fallback (client setting).
@@ -215,6 +215,23 @@ Data separated from drawing, so that a future HUD can replace the drawing withou
 
 - `message/` in plain Java, without any Minecraft class: levels, uses, channels, values of a message (plain text, number, key to translate, device), message (level, key, values), routing, repeat limit, sent message (for the listeners), status panel lines.
 - `message/server/MessageCenter`, carried by the server's data like the simulation: routing, repeat limit, sending, English log, listeners. No static state.
-- `network/sync/MessagePayload`: channel, level, key and values, to the client. The server never sends text or formatting.
+- `network/sync/MessagePayload`: channel, level, key and values, to the client. The server never sends text or formatting (only exception: the output of the commands of the terminal, section 3).
 - `client/`: the only place that decides how it looks (symbol, colour, action bar or chat, panel drawing). It goes through the game's `ChatListener` (`gui.chatListener()`), which keeps the player's narration and chat settings.
 - Command replies stay Minecraft command texts (exception above).
+
+## 3. Terminal
+
+Decided with Max on 2026-11-19, before lot 1c-1 (`docs/lot-plan.md`, "Decisions taken"). The terminal of a computer is a third way next to the messages above: it is not a message module channel, and it is the only place where the server sends written text.
+
+The console stream carries two kinds of lines, kept strictly apart:
+
+| Kind | Examples | Who writes the text | Language |
+|---|---|---|---|
+| Output of a command | Output of `ping`, `ip`, later `tcpdump` and `dhclient`; errors of the tools and of the shell (`Destination Host Unreachable`, `bash: foo: command not found`); the prompt | The server, in plain Java, from the real state of the machine and of the network: never a prepared result | Literal English, in the format of the real tool; never translated |
+| Line of the game | `help`, advice after a failure, texts of the title bar ("Ctrl+C: stop", how to close) | The client, from a key and values, like every other text of the mod | Both language files |
+
+- The output of a command is what a real Linux would show for the same situation, so that the player can recognise it, and search for it, outside the game. It is built in plain Java and tested in JUnit, like `StatusPanel`.
+- A line of the game is always marked as such: the client draws it apart from the output (its look is chosen by the client, like the symbols of the levels). It never imitates the output of a tool, and no translated text is ever inserted into the output of a running command.
+- Advice comes only after a command has ended, and only after a failure. A client setting turns it off.
+- "Computer busy" answers a gesture (a right-click on a computer already in use). Proposal, to confirm at the start of lot 1c-1: it goes through `MessageCenter.gesture`, as an error, like the other gestures.
+- The terminal output has no level and no repeat limit: it belongs to the session of the console, not to the message module.

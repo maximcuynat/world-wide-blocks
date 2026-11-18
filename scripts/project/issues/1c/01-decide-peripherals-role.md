@@ -1,9 +1,15 @@
 Title: Decide the role of the monitor, keyboard and mouse
 Labels: type: docs, area: interface, priority: high
-Milestone: lot 1c
+Milestone: lot 1c-1
 
-Decision to take before lot 1c ("Open decisions" in `docs/lot-plan.md`).
+Decision taken with Max on 2026-11-19 ("Decisions taken" in `docs/lot-plan.md`):
 
-Proposal: the terminal opens directly on the tower; the peripherals of lot 2c stay decorative and do not condition access. Alternative: make them mandatory, which would change the behaviour of the tower in lot 2c.
+- The terminal opens directly on the tower and on the laptop, with the same console, from lot 1c-1.
+- The screen, keyboard and mouse of lot 2c are not required by default to use a computer.
+- A connected screen will give access to the graphical mode when it exists.
+- A server option may later require the peripherals.
+- The tower built from components is a separate idea (idea issue "PC tower built from components"), independent of this decision.
 
-- [ ] Decision taken and recorded in `docs/lot-plan.md`
+`docs/lot-plan.md` keeps the history of the decision: during the interview, a first answer made the peripherals required for the tower; the review of the summary settled on the principle above.
+
+- [ ] Decision recorded in `docs/lot-plan.md`

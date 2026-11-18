@@ -2,10 +2,13 @@
 # One milestone per planned version, one per lot of these versions; add the next ones as versions come closer.
 # Roadmap: docs/project-management.md. Content of each lot: docs/lot-plan.md.
 # Tab-separated columns: kind, key (lot: branch lot/<key>), target version, title, description.
-version	0.1.0	0.1.0	v0.1.0: Wired home network	Lots 0 and 1a to 1d: PCs, Ethernet cable, internet box, DHCP, ping, desktop switches. Holds the beta fixes and the work shared by several lots.
+# Lot 1c-1 keeps its issue definitions in issues/1c/ (lot 1c renamed 1c-1 on 2026-11-19): moving the
+# files would change their keys and create the issues a second time.
+version	0.1.0	0.1.0	v0.1.0: Wired home network	Lots 0 and 1a to 1d: PCs, Ethernet cable, internet box, DHCP, terminal, ping and frame capture, desktop switches. Holds the beta fixes and the work shared by several lots.
 version	0.2.0	0.2.0	v0.2.0: Power and home network	Lots 1e, 1f and 2a to 2d: electricity, TCP, Wi-Fi, fixed cabling, peripherals and other home devices. Holds the beta fixes and the work shared by several lots.
 lot	1b-2	0.1.0	Lot 1b-2: DHCP	Each PC gets its address through a real DHCP exchange with the box and shows it with the state of its lease.
-lot	1c	0.1.0	Lot 1c: Terminal and ping	From a PC, ping the other PC, which answers: terminal, ip addr, ARP, ICMP.
+lot	1c-1	0.1.0	Lot 1c-1: Terminal and ping	From a computer, ping another computer, which answers: terminal on the tower and the laptop, ip commands, ARP, ICMP.
+lot	1c-2	0.1.0	Lot 1c-2: Network diagnostics	tcpdump shows the ARP and ICMP frames of a ping; dhclient runs and releases the DHCP lease.
 lot	1d	0.1.0	Lot 1d: Desktop switch	More PCs than the box has ports, all reachable by ping.
 lot	1e	0.2.0	Lot 1e: Electricity	A device without power is off.
 lot	1f	0.2.0	Lot 1f: TCP	A connection opens between two computers, carries a message and closes.
