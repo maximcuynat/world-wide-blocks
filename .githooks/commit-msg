@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Checks that the commit message follows Conventional Commits:
+#   <type>(<scope>)!: <description>
+# Types: feat, fix, docs, test, refactor, chore, perf, style, build, ci, revert.
+# The scope and the "!" (breaking change) are optional.
+# Lets merge commits, revert commits (Revert) and fixup!/squash!/amend! pass.
+set -euo pipefail
+
+message_file="$1"
+
+# First useful line: neither empty nor a comment (git removes the comments after the hook).
+subject="$(grep -v -E '^[[:space:]]*(#|$)' "$message_file" | head -n 1 || true)"
+
+if [ -z "$subject" ]; then
+    echo "commit-msg: empty message." >&2
+    exit 1
+fi
+
+types='feat|fix|docs|test|refactor|chore|perf|style|build|ci|revert'
+conventional="^(${types})(\([a-z0-9._/-]+\))?!?: [^[:space:]].*"
+special='^(Merge |Revert "|(fixup|squash|amend)! )'
+
+if printf '%s\n' "$subject" | grep -q -E "$conventional|$special"; then
+    exit 0
+fi
+
+cat >&2 <<EOF
+commit-msg: the message does not follow the project convention.
+
+  Received: $subject
+  Expected: <type>(<scope>): <short imperative description>
+  Types   : ${types//|/, }
+  Example : fix(cable): cancel the pending connection when the start point disappears
+
+See CONTRIBUTING.md, section "Commit messages".
+EOF
+exit 1

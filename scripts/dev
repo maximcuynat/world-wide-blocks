@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# Assisted commands for the branch model and the release cycle (see CONTRIBUTING.md).
+#
+# Usage: scripts/dev [--dry-run] <command> [arguments]
+#
+#   status                      branch, version, unpushed commits, open issues of the current lot
+#   lot start <id>              update developement, create lot/<id>, list the issues of its milestone
+#   lot finish [--except n,m]   check, push and open the pull request to developement, closing the
+#                               open issues of the lot's milestone (except n, m)
+#   release prepare <version>   version, changelog and checks on release/v<version> (from developement)
+#                               or on hotfix/<version>, then pull request to main
+#                               [--allow-features: release features despite the beta freeze]
+#   release publish <version>   after the merge: signed tag on main, jar, draft GitHub release
+#                               (notes kept in build/release/ and editable), main back into developement
+#   hotfix start <X.Y.Z>        create hotfix/<X.Y.Z> from main, which must be at the previous release
+#   project sync                create the labels, milestones and issues of scripts/project/ on GitHub
+#                               (can be run again: nothing is created twice)
+#   project update-issues       rewrite the body of the issues already on GitHub from their files
+#                               (issues with ticked boxes are skipped)
+#
+# --dry-run (or -n): run every check and show what would be done, without changing anything.
+# Every public action (push, pull request, tag, release) asks for confirmation on the terminal first.
+# Nothing names the mod or the repository: the GitHub repository comes from the origin remote, the
+# mod identity and version from gradle.properties.
+set -euo pipefail
+
+dev_lib="$(cd "$(dirname "$0")" && pwd)/lib"
+# All the code is loaded now: a command that switches branches cannot change what is running.
+for dev_file in common version checks status lot release project; do
+    # shellcheck source=/dev/null
+    . "$dev_lib/$dev_file.sh"
+done
+
+# Temporary files of this run (pull request bodies, release notes), removed on exit.
+DEV_TMPDIR="$(mktemp -d "${TMPDIR:-/tmp}/dev.XXXXXX")"
+trap 'rm -rf "$DEV_TMPDIR"' EXIT
+
+usage() {
+    sed -n '2,/^set -euo/p' "$0" | sed -e '$d' -e 's/^# \{0,1\}//'
+}
+
+main() {
+    local args=() arg
+    for arg in "$@"; do
+        case "$arg" in
+            -n | --dry-run) DRY_RUN=1 ;;
+            -h | --help) usage; return 0 ;;
+            *) args+=("$arg") ;;
+        esac
+    done
+    set -- ${args[@]+"${args[@]}"}
+    [ $# -gt 0 ] || { usage; return 2; }
+
+    cd "$(git rev-parse --show-toplevel 2>/dev/null)" || die "not inside a git repository."
+
+    case "$1 ${2:-}" in
+        "status "*) shift; cmd_status "$@" ;;
+        "lot start") shift 2; cmd_lot_start "$@" ;;
+        "lot finish") shift 2; cmd_lot_finish "$@" ;;
+        "release prepare") shift 2; cmd_release_prepare "$@" ;;
+        "release publish") shift 2; cmd_release_publish "$@" ;;
+        "hotfix start") shift 2; cmd_hotfix_start "$@" ;;
+        "project sync") shift 2; cmd_project_sync "$@" ;;
+        "project update-issues") shift 2; cmd_project_update_issues "$@" ;;
+        "help "*) usage ;;
+        *) echo "dev: unknown command \"$*\"." >&2; echo >&2; usage >&2; return 2 ;;
+    esac
+}
+
+main "$@"
+exit $?

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Looks for secrets (passwords, tokens, keys) in the staged changes, with gitleaks.
+# If gitleaks is not installed, warns without blocking the commit.
+# If gitleaks is installed but could not scan (error), blocks: a failed scan does not mean "no secret".
+set -uo pipefail
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+    echo "pre-commit: gitleaks is not installed, secret scan skipped." >&2
+    echo "            Installation: https://github.com/gitleaks/gitleaks#installing (macOS: brew install gitleaks)" >&2
+    exit 0
+fi
+
+output="$(gitleaks git --pre-commit --staged --redact --no-banner --no-color --verbose 2>&1)"
+status=$?
+printf '%s\n' "$output"
+
+if [ "$status" -ne 0 ]; then
+    cat >&2 <<'EOF'
+
+pre-commit: gitleaks found a possible secret in the staged changes (value masked above).
+  1. Remove the secret from the file, then stage again (git add).
+  2. If this secret was ever used, consider it compromised and renew it.
+  3. False positive: add the comment "gitleaks:allow" on the line concerned.
+EOF
+    exit 1
+fi
+
+# gitleaks answers "no leaks found" even when it could not read the changes: its errors are checked.
+if printf '%s\n' "$output" | grep -q -E '(^| )(ERR|FTL) '; then
+    echo "" >&2
+    echo "pre-commit: gitleaks hit an error (above), the scan is not reliable: commit blocked." >&2
+    exit 1
+fi

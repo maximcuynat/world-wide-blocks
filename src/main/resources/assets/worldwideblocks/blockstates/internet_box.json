@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "worldwideblocks:block/internet_box"
+    },
+    "facing=east": {
+      "model": "worldwideblocks:block/internet_box",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "worldwideblocks:block/internet_box",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "worldwideblocks:block/internet_box",
+      "y": 270
+    }
+  }
+}

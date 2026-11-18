@@ -1,0 +1,19 @@
+# Labels created or updated by scripts/dev project sync. Tab-separated columns: name, color (hex,
+# without #), description, former names (comma-separated: an existing label with that name is renamed
+# instead of creating a new one, which keeps it on its issues).
+type: bug	d73a4a	Something does not work as expected	bug
+type: feature	a2eeef	New device, protocol or gameplay	enhancement
+type: docs	0075ca	Documentation and design decisions	documentation
+type: test	bfd4f2	Unit tests, game tests, checks in game	
+type: chore	cfd3d7	Maintenance, clean-up, tooling chores	
+type: idea	d4c5f9	Idea to triage, not planned yet	
+area: engine	1d76db	Network engine: graph, simulation, save	
+area: protocols	0e8a16	Frames and protocols: Ethernet, DHCP, ARP, ICMP	
+area: interface	5319e7	Screens, status panel, cable rendering	
+area: messages	fbca04	Messages to players and logs	
+area: blocks	c2955f	Blocks, items, models and textures	
+area: tooling	c5def5	Build, hooks, scripts and repository	
+priority: high	b60205	To do first	
+priority: medium	e99695	Normal priority	
+priority: low	f9d0c4	When there is time	
+breaking	e11d21	Breaks existing worlds (commits marked !)	

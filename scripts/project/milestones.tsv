@@ -1,0 +1,15 @@
+# Milestones created by scripts/dev project sync, and the lots known to scripts/dev lot.
+# One milestone per planned version, one per lot of these versions; add the next ones as versions come closer.
+# Roadmap: docs/project-management.md. Content of each lot: docs/lot-plan.md.
+# Tab-separated columns: kind, key (lot: branch lot/<key>), target version, title, description.
+version	0.1.0	0.1.0	v0.1.0: Wired home network	Lots 0 and 1a to 1d: PCs, Ethernet cable, internet box, DHCP, ping, desktop switches. Holds the beta fixes and the work shared by several lots.
+version	0.2.0	0.2.0	v0.2.0: Power and home network	Lots 1e, 1f and 2a to 2d: electricity, TCP, Wi-Fi, fixed cabling, peripherals and other home devices. Holds the beta fixes and the work shared by several lots.
+lot	1b-2	0.1.0	Lot 1b-2: DHCP	Each PC gets its address through a real DHCP exchange with the box and shows it with the state of its lease.
+lot	1c	0.1.0	Lot 1c: Terminal and ping	From a PC, ping the other PC, which answers: terminal, ip addr, ARP, ICMP.
+lot	1d	0.1.0	Lot 1d: Desktop switch	More PCs than the box has ports, all reachable by ping.
+lot	1e	0.2.0	Lot 1e: Electricity	A device without power is off.
+lot	1f	0.2.0	Lot 1f: TCP	A connection opens between two computers, carries a message and closes.
+lot	2a	0.2.0	Lot 2a: Wi-Fi	The laptop connects without a cable.
+lot	2b	0.2.0	Lot 2b: Fixed home cabling	Cables run through wall sockets and trunking.
+lot	2c	0.2.0	Lot 2c: Peripherals and local services	A shared file and a network printer.
+lot	2d	0.2.0	Lot 2d: Other home devices	Phone, camera and TV on the network.

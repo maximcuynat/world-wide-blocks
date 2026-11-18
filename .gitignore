@@ -31,13 +31,40 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+
+### Editors ###
+.fleet/
+*.swp
+*~
 
 ### Minecraft Modding ###
 run/
+# Throwaway world of the game test server (./gradlew runGameTestServer)
+run-gametest/
 !**/src/**/run/
 **/src/generated/**/.cache/
 repo/
 !**/src/**/repo/
+
+### Logs, screenshots, crashes (normally under run/, here everywhere) ###
+*.log
+logs/
+crash-reports/
+screenshots/
+hs_err_pid*.log
+*.hprof
+*.jfr
+
+### Secrets and local settings ###
+.env
+.env.*
+*.pem
+*.key
 
 ### Local ###
 .claude/

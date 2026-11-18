@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# Before each push: builds, runs the unit tests then the game tests, and refuses the push on failure.
+#   ./gradlew build test
+#   ./gradlew runGameTestServer
+# Gradle's output goes to build/pre-push.log; only its last lines are shown when something fails.
+# The tests are skipped only when every file of the pushed commits is a .md file or lives in docs/.
+# The tests run on the working tree: it must be clean and the pushed commit must be HEAD.
+set -euo pipefail
+
+remote="$1"
+zero='^0+$'
+
+cd "$(git rev-parse --show-toplevel)"
+# shellcheck source=../scripts/lib/checks.sh
+. scripts/lib/checks.sh
+
+# git gives one line per pushed ref: <local ref> <local sha> <remote ref> <remote sha>.
+pushed_commits=""
+while read -r local_ref local_sha remote_ref remote_sha; do
+    [ -z "${local_ref:-}" ] && continue
+    # Deleting a remote ref: nothing to test.
+    if printf '%s' "$local_sha" | grep -q -E "$zero"; then
+        continue
+    fi
+    # An annotated tag points to a tag object: test the commit it points to.
+    commit="$(git rev-parse "${local_sha}^{commit}")"
+    pushed_commits="$pushed_commits $commit"
+done
+
+if [ -z "$pushed_commits" ]; then
+    exit 0
+fi
+
+# Files touched by the commits that are not yet on any branch of this remote.
+# For a merge, count what it brings to its first parent.
+# shellcheck disable=SC2086 # pushed_commits is a list of hashes
+changed_files="$(git log --format= --name-only --diff-merges=first-parent $pushed_commits --not --remotes="$remote" | sort -u | sed '/^$/d')"
+
+if [ -z "$changed_files" ]; then
+    echo "pre-push: no new commit for $remote, tests skipped."
+    exit 0
+fi
+
+needs_tests=0
+while IFS= read -r file; do
+    case "$file" in
+        *.md | docs/*) ;;
+        *) needs_tests=1; break ;;
+    esac
+done <<EOF
+$changed_files
+EOF
+
+if [ "$needs_tests" -eq 0 ]; then
+    echo "pre-push: only .md files or files in docs/, tests skipped."
+    exit 0
+fi
+
+# The tests run on the working tree: it must match exactly what is pushed.
+if [ -n "$(git status --porcelain)" ]; then
+    cat >&2 <<'EOF'
+pre-push: the working tree is not clean (changes or untracked files).
+The tests would run on something else than what is pushed. Commit or stash (git stash -u), then push again.
+EOF
+    exit 1
+fi
+
+head="$(git rev-parse HEAD)"
+for commit in $pushed_commits; do
+    if [ "$commit" != "$head" ]; then
+        cat >&2 <<EOF
+pre-push: the pushed commit ($commit) is not HEAD ($head).
+Switch to what you push (git switch <branch>) so that it is tested, then push again.
+EOF
+        exit 1
+    fi
+done
+
+if ! run_checks build/pre-push.log pre-push; then
+    echo "pre-push: push refused." >&2
+    exit 1
+fi
