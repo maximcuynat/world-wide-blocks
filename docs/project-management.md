@@ -134,15 +134,19 @@ Known limits, without Actions:
 
 gh needs the `project` scope for all of this: `gh auth refresh -s project`, in a real terminal.
 
-To try the command on a throwaway copy of the board before the real one:
+To try the command on a throwaway copy of the board before the real one (what `gh project copy` copies is not documented: if the copy has no items, seed a few, so that the trial checks that a status set before the options change is kept):
 
 ```bash
-gh project copy <number> --source-owner <login> --target-owner <login> --title "Roadmap trial" --format json --jq .number
-# put the number of the copy in scripts/project/board.conf (number=...), without committing it
+gh project copy <number> --source-owner <login> --target-owner <login> --title "Roadmap trial"   # note the number of the copy
+gh project item-list <copy> --owner <login> --format json -L 100 --jq '.items | length'        # 0: seed the copy
+gh project item-add <copy> --owner <login> --url https://github.com/<owner>/<repo>/issues/<n>
+gh project item-edit <copy> --owner <login> --url https://github.com/<owner>/<repo>/issues/<n> --field Status --value "In Progress"
+sed -i '' 's/^number=.*/number=<copy>/' scripts/project/board.conf                            # not committed
 scripts/dev project board --dry-run
 scripts/dev project board
-gh project delete <number of the copy> --owner <login>
-# put back number=<number> in scripts/project/board.conf
+scripts/dev project board --dry-run          # must answer "up to date"; issue <n> still In Progress; columns in order in the browser
+gh project delete <copy> --owner <login>
+git checkout -- scripts/project/board.conf
 ```
 
 ### 4. Labels, milestones and issues
@@ -168,7 +172,7 @@ GitHub documentation read on 2026-11-19, for `scripts/dev project board`:
 - `Issue.projectItems`: https://docs.github.com/en/graphql/reference/issues ; `repositoryOwner` and the `ProjectV2Owner` interface: https://docs.github.com/en/graphql/reference/repos
 - gh 2.103.3: `gh api --help` (GraphQL pagination with `$endCursor`, `--input`), `gh project copy --help`, `gh project delete`.
 
-Not confirmed by the documentation: that the order of the options sent gives the order of the columns, and what `gh project copy` copies (workflows, items).
+Not confirmed by the documentation: that the order of the options sent gives the order of the columns, what `gh project copy` copies (workflows, items), and the exact behaviour of `gh api graphql --input` with a full request body (described only in general terms by `gh api --help`).
 
 GitHub documentation read on 2026-11-18:
 
