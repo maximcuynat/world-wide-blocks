@@ -1,6 +1,6 @@
 # World Wide Blocks: lot plan
 
-Written on 2026-11-17, revised the same day after review; revised again on 2026-11-18 (lot E renamed 1e, lot 6c split in two, tool-crafting decision added; TCP lot 1f, shared console and terminal decisions added). Status: proposed, awaiting approval. Lots coded: 0 and 1a (see the status of each lot).
+Written on 2026-11-17, revised the same day after review; revised again on 2026-11-18 (lot E renamed 1e, lot 6c split in two, tool-crafting decision added; TCP lot 1f, shared console and terminal decisions added); revised on 2026-11-19 (decisions of lot 1c taken with Max, lot 1c split into 1c-1 and 1c-2). Status: proposed, awaiting approval. Lots coded: 0 and 1a (see the status of each lot).
 
 ## Principles
 
@@ -21,18 +21,35 @@ Written on 2026-11-17, revised the same day after review; revised again on 2026-
 | Decision | Before lot | Proposal | Status |
 |---|---|---|---|
 | Choice of the exact port | 1d | No proposal for now. Today the Ethernet cord takes the first free local network port; with a desktop switch, the player will want to choose the port | To decide |
-| Role of the screen, keyboard and mouse (issue #10) | 1c | The terminal opens directly on the tower; the peripherals of lot 2c enrich the computer but never condition access to it. Alternative: make them mandatory, which would change the behaviour of the tower at lot 2c | To approve |
-| Language of the terminal | 1c | The output of the tools stays literal English, as on a real system; help and advice lines are translated through language keys. A third way next to the rules of `docs/messages.md`, to write there once approved | To approve |
-| Two players at the same computer | 1c | One player at a time ("computer busy"); a shared read-only console can come later | To approve |
-| Time shown by `ping` | 1c | Game milliseconds, 1 tick = 50 ms, to keep the real format (`time=50.0 ms`) | To approve |
-| `ping` without a count | 1c | Continuous, as on Linux, until Ctrl+C; stopped when the console closes | To approve |
-| Frame capture (`tcpdump`) | 1c | In a small lot right after 1c, so as not to weigh on the success criterion of lot 1 | To approve |
-| Monospaced font of the terminal | 1c | A free font whose licence is compatible with the LGPL, to choose | To decide |
+| Final font of the terminal | 1c-1 | Choice between Monocraft and the game font drawn cell by cell (Spleen as a fallback), after the screenshots of the prototype at 854 x 480 and 1920 x 1080 | To decide |
+| Reply of the box to a `ping` outside the local network | 1c-1 | No proposal for now: `Destination Net Unreachable` or silence, from the behaviour of a real box without an internet link | To decide |
+| Laptop with its lid closed | 1c-1 | It stays on the network (keeps its address, answers `ping`) until lot 1e; at lot 1e, closing the lid could put it to sleep, as most real laptops do by default (from memory, to verify) | To confirm |
 | Laptop battery | 1e | The laptop runs on battery when it is not plugged in and recharges on a socket | To approve |
 | Electricity mandatory or not | 1e | "Power required" configuration option, enabled by default; when disabled, all devices work without power | To approve |
 | Making cables by hand | 2b | The tools of lot 9a (spool, connector, crimping tool, tester) are brought forward just before 2b, so that the fixed home cabling uses cables cut to the wanted length. Alternative: keep them at 9a and use only finished cords until then | To decide |
 | Scale of rack equipment | 6a | Scale per family: racks at player scale, small equipment enlarged. With the factor 2.4 of the PC tower, a 42U rack would be about 4.8 blocks high | To approve |
 | Cord laid on the ground, separated by a wall | F | No proposal for now: what to do when a wall separates the two devices of a cord drawn on the ground (see lot F) | To decide |
+
+## Decisions taken
+
+Decisions of lot 1c, taken with Max on 2026-11-19 in a dedicated session (details in the sections of lots 1c-1 and 1c-2).
+
+| Decision | Lot | Decided | Why |
+|---|---|---|---|
+| Role of the screen, keyboard and mouse (issue #10) | 1c-1 | The terminal opens directly on the tower and on the laptop, with the same console. Peripherals are not required by default; a connected screen will give access to the graphical mode when it exists; a server option may later require peripherals | A console is a view of a machine that lives on the server, and lot 1c-1 must stay playable without peripherals |
+| Laptop gestures | 1c-1 | A right-click on the screen part opens or closes the lid; a right-click on the keyboard part of the open laptop opens the terminal; the item keeps its open or closed state in the inventory and is placed in that state | Everything is built into a laptop, so each part of the model gets its own gesture |
+| Language of the terminal | 1c-1 | The output of the commands is literal English, produced by the real processing of the simulated system; help, advice and game messages are translated through language keys, shown apart from the output and can be turned off (`docs/messages.md`, "Terminal") | The player reads what a real Linux shows, and the teaching stays accessible in both languages |
+| Keyboard | 1c-1 | The terminal follows the player's keyboard layout, for typed characters and for shortcuts; any typed character is accepted and shown if the font has it; commands follow the Linux conventions | The computer of the game has no keyboard layout of its own |
+| Monospaced font | 1c-1 | A pixel monospaced font close to Minecraft, readable, with the French accents, under a licence that allows redistribution in the LGPL jar (licence text and attribution shipped). The prototype compares Monocraft (OFL 1.1) and the game font drawn cell by cell; Spleen (BSD-2-Clause) is kept as a fallback only if it brings a real gain in density. Final choice after comparison in game at 854 x 480 and 1920 x 1080 | Keep the look of the game while the columns stay aligned |
+| Appearance of the terminal | 1c-1 | See lot 1c-1: Minecraft-style frame, game colours as the ANSI palette, prompt `user@laptop-3f2a:~$` | It looks like Minecraft and behaves like Linux |
+| Two players at the same computer | 1c-1 | One player at the keyboard at a time ("computer busy"). One local console per machine, kept in server memory while the machine exists: closing the screen hides it and running commands go on. Read-only viewing later (backlog) | A computer has one screen and one keyboard, and it keeps running when nobody is in front of it |
+| `ping` without a count | 1c-1 | Continuous until Ctrl+C, as on Linux; `-c n` for a fixed count. "Ctrl+C: stop" in the title bar while a command runs; after a failure, a translated advice line, marked as a game message, that a client setting turns off | Learn the real conventions, with help kept out of the output of the tool |
+| Time shown by `ping` | 1c-1 | A latency computed from the path actually taken: cable lengths, devices crossed, processing time of each type of device. Delivery stays instant in the engine; the values are documented with their sources and easy to change; results are deterministic (jitter maybe later). Game time stays for intervals, timeouts, elapsed time and leases | Replies are delivered in the same tick, so converted ticks would show 0 ms; a computed latency makes the built network measurable (replaces the proposal "1 tick = 50 ms") |
+| Frame capture (`tcpdump`) | 1c-2 | In lot 1c-2, between 1c-1 and 1d | Lot 1c-1 keeps its success criterion, and capture arrives before switches, to show unicast and broadcast |
+| Scope of lots 1c-1 and 1c-2 | 1c-1, 1c-2 | See the two lots. A working subset of the real tools: what exists really works, everything else returns a consistent error | No command shows a prepared result |
+| Working name of the operating system | (announcement) | "Blocknix" is a working name, in the documentation only: generic names in the code, nothing in the game or its resources. Before any announcement: trademark databases (classes 9 and 42: INPI, EUIPO, WIPO, USPTO), mod platforms (CurseForge, Modrinth), GitHub and the web, checked the same day, and availability of the useful names | The name can change without touching the architecture |
+
+History of the decision on issue #10: during the interview, Max first answered that the tower would have no terminal for now, that its terminal would need a screen, keyboard and mouse plugged in, and that the tower would later be crafted from components. On review of the summary, he confirmed the principle written above (terminal on the tower from lot 1c-1, peripherals optional by default). The tower crafted from components stays an idea of its own (idea issue "PC tower built from components"), independent of this decision.
 
 The real dimensions of each piece of equipment are in `docs/network-equipment.md`.
 
@@ -45,7 +62,8 @@ This document describes the design. The tasks of each lot are GitHub issues, one
 | 0 | Computers | Two computers can be placed (done, laptop to test in game) |
 | 1a | Cable and connection | Two computers linked by a cable show "connected" (done) |
 | 1b | The box assigns addresses | Each computer connected to the box receives an address |
-| 1c | Screen and ping command | From a computer, `ping` to the other computer, which answers |
+| 1c-1 | Terminal and ping command | From a computer, `ping` to another computer, which answers |
+| 1c-2 | Network diagnostics | `tcpdump` shows the ARP and ICMP frames of a `ping` |
 | 1d | Desktop switch | More computers than the box has ports |
 | 1e | Electricity | A device without power is off |
 | 1f | TCP | A connection opens between two computers, carries a message and closes |
@@ -317,26 +335,86 @@ Procedure, kept for the next checks. Preparation: `./gradlew runClient`, Options
 
 To report: the screenshots, and any text cut off, overflowing the panel, badly translated, or a time left that does not count down.
 
-### 1c: screen on the computer and ping command
+### 1c-1: terminal and ping command
 
 | Type | Equipment | Role |
 |---|---|---|
-| Screen | Computer terminal | A right-click on the tower or on the open laptop shows a command prompt |
-| Command | `ip addr` | Shows the address of the computer |
-| Command | `ping <address>` | Sends a request to another device and shows its answer or the absence of an answer |
+| Screen | Computer terminal | A right-click on the tower, or on the keyboard part of the open laptop, shows the console of the machine |
+| Command | `ping [-c n] <address>` | Sends real ICMP echo requests and shows the replies, or the real reason why none comes |
+| Command | `ip addr`, `ip link`, `ip route`, `ip neigh` | Show the interfaces, the state of the link, the routes and the ARP cache that really exist on the machine |
+| Command | `hostname`, `help`, `clear`, `history`, `exit` | Base of the shell; `help` is translated |
 | Mechanic | Address resolution | Before sending, the computer asks on the network which hardware address matches the target address (ARP) |
+| Mechanic | Network latency | Computed from the path actually taken by the frames |
 
-Playable at the end: from a computer, `ping` to the other computer, and it answers. This is the success criterion of lot 1.
+Playable at the end: from a computer (tower or laptop), `ping` to another computer, and it answers; to an absent address, the real error. This is the success criterion of lot 1.
 
-Consequence on the laptop: the right-click will open the terminal, and the screen will open or close by clicking on the screen part of the model. Sneak + right-click with an empty hand is already taken by unplugging one end of a cable (decided at lot 1a, on 2026-11-17).
+Decisions of 2026-11-19: see "Decisions taken". The terminal is an interface to the simulated system, never a set of prepared results: each command reads or changes the real state of the machine and of the network.
 
-Proposed choice: the commands follow the Linux convention (`ip addr`, `ping`, `traceroute`, `nslookup`), which is also the closest to network equipment.
+**Gestures.**
 
-The terminal is designed as a shared "console" component: a grid of characters and a stream of keys, linked on the server side to a command interpreter. The consoles planned later reuse it with another interpreter or another way in: the router console (7a), the switch console and its console cable (8b), the screen and keyboard console of the rack (8d), and SSH sessions.
+- Laptop: a right-click on the screen part of the model opens or closes the lid; a right-click on the keyboard part of the open laptop opens the terminal. The item keeps its open or closed state in the inventory and is placed in that state. Sneak + right-click with an empty hand stays the unplugging of a cable end (decided at lot 1a, on 2026-11-17), and a right-click with a cord in hand stays the connection of a cable.
+- Tower: a right-click with an empty hand opens the terminal. No screen, keyboard or mouse is needed (issue #10).
+- The behaviour of a laptop with its lid closed is still to confirm (see "Open decisions").
 
-Lot 1c is also where the IP stack per interface is laid down, with its services bound to a port (idea issue "Services API shared by the network engine and the computer OS"): ARP and ICMP need a real IP layer on the computers, and the DHCP client and server of lot 1b-2 move onto it.
+**Machine, console and session.**
 
-A throwaway prototype of the terminal screen comes before the lot (issue in the lot 1c milestone): keyboard input (SDL3), monospaced font, character grid at 854 x 480 and 1920 x 1080, a screen that does not pause the game in single player.
+- The computer is an object of the server: its interfaces, its host name, its account, its processes. It runs whether a player is in front of it or not.
+- A console is a view: a grid of characters on the client and a stream of keys, linked on the server side to a session that runs a command interpreter. The consoles planned later reuse it with another interpreter or another way in: the router console (7a), the switch console and its console cable (8b), the screen and keyboard console of the rack (8d), SSH sessions. The design allows several sessions per machine; lot 1c-1 opens only one, the local console.
+- One player at the keyboard at a time; another player who tries gets "computer busy" (translated message). The keyboard is freed when the player walks away beyond the distance of use, disconnects or changes dimension, as with the containers of the game.
+- The local console lives in server memory while the machine exists. Esc hides the screen: the session and its running commands go on, and the player finds the screen as it was. `exit` (or Ctrl+D on an empty line) ends the shell session, not the other processes of the machine; the next opening starts a new shell on a clear screen. A server restart loses the session, like the memory of a real computer that restarts; the saved disk comes with the operating system lots.
+- First packet from client to server of the mod: size of a line, rate and session (player, distance) are checked again by the server on each packet.
+- A command is a process advanced by the server tick, never a blocking call: it reacts to keys, received frames and timers. An error in a command ends its process, never the tick. Each command is a class registered in a registry: a later lot adds commands without changing the terminal. A cap limits the running processes per machine.
+
+**Appearance.**
+
+- Dark opaque background inside a Minecraft-style frame, as if the text were shown on the screen of the computer. Title bar: name of the machine, how to close, and "Ctrl+C: stop" while a command runs.
+- The 16 text colours of Minecraft as the ANSI palette; light grey text on black by default. Text shadow or not: compared in the prototype. Blinking block cursor.
+- Prompt `user@laptop-3f2a:~$ `, with `user@laptop-3f2a` in green and `~` in blue, as on Ubuntu (from memory, to verify). The account `user` and the host name are data of the machine, never text fixed in the screen: the host name is the type of the machine and the last four hex digits of the MAC of its first port: a laptop is named `laptop-3f2a`, a tower `tower-…`; it will change through `hostname` and `/etc/hostname` when the operating system has files.
+- Number of columns and rows from the window size, never a fixed 80 x 25; long lines wrapped by the client, as by a real terminal emulator.
+- Scrollback with the mouse wheel and Shift+Page Up / Page Down, with a cap on kept lines; command history with the Up and Down arrows.
+- Keys: the player's keyboard layout, for typed characters and for the shortcuts Ctrl+C, Ctrl+L and Ctrl+D (the letters of the layout, not the physical key positions). Any typed character is accepted and shown if the font has it. Esc closes the screen; to revisit when a text editor arrives, since programs use it.
+
+**Commands.** A working subset of the real tools, Linux convention (iproute2, iputils, bash): what is supported really works; any other command or option returns the error of the real tool, in the same format (`bash: foo: command not found`), possibly followed by a translated advice line pointing to `help`.
+
+| Command | Content |
+|---|---|
+| `ping [-c n] <address>` | One request per second until Ctrl+C, or `n` requests; one line per reply (`icmp_seq`, `ttl`, `time`), then the statistics block. The terminal belongs to the command while it runs (no background jobs in 1c-1); a `ping` goes on when the screen is hidden |
+| `ip addr` (`ip a`, `ip addr show eth0`) | Interfaces, MAC, IPv4 address and mask, state of the link, lease time left |
+| `ip link` | Physical state of the interfaces (`LOWER_UP` or `NO-CARRIER`): "no cable" is not "no address" |
+| `ip route` | `default via 192.168.1.1 dev eth0` and the route of the local network, from the DHCP lease |
+| `ip neigh` | The ARP cache and its states |
+| `hostname` | The name of the machine |
+| `help`, `help <command>` | Translated: the commands of this machine, their syntax, the differences with the real tool |
+| `clear` (Ctrl+L), `history`, `exit` (Ctrl+D) | Base gestures of a terminal |
+
+`ping` shows the situation really met. Cases to cover, with their exact output to check on a real machine before writing the tests: no address or no route (from memory: `ping: connect: Network is unreachable`); absent machine on the local network, ARP fails (`From <own address> icmp_seq=1 Destination Host Unreachable`); destination outside the local network, through the box, which has no internet link before lot 6c (to decide at the start of the lot from the behaviour of a real box: `Destination Net Unreachable` or silence). A timeout prints nothing, as on Linux; the statistics say `100% packet loss`.
+
+Pedagogical help stays apart from the output of the tools: translated, marked as a message of the game, shown after the command ends and only after a failure, and turned off by a client setting (`docs/messages.md`, "Terminal").
+
+**Network latency.** The time shown by `ping` (and later by `tcpdump` and `traceroute`) comes from a latency carried by each frame and added at each step of its real path: length of each cable crossed, processing time of each device according to its type. Delivery stays instant in the engine (a frame and its replies are delivered in the same tick, `NetworkSimulation`). The values come from documented sources, cited next to them, and are parameters that change without touching the engine. Results are deterministic; jitter can come later if it brings something. Game time (1 tick = 50 ms) stays for what is not a round trip: the interval between two requests, timeouts, the elapsed time of the statistics, DHCP leases.
+
+**IP stack.** Lot 1c-1 lays down the IPv4 stack per interface, with services bound to a port (idea issue "Services API shared by the network engine and the computer OS"): ARP and ICMP need a real IP layer on the computers, and the DHCP client and server of lot 1b-2 move onto it. The rest of that idea (generic saved memory per service, start and stop) waits for the next service (DNS, lot 7b).
+
+**Throwaway prototype** before the lot (issue in the lot 1c-1 milestone): keyboard input (SDL3) with the AZERTY and QWERTY layouts, shortcuts and arrows reaching the screen, monospaced font candidates, character grid at 854 x 480 and 1920 x 1080, frame and colours, a screen that does not pause the game in single player.
+
+Pushed back: completion with Tab and read-only viewing (backlog), fixed address with `ip addr add` (idea issue "Configure the devices like real ones", once the operating system has files), `traceroute` (6c), `nslookup` and `dig` (7b), `ss` and `nc` (1f), `uptime`, `reboot` and `poweroff` (1e), pipes, redirections, variables and background jobs (scripts), terminal text shown on the block in the world (F).
+
+### 1c-2: network diagnostics
+
+| Type | Equipment | Role |
+|---|---|---|
+| Command | `tcpdump [-i eth0] [-n] [-e] [-c n] [filter]` | One line per frame that really goes through the interface of the machine, until Ctrl+C or `n` frames |
+| Command | `dhclient -v eth0`, `dhclient -r eth0` | Runs the real DHCP exchange again and shows it; releases the lease for real and removes the configuration of the interface |
+
+Playable at the end: `tcpdump` runs on one computer while another `ping`s it; the ARP request, its reply, then the ICMP echoes scroll by.
+
+- `tcpdump` reads the frames of `FrameTap`, on the interface of the machine only: its incoming and outgoing frames and the broadcasts it receives, never the traffic of other machines. This is what a real computer sees behind a box or a switch, and lot 1d shows it.
+- Output in the real format, with the information that really exists in the engine. The timestamp is the time of the tick plus the latency carried by the frame.
+- Options `-n` (accepted; same output, there is no DNS yet), `-e` (MAC addresses, needed in lot 1d), `-c n`.
+- Filters: a closed grammar that really filters the frames, `arp`, `icmp`, `udp`, `port <n>`, `host <address>`. Anything else is refused with an error; `and` and `or` come later if needed.
+- `dhclient -v eth0` shows the real exchange (`DHCPDISCOVER`, `DHCPOFFER`, `DHCPREQUEST`, `DHCPACK`); `dhclient -r eth0` releases the lease and removes the address and the routes of the interface.
+
+The order of lots 1c-1, 1c-2 and 1d follows the learning: use the network, observe what travels on it, then see what a switch changes (unicast and broadcast).
 
 ### 1d: desktop switch
 
@@ -414,7 +492,7 @@ Playable at the end: a computer connected to the socket of a bedroom reaches the
 
 Playable at the end: a file dropped from one computer is read from another.
 
-The role of the screen, keyboard and mouse depends on the decision taken before lot 1c (see "Open decisions").
+The screen, keyboard and mouse are not required to use the tower (decision of 2026-11-19 on issue #10, see "Decisions taken"): a connected screen will give access to the graphical mode when it exists, and a server option may require the peripherals. To design at this lot.
 
 ### 2d: other devices in the home
 
@@ -747,8 +825,8 @@ Cord on the ground, idea to refine when we reach the lot:
 ## Dependencies
 
 - Lot 1a is required by everything else.
-- 1c depends on 1b: without an address, no `ping`.
-- 1f (TCP) depends on 1c (IP stack per interface) and is required by 2c (file sharing), 7b (web server) and 8d (SSH).
+- 1c-1 depends on 1b: without an address, no `ping`. 1c-2 depends on 1c-1 and comes before 1d, whose switches it helps to understand.
+- 1f (TCP) depends on 1c-1 (IP stack per interface) and is required by 2c (file sharing), 7b (web server) and 8d (SSH).
 - Lot 1e is required by the powerline adapter, the PoE injector and room power (8e).
 - Lot 3 needs the test block as long as lots 4 to 6 are not done.
 - The 19-inch rack (6a) is required by 6b, 7b and the whole of lot 8.
