@@ -46,7 +46,7 @@ confirm() {
 stop_if_dry_run() {
     if [ "$DRY_RUN" -eq 1 ]; then
         echo
-        say "dry run: nothing was changed."
+        say "dry run: nothing was changed in git or on GitHub."
         exit 0
     fi
 }

@@ -40,7 +40,7 @@ cmd_status() {
     echo
     echo "Mod          $(prop mod_id) $(prop mod_version) (gradle.properties)"
     latest="$(latest_version)"
-    echo "Latest tag   ${latest:+v$latest}${latest:-none}"
+    if [ -n "$latest" ]; then echo "Latest tag   v$latest"; else echo "Latest tag   none"; fi
     echo "Next         $(next_versions | sed -n '1p')"
     next_versions | sed -n '2,$p' | sed 's/^/             /'
     phase="$(dev_phase)"
