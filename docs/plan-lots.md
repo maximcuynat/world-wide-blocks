@@ -192,9 +192,9 @@ Limites connues, à reprendre plus tard :
 
 Audit, conception et règles dans `docs/messages.md` (validés par Max le 2026-11-18). Codé le 2026-11-18 en 6 étapes, un commit chacune après un build vert (`./gradlew build test` : 123 tests unitaires ; `./gradlew runGameTestServer` : 17 tests en jeu). **Vérification à l'œil faite par Max le 2026-11-18** (jeu en français, monde « Essais messages » en superflat, aucun plantage) ; rendu validé comme base de la future interface HUD (lot F).
 
-Résultat de la vérification, d'après les captures (`run/screenshots`) et le log :
+Résultat de la vérification : la colonne « Vu » est prouvée par les captures (`run/screenshots`) et le log ; la dernière colonne a été vue à l'œil par Max pendant la même session, sans capture, et validée sur son témoignage le 2026-11-18. Tous les points sont bons.
 
-| Point | Vu | Non prouvé par une capture ou le log |
+| Point | Vu (capture ou log) | Validé sur le témoignage de Max |
 |---|---|---|
 | 1. Infobulle et barre d'action | Infobulle : 3 lignes grises (la deuxième passe à la ligne dans une fenêtre de 854 x 480) ; « ✖ Box internet : aucun port libre. » en rouge | |
 | 2. Panneau de la box | Compact « 3/4 ports connectés » et « Accroupi : détails » ; détaillé : ports 1 à 3 avec la MAC en entier, port 4 libre, port 5 (ligne) inactif ; postes compacts « Connecté » | Panneau détaillé d'un poste (port et MAC) |
@@ -632,7 +632,7 @@ Jouable à la fin : tout le mod est accessible sans le mode créatif.
 | Cordon au sol | Le cordon est rendu posé au sol au lieu d'une ligne tendue (idée notée le 2026-11-17, non validée) |
 | Interface HUD | HUD plus professionnel et plus soigné pour le panneau d'état et les messages (demandé par Max le 2026-11-18) |
 
-Interface HUD : le rendu actuel (panneau compact ou détaillé, messages avec symbole et couleur) est **validé par Max le 2026-11-18 comme base** ; rien n'est à changer avant le lot F. Le travail futur porte sur l'apparence : un HUD plus professionnel et plus soigné. Le module des messages (voir `docs/messages.md`) sépare les données du dessin : le serveur n'envoie que des clés, des valeurs et un niveau, les lignes du panneau sont construites en Java pur (`StatusPanel`), et seul le client décide de l'apparence. La nouvelle interface remplace donc le dessin (`client/ClientMessages`, `client/PortStatusLayer`) sans toucher au moteur, aux paquets ni aux textes.
+Interface HUD : le rendu actuel (panneau compact ou détaillé, messages avec symbole et couleur) est **validé par Max le 2026-11-18 comme base** ; rien n'est à changer avant le lot F. Le travail futur porte sur l'apparence : un HUD plus professionnel et plus soigné, avec une vérification du rendu sur plusieurs tailles de fenêtre (en 854 x 480, la deuxième ligne de l'infobulle du cordon passe à la ligne). Le module des messages (voir `docs/messages.md`) sépare les données du dessin : le serveur n'envoie que des clés, des valeurs et un niveau, les lignes du panneau sont construites en Java pur (`StatusPanel`), et seul le client décide de l'apparence. La nouvelle interface remplace donc le dessin (`client/ClientMessages`, `client/PortStatusLayer`) sans toucher au moteur, aux paquets ni aux textes.
 
 Cordon au sol, idée à préciser en arrivant au lot :
 
