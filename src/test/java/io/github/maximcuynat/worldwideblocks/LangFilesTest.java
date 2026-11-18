@@ -19,12 +19,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.Test;
 
 /**
- * Les deux fichiers de langue sont tenus ensemble, et chaque texte tient à sa place avec les valeurs
- * les plus longues (voir {@code docs/messages.md}) : 80 caractères pour la barre d'action, 45 pour une
- * ligne du panneau ou de l'infobulle, 90 pour le chat.
+ * Both language files are kept together, and every text fits its place with the longest values
+ * (see {@code docs/messages.md}): 80 characters for the action bar, 45 for a line of the panel or
+ * of the tooltip, 90 for the chat.
  *
- * <p>Chaque clé de ces familles doit avoir ses valeurs d'exemple ci-dessous : une clé ajoutée sans
- * exemple fait échouer le test, pour qu'on ne l'oublie pas.
+ * <p>Every key of these families must have its sample values below: a key added without a
+ * sample makes the test fail, so that nobody forgets it.
  */
 class LangFilesTest {
     private static final Path LANG = Path.of("src/main/resources/assets/worldwideblocks/lang");
@@ -41,14 +41,14 @@ class LangFilesTest {
     private static final String Y = "320";
     private static final String Z = "-5678";
 
-    /** Familles de clés vérifiées, avec leur longueur maximale. */
+    /** Checked key families, with their maximum length. */
     private static final Map<String, Integer> LIMITS = Map.of(
             "message.worldwideblocks.cable.", ACTION_BAR,
             "message.worldwideblocks.network.", CHAT,
             "hud.worldwideblocks.", PANEL,
             "item.worldwideblocks.ethernet_cable.tooltip.", PANEL);
 
-    /** Valeurs d'exemple de chaque clé, à partir du nom d'appareil le plus long de la langue. */
+    /** Sample values of each key, built from the longest device name of the language. */
     private static Map<String, List<String>> samples(String name) {
         Map<String, List<String>> samples = new LinkedHashMap<>();
         samples.put("message.worldwideblocks.cable.start", List.of(name, PORT));
@@ -65,7 +65,7 @@ class LangFilesTest {
         for (String refusal : List.of("not_a_device", "incompatible_port", "same_device", "other_dimension", "too_far")) {
             samples.put("message.worldwideblocks.cable.result." + refusal, List.of(DISTANCE, DISTANCE));
         }
-        // Un appareil s'écrit « nom [x, y, z] » (clé message.worldwideblocks.device).
+        // A device is written "name [x, y, z]" (key message.worldwideblocks.device).
         samples.put("message.worldwideblocks.network.loop", List.of(name + " [" + X + ", " + Y + ", " + Z + "]"));
         samples.put("message.worldwideblocks.network.saturated", List.of());
         samples.put("hud.worldwideblocks.port.connected", List.of(PORT));
@@ -85,13 +85,13 @@ class LangFilesTest {
     }
 
     @Test
-    void lesDeuxLanguesOntLesMemesCles() throws IOException {
+    void bothLanguagesHaveTheSameKeys() throws IOException {
         assertEquals(read("en_us").keySet(), read("fr_fr").keySet());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"fr_fr", "en_us"})
-    void chaqueTexteTientASaPlace(String language) throws IOException {
+    void everyTextFitsItsPlace(String language) throws IOException {
         Map<String, String> texts = read(language);
         String longestName = texts.entrySet().stream()
                 .filter(entry -> entry.getKey().startsWith("block.worldwideblocks."))
@@ -106,22 +106,22 @@ class LangFilesTest {
             }
             List<String> args = samples.get(key);
             if (args == null) {
-                problems.add(key + " : aucune valeur d'exemple dans LangFilesTest");
+                problems.add(key + ": no sample values in LangFilesTest");
                 return;
             }
             String rendered = format(text, args);
             if (length(rendered) > limit) {
-                problems.add(key + " : " + length(rendered) + " caractères (" + limit + " au plus) : " + rendered);
+                problems.add(key + " : " + length(rendered) + " characters (" + limit + " at most): " + rendered);
             }
         }));
         assertTrue(problems.isEmpty(), language + "\n" + String.join("\n", problems));
     }
 
-    // ---- Outils ----
+    // ---- Helpers ----
 
     private static final Pattern PLACEHOLDER = Pattern.compile("%(?:(\\d+)\\$)?s|%%");
 
-    /** Remplace {@code %s} et {@code %1$s} comme le fait Minecraft. */
+    /** Replaces {@code %s} and {@code %1$s} the way Minecraft does. */
     static String format(String text, List<String> args) {
         Matcher matcher = PLACEHOLDER.matcher(text);
         StringBuilder out = new StringBuilder();
@@ -148,7 +148,7 @@ class LangFilesTest {
         return FlatJson.parse(Files.readString(LANG.resolve(language + ".json"), StandardCharsets.UTF_8));
     }
 
-    /** Lecteur minimal d'un objet JSON plat de chaînes, comme les fichiers de langue. */
+    /** Minimal reader of a flat JSON object of strings, like the language files. */
     private static final class FlatJson {
         private final String text;
         private int pos;
@@ -168,7 +168,7 @@ class LangFilesTest {
                 String key = json.string();
                 json.expect(':');
                 if (map.put(key, json.string()) != null) {
-                    throw new IllegalStateException("Clé en double : " + key);
+                    throw new IllegalStateException("Duplicate key: " + key);
                 }
             } while (json.next(',', '}') == ',');
             return map;
@@ -183,7 +183,7 @@ class LangFilesTest {
 
         private void expect(char c) {
             if (this.peek() != c) {
-                throw new IllegalStateException("Attendu " + c + " à la position " + this.pos);
+                throw new IllegalStateException("Expected " + c + " at position " + this.pos);
             }
             this.pos++;
         }
@@ -191,7 +191,7 @@ class LangFilesTest {
         private char next(char a, char b) {
             char c = this.peek();
             if (c != a && c != b) {
-                throw new IllegalStateException("Attendu " + a + " ou " + b + " à la position " + this.pos);
+                throw new IllegalStateException("Expected " + a + " or " + b + " at position " + this.pos);
             }
             this.pos++;
             return c;

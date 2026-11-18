@@ -1,9 +1,9 @@
 package io.github.maximcuynat.worldwideblocks.network.sim;
 
-/** Sens d'une trame vue par le point d'écoute, du point de vue de l'appareil. */
+/** Direction of a frame seen by the tap, from the device's point of view. */
 public enum FrameDirection {
-    /** La trame arrive sur un port de l'appareil. */
+    /** The frame arrives on a port of the device. */
     RECEIVED,
-    /** La trame part d'un port de l'appareil (qu'un câble y soit branché ou non). */
+    /** The frame leaves a port of the device (whether or not a cable is connected to it). */
     SENT
 }

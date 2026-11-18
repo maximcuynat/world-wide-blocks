@@ -7,20 +7,20 @@ import java.util.OptionalInt;
 import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 
 /**
- * Commutation Ethernet transparente (pont IEEE 802.1D sans STP) : elle apprend la MAC source de
- * chaque trame reçue, relaie une trame vers le port où se trouve sa destination, et la diffuse sur
- * tous les autres ports quand la destination est inconnue ou que la trame est adressée à tous.
+ * Transparent Ethernet switching (IEEE 802.1D bridge without STP): it learns the source MAC of
+ * each received frame, relays a frame to the port where its destination is, and broadcasts it on
+ * all the other ports when the destination is unknown or the frame is addressed to all.
  *
- * <p>Réutilisée telle quelle par la box (lot 1b) et par les switchs de bureau (lot 1d). Les ports
- * sont les numéros de port de l'appareil qui la porte. Un appareil qui a son propre service sur le
- * réseau (la box et son serveur DHCP au lot 1b-2, un switch administrable au lot 8b) l'y branche par
- * le point local {@link #LOCAL_PORT}, comme un hôte interne ; un switch de bureau n'en a pas.
+ * <p>Reused as is by the box (lot 1b) and by the desk switches (lot 1d). The ports
+ * are the port numbers of the device that holds it. A device that has its own service on the
+ * network (the box and its DHCP server in lot 1b-2, a managed switch in lot 8b) plugs it in through
+ * the local point {@link #LOCAL_PORT}, like an internal host; a desk switch has none.
  *
- * <p>Elle ne fait que décider : l'envoi des trames et la protection contre les boucles sont l'affaire
- * de la simulation. Java pur, sans classe Minecraft.
+ * <p>It only decides: sending the frames and the loop protection are the business
+ * of the simulation. Plain Java, no Minecraft class.
  */
 public final class EthernetSwitch {
-    /** Numéro du point local : jamais un numéro de port réel, qui commence à 0. */
+    /** Number of the local point: never a real port number, which starts at 0. */
     public static final int LOCAL_PORT = -1;
 
     private final List<Integer> ports;
@@ -28,8 +28,8 @@ public final class EthernetSwitch {
     private final MacTable table;
 
     /**
-     * @param ports     numéros des ports commutés, dans l'ordre de diffusion
-     * @param localPort vrai si l'appareil a un service branché sur le point local
+     * @param ports     numbers of the switched ports, in broadcast order
+     * @param localPort true if the device has a service plugged into the local point
      */
     public EthernetSwitch(List<Integer> ports, boolean localPort, long agingTicks) {
         for (int port : ports) {
@@ -43,9 +43,9 @@ public final class EthernetSwitch {
     }
 
     /**
-     * Une trame arrive par {@code ingress} (un port commuté ou {@link #LOCAL_PORT}) : le switch apprend
-     * sa source, puis renvoie les ports par lesquels la relayer. Une liste vide signifie que la trame
-     * est filtrée (sa destination est derrière le port même d'où elle vient).
+     * A frame arrives through {@code ingress} (a switched port or {@link #LOCAL_PORT}): the switch learns
+     * its source, then returns the ports to relay it through. An empty list means the frame
+     * is filtered (its destination is behind the very port it came from).
      */
     public List<Integer> receive(int ingress, EthernetFrame frame, long now) {
         if (ingress != LOCAL_PORT && !this.ports.contains(ingress)) {
@@ -61,12 +61,12 @@ public final class EthernetSwitch {
         return this.floodFrom(ingress);
     }
 
-    /** Le câble de ce port vient d'être retiré : tout ce qui était appris derrière est oublié. */
+    /** The cable of this port was just removed: everything learned behind it is forgotten. */
     public void linkDown(int port) {
         this.table.flushPort(port);
     }
 
-    /** À appeler régulièrement : retire les entrées expirées. */
+    /** To call regularly: removes the expired entries. */
     public void purgeExpired(long now) {
         this.table.purgeExpired(now);
     }
@@ -75,7 +75,7 @@ public final class EthernetSwitch {
         return this.ports.contains(port);
     }
 
-    /** Table d'apprentissage, en lecture (indicateur, futur analyseur). */
+    /** Learning table, read access (status panel, future analyzer). */
     public List<MacTable.Entry> entries() {
         return this.table.entries();
     }

@@ -4,13 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Anti-répétition des événements : un même problème, désigné par sa clé, n'est transmis qu'une fois
- * par intervalle, quel que soit le nombre d'appareils qui le voient. Le temps est celui des ticks de la
- * simulation, en temps de jeu.
+ * Repeat limit for events: a same problem, designated by its key, is only passed on once
+ * per interval, whatever the number of devices that see it. The time is that of the ticks of the
+ * simulation, in game time.
  *
- * <p>La clé d'un problème lié à un réseau est oubliée quand ce réseau change ({@link #forget(String)}) :
- * le joueur qui croit avoir réparé l'apprend au signalement suivant, sans attendre la fin de
- * l'intervalle. Les autres réseaux ne sont pas touchés.
+ * <p>The key of a problem tied to a network is forgotten when that network changes ({@link #forget(String)}):
+ * the player who thinks they have fixed it learns at the next report, without waiting for the end of
+ * the interval. The other networks are not touched.
  */
 public final class MessageThrottle {
     private final long intervalTicks;
@@ -23,7 +23,7 @@ public final class MessageThrottle {
         this.intervalTicks = intervalTicks;
     }
 
-    /** Vrai si le problème peut être transmis maintenant ; le cas échéant, l'instant est retenu. */
+    /** True if the problem can be passed on now; if so, the instant is remembered. */
     public boolean allow(String problemKey, long now) {
         Long last = this.lastSent.get(problemKey);
         if (last != null && now - last < this.intervalTicks) {
@@ -33,7 +33,7 @@ public final class MessageThrottle {
         return true;
     }
 
-    /** Oublie ce problème : il pourra être transmis de nouveau tout de suite. */
+    /** Forgets this problem: it can be passed on again right away. */
     public void forget(String problemKey) {
         this.lastSent.remove(problemKey);
     }

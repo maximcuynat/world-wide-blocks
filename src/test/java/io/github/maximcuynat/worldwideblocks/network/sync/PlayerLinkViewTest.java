@@ -56,19 +56,19 @@ class PlayerLinkViewTest {
         return this.view.chunkUnwatched(chunk, this.graph.linksTouching(chunk));
     }
 
-    // Câble entre le chunk (0, 0) et le chunk (2, 0) : 40 blocs.
+    // Cable between chunk (0, 0) and chunk (2, 0): 40 blocks.
     private Link crossChunkLink() {
         return link(device(OVERWORLD, 5, 5), device(OVERWORLD, 45, 5));
     }
 
     @Test
-    void chunkKeyArrondiVersLeBasPourLesCoordonneesNegatives() {
+    void chunkKeyRoundsDownForNegativeCoordinates() {
         assertEquals(chunk(-1, -1), ChunkKey.of(new DeviceId(OVERWORLD, -1, 64, -16)));
         assertEquals(chunk(-2, 0), ChunkKey.of(new DeviceId(OVERWORLD, -17, 64, 15)));
     }
 
     @Test
-    void linksTouchingTrouveLeCableParSesDeuxExtremitesEtLOublieQuandIlEstRetire() {
+    void linksTouchingFindsTheCableByItsTwoEndsAndForgetsItWhenRemoved() {
         Link cable = crossChunkLink();
 
         assertEquals(List.of(cable), List.copyOf(graph.linksTouching(chunk(0, 0))));
@@ -81,23 +81,23 @@ class PlayerLinkViewTest {
     }
 
     @Test
-    void unChunkRecuEnvoieSesCablesUneSeuleFoisMemeParLesDeuxExtremites() {
+    void aReceivedChunkSendsItsCablesOnlyOnceEvenThroughBothEnds() {
         Link cable = crossChunkLink();
 
         assertEquals(List.of(cable), sent(chunk(0, 0)));
-        assertTrue(sent(chunk(2, 0)).isEmpty(), "déjà connu par l'autre extrémité");
+        assertTrue(sent(chunk(2, 0)).isEmpty(), "already known through the other end");
         assertTrue(view.knows(cable.id()));
     }
 
     @Test
-    void unChunkSansCableNEnvoieRien() {
+    void aChunkWithoutCableSendsNothing() {
         crossChunkLink();
 
         assertTrue(sent(chunk(1, 0)).isEmpty());
     }
 
     @Test
-    void auDechargementLeCableResteSiLAutreExtremiteEstEncoreSuivie() {
+    void onUnloadTheCableStaysIfTheOtherEndIsStillTracked() {
         Link cable = crossChunkLink();
         sent(chunk(0, 0));
         sent(chunk(2, 0));
@@ -107,7 +107,7 @@ class PlayerLinkViewTest {
     }
 
     @Test
-    void auDechargementLeCableEstOublieQuandPlusAucuneExtremiteNEstSuivie() {
+    void onUnloadTheCableIsForgottenWhenNoEndIsTrackedAnymore() {
         Link cable = crossChunkLink();
         sent(chunk(0, 0));
         sent(chunk(2, 0));
@@ -118,7 +118,7 @@ class PlayerLinkViewTest {
     }
 
     @Test
-    void unCableDansUnSeulChunkEstOublieAvecLui() {
+    void aCableInASingleChunkIsForgottenWithIt() {
         Link cable = link(device(OVERWORLD, 1, 1), device(OVERWORLD, 9, 9));
         sent(chunk(0, 0));
 
@@ -126,8 +126,8 @@ class PlayerLinkViewTest {
     }
 
     @Test
-    void unTeleportQuiRetireLesDeuxChunksALaSuiteOublieLeCable() {
-        // Cas où la vue de suivi de Minecraft serait encore l'ancienne pendant les deux retraits.
+    void aTeleportThatRemovesBothChunksOneAfterTheOtherForgetsTheCable() {
+        // Case where Minecraft's tracking view would still be the old one during both removals.
         Link cable = crossChunkLink();
         sent(chunk(0, 0));
         sent(chunk(2, 0));
@@ -139,7 +139,7 @@ class PlayerLinkViewTest {
     }
 
     @Test
-    void unChunkJamaisRecuNeFaitRienOublier() {
+    void aChunkNeverReceivedMakesNothingForgotten() {
         Link cable = crossChunkLink();
         sent(chunk(0, 0));
 
@@ -148,40 +148,40 @@ class PlayerLinkViewTest {
     }
 
     @Test
-    void unCableBrancheNEstEnvoyeQueSiUneExtremiteEstSuivie() {
+    void aConnectedCableIsSentOnlyIfAnEndIsTracked() {
         sent(chunk(0, 0));
         Link visible = link(device(OVERWORLD, 2, 2), device(OVERWORLD, 60, 2));
-        Link horsDeVue = link(device(OVERWORLD, 200, 200), device(OVERWORLD, 230, 200));
+        Link outOfView = link(device(OVERWORLD, 200, 200), device(OVERWORLD, 230, 200));
 
         assertTrue(view.linkAdded(visible));
-        assertFalse(view.linkAdded(visible), "pas de second envoi");
-        assertFalse(view.linkAdded(horsDeVue));
+        assertFalse(view.linkAdded(visible), "no second send");
+        assertFalse(view.linkAdded(outOfView));
     }
 
     @Test
-    void unCableRetireNEstSignaleQueSiLeClientLeConnaissait() {
+    void aRemovedCableIsReportedOnlyIfTheClientKnewIt() {
         Link cable = crossChunkLink();
-        Link inconnu = link(device(OVERWORLD, 300, 300), device(OVERWORLD, 310, 300));
+        Link unknown = link(device(OVERWORLD, 300, 300), device(OVERWORLD, 310, 300));
         sent(chunk(0, 0));
 
         assertTrue(view.linkRemoved(cable.id()));
         assertFalse(view.linkRemoved(cable.id()));
-        assertFalse(view.linkRemoved(inconnu.id()));
+        assertFalse(view.linkRemoved(unknown.id()));
     }
 
     @Test
-    void changerDeDimensionVideLaVue() {
+    void changingDimensionEmptiesTheView() {
         Link cable = crossChunkLink();
         sent(chunk(0, 0));
 
-        assertFalse(view.enterDimension(OVERWORLD), "même dimension : rien à oublier");
+        assertFalse(view.enterDimension(OVERWORLD), "same dimension: nothing to forget");
         assertTrue(view.enterDimension(NETHER));
         assertFalse(view.knows(cable.id()));
-        assertFalse(view.linkAdded(cable), "le chunk de l'Overworld n'est plus suivi");
+        assertFalse(view.linkAdded(cable), "the Overworld chunk is no longer tracked");
     }
 
     @Test
-    void unChunkDUneAutreDimensionEstIgnore() {
+    void aChunkOfAnotherDimensionIsIgnored() {
         PortRef a = device(NETHER, 5, 5);
         PortRef b = device(NETHER, 10, 5);
         link(a, b);
@@ -192,9 +192,9 @@ class PlayerLinkViewTest {
     }
 
     @Test
-    void unNouveauJoueurDoitToujoursRepartirDeZero() {
-        PlayerLinkView neuf = new PlayerLinkView();
+    void aNewPlayerMustAlwaysStartFromScratch() {
+        PlayerLinkView fresh = new PlayerLinkView();
 
-        assertTrue(neuf.enterDimension(OVERWORLD));
+        assertTrue(fresh.enterDimension(OVERWORLD));
     }
 }

@@ -19,8 +19,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * Passerelle entre le monde Minecraft (niveaux, positions, blocs) et le moteur réseau,
- * qui ne manipule que des {@link DeviceId}.
+ * Bridge between the Minecraft world (levels, positions, blocks) and the network engine,
+ * which only handles {@link DeviceId}s.
  */
 public final class NetworkDevices {
 
@@ -35,12 +35,12 @@ public final class NetworkDevices {
         return new BlockPos(id.x(), id.y(), id.z());
     }
 
-    /** Niveau (dimension) où se trouve l'appareil, s'il existe sur ce serveur. */
+    /** Level (dimension) where the device is, if it exists on this server. */
     public static Optional<ServerLevel> levelOf(MinecraftServer server, DeviceId id) {
         return Optional.ofNullable(server.getLevel(ResourceKey.create(Registries.DIMENSION, Identifier.parse(id.dimension()))));
     }
 
-    /** L'appareil décrit par le bloc présent à cette position, si c'est un appareil réseau. */
+    /** The device described by the block at this position, if it is a network device. */
     public static Optional<NetworkNode> nodeAt(Level level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
         if (!(state.getBlock() instanceof NetworkDevice device)) {
@@ -51,11 +51,11 @@ public final class NetworkDevices {
     }
 
     /**
-     * Un appareil vient d'être posé : on efface d'abord tout câble resté enregistré à cette position
-     * (un bloc retiré sans que le jeu le signale, par exemple par un {@code /setblock} sans mise à jour),
-     * puis on enregistre l'appareil.
+     * A device was just placed: first clear any cable still registered at this position
+     * (a block removed without the game reporting it, for example by a {@code /setblock} without update),
+     * then register the device.
      *
-     * @return les câbles orphelins retirés
+     * @return the orphan cables removed
      */
     public static List<Link> onPlaced(ServerLevel level, BlockPos pos) {
         NetworkManager network = NetworkManager.of(level.getServer());
@@ -66,19 +66,19 @@ public final class NetworkDevices {
     }
 
     /**
-     * L'appareil a quitté cette position (cassé, explosé, remplacé) : il est retiré du réseau avec ses câbles.
+     * The device left this position (broken, exploded, replaced): it is removed from the network with its cables.
      *
-     * @return les câbles retirés
+     * @return the removed cables
      */
     public static List<Link> onRemoved(ServerLevel level, BlockPos pos) {
         return NetworkManager.of(level.getServer()).removeDevice(idOf(level, pos));
     }
 
     /**
-     * Revérifie un appareil avant de s'en servir. Si sa zone est chargée et que le bloc n'est plus un
-     * appareil (ou plus le même), le moteur est corrigé. Si la zone n'est pas chargée, on se fie au moteur.
+     * Rechecks a device before using it. If its area is loaded and the block is no longer a
+     * device (or no longer the same one), the engine is corrected. If the area is not loaded, trust the engine.
      *
-     * @return l'appareil tel que le moteur le connaît après vérification
+     * @return the device as the engine knows it after the check
      */
     public static Optional<NetworkNode> validate(ServerLevel level, DeviceId id) {
         NetworkManager network = NetworkManager.of(level.getServer());
@@ -93,8 +93,8 @@ public final class NetworkDevices {
     }
 
     /**
-     * Fait tomber à cette position un cordon par câble retiré, mais seulement pour les câbles
-     * qui en avaient consommé un : un câble posé en créatif ne rend rien.
+     * Drops one cord at this position per removed cable, but only for the cables
+     * that had consumed one: a cable placed in creative gives nothing back.
      */
     public static void dropCables(ServerLevel level, BlockPos pos, List<Link> removed) {
         for (Link link : removed) {
@@ -104,17 +104,17 @@ public final class NetworkDevices {
         }
     }
 
-    /** Appareil comme valeur d'un message : nom traduit et coordonnées pour le joueur, identifiant dans le log. */
+    /** Device as a message value: translated name and coordinates for the player, identifier in the log. */
     public static MessageArg deviceArg(NetworkNode node) {
         return MessageArg.device(node.id(), node.deviceType());
     }
 
-    /** Nom de l'appareil comme valeur d'un message : sa clé de langue, traduite par le client. */
+    /** Device name as a message value: its language key, translated by the client. */
     public static MessageArg nameArg(NetworkNode node) {
         return MessageArg.key("block." + node.deviceType().replace(':', '.'));
     }
 
-    /** Nom de l'appareil tel qu'il apparaît en jeu, par exemple « Tour PC ». */
+    /** Device name as it appears in game, for example "PC Tower". */
     public static Component displayName(NetworkNode node) {
         return Component.translatable("block." + node.deviceType().replace(':', '.'));
     }

@@ -9,23 +9,23 @@ import io.github.maximcuynat.worldwideblocks.network.PortKind;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 
 /**
- * Contenu du panneau d'état de l'appareil visé, sans aucun dessin : des lignes faites d'un voyant,
- * d'une clé de langue et de valeurs. Le client les dessine comme il veut ; une future interface HUD
- * remplace le dessin sans toucher à ce contenu.
+ * Content of the status panel of the targeted device, without any drawing: lines made of an indicator light,
+ * a language key and values. The client draws them as it wishes; a future HUD
+ * replaces the drawing without touching this content.
  *
  * <ul>
- * <li>Compact (par défaut) : un résumé, puis « Accroupi : détails ». Pour un appareil à plusieurs
- * ports réseau local, le nombre de ports connectés (« 3/4 ports connectés ») ; pour un poste,
- * « Connecté » ou « Non connecté ».</li>
- * <li>Détaillé (joueur accroupi) : une ligne par port ; pour un appareil qui commute, la MAC apprise
- * derrière chaque port et le nombre des autres (« (+1) ») ; pour un poste, la MAC de chaque port.</li>
+ * <li>Compact (default): a summary, then "Sneak: details". For a device with several
+ * local network ports, the number of connected ports ("3/4 ports connected"); for a computer,
+ * "Connected" or "Not connected".</li>
+ * <li>Detailed (sneaking player): one line per port; for a device that switches, the learned MAC
+ * behind each port and the number of others ("(+1)"); for a computer, the MAC of each port.</li>
  * </ul>
  *
- * <p>Java pur, sans classe Minecraft.
+ * <p>Plain Java, no Minecraft class.
  */
 public final class StatusPanel {
 
-    /** Voyant d'une ligne ; {@link #NONE} pour une ligne de détail, sans voyant. */
+    /** Indicator light of a line; {@link #NONE} for a detail line, without a light. */
     public enum Light {
         CONNECTED,
         FREE,
@@ -44,11 +44,11 @@ public final class StatusPanel {
     }
 
     /**
-     * Ce que le serveur a dit de l'appareil visé.
+     * What the server said about the targeted device.
      *
-     * @param switching vrai pour un appareil qui commute (box, switch)
-     * @param portMacs  MAC de chaque port, dans l'ordre des ports
-     * @param learned   MAC apprises derrière chaque port (numéro à partir de 0), pour un appareil qui commute
+     * @param switching true for a device that switches (box, switch)
+     * @param portMacs  MAC of each port, in port order
+     * @param learned   MACs learned behind each port (number starting at 0), for a device that switches
      */
     public record DeviceStatus(boolean switching, List<MacAddress> portMacs, Map<Integer, List<MacAddress>> learned) {
         public DeviceStatus {
@@ -61,10 +61,10 @@ public final class StatusPanel {
     }
 
     /**
-     * @param ports     type de chaque port de l'appareil
-     * @param connected vrai si un câble est branché sur le port (numéro à partir de 0)
-     * @param status    état envoyé par le serveur, {@code null} s'il n'est pas encore arrivé
-     * @param detailed  vrai quand le joueur est accroupi
+     * @param ports     type of each port of the device
+     * @param connected true if a cable is connected to the port (number starting at 0)
+     * @param status    state sent by the server, {@code null} if it has not arrived yet
+     * @param detailed  true when the player is sneaking
      */
     public static List<Line> lines(List<PortKind> ports, IntPredicate connected, DeviceStatus status, boolean detailed) {
         return detailed ? detailedLines(ports, connected, status) : compactLines(ports, connected);

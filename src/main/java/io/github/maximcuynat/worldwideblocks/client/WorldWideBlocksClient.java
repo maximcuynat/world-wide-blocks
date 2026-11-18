@@ -21,8 +21,8 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.client.network.event.RegisterClientPayloadHandlersEvent;
 
 /**
- * Point d'entrée côté client : jamais chargé sur un serveur dédié. Le client ne fait qu'afficher
- * ce que le serveur lui envoie.
+ * Client-side entry point: never loaded on a dedicated server. The client only displays
+ * what the server sends it.
  */
 @Mod(value = WorldWideBlocks.MODID, dist = Dist.CLIENT)
 public final class WorldWideBlocksClient {
@@ -64,7 +64,7 @@ public final class WorldWideBlocksClient {
         this.cableRenderer.submit(event);
     }
 
-    /** En solo, deux mondes ne doivent pas se mélanger : on oublie tout en quittant. */
+    /** In singleplayer, two worlds must not get mixed up: everything is forgotten on leaving. */
     private void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         this.links.clear();
         this.deviceStatus.clear();

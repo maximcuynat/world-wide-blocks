@@ -10,7 +10,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class ModDataComponents {
     public static final DeferredRegister.DataComponents DATA_COMPONENTS = DeferredRegister.createDataComponents(Registries.DATA_COMPONENT_TYPE, WorldWideBlocks.MODID);
 
-    /** Première extrémité d'un cordon en cours de branchement. */
+    /** First end of a cord whose connection is in progress. */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<CableStart>> CABLE_START = DATA_COMPONENTS.registerComponentType("cable_start",
             builder -> builder.persistent(CableStart.CODEC).networkSynchronized(CableStart.STREAM_CODEC).ignoreSwapAnimation());
 

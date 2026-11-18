@@ -5,18 +5,18 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 import io.github.maximcuynat.worldwideblocks.network.protocol.PresencePayload;
 
 /**
- * Poste (tour PC, portable) : une carte réseau par port, qui ne garde que les trames qui lui sont
- * adressées ou diffusées à tous.
+ * Computer (PC tower, laptop): a network card per port, which keeps only the frames addressed
+ * to it or broadcast to all.
  *
- * <p>Lot 1b-1 : le poste n'a encore aucun protocole. Il diffuse une trame de présence au branchement
- * de son câble puis toutes les 30 s, pour qu'un switch apprenne sa MAC. <b>Échafaudage à retirer au
- * lot 1c</b>, quand le DHCP (1b-2) et l'ARP (1c) produiront du vrai trafic.
+ * <p>Lot 1b-1: the computer has no protocol yet. It broadcasts a presence frame when
+ * its cable is connected then every 30 s, so a switch learns its MAC. <b>Scaffolding to remove in
+ * lot 1c</b>, when DHCP (1b-2) and ARP (1c) produce real traffic.
  */
 public final class HostLogic implements DeviceLogic {
-    /** 30 s de jeu entre deux trames de présence, bien moins que les 300 s d'expiration des switchs. */
+    /** 30 game seconds between two presence frames, well below the 300 s expiry of switches. */
     public static final long PRESENCE_INTERVAL_TICKS = 30L * 20L;
 
-    /** Minuterie de présence ; la génération périmée d'un câble retiré puis rebranché est ignorée. */
+    /** Presence timer; the stale generation of a cable removed then plugged back in is ignored. */
     private record PresenceTimer(int port, long generation) {
     }
 
@@ -49,9 +49,9 @@ public final class HostLogic implements DeviceLogic {
     public void onFrame(DeviceContext context, int port, EthernetFrame frame) {
         MacAddress destination = frame.destination();
         if (!destination.isBroadcast() && !destination.equals(context.mac(port))) {
-            return; // pas pour cette carte réseau
+            return; // not for this network card
         }
-        // Lot 1b-2 : la trame sera remise à la pile IP du poste (client DHCP).
+        // Lot 1b-2: the frame will be handed to the computer's IP stack (DHCP client).
     }
 
     private void announce(DeviceContext context, int port) {

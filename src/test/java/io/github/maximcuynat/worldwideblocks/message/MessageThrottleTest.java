@@ -12,14 +12,14 @@ class MessageThrottleTest {
     private final MessageThrottle throttle = new MessageThrottle(MINUTE);
 
     @Test
-    void unProblemeNeSeRepetePasDansLaMinute() {
+    void aProblemIsNotRepeatedWithinTheMinute() {
         assertTrue(throttle.allow("loop:a", 100));
         assertFalse(throttle.allow("loop:a", 100));
         assertFalse(throttle.allow("loop:a", 100 + MINUTE - 1));
     }
 
     @Test
-    void ilRevientAUneMinuteExactement() {
+    void itComesBackAfterExactlyOneMinute() {
         assertTrue(throttle.allow("loop:a", 100));
         assertTrue(throttle.allow("loop:a", 100 + MINUTE));
         assertFalse(throttle.allow("loop:a", 100 + MINUTE + 1));
@@ -27,14 +27,14 @@ class MessageThrottleTest {
     }
 
     @Test
-    void deuxProblemesDifferentsSontIndependants() {
+    void twoDifferentProblemsAreIndependent() {
         assertTrue(throttle.allow("loop:a", 100));
         assertTrue(throttle.allow("loop:b", 101));
         assertTrue(throttle.allow("saturated", 102));
     }
 
     @Test
-    void oublierUnProblemeLeRendSignalableAussitotSansToucherAuxAutres() {
+    void forgettingAProblemMakesItReportableAtOnceWithoutTouchingTheOthers() {
         assertTrue(throttle.allow("loop:a", 100));
         assertTrue(throttle.allow("loop:a1", 100));
         assertTrue(throttle.allow("saturated", 100));
@@ -47,7 +47,7 @@ class MessageThrottleTest {
     }
 
     @Test
-    void unIntervalleNegatifEstRefuse() {
+    void aNegativeIntervalIsRejected() {
         assertThrows(IllegalArgumentException.class, () -> new MessageThrottle(-1));
     }
 }

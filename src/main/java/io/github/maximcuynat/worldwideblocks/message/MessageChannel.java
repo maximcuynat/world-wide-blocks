@@ -1,14 +1,14 @@
 package io.github.maximcuynat.worldwideblocks.message;
 
 /**
- * Où un message est montré. Le panneau d'état n'en fait pas partie : il n'est pas envoyé comme un
- * message, le client le construit à partir de l'état de l'appareil visé.
+ * Where a message is shown. The status panel is not one of them: it is not sent as a
+ * message, the client builds it from the state of the targeted device.
  */
 public enum MessageChannel {
-    /** Au-dessus de la barre d'objets, au joueur qui vient d'agir. */
+    /** Above the hotbar, to the player who has just acted. */
     ACTION_BAR,
-    /** Dans le chat, pour les événements rares et importants. */
+    /** In the chat, for rare and important events. */
     CHAT,
-    /** Dans le log du serveur, en anglais. */
+    /** In the server log, in English. */
     LOG
 }

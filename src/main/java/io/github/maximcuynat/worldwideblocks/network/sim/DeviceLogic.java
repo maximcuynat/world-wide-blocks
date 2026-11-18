@@ -6,14 +6,14 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 import io.github.maximcuynat.worldwideblocks.network.switching.MacTable;
 
 /**
- * Comportement d'un appareil dans la simulation : ce qu'il fait quand un câble est branché ou retiré,
- * quand une trame arrive et quand une minuterie échoit. Une instance par appareil, recréée si
- * l'appareil est remplacé ; son état n'est pas sauvegardé, comme la mémoire d'un vrai appareil
- * qu'on redémarre.
+ * Behavior of a device in the simulation: what it does when a cable is connected or removed,
+ * when a frame arrives and when a timer expires. One instance per device, recreated if
+ * the device is replaced; its state is not saved, like the memory of a real device
+ * that is restarted.
  */
 public interface DeviceLogic {
 
-    /** L'appareil entre dans la simulation (posé, ou serveur démarré). */
+    /** The device enters the simulation (placed, or server started). */
     default void onStart(DeviceContext context) {
     }
 
@@ -27,14 +27,14 @@ public interface DeviceLogic {
     }
 
     /**
-     * Vrai pour un appareil qui relaie des trames entre ses ports (switch, box) : la simulation
-     * vérifie qu'une même trame ne lui revient pas deux fois.
+     * True for a device that relays frames between its ports (switch, box): the simulation
+     * checks that the same frame does not come back to it twice.
      */
     default boolean bridges() {
         return false;
     }
 
-    /** MAC apprises derrière chaque port, pour un appareil qui commute (indicateur) ; vide sinon. */
+    /** MACs learned behind each port, for a device that switches (status panel); empty otherwise. */
     default List<MacTable.Entry> learnedMacs() {
         return List.of();
     }

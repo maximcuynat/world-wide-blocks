@@ -19,22 +19,22 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.phys.Vec3;
 
-/** Tests en jeu du cordon Ethernet : branchement refusé, branchement en attente annulé. */
+/** Game tests of the Ethernet cord: refused connection, cancelled pending connection. */
 final class CableTests {
     private static final String START_GONE = "message.worldwideblocks.cable.start_gone";
     private static final String CANCELLED_DIMENSION = "message.worldwideblocks.cable.cancelled_dimension";
 
-    /** Box A, point de départ de l'attente. */
+    /** Box A, the start of the pending connection. */
     private static final BlockPos START = new BlockPos(4, 0, 8);
-    /** Tour B, dont on retire le bout. */
+    /** PC tower B, whose end is taken off. */
     private static final BlockPos END = new BlockPos(12, 0, 8);
 
     private CableTests() {
     }
 
     /**
-     * Box aux 4 ports réseau local occupés : un cordon de plus est refusé avec un message, sans
-     * branchement commencé ni cordon perdu, et le port de ligne n'est jamais pris pour un port libre.
+     * Box with its 4 local network ports in use: one more cord is refused with a message, with no
+     * connection started and no cord lost, and the line port is never taken for a free port.
      */
     static void noFreePort(GameTestHelper helper) {
         NetworkScene scene = NetworkScene.of(helper);
@@ -44,7 +44,7 @@ final class CableTests {
             scene.cable(box, scene.place(pos, ModBlocks.PC_TOWER.get()));
         }
         helper.assertTrue(scene.network().firstFreePort(box, LinkMedium.COPPER_ETHERNET).isEmpty(),
-                "La box a encore un port libre pour un câble Ethernet : le port de ligne a-t-il été compté ?");
+                "The box still has a free port for an Ethernet cable: was the line port counted?");
 
         TestPlayer player = scene.player(GameType.SURVIVAL);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.ETHERNET_CABLE.get()));
@@ -52,13 +52,13 @@ final class CableTests {
 
         scene.assertMessages(player, MessageChannel.ACTION_BAR, "message.worldwideblocks.cable.no_free_port", 1);
         helper.assertFalse(player.getMainHandItem().has(ModDataComponents.CABLE_START.get()),
-                "Un branchement a commencé sur une box sans port libre");
-        helper.assertValueEqual(scene.cordsHeldBy(player), 1, "cordons dans l'inventaire");
-        helper.assertValueEqual(scene.network().linksOf(box).size(), 4, "câbles de la box");
+                "A connection started on a box with no free port");
+        helper.assertValueEqual(scene.cordsHeldBy(player), 1, "cords in the inventory");
+        helper.assertValueEqual(scene.network().linksOf(box).size(), 4, "cables of the box");
         helper.succeed();
     }
 
-    /** Bug du 2026-11-17, en créatif : le départ de l'attente est cassé par le joueur. */
+    /** Bug of 2026-11-17, in creative: the start of the pending connection is broken by the player. */
     static void startBrokenCreative(GameTestHelper helper) {
         NetworkScene scene = NetworkScene.of(helper);
         TestPlayer player = pendingFromStart(scene, GameType.CREATIVE);
@@ -66,7 +66,7 @@ final class CableTests {
         helper.succeedWhen(() -> assertCancelled(scene, player, START_GONE));
     }
 
-    /** Même bug en survie : le cordon branché puis repris n'est ni perdu ni dupliqué. */
+    /** Same bug in survival: the cord that was plugged in then taken back is neither lost nor duplicated. */
     static void startBrokenSurvival(GameTestHelper helper) {
         NetworkScene scene = NetworkScene.of(helper);
         TestPlayer player = pendingFromStart(scene, GameType.SURVIVAL);
@@ -74,31 +74,31 @@ final class CableTests {
         helper.succeedWhen(() -> assertCancelled(scene, player, START_GONE));
     }
 
-    /** Le départ de l'attente explose (cas relevé en survie le 2026-11-17 à 20:04). */
+    /** The start of the pending connection explodes (case seen in survival on 2026-11-17 at 20:04). */
     static void startExplodedSurvival(GameTestHelper helper) {
         NetworkScene scene = NetworkScene.of(helper);
         TestPlayer player = pendingFromStart(scene, GameType.SURVIVAL);
         scene.explodeAt(START, 2.0F);
-        helper.assertTrue(scene.network().node(scene.id(START)).isEmpty(), "La box a survécu à l'explosion");
+        helper.assertTrue(scene.network().node(scene.id(START)).isEmpty(), "The box survived the explosion");
         helper.succeedWhen(() -> assertCancelled(scene, player, START_GONE));
     }
 
-    /** Le porteur passe dans le Nether pendant l'attente : elle est annulée, le cordon reste libre. */
+    /** The holder goes through to the Nether while waiting: the wait is cancelled, the cord stays free. */
     static void dimensionChange(GameTestHelper helper) {
         NetworkScene scene = NetworkScene.of(helper);
         TestPlayer player = pendingFromStart(scene, GameType.CREATIVE);
         ServerLevel nether = helper.getLevel().getServer().getLevel(Level.NETHER);
-        helper.assertTrue(nether != null, "Pas de Nether dans le monde de test");
+        helper.assertTrue(nether != null, "No Nether in the test world");
         player.teleport(new TeleportTransition(nether, new Vec3(0.5, 80.0, 0.5), Vec3.ZERO, 0.0F, 0.0F, TeleportTransition.DO_NOTHING));
         helper.succeedWhen(() -> {
-            helper.assertTrue(player.level() == nether, "Le joueur n'est pas dans le Nether");
+            helper.assertTrue(player.level() == nether, "The player is not in the Nether");
             assertCancelled(scene, player, CANCELLED_DIMENSION);
         });
     }
 
     /**
-     * Le joueur se déconnecte pendant l'attente, le départ est cassé en son absence : à la
-     * reconnexion, le cordon relu de la sauvegarde du joueur voit que le départ n'existe plus.
+     * The player disconnects while waiting and the start is broken in their absence: on
+     * reconnection, the cord read back from the player's save sees that the start no longer exists.
      */
     static void startBrokenWhileDisconnected(GameTestHelper helper) {
         NetworkScene scene = NetworkScene.of(helper);
@@ -107,19 +107,19 @@ final class CableTests {
         TestPlayer player = scene.player(id, GameType.SURVIVAL);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.ETHERNET_CABLE.get()));
         scene.rightClick(player, START);
-        helper.assertTrue(scene.hasPendingCord(player), "Le premier clic n'a pas commencé de branchement");
+        helper.assertTrue(scene.hasPendingCord(player), "The first click did not start a connection");
 
         player.leaveServer();
         helper.destroyBlock(START);
         TestPlayer back = scene.player(id, GameType.SURVIVAL);
-        helper.assertTrue(back != player, "La reconnexion a réutilisé le même joueur");
+        helper.assertTrue(back != player, "The reconnection reused the same player");
         helper.succeedWhen(() -> assertCancelled(scene, back, START_GONE));
     }
 
     /**
-     * Étapes 1 à 3 du bug : box A reliée à la tour B, bout retiré de B (le cordon attend, accroché à
-     * A), puis changement d'emplacement dans la barre d'objets. En survie, le câble est branché par le
-     * joueur avec son unique cordon, comme en jeu.
+     * Steps 1 to 3 of the bug: box A linked to PC tower B, end taken off B (the cord waits, hooked to
+     * A), then a change of slot in the hotbar. In survival, the cable is plugged in by the player
+     * with their only cord, as in the game.
      */
     private static TestPlayer pendingFromStart(NetworkScene scene, GameType gameType) {
         GameTestHelper helper = scene.helper();
@@ -130,29 +130,29 @@ final class CableTests {
             player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.ETHERNET_CABLE.get()));
             scene.rightClick(player, START);
             scene.rightClick(player, END);
-            helper.assertValueEqual(scene.cordsHeldBy(player), 0, "cordons après un branchement en survie");
+            helper.assertValueEqual(scene.cordsHeldBy(player), 0, "cords after a connection in survival");
         } else {
             scene.cable(box, tower);
         }
-        helper.assertValueEqual(scene.network().linksOf(box).size(), 1, "câbles de la box avant le retrait");
+        helper.assertValueEqual(scene.network().linksOf(box).size(), 1, "cables of the box before the removal");
 
-        // Main vide, accroupi + clic droit sur B : le bout est retiré et reste en main.
+        // Empty hand, sneaking + right-click on B: the end is taken off and stays in hand.
         scene.sneakRightClick(player, END);
         scene.assertMessages(player, MessageChannel.ACTION_BAR, "message.worldwideblocks.cable.end_taken", 1);
-        helper.assertTrue(scene.hasPendingCord(player), "Le bout retiré n'attend pas d'être rebranché");
-        helper.assertValueEqual(scene.cordsHeldBy(player), 1, "cordons après le retrait du bout");
-        helper.assertValueEqual(scene.network().linksOf(box).size(), 0, "câbles de la box après le retrait");
+        helper.assertTrue(scene.hasPendingCord(player), "The end taken off is not waiting to be plugged in again");
+        helper.assertValueEqual(scene.cordsHeldBy(player), 1, "cords after the end was taken off");
+        helper.assertValueEqual(scene.network().linksOf(box).size(), 0, "cables of the box after the removal");
 
         player.getInventory().setSelectedSlot(1);
         return player;
     }
 
-    /** L'attente est annulée, le joueur prévenu une fois, et il a toujours exactement un cordon. */
+    /** The wait is cancelled, the player is told once, and still has exactly one cord. */
     private static void assertCancelled(NetworkScene scene, TestPlayer player, String messageKey) {
         GameTestHelper helper = scene.helper();
-        helper.assertFalse(scene.hasPendingCord(player), "Le cordon attend encore d'être branché");
+        helper.assertFalse(scene.hasPendingCord(player), "The cord is still waiting to be plugged in");
         scene.assertMessages(player, MessageChannel.ACTION_BAR, messageKey, 1);
-        helper.assertValueEqual(scene.cordsHeldBy(player), 1, "cordons dans l'inventaire");
-        helper.assertValueEqual(scene.cordsOnGround(), 0, "cordons au sol");
+        helper.assertValueEqual(scene.cordsHeldBy(player), 1, "cords in the inventory");
+        helper.assertValueEqual(scene.cordsOnGround(), 0, "cords on the ground");
     }
 }

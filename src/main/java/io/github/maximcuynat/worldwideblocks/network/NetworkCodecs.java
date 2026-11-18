@@ -12,8 +12,8 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 import net.minecraft.core.UUIDUtil;
 
 /**
- * Format de sauvegarde du réseau. Les noms de champs sont écrits dans le monde du joueur :
- * ne jamais les renommer sans prévoir la relecture des anciennes sauvegardes.
+ * Save format of the network. The field names are written in the player's world:
+ * never rename them without planning how to reread old saves.
  */
 final class NetworkCodecs {
     static final Codec<DeviceId> DEVICE_ID = RecordCodecBuilder.create(i -> i.group(
@@ -31,7 +31,7 @@ final class NetworkCodecs {
     static final Codec<DeviceRole> ROLE = Codec.STRING.comapFlatMap(
             name -> DeviceRole.bySerializedName(name)
                     .map(DataResult::success)
-                    .orElseGet(() -> DataResult.error(() -> "Rôle d'appareil inconnu : " + name)),
+                    .orElseGet(() -> DataResult.error(() -> "Unknown device role: " + name)),
             DeviceRole::serializedName);
 
     static final Codec<PortKind> PORT_KIND = Codec.STRING.comapFlatMap(
@@ -40,7 +40,7 @@ final class NetworkCodecs {
                     .orElseGet(() -> DataResult.error(() -> "Type de port inconnu : " + name)),
             PortKind::serializedName);
 
-    /** Écrite en texte ({@code 02:4f:a0:00:1b:7c}) pour rester lisible dans un éditeur NBT. */
+    /** Written as text ({@code 02:4f:a0:00:1b:7c}) to stay readable in an NBT editor. */
     static final Codec<MacAddress> MAC = Codec.STRING.comapFlatMap(
             text -> MacAddress.parse(text)
                     .map(DataResult::success)
@@ -48,8 +48,8 @@ final class NetworkCodecs {
             MacAddress::toString);
 
     /**
-     * {@code role}, {@code port_kinds} et {@code macs} n'existent que depuis le lot 1b : ils sont facultatifs pour
-     * relire les mondes plus anciens (voir {@link SavedNode#decode}).
+     * {@code role}, {@code port_kinds} and {@code macs} only exist since lot 1b: they are optional to
+     * reread older worlds (see {@link SavedNode#decode}).
      */
     static final Codec<SavedNode> NODE = RecordCodecBuilder.create(i -> i.group(
             DEVICE_ID.fieldOf("id").forGetter(saved -> saved.node().id()),

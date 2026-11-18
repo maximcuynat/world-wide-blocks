@@ -7,29 +7,29 @@ import io.github.maximcuynat.worldwideblocks.message.MessageArg;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 
 /**
- * Descriptions en anglais du réseau pour le log : identifiants de bloc plutôt que noms traduits, même
- * format d'appareil que les messages ({@link MessageArg.Device#logText()}).
+ * English descriptions of the network for the log: block ids rather than translated names, same
+ * device format as the messages ({@link MessageArg.Device#logText()}).
  *
- * <p>Java pur, sans classe Minecraft.
+ * <p>Plain Java, no Minecraft class.
  */
 public final class NetworkDescriptions {
 
     private NetworkDescriptions() {
     }
 
-    /** Par exemple {@code worldwideblocks:internet_box [12, 64, -5] minecraft:overworld}. */
+    /** For example {@code worldwideblocks:internet_box [12, 64, -5] minecraft:overworld}. */
     public static String device(NetworkGraph graph, DeviceId id) {
         String type = graph.node(id).map(NetworkNode::deviceType).orElse("?");
         return MessageArg.device(id, type).logText();
     }
 
-    /** Un port d'un appareil, avec sa MAC : {@code … port 2 (MAC 02:…)}. */
+    /** A port of a device, with its MAC: {@code … port 2 (MAC 02:…)}. */
     public static String port(NetworkGraph graph, PortRef port) {
         String mac = graph.macOf(port).map(m -> " (MAC " + m + ")").orElse("");
         return device(graph, port.device()) + " port " + port.displayNumber() + mac;
     }
 
-    /** État de chaque port : {@code 1 free (MAC …), 2 connected (MAC …), 5 line inactive}. */
+    /** State of each port: {@code 1 free (MAC …), 2 connected (MAC …), 5 line inactive}. */
     public static String ports(NetworkGraph graph, NetworkNode node) {
         List<String> parts = new ArrayList<>();
         List<MacAddress> macs = graph.macsOf(node.id());

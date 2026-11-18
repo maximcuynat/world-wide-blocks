@@ -13,7 +13,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class ModBlocks {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(WorldWideBlocks.MODID);
 
-    // Les appareils réseau refusent les pistons : le moteur réseau les identifie par leur position.
+    // Network devices refuse pistons: the network engine identifies them by their position.
     public static final DeferredBlock<PcTowerBlock> PC_TOWER = BLOCKS.registerBlock("pc_tower", PcTowerBlock::new,
             p -> p.mapColor(MapColor.COLOR_GRAY).strength(2.0F).sound(SoundType.METAL).noOcclusion()
                     .pushReaction(PushReaction.IMMOVEABLE));

@@ -4,17 +4,17 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Appareil connu du moteur réseau. Il est enregistré à la pose du bloc et existe même quand
- * son chunk n'est pas chargé : le moteur sait ainsi quels ports il a et comment il se comporte
- * sans charger le monde.
+ * Device known to the network engine. It is registered when the block is placed and exists even when
+ * its chunk is not loaded: the engine thus knows which ports it has and how it behaves
+ * without loading the world.
  *
- * <p>Ce record décrit ce que le bloc déclare (type, rôle et ports). Il est reconstruit depuis le bloc
- * puis comparé à celui du moteur : il ne porte donc pas les adresses MAC, que le graphe attribue et
- * garde à part.
+ * <p>This record describes what the block declares (type, role and ports). It is rebuilt from the block
+ * then compared with the engine's: it therefore does not carry the MAC addresses, which the graph assigns and
+ * keeps separately.
  *
- * @param deviceType identifiant du bloc, par exemple {@code worldwideblocks:pc_tower}
- * @param role       comportement de l'appareil dans la simulation
- * @param ports      type de chaque port, dans l'ordre des numéros de port
+ * @param deviceType block identifier, for example {@code worldwideblocks:pc_tower}
+ * @param role       behavior of the device in the simulation
+ * @param ports      kind of each port, in port number order
  */
 public record NetworkNode(DeviceId id, String deviceType, DeviceRole role, List<PortKind> ports) {
 
@@ -23,7 +23,7 @@ public record NetworkNode(DeviceId id, String deviceType, DeviceRole role, List<
         ports = List.copyOf(ports);
     }
 
-    /** Poste dont tous les ports sont des prises Ethernet. */
+    /** Computer whose ports are all Ethernet jacks. */
     public NetworkNode(DeviceId id, String deviceType, int ethernetPorts) {
         this(id, deviceType, DeviceRole.HOST, PortKind.ethernet(ethernetPorts));
     }

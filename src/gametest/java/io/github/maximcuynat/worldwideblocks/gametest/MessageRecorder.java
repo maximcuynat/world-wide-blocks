@@ -9,9 +9,9 @@ import io.github.maximcuynat.worldwideblocks.message.MessageListener;
 import io.github.maximcuynat.worldwideblocks.message.SentMessage;
 
 /**
- * Retient chaque message envoyé par le module des messages pendant un test : canal, niveau, clé,
- * valeurs, destinataire, temps de jeu. Les tests d'un même lot partagent le serveur : chaque test
- * filtre ce qu'il lit par son joueur (ou ses appareils).
+ * Records each message sent by the message module during a test: channel, level, key, values,
+ * recipient, game time. The tests of one batch share the server: each test filters what it reads
+ * by its player (or its devices).
  */
 public final class MessageRecorder implements MessageListener {
     private final List<SentMessage> messages = new ArrayList<>();
@@ -21,21 +21,21 @@ public final class MessageRecorder implements MessageListener {
         this.messages.add(message);
     }
 
-    /** Messages reçus par ce joueur sur ce canal, avec cette clé. */
+    /** Messages received by this player on this channel, with this key. */
     public List<SentMessage> to(UUID player, MessageChannel channel, String key) {
         return this.messages.stream()
                 .filter(message -> message.sentTo(player) && message.channel() == channel && message.key().equals(key))
                 .toList();
     }
 
-    /** Lignes du log de cette clé (événements réseau), tous appareils confondus : à filtrer par appareil. */
+    /** Log lines of this key (network events), all devices together: filter them by device. */
     public List<SentMessage> logs(String key) {
         return this.messages.stream()
                 .filter(message -> message.channel() == MessageChannel.LOG && message.key().equals(key))
                 .toList();
     }
 
-    /** Tous les messages reçus par ce joueur, pour expliquer un échec. */
+    /** All messages received by this player, to explain a failure. */
     public List<SentMessage> to(UUID player) {
         return this.messages.stream().filter(message -> message.sentTo(player)).toList();
     }

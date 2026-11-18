@@ -1,19 +1,19 @@
 package io.github.maximcuynat.worldwideblocks.network;
 
-/** Issue d'une tentative de branchement. */
+/** Outcome of an attempt to connect. */
 public enum ConnectResult {
     OK("ok"),
-    /** Une des extrémités n'est pas un appareil connu, ou le port n'existe pas sur cet appareil. */
+    /** One end is not a known device, or the port does not exist on that device. */
     NOT_A_DEVICE("not_a_device"),
-    /** Un des deux ports n'accepte pas ce type de câble (arrivée de ligne de la box, par exemple). */
+    /** One of the two ports does not accept this kind of cable (the box's line input, for example). */
     INCOMPATIBLE_PORT("incompatible_port"),
-    /** Les deux extrémités sont le même appareil. */
+    /** Both ends are the same device. */
     SAME_DEVICE("same_device"),
-    /** Les deux appareils ne sont pas dans la même dimension. */
+    /** The two devices are not in the same dimension. */
     OTHER_DIMENSION("other_dimension"),
-    /** La distance dépasse la longueur maximale du support. */
+    /** The distance exceeds the maximum length of the medium. */
     TOO_FAR("too_far"),
-    /** Un des deux ports a déjà un câble. */
+    /** One of the two ports already has a cable. */
     PORT_IN_USE("port_in_use");
 
     private final String key;
@@ -22,7 +22,7 @@ public enum ConnectResult {
         this.key = key;
     }
 
-    /** Suffixe de la clé de traduction du message montré au joueur. */
+    /** Suffix of the translation key of the message shown to the player. */
     public String key() {
         return this.key;
     }

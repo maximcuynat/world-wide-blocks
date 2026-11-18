@@ -34,13 +34,13 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Décor réseau d'un test : appareils posés comme de vrais blocs, câbles, joueurs de test.
+ * Network scene of a test: devices placed as real blocks, cables, test players.
  *
- * <p>Tous les tests partagent le même moteur réseau. À la fin du test, réussi ou non, la scène
- * déconnecte ses joueurs et retire ses appareils du monde et du moteur : rien de ce test ne continue
- * à émettre des trames pendant les suivants.
+ * <p>All tests share the same network engine. At the end of the test, passed or not, the scene
+ * disconnects its players and removes its devices from the world and from the engine: nothing from
+ * this test keeps sending frames during the following ones.
  *
- * <p>Elle écoute le module des messages pendant tout le test ({@link #messages()}).
+ * <p>It listens to the message module during the whole test ({@link #messages()}).
  */
 public final class NetworkScene implements GameTestListener {
     private final GameTestHelper helper;
@@ -68,17 +68,17 @@ public final class NetworkScene implements GameTestListener {
         return NetworkManager.of(this.helper.getLevel().getServer());
     }
 
-    /** Pose un appareil (bloc réel : il s'enregistre dans le moteur comme posé par un joueur). */
+    /** Places a device (real block: it registers in the engine as if placed by a player). */
     public DeviceId place(BlockPos relative, Block block) {
         this.helper.setBlock(relative, block);
         BlockPos absolute = this.helper.absolutePos(relative);
         this.devices.add(absolute);
         DeviceId id = this.id(relative);
-        this.helper.assertTrue(this.network().node(id).isPresent(), "Appareil non enregistré dans le moteur : " + id);
+        this.helper.assertTrue(this.network().node(id).isPresent(), "Device not registered in the engine: " + id);
         return id;
     }
 
-    /** Prend en charge, pour le nettoyage de fin de test, des appareils posés par un autre code. */
+    /** Takes over, for the cleanup at the end of the test, devices placed by other code. */
     public void adopt(List<BlockPos> absolutePositions) {
         this.devices.addAll(absolutePositions);
     }
@@ -87,26 +87,26 @@ public final class NetworkScene implements GameTestListener {
         return NetworkDevices.idOf(this.helper.getLevel(), this.helper.absolutePos(relative));
     }
 
-    /** Relie le premier port libre de chaque appareil, sans cordon consommé (comme en créatif). */
+    /** Links the first free port of each device, with no cord used (as in creative). */
     public Link cable(DeviceId a, DeviceId b) {
         PortRef portA = this.firstFreePort(a);
         PortRef portB = this.firstFreePort(b);
         ConnectOutcome outcome = this.network().connect(portA, portB, LinkMedium.COPPER_ETHERNET, false);
-        this.helper.assertTrue(outcome.isSuccess(), "Câble refusé entre " + portA + " et " + portB + " : " + outcome.result());
+        this.helper.assertTrue(outcome.isSuccess(), "Cable refused between " + portA + " and " + portB + ": " + outcome.result());
         return outcome.link().orElseThrow();
     }
 
     private PortRef firstFreePort(DeviceId device) {
         return this.network().firstFreePort(device, LinkMedium.COPPER_ETHERNET)
-                .orElseThrow(() -> this.helper.assertionException(Component.literal("Aucun port libre sur " + device)));
+                .orElseThrow(() -> this.helper.assertionException(Component.literal("No free port on " + device)));
     }
 
-    /** Connecte un nouveau joueur de test, debout dans la zone du test. */
+    /** Connects a new test player, standing in the test area. */
     public TestPlayer player(GameType gameType) {
         return this.player(UUID.randomUUID(), gameType);
     }
 
-    /** Connecte un joueur avec cet identifiant : s'il a déjà joué dans ce monde, c'est une reconnexion. */
+    /** Connects a player with this id: if they already played in this world, it is a reconnection. */
     public TestPlayer player(UUID id, GameType gameType) {
         TestPlayer player = TestPlayer.connect(this.helper, id, gameType, new Vec3(1.5, 0.0, 1.5));
         this.players.add(player);
@@ -114,8 +114,8 @@ public final class NetworkScene implements GameTestListener {
     }
 
     /**
-     * Clic droit sur un appareil avec ce qui est en main, par le même chemin qu'un clic reçu d'un vrai
-     * client (événement de NeoForge, {@code onItemUseFirst}, bloc, puis objet).
+     * Right-click on a device with what is in hand, through the same path as a click received from a
+     * real client (NeoForge event, {@code onItemUseFirst}, block, then item).
      */
     public InteractionResult rightClick(TestPlayer player, BlockPos relative) {
         BlockPos absolute = this.helper.absolutePos(relative);
@@ -124,7 +124,7 @@ public final class NetworkScene implements GameTestListener {
                 player.getItemInHand(InteractionHand.MAIN_HAND), InteractionHand.MAIN_HAND, hit);
     }
 
-    /** Accroupi + clic droit sur un appareil. */
+    /** Sneaking + right-click on a device. */
     public InteractionResult sneakRightClick(TestPlayer player, BlockPos relative) {
         player.setShiftKeyDown(true);
         try {
@@ -134,23 +134,23 @@ public final class NetworkScene implements GameTestListener {
         }
     }
 
-    /** Le joueur casse l'appareil, par le même chemin que dans le jeu (gouttes selon son mode de jeu). */
+    /** The player breaks the device, through the same path as in the game (drops depend on the game mode). */
     public void breakAsPlayer(TestPlayer player, BlockPos relative) {
-        this.helper.assertTrue(player.gameMode.destroyBlock(this.helper.absolutePos(relative)), "Casse refusée en " + relative);
+        this.helper.assertTrue(player.gameMode.destroyBlock(this.helper.absolutePos(relative)), "Break refused at " + relative);
     }
 
-    /** Explosion centrée sur ce bloc, qui détruit les blocs comme une créature explosive. */
+    /** Explosion centered on this block, which destroys blocks like an explosive mob. */
     public void explodeAt(BlockPos relative, float power) {
         Vec3 center = Vec3.atCenterOf(this.helper.absolutePos(relative));
         this.helper.getLevel().explode(null, center.x, center.y, center.z, power, Level.ExplosionInteraction.BLOCK);
     }
 
-    /** Temps de jeu en ticks, celui de la simulation réseau. */
+    /** Game time in ticks, the one of the network simulation. */
     public long gameTime() {
         return this.helper.getLevel().getServer().overworld().getGameTime();
     }
 
-    /** Vrai si un cordon de l'inventaire attend encore d'être branché. */
+    /** True if a cord in the inventory is still waiting to be plugged in. */
     public boolean hasPendingCord(TestPlayer player) {
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
             if (player.getInventory().getItem(slot).has(ModDataComponents.CABLE_START.get())) {
@@ -160,12 +160,12 @@ public final class NetworkScene implements GameTestListener {
         return false;
     }
 
-    /** Cordons dans l'inventaire du joueur. */
+    /** Cords in the player's inventory. */
     public int cordsHeldBy(TestPlayer player) {
         return player.getInventory().countItem(ModItems.ETHERNET_CABLE.get());
     }
 
-    /** Cordons tombés au sol dans la zone du test. */
+    /** Cords dropped on the ground in the test area. */
     public int cordsOnGround() {
         int count = 0;
         for (ItemEntity item : this.helper.getLevel().getEntitiesOfClass(ItemEntity.class, this.helper.getBoundsWithPadding())) {
@@ -176,16 +176,16 @@ public final class NetworkScene implements GameTestListener {
         return count;
     }
 
-    /** Messages envoyés par le module depuis le début du test. */
+    /** Messages sent by the module since the start of the test. */
     public MessageRecorder messages() {
         return this.messages;
     }
 
-    /** Vérifie que le joueur a reçu exactement {@code expected} messages de cette clé sur ce canal. */
+    /** Checks that the player received exactly {@code expected} messages of this key on this channel. */
     public void assertMessages(TestPlayer player, MessageChannel channel, String key, int expected) {
         int received = this.messages.to(player.getUUID(), channel, key).size();
-        this.helper.assertTrue(received == expected, "Message " + key + " (" + channel + ") reçu " + received
-                + " fois au lieu de " + expected + ". Messages reçus : "
+        this.helper.assertTrue(received == expected, "Message " + key + " (" + channel + ") received " + received
+                + " times instead of " + expected + ". Messages received: "
                 + this.messages.to(player.getUUID()).stream().map(m -> m.channel() + " " + m.key()).toList());
     }
 
@@ -197,7 +197,7 @@ public final class NetworkScene implements GameTestListener {
         for (BlockPos pos : this.devices) {
             DeviceId id = NetworkDevices.idOf(this.helper.getLevel(), pos);
             this.helper.getLevel().setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-            // Sans effet si le retrait du bloc l'a déjà fait (cas normal) : filet de sécurité.
+            // No effect if removing the block already did it (normal case): safety net.
             network.removeDevice(id);
         }
         this.devices.clear();

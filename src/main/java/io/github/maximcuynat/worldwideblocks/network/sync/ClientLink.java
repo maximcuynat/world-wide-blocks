@@ -11,8 +11,8 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
 /**
- * Ce que le client sait d'un câble : ses deux extrémités dans la dimension où se trouve le joueur.
- * Le client s'en sert uniquement pour l'affichage.
+ * What the client knows about a cable: its two ends in the dimension where the player is.
+ * The client uses it only for display.
  */
 public record ClientLink(UUID id, BlockPos a, int portA, BlockPos b, int portB) {
     public static final StreamCodec<ByteBuf, ClientLink> STREAM_CODEC = StreamCodec.composite(

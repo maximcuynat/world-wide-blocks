@@ -6,7 +6,7 @@ import io.github.maximcuynat.worldwideblocks.message.MessageArg;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
-/** Met en texte, dans la langue du joueur, une clé et des valeurs reçues du serveur (messages et panneau). */
+/** Turns a key and values received from the server into text, in the player's language (messages and panel). */
 final class ClientText {
 
     private ClientText() {

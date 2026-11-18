@@ -10,11 +10,11 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class EthernetFrameTest {
-    private static final MacAddress POSTE = new MacAddress(0x02_00_00_00_00_01L);
-    private static final MacAddress AUTRE = new MacAddress(0x02_00_00_00_00_02L);
+    private static final MacAddress HOST = new MacAddress(0x02_00_00_00_00_01L);
+    private static final MacAddress OTHER = new MacAddress(0x02_00_00_00_00_02L);
 
     @Test
-    void lesTypesSontLesValeursOfficielles() {
+    void theTypesAreTheOfficialValues() {
         assertEquals(0x0800, EtherType.IPV4.value());
         assertEquals(0x0806, EtherType.ARP.value());
         assertEquals(0x88B5, EtherType.LOCAL_EXPERIMENTAL.value());
@@ -23,27 +23,27 @@ class EthernetFrameTest {
     }
 
     @Test
-    void laTrameDePresenceUtiliseLeTypeExperimental() {
-        EthernetFrame frame = new EthernetFrame(POSTE, MacAddress.BROADCAST, PresencePayload.INSTANCE);
+    void thePresenceFrameUsesTheExperimentalType() {
+        EthernetFrame frame = new EthernetFrame(HOST, MacAddress.BROADCAST, PresencePayload.INSTANCE);
 
         assertEquals(EtherType.LOCAL_EXPERIMENTAL, frame.type());
         assertTrue(frame.isBroadcast());
     }
 
     @Test
-    void uneTrameUnicastNEstPasDiffusee() {
-        assertFalse(new EthernetFrame(POSTE, AUTRE, PresencePayload.INSTANCE).isBroadcast());
+    void aUnicastFrameIsNotBroadcast() {
+        assertFalse(new EthernetFrame(HOST, OTHER, PresencePayload.INSTANCE).isBroadcast());
     }
 
     @Test
-    void refuseUnTypeIncoherentAvecLeContenu() {
+    void rejectsATypeInconsistentWithThePayload() {
         assertThrows(IllegalArgumentException.class,
-                () -> new EthernetFrame(POSTE, AUTRE, EtherType.ARP, PresencePayload.INSTANCE));
+                () -> new EthernetFrame(HOST, OTHER, EtherType.ARP, PresencePayload.INSTANCE));
     }
 
     @Test
-    void refuseUneSourceDeGroupe() {
+    void rejectsAGroupSource() {
         assertThrows(IllegalArgumentException.class,
-                () -> new EthernetFrame(MacAddress.BROADCAST, AUTRE, PresencePayload.INSTANCE));
+                () -> new EthernetFrame(MacAddress.BROADCAST, OTHER, PresencePayload.INSTANCE));
     }
 }

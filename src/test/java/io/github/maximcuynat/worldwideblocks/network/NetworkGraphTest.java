@@ -22,7 +22,7 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 class NetworkGraphTest {
     private static final String OVERWORLD = "minecraft:overworld";
     private static final String NETHER = "minecraft:the_nether";
-    private static final LinkMedium CUIVRE = LinkMedium.COPPER_ETHERNET;
+    private static final LinkMedium COPPER = LinkMedium.COPPER_ETHERNET;
 
     private NetworkGraph graph;
 
@@ -31,7 +31,7 @@ class NetworkGraphTest {
         this.graph = new NetworkGraph(new SplittableRandom(42));
     }
 
-    /** Enregistre un appareil à 1 port dans l'Overworld et renvoie son port 0. */
+    /** Registers a 1-port device in the Overworld and returns its port 0. */
     private PortRef device(int x, int y, int z) {
         return this.device(OVERWORLD, x, y, z, 1);
     }
@@ -46,41 +46,41 @@ class NetworkGraphTest {
     class NetworkKey {
 
         @Test
-        void unAppareilSeulEstSonPropreReseau() {
-            DeviceId seul = device(5, 64, 0).device();
+        void aLoneDeviceIsItsOwnNetwork() {
+            DeviceId alone = device(5, 64, 0).device();
 
-            assertEquals(seul, graph.networkKey(seul));
-            DeviceId inconnu = new DeviceId(OVERWORLD, 99, 64, 0);
-            assertEquals(inconnu, graph.networkKey(inconnu));
+            assertEquals(alone, graph.networkKey(alone));
+            DeviceId unknown = new DeviceId(OVERWORLD, 99, 64, 0);
+            assertEquals(unknown, graph.networkKey(unknown));
         }
 
         @Test
-        void tousLesAppareilsReliesDonnentLaMemeCleLePlusPetitIdentifiant() {
-            PortRef centre = device(OVERWORLD, 10, 64, 0, 3);
-            PortRef gauche = device(-4, 64, 0);
-            PortRef droite = device(20, 64, 0);
-            graph.connect(new PortRef(centre.device(), 0), gauche, CUIVRE, true);
-            graph.connect(new PortRef(centre.device(), 1), droite, CUIVRE, true);
-            DeviceId isole = device(-50, 64, 0).device();
+        void allLinkedDevicesGiveTheSameKeyTheSmallestId() {
+            PortRef center = device(OVERWORLD, 10, 64, 0, 3);
+            PortRef left = device(-4, 64, 0);
+            PortRef right = device(20, 64, 0);
+            graph.connect(new PortRef(center.device(), 0), left, COPPER, true);
+            graph.connect(new PortRef(center.device(), 1), right, COPPER, true);
+            DeviceId isolated = device(-50, 64, 0).device();
 
-            for (PortRef port : List.of(centre, gauche, droite)) {
-                assertEquals(gauche.device(), graph.networkKey(port.device()));
+            for (PortRef port : List.of(center, left, right)) {
+                assertEquals(left.device(), graph.networkKey(port.device()));
             }
-            assertEquals(isole, graph.networkKey(isole));
+            assertEquals(isolated, graph.networkKey(isolated));
         }
 
         @Test
-        void unDebranchementCoupeLeReseauEnDeux() {
-            PortRef centre = device(OVERWORLD, 10, 64, 0, 3);
-            PortRef gauche = device(-4, 64, 0);
-            PortRef droite = device(20, 64, 0);
-            graph.connect(new PortRef(centre.device(), 0), gauche, CUIVRE, true);
-            graph.connect(new PortRef(centre.device(), 1), droite, CUIVRE, true);
+        void anUnplugSplitsTheNetworkInTwo() {
+            PortRef center = device(OVERWORLD, 10, 64, 0, 3);
+            PortRef left = device(-4, 64, 0);
+            PortRef right = device(20, 64, 0);
+            graph.connect(new PortRef(center.device(), 0), left, COPPER, true);
+            graph.connect(new PortRef(center.device(), 1), right, COPPER, true);
 
-            graph.disconnect(gauche);
+            graph.disconnect(left);
 
-            assertEquals(gauche.device(), graph.networkKey(gauche.device()));
-            assertEquals(centre.device(), graph.networkKey(droite.device()));
+            assertEquals(left.device(), graph.networkKey(left.device()));
+            assertEquals(center.device(), graph.networkKey(right.device()));
         }
     }
 
@@ -88,11 +88,11 @@ class NetworkGraphTest {
     class Connect {
 
         @Test
-        void okCreeLeLienEtOccupeLesDeuxPorts() {
+        void okCreatesTheLinkAndOccupiesBothPorts() {
             PortRef a = device(0, 64, 0);
             PortRef b = device(10, 64, 0);
 
-            ConnectOutcome outcome = graph.connect(a, b, CUIVRE, true);
+            ConnectOutcome outcome = graph.connect(a, b, COPPER, true);
 
             assertEquals(ConnectResult.OK, outcome.result());
             Link link = outcome.link().orElseThrow();
@@ -105,73 +105,73 @@ class NetworkGraphTest {
         }
 
         @Test
-        void retientQuUnCordonNAPasEteConsomme() {
-            Link link = graph.connect(device(0, 64, 0), device(1, 64, 0), CUIVRE, false).link().orElseThrow();
+        void remembersThatNoCordWasConsumed() {
+            Link link = graph.connect(device(0, 64, 0), device(1, 64, 0), COPPER, false).link().orElseThrow();
 
             assertFalse(link.cableConsumed());
         }
 
         @Test
-        void notADeviceSiUneExtremiteEstInconnue() {
+        void notADeviceWhenAnEndIsUnknown() {
             PortRef a = device(0, 64, 0);
-            PortRef inconnu = new PortRef(new DeviceId(OVERWORLD, 5, 64, 0), 0);
+            PortRef unknown = new PortRef(new DeviceId(OVERWORLD, 5, 64, 0), 0);
 
-            assertEquals(ConnectResult.NOT_A_DEVICE, graph.connect(a, inconnu, CUIVRE, true).result());
-            assertEquals(ConnectResult.NOT_A_DEVICE, graph.connect(inconnu, a, CUIVRE, true).result());
+            assertEquals(ConnectResult.NOT_A_DEVICE, graph.connect(a, unknown, COPPER, true).result());
+            assertEquals(ConnectResult.NOT_A_DEVICE, graph.connect(unknown, a, COPPER, true).result());
             assertTrue(graph.links().isEmpty());
         }
 
         @Test
-        void notADeviceSiLePortNExistePas() {
+        void notADeviceWhenThePortDoesNotExist() {
             PortRef a = device(0, 64, 0);
             PortRef b = device(5, 64, 0);
 
-            assertEquals(ConnectResult.NOT_A_DEVICE, graph.connect(a, new PortRef(b.device(), 1), CUIVRE, true).result());
-            assertEquals(ConnectResult.NOT_A_DEVICE, graph.connect(a, new PortRef(b.device(), -1), CUIVRE, true).result());
+            assertEquals(ConnectResult.NOT_A_DEVICE, graph.connect(a, new PortRef(b.device(), 1), COPPER, true).result());
+            assertEquals(ConnectResult.NOT_A_DEVICE, graph.connect(a, new PortRef(b.device(), -1), COPPER, true).result());
         }
 
         @Test
-        void sameDeviceSiLesDeuxExtremitesSontLeMemeAppareil() {
+        void sameDeviceWhenBothEndsAreTheSameDevice() {
             PortRef port0 = device(OVERWORLD, 0, 64, 0, 2);
             PortRef port1 = new PortRef(port0.device(), 1);
 
-            assertEquals(ConnectResult.SAME_DEVICE, graph.connect(port0, port1, CUIVRE, true).result());
-            assertEquals(ConnectResult.SAME_DEVICE, graph.connect(port0, port0, CUIVRE, true).result());
+            assertEquals(ConnectResult.SAME_DEVICE, graph.connect(port0, port1, COPPER, true).result());
+            assertEquals(ConnectResult.SAME_DEVICE, graph.connect(port0, port0, COPPER, true).result());
         }
 
         @Test
-        void otherDimensionSiLesAppareilsSontDansDeuxDimensions() {
+        void otherDimensionWhenTheDevicesAreInTwoDimensions() {
             PortRef a = device(OVERWORLD, 0, 64, 0, 1);
             PortRef b = device(NETHER, 0, 64, 0, 1);
 
-            assertEquals(ConnectResult.OTHER_DIMENSION, graph.connect(a, b, CUIVRE, true).result());
+            assertEquals(ConnectResult.OTHER_DIMENSION, graph.connect(a, b, COPPER, true).result());
         }
 
         @Test
-        void tooFarAuDelaDeCentBlocs() {
+        void tooFarBeyondOneHundredBlocks() {
             PortRef a = device(0, 64, 0);
-            PortRef aCent = device(100, 64, 0);
-            PortRef aCentUn = device(0, 64, 101);
+            PortRef atHundred = device(100, 64, 0);
+            PortRef atHundredAndOne = device(0, 64, 101);
 
-            assertEquals(ConnectResult.TOO_FAR, graph.connect(a, aCentUn, CUIVRE, true).result());
-            assertEquals(ConnectResult.OK, graph.connect(a, aCent, CUIVRE, true).result(), "100 blocs pile reste autorisé");
+            assertEquals(ConnectResult.TOO_FAR, graph.connect(a, atHundredAndOne, COPPER, true).result());
+            assertEquals(ConnectResult.OK, graph.connect(a, atHundred, COPPER, true).result(), "exactly 100 blocks stays allowed");
         }
 
         @Test
-        void tooFarMesureEnLigneDroite() {
-            // 60 x 60 x 60 : 103,9 blocs en diagonale, chaque axe est sous 100.
-            assertEquals(ConnectResult.TOO_FAR, graph.connect(device(0, 0, 0), device(60, 60, 60), CUIVRE, true).result());
+        void tooFarIsMeasuredInAStraightLine() {
+            // 60 x 60 x 60: 103.9 blocks on the diagonal, every axis is under 100.
+            assertEquals(ConnectResult.TOO_FAR, graph.connect(device(0, 0, 0), device(60, 60, 60), COPPER, true).result());
         }
 
         @Test
-        void portInUseSiLUnDesDeuxPortsEstDejaBranche() {
+        void portInUseWhenOneOfTheTwoPortsIsAlreadyConnected() {
             PortRef a = device(0, 64, 0);
             PortRef b = device(5, 64, 0);
             PortRef c = device(10, 64, 0);
-            graph.connect(a, b, CUIVRE, true);
+            graph.connect(a, b, COPPER, true);
 
-            assertEquals(ConnectResult.PORT_IN_USE, graph.connect(a, c, CUIVRE, true).result());
-            assertEquals(ConnectResult.PORT_IN_USE, graph.connect(c, b, CUIVRE, true).result());
+            assertEquals(ConnectResult.PORT_IN_USE, graph.connect(a, c, COPPER, true).result());
+            assertEquals(ConnectResult.PORT_IN_USE, graph.connect(c, b, COPPER, true).result());
             assertEquals(1, graph.links().size());
         }
     }
@@ -180,10 +180,10 @@ class NetworkGraphTest {
     class Disconnect {
 
         @Test
-        void retireLeLienEtLibereLesDeuxPorts() {
+        void removesTheLinkAndFreesBothPorts() {
             PortRef a = device(0, 64, 0);
             PortRef b = device(5, 64, 0);
-            Link link = graph.connect(a, b, CUIVRE, true).link().orElseThrow();
+            Link link = graph.connect(a, b, COPPER, true).link().orElseThrow();
 
             assertEquals(Optional.of(link), graph.disconnect(b));
             assertTrue(graph.linkAt(a).isEmpty());
@@ -192,19 +192,19 @@ class NetworkGraphTest {
         }
 
         @Test
-        void renvoieVideSurUnPortLibre() {
+        void returnsEmptyOnAFreePort() {
             assertTrue(graph.disconnect(device(0, 64, 0)).isEmpty());
         }
 
         @Test
-        void unPortLibereAccepteUnNouveauCable() {
+        void aFreedPortAcceptsANewCable() {
             PortRef a = device(0, 64, 0);
             PortRef b = device(5, 64, 0);
             PortRef c = device(10, 64, 0);
-            graph.connect(a, b, CUIVRE, true);
+            graph.connect(a, b, COPPER, true);
             graph.disconnect(a);
 
-            assertEquals(ConnectResult.OK, graph.connect(a, c, CUIVRE, true).result());
+            assertEquals(ConnectResult.OK, graph.connect(a, c, COPPER, true).result());
         }
     }
 
@@ -212,29 +212,29 @@ class NetworkGraphTest {
     class RemoveDevice {
 
         @Test
-        void retireLAppareilEtSesCablesSansToucherAuxAutres() {
+        void removesTheDeviceAndItsCablesWithoutTouchingTheOthers() {
             PortRef hub = device(OVERWORLD, 0, 64, 0, 2);
             PortRef a = device(5, 64, 0);
             PortRef b = device(10, 64, 0);
             PortRef c = device(15, 64, 0);
             PortRef d = device(20, 64, 0);
-            Link versA = graph.connect(hub, a, CUIVRE, true).link().orElseThrow();
-            Link versB = graph.connect(new PortRef(hub.device(), 1), b, CUIVRE, false).link().orElseThrow();
-            Link autre = graph.connect(c, d, CUIVRE, true).link().orElseThrow();
+            Link toA = graph.connect(hub, a, COPPER, true).link().orElseThrow();
+            Link toB = graph.connect(new PortRef(hub.device(), 1), b, COPPER, false).link().orElseThrow();
+            Link other = graph.connect(c, d, COPPER, true).link().orElseThrow();
 
             List<Link> removed = graph.removeDevice(hub.device());
 
             assertEquals(2, removed.size());
-            assertTrue(removed.contains(versA));
-            assertTrue(removed.contains(versB));
+            assertTrue(removed.contains(toA));
+            assertTrue(removed.contains(toB));
             assertTrue(graph.node(hub.device()).isEmpty());
-            assertTrue(graph.linkAt(a).isEmpty(), "le port d'en face est libéré");
+            assertTrue(graph.linkAt(a).isEmpty(), "the port on the other side is freed");
             assertTrue(graph.linkAt(b).isEmpty());
-            assertEquals(List.of(autre), List.copyOf(graph.links()));
+            assertEquals(List.of(other), List.copyOf(graph.links()));
         }
 
         @Test
-        void unAppareilSansCableNeRenvoieRien() {
+        void aDeviceWithoutCableReturnsNothing() {
             PortRef a = device(0, 64, 0);
 
             assertTrue(graph.removeDevice(a.device()).isEmpty());
@@ -246,20 +246,20 @@ class NetworkGraphTest {
     class PutNode {
 
         @Test
-        void reenregistrerLeMemeAppareilGardeSesCables() {
+        void registeringTheSameDeviceAgainKeepsItsCables() {
             PortRef a = device(0, 64, 0);
             PortRef b = device(5, 64, 0);
-            graph.connect(a, b, CUIVRE, true);
+            graph.connect(a, b, COPPER, true);
 
             assertTrue(graph.putNode(new NetworkNode(a.device(), "worldwideblocks:pc_tower", 1)).isEmpty());
             assertEquals(1, graph.links().size());
         }
 
         @Test
-        void unAppareilRemplaceSansRetraitSignalePerdSesCables() {
+        void aDeviceReplacedWithoutRemovalLosesItsCables() {
             PortRef a = device(0, 64, 0);
             PortRef b = device(5, 64, 0);
-            Link link = graph.connect(a, b, CUIVRE, true).link().orElseThrow();
+            Link link = graph.connect(a, b, COPPER, true).link().orElseThrow();
 
             List<Link> removed = graph.putNode(new NetworkNode(a.device(), "worldwideblocks:laptop", 1));
 
@@ -272,20 +272,20 @@ class NetworkGraphTest {
     class FirstFreePort {
 
         @Test
-        void donneLePremierPortSansCable() {
+        void givesTheFirstPortWithoutCable() {
             PortRef port0 = device(OVERWORLD, 0, 64, 0, 3);
-            graph.connect(port0, device(5, 64, 0), CUIVRE, true);
+            graph.connect(port0, device(5, 64, 0), COPPER, true);
 
-            assertEquals(Optional.of(new PortRef(port0.device(), 1)), graph.firstFreePort(port0.device(), CUIVRE));
+            assertEquals(Optional.of(new PortRef(port0.device(), 1)), graph.firstFreePort(port0.device(), COPPER));
         }
 
         @Test
-        void videQuandTousLesPortsSontOccupesOuLAppareilInconnu() {
+        void emptyWhenAllPortsAreTakenOrTheDeviceIsUnknown() {
             PortRef a = device(0, 64, 0);
-            graph.connect(a, device(5, 64, 0), CUIVRE, true);
+            graph.connect(a, device(5, 64, 0), COPPER, true);
 
-            assertTrue(graph.firstFreePort(a.device(), CUIVRE).isEmpty());
-            assertTrue(graph.firstFreePort(new DeviceId(OVERWORLD, 99, 64, 99), CUIVRE).isEmpty());
+            assertTrue(graph.firstFreePort(a.device(), COPPER).isEmpty());
+            assertTrue(graph.firstFreePort(new DeviceId(OVERWORLD, 99, 64, 99), COPPER).isEmpty());
         }
     }
 
@@ -293,30 +293,30 @@ class NetworkGraphTest {
     class RestoreLink {
 
         @Test
-        void remetEnPlaceUnLienCoherentAvecSonIdentifiant() {
+        void restoresAConsistentLinkWithItsId() {
             PortRef a = device(0, 64, 0);
             PortRef b = device(5, 64, 0);
-            Link saved = new Link(UUID.randomUUID(), a, b, CUIVRE, false);
+            Link saved = new Link(UUID.randomUUID(), a, b, COPPER, false);
 
             assertTrue(graph.restoreLink(saved));
             assertEquals(Optional.of(saved), graph.linkAt(a));
         }
 
         @Test
-        void ignoreUnLienVersUnAppareilInconnuOuUnPortOccupe() {
+        void ignoresALinkToAnUnknownDeviceOrATakenPort() {
             PortRef a = device(0, 64, 0);
             PortRef b = device(5, 64, 0);
             PortRef c = device(10, 64, 0);
-            PortRef inconnu = new PortRef(new DeviceId(OVERWORLD, 50, 64, 0), 0);
-            graph.restoreLink(new Link(UUID.randomUUID(), a, b, CUIVRE, true));
+            PortRef unknown = new PortRef(new DeviceId(OVERWORLD, 50, 64, 0), 0);
+            graph.restoreLink(new Link(UUID.randomUUID(), a, b, COPPER, true));
 
-            assertFalse(graph.restoreLink(new Link(UUID.randomUUID(), a, inconnu, CUIVRE, true)));
-            assertFalse(graph.restoreLink(new Link(UUID.randomUUID(), c, b, CUIVRE, true)));
+            assertFalse(graph.restoreLink(new Link(UUID.randomUUID(), a, unknown, COPPER, true)));
+            assertFalse(graph.restoreLink(new Link(UUID.randomUUID(), c, b, COPPER, true)));
             assertEquals(1, graph.links().size());
         }
     }
 
-    /** Box : 4 prises Ethernet puis l'arrivée de ligne. */
+    /** Box: 4 Ethernet sockets, then the line input. */
     private DeviceId box(int x, int y, int z) {
         DeviceId id = new DeviceId(OVERWORLD, x, y, z);
         graph.putNode(new NetworkNode(id, "worldwideblocks:internet_box", DeviceRole.BOX,
@@ -325,24 +325,24 @@ class NetworkGraphTest {
     }
 
     @Nested
-    class TypesDePort {
+    class PortTypes {
 
         @Test
-        void lePremierPortLibreSauteLArriveeDeLigne() {
+        void theFirstFreePortSkipsTheLineInput() {
             DeviceId box = box(0, 64, 0);
             for (int i = 0; i < 4; i++) {
-                assertEquals(Optional.of(new PortRef(box, i)), graph.firstFreePort(box, CUIVRE));
-                graph.connect(new PortRef(box, i), device(10 + i, 64, 0), CUIVRE, true);
+                assertEquals(Optional.of(new PortRef(box, i)), graph.firstFreePort(box, COPPER));
+                graph.connect(new PortRef(box, i), device(10 + i, 64, 0), COPPER, true);
             }
 
-            assertTrue(graph.firstFreePort(box, CUIVRE).isEmpty());
+            assertTrue(graph.firstFreePort(box, COPPER).isEmpty());
         }
 
         @Test
-        void leCordonEthernetEstRefuseSurLArriveeDeLigne() {
+        void theEthernetCordIsRefusedOnTheLineInput() {
             DeviceId box = box(0, 64, 0);
 
-            ConnectOutcome outcome = graph.connect(new PortRef(box, 4), device(5, 64, 0), CUIVRE, true);
+            ConnectOutcome outcome = graph.connect(new PortRef(box, 4), device(5, 64, 0), COPPER, true);
 
             assertEquals(ConnectResult.INCOMPATIBLE_PORT, outcome.result());
             assertTrue(graph.links().isEmpty());
@@ -350,10 +350,10 @@ class NetworkGraphTest {
     }
 
     @Nested
-    class AdressesMac {
+    class MacAddresses {
 
         @Test
-        void uneMacParPortALaPremiereInscriptionAdministreeLocalementEtUnicast() {
+        void oneMacPerPortAtFirstRegistrationLocallyAdministeredAndUnicast() {
             DeviceId box = box(0, 64, 0);
 
             List<MacAddress> macs = graph.macsOf(box);
@@ -369,44 +369,44 @@ class NetworkGraphTest {
         }
 
         @Test
-        void reenregistrerLeMemeAppareilGardeSesMac() {
+        void registeringTheSameDeviceAgainKeepsItsMacs() {
             PortRef a = device(0, 64, 0);
-            List<MacAddress> avant = graph.macsOf(a.device());
+            List<MacAddress> before = graph.macsOf(a.device());
 
             graph.putNode(new NetworkNode(a.device(), "worldwideblocks:pc_tower", 1));
 
-            assertEquals(avant, graph.macsOf(a.device()));
+            assertEquals(before, graph.macsOf(a.device()));
         }
 
         @Test
-        void unAppareilRetirePuisReposeRecoitDeNouvellesMac() {
+        void aDeviceRemovedThenPlacedAgainGetsNewMacs() {
             PortRef a = device(0, 64, 0);
-            MacAddress avant = graph.macOf(a).orElseThrow();
+            MacAddress before = graph.macOf(a).orElseThrow();
 
             graph.removeDevice(a.device());
             assertTrue(graph.macsOf(a.device()).isEmpty());
             device(0, 64, 0);
 
-            assertNotEquals(avant, graph.macOf(a).orElseThrow());
+            assertNotEquals(before, graph.macOf(a).orElseThrow());
         }
 
         @Test
-        void unAppareilRemplaceRecoitDeNouvellesMac() {
+        void aReplacedDeviceGetsNewMacs() {
             PortRef a = device(0, 64, 0);
-            MacAddress avant = graph.macOf(a).orElseThrow();
+            MacAddress before = graph.macOf(a).orElseThrow();
 
             graph.putNode(new NetworkNode(a.device(), "worldwideblocks:laptop", 1));
 
-            assertNotEquals(avant, graph.macOf(a).orElseThrow());
+            assertNotEquals(before, graph.macOf(a).orElseThrow());
         }
 
         @Test
-        void uneMacDejaPriseEstTireeANouveau() {
-            // Le hasard renvoie deux fois la même valeur, puis une autre.
-            long[] tirages = {7L, 7L, 9L};
+        void aMacAlreadyTakenIsDrawnAgain() {
+            // The random source returns the same value twice, then another one.
+            long[] draws = {7L, 7L, 9L};
             int[] i = {0};
-            RandomGenerator truque = () -> tirages[Math.min(i[0]++, tirages.length - 1)];
-            NetworkGraph g = new NetworkGraph(truque);
+            RandomGenerator rigged = () -> draws[Math.min(i[0]++, draws.length - 1)];
+            NetworkGraph g = new NetworkGraph(rigged);
             DeviceId a = new DeviceId(OVERWORLD, 0, 64, 0);
             DeviceId b = new DeviceId(OVERWORLD, 1, 64, 0);
 
@@ -418,47 +418,47 @@ class NetworkGraphTest {
         }
 
         @Test
-        void desMacUniquesSurBeaucoupDAppareils() {
-            Set<MacAddress> vues = new HashSet<>();
+        void uniqueMacsAcrossManyDevices() {
+            Set<MacAddress> sightings = new HashSet<>();
             for (int x = 0; x < 200; x++) {
                 DeviceId box = box(x, 64, 0);
-                vues.addAll(graph.macsOf(box));
+                sightings.addAll(graph.macsOf(box));
             }
-            assertEquals(200 * 5, vues.size());
+            assertEquals(200 * 5, sightings.size());
         }
     }
 
     @Nested
     class RestoreNode {
         private final DeviceId id = new DeviceId(OVERWORLD, 0, 64, 0);
-        private final NetworkNode tour = new NetworkNode(this.id, "worldwideblocks:pc_tower", 1);
+        private final NetworkNode tower = new NetworkNode(this.id, "worldwideblocks:pc_tower", 1);
 
         @Test
-        void reprendLesMacSauvegardees() {
-            MacAddress sauvegardee = MacAddress.parse("02:11:22:33:44:55").orElseThrow();
+        void takesTheSavedMacs() {
+            MacAddress savedMac = MacAddress.parse("02:11:22:33:44:55").orElseThrow();
 
-            assertTrue(graph.restoreNode(this.tour, List.of(sauvegardee)));
-            assertEquals(List.of(sauvegardee), graph.macsOf(this.id));
-            assertEquals(Optional.of(this.tour), graph.node(this.id));
+            assertTrue(graph.restoreNode(this.tower, List.of(savedMac)));
+            assertEquals(List.of(savedMac), graph.macsOf(this.id));
+            assertEquals(Optional.of(this.tower), graph.node(this.id));
         }
 
         @Test
-        void genereDesMacPourUnMondeDAvantLeLot1b() {
-            assertFalse(graph.restoreNode(this.tour, List.of()));
+        void generatesMacsForAWorldFromBeforeLot1b() {
+            assertFalse(graph.restoreNode(this.tower, List.of()));
             assertEquals(1, graph.macsOf(this.id).size());
         }
 
         @Test
-        void genereDesMacQuandLesSauvegardeesSontInutilisables() {
+        void generatesMacsWhenTheSavedOnesAreUnusable() {
             MacAddress mac = MacAddress.parse("02:11:22:33:44:55").orElseThrow();
-            graph.restoreNode(this.tour, List.of(mac));
-            DeviceId autre = new DeviceId(OVERWORLD, 5, 64, 0);
+            graph.restoreNode(this.tower, List.of(mac));
+            DeviceId other = new DeviceId(OVERWORLD, 5, 64, 0);
 
-            // Doublon avec un autre appareil, adresse de diffusion, mauvais nombre.
-            assertFalse(graph.restoreNode(new NetworkNode(autre, "worldwideblocks:pc_tower", 1), List.of(mac)));
-            assertNotEquals(mac, graph.macsOf(autre).get(0));
-            assertFalse(graph.restoreNode(new NetworkNode(autre, "worldwideblocks:pc_tower", 1), List.of(MacAddress.BROADCAST)));
-            assertFalse(graph.restoreNode(new NetworkNode(autre, "worldwideblocks:pc_tower", 1), List.of(mac, mac)));
+            // Duplicate of another device, broadcast address, wrong count.
+            assertFalse(graph.restoreNode(new NetworkNode(other, "worldwideblocks:pc_tower", 1), List.of(mac)));
+            assertNotEquals(mac, graph.macsOf(other).get(0));
+            assertFalse(graph.restoreNode(new NetworkNode(other, "worldwideblocks:pc_tower", 1), List.of(MacAddress.BROADCAST)));
+            assertFalse(graph.restoreNode(new NetworkNode(other, "worldwideblocks:pc_tower", 1), List.of(mac, mac)));
         }
     }
 }

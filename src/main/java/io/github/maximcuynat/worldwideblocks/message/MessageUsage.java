@@ -1,9 +1,9 @@
 package io.github.maximcuynat.worldwideblocks.message;
 
-/** Pourquoi un message existe ; avec son niveau, il décide du canal (voir {@link MessageRouting}). */
+/** Why a message exists; with its level, it decides the channel (see {@link MessageRouting}). */
 public enum MessageUsage {
-    /** Réponse immédiate au geste d'un joueur (branchement, refus, débranchement). */
+    /** Immediate answer to a player's gesture (connection, refusal, unplugging). */
     GESTURE,
-    /** Événement du réseau, sans geste du joueur (boucle, réseau saturé). */
+    /** Network event, without a player gesture (loop, saturated network). */
     EVENT
 }

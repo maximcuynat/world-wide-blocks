@@ -3,13 +3,13 @@ package io.github.maximcuynat.worldwideblocks.network;
 import java.util.Optional;
 
 /**
- * Comportement d'un appareil dans la simulation. Il est fixe pour un type de bloc et sauvegardé
- * avec l'appareil, pour que la simulation tourne sans charger le monde.
+ * Behavior of a device in the simulation. It is fixed for a block type and saved
+ * with the device, so the simulation runs without loading the world.
  */
 public enum DeviceRole {
-    /** Poste : une carte réseau qui émet et reçoit pour lui-même (tour PC, portable). */
+    /** Computer: a network card that sends and receives for itself (PC tower, laptop). */
     HOST("host"),
-    /** Box internet : un switch sur ses ports réseau local, puis ses services (DHCP au lot 1b-2). */
+    /** Internet box: a switch on its local network ports, then its services (DHCP in lot 1b-2). */
     BOX("box");
 
     private final String serializedName;
@@ -18,7 +18,7 @@ public enum DeviceRole {
         this.serializedName = serializedName;
     }
 
-    /** Nom stocké dans la sauvegarde : ne jamais le changer une fois publié. */
+    /** Name stored in the save: never change it once published. */
     public String serializedName() {
         return this.serializedName;
     }

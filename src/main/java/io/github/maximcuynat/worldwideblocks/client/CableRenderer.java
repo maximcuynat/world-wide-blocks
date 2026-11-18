@@ -23,24 +23,25 @@ import net.neoforged.neoforge.client.event.ExtractLevelRenderStateEvent;
 import net.neoforged.neoforge.client.event.SubmitCustomGeometryEvent;
 
 /**
- * Dessine chaque câble comme une ligne tendue entre ses deux appareils, avec un léger affaissement
- * au milieu, ainsi que le câble tenu en main par un joueur dont l'autre bout est branché. Rendu provisoire du lot 1a : l'épaisseur et la texture du câble viendront au lot de finition.
+ * Draws each cable as a line stretched between its two devices, with a slight sag
+ * in the middle, as well as the cable held in hand by a player whose other end is connected. Provisional
+ * rendering of lot 1a: the thickness and texture of the cable will come in the finishing lot.
  *
- * <p>Comme l'exige le rendu de Minecraft 26.x, les câbles à dessiner sont relevés pendant
- * l'extraction de l'état de rendu, puis soumis comme géométrie à part.
+ * <p>As Minecraft 26.x rendering requires, the cables to draw are collected during
+ * the extraction of the render state, then submitted as separate geometry.
  */
 final class CableRenderer {
     private static final ContextKey<List<Cable>> CABLES = new ContextKey<>(Identifier.fromNamespaceAndPath(WorldWideBlocks.MODID, "cables"));
 
-    /** Bleu des cordons Ethernet courants, opaque. */
+    /** Blue of the common Ethernet cords, opaque. */
     private static final int COLOR = 0xFF2F6FD6;
     private static final int SEGMENTS = 16;
-    /** Hauteur de raccordement dans le bloc : un peu sous le centre, pour aller à la tour comme au portable. */
+    /** Attachment height in the block: a little below the center, to suit both the tower and the laptop. */
     private static final double ATTACH_HEIGHT = 0.3;
 
     private final ClientLinkCache cache;
 
-    /** Un câble à dessiner, en coordonnées du monde. */
+    /** A cable to draw, in world coordinates. */
     private record Cable(Vec3 a, Vec3 b) {
     }
 
@@ -63,8 +64,8 @@ final class CableRenderer {
     }
 
     /**
-     * Un joueur qui tient un cordon dont un bout est branché (branchement commencé, ou bout retiré
-     * d'un appareil) : on dessine le câble de l'appareil jusqu'à sa main.
+     * A player holding a cord with one end connected (connection started, or end taken off
+     * a device): the cable is drawn from the device to their hand.
      */
     private void extractHeldCables(ExtractLevelRenderStateEvent event, List<Cable> visible) {
         Minecraft minecraft = Minecraft.getInstance();
@@ -108,7 +109,7 @@ final class CableRenderer {
         });
     }
 
-    /** Une ligne brisée de {@link #SEGMENTS} segments, qui suit une parabole entre les deux extrémités. */
+    /** A broken line of {@link #SEGMENTS} segments, following a parabola between the two ends. */
     private static void drawCable(PoseStack.Pose pose, VertexConsumer buffer, Vec3 a, Vec3 b, double sag, float width) {
         Vec3 previous = pointAt(a, b, sag, 0.0);
         for (int i = 1; i <= SEGMENTS; i++) {
@@ -131,7 +132,7 @@ final class CableRenderer {
         return a.lerp(b, t).add(0.0, -sag * 4.0 * t * (1.0 - t), 0.0);
     }
 
-    /** Affaissement au milieu du câble, proportionnel à sa longueur et plafonné. */
+    /** Sag in the middle of the cable, proportional to its length and capped. */
     private static double sag(Vec3 a, Vec3 b) {
         return Math.min(0.04 * a.distanceTo(b), 1.5);
     }

@@ -19,17 +19,17 @@ import java.util.random.RandomGenerator;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 
 /**
- * Graphe du réseau : les appareils (noeuds) et les câbles (liens) qui relient leurs ports.
+ * Network graph: the devices (nodes) and the cables (links) that connect their ports.
  *
- * <p>C'est le coeur du moteur. Il est en Java pur, sans aucune classe Minecraft, pour être testé
- * sans lancer le jeu. Il ne sait rien des chunks : un lien existe tant qu'on ne l'a pas retiré.
- * Il décrit le matériel (appareils, ports, adresses MAC, câbles) ; les trames qui y circulent
- * sont l'affaire de la simulation.
+ * <p>This is the core of the engine. It is plain Java, with no Minecraft class, to be tested
+ * without launching the game. It knows nothing about chunks: a link exists until it is removed.
+ * It describes the hardware (devices, ports, MAC addresses, cables); the frames traveling through it
+ * are the simulation's business.
  *
- * <p>Chaque port reçoit une adresse MAC à la première inscription de son appareil. Elle lui reste
- * tant que l'appareil est inchangé ; un appareil retiré puis reposé, ou remplacé, en reçoit de nouvelles.
+ * <p>Each port gets a MAC address when its device is first registered. It stays with it
+ * as long as the device is unchanged; a device removed then placed again, or replaced, gets new ones.
  *
- * <p>Pas thread-safe : n'y accéder que depuis le thread du serveur.
+ * <p>Not thread-safe: access it only from the server thread.
  */
 public final class NetworkGraph {
     private final Map<DeviceId, NetworkNode> nodes = new LinkedHashMap<>();
@@ -44,12 +44,12 @@ public final class NetworkGraph {
         this(RandomGenerator.getDefault());
     }
 
-    /** @param random source des adresses MAC générées ; une graine fixe rend les tests reproductibles */
+    /** @param random source of the generated MAC addresses; a fixed seed makes tests reproducible */
     public NetworkGraph(RandomGenerator random) {
         this.random = random;
     }
 
-    // ---- Lecture ----
+    // ---- Reading ----
 
     public Optional<NetworkNode> node(DeviceId id) {
         return Optional.ofNullable(this.nodes.get(id));
@@ -78,10 +78,10 @@ public final class NetworkGraph {
     }
 
     /**
-     * Désigne le réseau de l'appareil : l'ensemble des appareils reliés à lui par des câbles, lui
-     * compris, représenté par le plus petit de leurs identifiants ({@link DeviceId#ORDER}). Deux
-     * appareils du même réseau donnent la même clé. Un appareil inconnu forme un réseau à lui seul.
-     * Parcours port par port, sans balayer tous les câbles.
+     * Designates the device's network: the set of devices linked to it by cables, itself
+     * included, represented by the smallest of their identifiers ({@link DeviceId#ORDER}). Two
+     * devices of the same network give the same key. An unknown device forms a network of its own.
+     * Walks port by port, without scanning all the cables.
      */
     public DeviceId networkKey(DeviceId device) {
         DeviceId smallest = device;
@@ -111,13 +111,13 @@ public final class NetworkGraph {
         return smallest;
     }
 
-    /** Câbles dont au moins une extrémité se trouve dans ce chunk. */
+    /** Cables with at least one end in this chunk. */
     public Collection<Link> linksTouching(ChunkKey chunk) {
         Set<Link> found = this.linksByChunk.get(chunk);
         return found == null ? List.of() : Collections.unmodifiableCollection(found);
     }
 
-    /** Premier port sans câble de l'appareil qui accepte ce support, s'il en reste un. */
+    /** First port without a cable on the device that accepts this medium, if one is left. */
     public Optional<PortRef> firstFreePort(DeviceId device, LinkMedium medium) {
         NetworkNode node = this.nodes.get(device);
         if (node == null) {
@@ -132,7 +132,7 @@ public final class NetworkGraph {
         return Optional.empty();
     }
 
-    /** Adresses MAC des ports de l'appareil, dans l'ordre des ports ; vide si l'appareil est inconnu. */
+    /** MAC addresses of the device's ports, in port order; empty if the device is unknown. */
     public List<MacAddress> macsOf(DeviceId device) {
         return this.macs.getOrDefault(device, List.of());
     }
@@ -145,10 +145,10 @@ public final class NetworkGraph {
     // ---- Modification ----
 
     /**
-     * Enregistre un appareil, ou le met à jour.
+     * Registers a device, or updates it.
      *
-     * @return les liens retirés : si l'appareil enregistré à cette position a changé (bloc remplacé
-     *         sans que son retrait ait été signalé), ses anciens câbles ne tiennent plus
+     * @return the removed links: if the device registered at this position changed (block replaced
+     *         without its removal having been reported), its old cables no longer hold
      */
     public List<Link> putNode(NetworkNode node) {
         NetworkNode previous = this.nodes.put(node.id(), node);
@@ -156,18 +156,18 @@ public final class NetworkGraph {
             return List.of();
         }
         List<Link> removed = previous == null ? List.of() : this.removeLinksOf(node.id());
-        // Nouvel appareil, ou appareil remplacé : de nouvelles adresses.
+        // New device, or replaced device: new addresses.
         this.releaseMacs(node.id());
         this.macs.put(node.id(), this.generateMacs(node.portCount()));
         return removed;
     }
 
     /**
-     * Remet en place un appareil relu depuis la sauvegarde, avec ses adresses MAC. Si elles manquent
-     * (monde sauvegardé avant le lot 1b) ou ne conviennent pas (nombre, doublon, adresse de groupe),
-     * de nouvelles sont générées.
+     * Restores a device reread from the save, with its MAC addresses. If they are missing
+     * (world saved before lot 1b) or do not fit (count, duplicate, group address),
+     * new ones are generated.
      *
-     * @return vrai si les adresses sauvegardées ont été reprises telles quelles
+     * @return true if the saved addresses were taken over as they are
      */
     public boolean restoreNode(NetworkNode node, List<MacAddress> savedMacs) {
         this.removeDevice(node.id());
@@ -182,9 +182,9 @@ public final class NetworkGraph {
     }
 
     /**
-     * Branche un câble entre deux ports. Les vérifications se font dans cet ordre : appareils et
-     * ports existants, ports compatibles avec le support, appareils distincts, même dimension,
-     * distance, ports libres.
+     * Connects a cable between two ports. The checks are made in this order: existing devices and
+     * ports, ports compatible with the medium, distinct devices, same dimension,
+     * distance, free ports.
      */
     public ConnectOutcome connect(PortRef a, PortRef b, LinkMedium medium, boolean cableConsumed) {
         ConnectResult check = this.check(a, b, medium);
@@ -196,7 +196,7 @@ public final class NetworkGraph {
         return ConnectOutcome.success(link);
     }
 
-    /** Retire le câble branché sur ce port, s'il y en a un. */
+    /** Removes the cable connected to this port, if there is one. */
     public Optional<Link> disconnect(PortRef port) {
         Link link = this.linksByPort.get(port);
         if (link == null) {
@@ -206,7 +206,7 @@ public final class NetworkGraph {
         return Optional.of(link);
     }
 
-    /** Retire l'appareil et tous ses câbles. */
+    /** Removes the device and all its cables. */
     public List<Link> removeDevice(DeviceId device) {
         this.nodes.remove(device);
         this.releaseMacs(device);
@@ -214,9 +214,9 @@ public final class NetworkGraph {
     }
 
     /**
-     * Remet en place un lien relu depuis la sauvegarde, sans en créer de nouveau.
+     * Restores a link reread from the save, without creating a new one.
      *
-     * @return faux si le lien est incohérent avec le graphe (appareil inconnu, port occupé…) et a été ignoré
+     * @return false if the link is inconsistent with the graph (unknown device, port in use…) and was ignored
      */
     public boolean restoreLink(Link link) {
         if (this.links.containsKey(link.id()) || this.check(link.a(), link.b(), link.medium()) != ConnectResult.OK) {
@@ -226,7 +226,7 @@ public final class NetworkGraph {
         return true;
     }
 
-    // ---- Interne ----
+    // ---- Internal ----
 
     private ConnectResult check(PortRef a, PortRef b, LinkMedium medium) {
         NetworkNode nodeA = this.nodes.get(a.device());
@@ -252,7 +252,7 @@ public final class NetworkGraph {
         return ConnectResult.OK;
     }
 
-    /** Adresses neuves, uniques dans tout le graphe, et réservées. */
+    /** Fresh addresses, unique in the whole graph, and reserved. */
     private List<MacAddress> generateMacs(int count) {
         List<MacAddress> generated = new ArrayList<>(count);
         while (generated.size() < count) {

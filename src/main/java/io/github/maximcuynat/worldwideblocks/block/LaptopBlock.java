@@ -24,16 +24,16 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * PC portable : 14 px de large, 10 px de profondeur. Un clic droit main vide ouvre ou ferme l'écran.
- * FACING désigne le côté où se tient l'utilisateur (le bord avant du clavier).
+ * Laptop: 14 px wide, 10 px deep. An empty-hand right-click opens or closes the screen.
+ * FACING is the side where the user sits (the front edge of the keyboard).
  */
 public class LaptopBlock extends NetworkDeviceBlock {
-    /** Une prise Ethernet ; le Wi-Fi arrive au lot 2a. */
+    /** One Ethernet port; Wi-Fi comes in lot 2a. */
     public static final List<PortKind> PORTS = List.of(PortKind.ETHERNET);
 
     public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
 
-    // Formes pour un portable dont l'utilisateur est au nord : l'écran se dresse côté sud.
+    // Shapes for a laptop whose user is to the north: the screen stands on the south side.
     private static final VoxelShape CLOSED_NORTH = Block.box(1.0, 0.0, 3.0, 15.0, 2.0, 13.0);
     private static final VoxelShape OPEN_NORTH = Shapes.or(
             Block.box(1.0, 0.0, 3.0, 15.0, 1.0, 13.0),
@@ -48,7 +48,7 @@ public class LaptopBlock extends NetworkDeviceBlock {
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        // Le clavier fait face au joueur qui pose le bloc.
+        // The keyboard faces the player who places the block.
         return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 

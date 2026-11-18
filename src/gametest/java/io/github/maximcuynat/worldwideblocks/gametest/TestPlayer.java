@@ -28,13 +28,13 @@ import net.neoforged.neoforge.network.registration.NetworkRegistry;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Joueur de test connecté au serveur par une connexion en mémoire, sur le modèle du
- * {@code GameTestPlayer} des tests de NeoForge : il est dans la liste des joueurs et dans son
- * niveau, le serveur le fait vivre à chaque tick (inventaire compris), il peut changer de dimension
- * et se déconnecter pour de vrai.
+ * Test player connected to the server through an in-memory connection, modeled on the
+ * {@code GameTestPlayer} of the NeoForge tests: it is in the player list and in its level, the
+ * server ticks it like any player (inventory included), it can change dimension and really
+ * disconnect.
  *
- * <p>Les messages se vérifient par l'écouteur du module des messages ({@link NetworkScene#messages()}),
- * pas par ce joueur.
+ * <p>Messages are checked through the message module listener ({@link NetworkScene#messages()}),
+ * not through this player.
  */
 public final class TestPlayer extends ServerPlayer {
     private boolean left;
@@ -44,16 +44,16 @@ public final class TestPlayer extends ServerPlayer {
     }
 
     /**
-     * Connecte un joueur de test, comme un client qui rejoint le serveur, puis le place à
-     * {@code relativePos} dans la zone du test. Un {@code id} déjà connu du monde reprend les données
-     * sauvegardées de ce joueur (inventaire compris) : c'est une reconnexion.
+     * Connects a test player, like a client joining the server, then places it at
+     * {@code relativePos} in the test area. An {@code id} already known to the world takes over that
+     * player's saved data (inventory included): it is a reconnection.
      */
     public static TestPlayer connect(GameTestHelper helper, UUID id, GameType gameType, Vec3 relativePos) {
         MinecraftServer server = helper.getLevel().getServer();
         CommonListenerCookie cookie = CommonListenerCookie.createInitial(new GameProfile(id, "wwb-test"), false);
         TestPlayer player = new TestPlayer(server, helper.getLevel(), cookie.gameProfile(), cookie.clientInformation());
-        // Nom complet : dans une sous-classe de ServerPlayer, « Connection » désigne le type hérité
-        // WaypointTransmitter.Connection, qui masque l'import.
+        // Full name: in a subclass of ServerPlayer, "Connection" means the inherited type
+        // WaypointTransmitter.Connection, which hides the import.
         net.minecraft.network.Connection memory = new net.minecraft.network.Connection(PacketFlow.SERVERBOUND) {
             @Override
             public boolean isMemoryConnection() {
@@ -63,17 +63,17 @@ public final class TestPlayer extends ServerPlayer {
             @Override
             public void send(Packet<?> packet, @Nullable ChannelFutureListener listener, boolean flush) {
                 super.send(packet, listener, flush);
-                // Le client répond aussitôt aux paquets de maintien, sinon le serveur le déconnecterait.
+                // The client answers keep-alive packets at once, otherwise the server would disconnect it.
                 if (packet instanceof ClientboundKeepAlivePacket keepAlive) {
                     player.connection.handleKeepAlive(new ServerboundKeepAlivePacket(keepAlive.getId()));
                 }
             }
         };
-        // Le constructeur associe le canal à la connexion.
+        // The constructor binds the channel to the connection.
         new EmbeddedChannel(memory);
         NetworkRegistry.configureMockConnection(memory);
-        // Comme PrepareSpawnTask.spawn à une vraie connexion : les données sauvegardées du joueur
-        // (inventaire compris) sont relues avant qu'il entre dans le monde.
+        // Like PrepareSpawnTask.spawn on a real connection: the player's saved data
+        // (inventory included) is read back before they enter the world.
         try (ProblemReporter.ScopedCollector reporter = new ProblemReporter.ScopedCollector(player.problemPath(), WorldWideBlocks.LOGGER)) {
             server.getPlayerList().loadPlayerData(player.nameAndId())
                     .map(tag -> TagValueInput.create(reporter, server.registryAccess(), tag))
@@ -81,7 +81,7 @@ public final class TestPlayer extends ServerPlayer {
             EventHooks.firePlayerLoadingEvent(player, server.getPlayerList(), player.getStringUUID());
         }
         server.getPlayerList().placeNewPlayer(memory, player, cookie);
-        // Inscrite parmi les connexions du serveur, elle est tickée : le joueur vit comme un vrai.
+        // Registered among the server connections, it is ticked: the player lives like a real one.
         server.getConnection().getConnections().add(memory);
         player.gameMode.changeGameModeForPlayer(gameType);
         player.placeAt(helper.absoluteVec(relativePos));
@@ -89,7 +89,7 @@ public final class TestPlayer extends ServerPlayer {
         return player;
     }
 
-    /** Déplace le joueur dans son niveau actuel et lui envoie les chunks autour. */
+    /** Moves the player within its current level and sends it the chunks around. */
     public void placeAt(Vec3 absolutePos) {
         this.snapTo(absolutePos.x, absolutePos.y, absolutePos.z);
         this.level().getChunkSource().move(this);
@@ -98,8 +98,8 @@ public final class TestPlayer extends ServerPlayer {
     }
 
     /**
-     * Déconnexion, comme un client qui quitte : le serveur sauvegarde le joueur et le retire
-     * aussitôt. (Pas {@code disconnect()}, qui est une étape interne de {@code ServerPlayer}.)
+     * Disconnection, like a client leaving: the server saves the player and removes it at once.
+     * (Not {@code disconnect()}, which is an internal step of {@code ServerPlayer}.)
      */
     public void leaveServer() {
         if (this.left) {
@@ -107,9 +107,9 @@ public final class TestPlayer extends ServerPlayer {
         }
         this.left = true;
         net.minecraft.network.Connection memory = this.connection.getConnection();
-        this.connection.disconnect(Component.literal("Test World Wide Blocks terminé"));
-        // La déconnexion est déjà traitée : sans ce retrait, la boucle des connexions du serveur la
-        // traiterait une seconde fois (avertissement « handleDisconnection() called twice »).
+        this.connection.disconnect(Component.literal("World Wide Blocks test finished"));
+        // The disconnection is already handled: without this removal, the server's connection loop
+        // would handle it a second time (warning "handleDisconnection() called twice").
         this.level().getServer().getConnection().getConnections().remove(memory);
     }
 }

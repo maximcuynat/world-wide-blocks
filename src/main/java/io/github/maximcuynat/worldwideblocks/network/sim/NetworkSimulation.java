@@ -23,43 +23,43 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 
 /**
- * Fait circuler de vraies trames Ethernet entre les appareils du graphe.
+ * Moves real Ethernet frames between the devices of the graph.
  *
- * <p>Une trame émise sur un port est déposée dans une file d'attente, puis livrée à l'autre bout du
- * câble lors du traitement de la file, à chaque tick du serveur : elle arrive instantanément, sans
- * temps de trajet le long du câble. Les trames produites pendant ce traitement (relais d'un switch,
- * réponses) sont livrées dans le même tick, dans la limite de {@link SimulationLimits#maxDeliveriesPerTick()}.
+ * <p>A frame sent on a port is placed in a queue, then delivered to the other end of the
+ * cable when the queue is processed, on every server tick: it arrives instantly, with no
+ * travel time along the cable. Frames produced during this processing (switch relays,
+ * replies) are delivered in the same tick, within the limit of {@link SimulationLimits#maxDeliveriesPerTick()}.
  *
- * <p>Protection contre les boucles, en attendant le STP du lot 8b : chaque trame émise reçoit une
- * trace, partagée par toutes ses copies relayées. Une trace n'existe que dans le moteur, pas dans la
- * trame. Si une copie revient à un switch que la trace a déjà traversé, il existe deux chemins entre
- * eux : la copie est supprimée et la boucle signalée. Dans un réseau sans boucle, cela n'arrive jamais.
+ * <p>Loop protection, until the STP of lot 8b: each sent frame gets a
+ * trace, shared by all its relayed copies. A trace exists only in the engine, not in the
+ * frame. If a copy comes back to a switch the trace already crossed, there are two paths between
+ * them: the copy is dropped and the loop reported. In a network without a loop, this never happens.
  *
- * <p>Horloge : le temps de la simulation est celui du tick en cours de traitement. Un changement du
- * graphe (branchement, débranchement, appareil posé ou retiré) survient souvent entre deux ticks :
- * un clic de joueur est traité après le tick de la simulation. Il est donc mis en attente et appliqué
- * au début du tick suivant, avec le temps de ce tick. Ainsi ses trames, ses minuteries et ses
- * signalements partent du tick même où ses trames sont livrées. (Appliqué sur-le-champ avec le temps
- * du tick précédent, une présence émise au branchement était livrée un tick après sa date : les
- * présences suivantes tombaient 1 199 ticks après le signalement de boucle au lieu de 1 200.)
+ * <p>Clock: the simulation time is that of the tick being processed. A change of the
+ * graph (connection, disconnection, device placed or removed) often happens between two ticks:
+ * a player click is handled after the simulation tick. It is therefore queued and applied
+ * at the start of the next tick, with the time of that tick. Thus its frames, its timers and its
+ * reports start from the very tick where its frames are delivered. (Applied immediately with the time
+ * of the previous tick, a presence sent on connection was delivered one tick after its date: the
+ * following presences fell 1,199 ticks after the loop report instead of 1,200.)
  *
- * <p>L'état d'exécution (comportement des appareils, file, minuteries) n'est pas sauvegardé : au
- * démarrage du serveur, chaque appareil repart de zéro et chaque câble existant est annoncé comme
- * branché, comme après une coupure de courant.
+ * <p>The runtime state (device behavior, queue, timers) is not saved: at
+ * server start, each device starts from zero and each existing cable is announced as
+ * connected, as after a power cut.
  *
- * <p>Java pur, sans classe Minecraft. Pas thread-safe : n'y accéder que depuis le thread du serveur.
+ * <p>Plain Java, no Minecraft class. Not thread-safe: access it only from the server thread.
  */
 public final class NetworkSimulation {
     private final NetworkGraph graph;
     private final SimulationLimits limits;
     private final Map<DeviceId, DeviceLogic> logics = new HashMap<>();
     private final ArrayDeque<Delivery> queue = new ArrayDeque<>();
-    /** Changements du graphe survenus depuis le dernier tick, appliqués dans l'ordre au tick suivant. */
+    /** Graph changes that happened since the last tick, applied in order on the next tick. */
     private final ArrayDeque<Runnable> pendingChanges = new ArrayDeque<>();
     private final PriorityQueue<Timer> timers = new PriorityQueue<>(
             Comparator.comparingLong(Timer::due).thenComparingLong(Timer::sequence));
     private final List<SimulationEvent> events = new ArrayList<>();
-    /** Ports où une trame en boucle est revenue pendant le tick en cours ; regroupés par réseau en fin de tick. */
+    /** Ports where a looping frame came back during the current tick; grouped by network at the end of the tick. */
     private final Set<SimulationEvent.LoopPoint> loopPoints = new LinkedHashSet<>();
     private boolean saturatedThisTick;
     private FrameTap tap = FrameTap.NONE;
@@ -67,11 +67,11 @@ public final class NetworkSimulation {
     private long timerSequence;
     private boolean started;
 
-    /** Une trame en route vers l'autre bout d'un câble. */
+    /** A frame on its way to the other end of a cable. */
     private record Delivery(PortRef ingress, UUID linkId, EthernetFrame frame, Trace trace) {
     }
 
-    /** Une émission et toutes ses copies relayées : les switchs qu'elles ont déjà traversés. */
+    /** One emission and all its relayed copies: the switches they have already crossed. */
     private static final class Trace {
         private final Set<DeviceId> visited = new HashSet<>();
     }
@@ -92,7 +92,7 @@ public final class NetworkSimulation {
         this.tap = tap;
     }
 
-    // ---- Lecture ----
+    // ---- Reading ----
 
     public SimulationLimits limits() {
         return this.limits;
@@ -102,27 +102,27 @@ public final class NetworkSimulation {
         return Optional.ofNullable(this.logics.get(device));
     }
 
-    /** Trames en attente de livraison. */
+    /** Frames waiting for delivery. */
     public int pendingFrames() {
         return this.queue.size();
     }
 
-    /** Événements survenus depuis le dernier appel, à transformer en messages. */
+    /** Events that happened since the last call, to turn into messages. */
     public List<SimulationEvent> drainEvents() {
         List<SimulationEvent> drained = List.copyOf(this.events);
         this.events.clear();
         return drained;
     }
 
-    // ---- Changements du graphe ----
-    // Appliqués au début du tick suivant, avec son temps (voir la classe). Avant le premier tick, ils
-    // sont ignorés : le démarrage relit tout le graphe.
+    // ---- Graph changes ----
+    // Applied at the start of the next tick, with its time (see the class). Before the first tick, they
+    // are ignored: startup rereads the whole graph.
     //
-    // Un changement en attente ne s'applique qu'à ce qui existe encore dans le graphe au moment du
-    // tick : un appareil ou un câble retiré entre-temps est déjà remplacé par son retrait, lui aussi en
-    // attente. (Un poste posé, câblé et retiré dans le même tick faisait planter le serveur.)
+    // A pending change only applies to what still exists in the graph at the time of the
+    // tick: a device or cable removed in the meantime is already replaced by its removal, also
+    // pending. (A computer placed, cabled and removed in the same tick used to crash the server.)
 
-    /** Un appareil vient d'être ajouté, ou remplacé par un autre (son ancien comportement est oublié). */
+    /** A device was just added, or replaced by another one (its old behavior is forgotten). */
     public void deviceAdded(NetworkNode node) {
         this.later(() -> {
             if (this.graph.node(node.id()).filter(node::equals).isPresent()) {
@@ -141,7 +141,7 @@ public final class NetworkSimulation {
         this.later(() -> this.notifyLink(link, true));
     }
 
-    /** À appeler après le retrait du câble du graphe. */
+    /** To call after the cable was removed from the graph. */
     public void linkDown(Link link) {
         this.later(() -> this.notifyLink(link, false));
     }
@@ -155,10 +155,10 @@ public final class NetworkSimulation {
     // ---- Tick ----
 
     /**
-     * Fait avancer la simulation jusqu'à {@code now} : changements du graphe survenus depuis le tick
-     * précédent, minuteries échues, puis livraison des trames.
+     * Advances the simulation to {@code now}: graph changes that happened since the previous
+     * tick, expired timers, then frame delivery.
      *
-     * @param now temps de jeu, en ticks ; il ne doit jamais reculer
+     * @param now game time, in ticks; it must never go backwards
      */
     public void tick(long now) {
         this.now = now;
@@ -172,7 +172,7 @@ public final class NetworkSimulation {
         }
         while (!this.timers.isEmpty() && this.timers.peek().due() <= now) {
             Timer timer = this.timers.poll();
-            // Un appareil retiré ou remplacé a un autre comportement : ses minuteries sont périmées.
+            // A removed or replaced device has another behavior: its timers are stale.
             if (this.logics.get(timer.device()) == timer.logic()) {
                 timer.logic().onTimer(new Context(timer.device(), timer.logic(), null), timer.key());
             }
@@ -186,9 +186,9 @@ public final class NetworkSimulation {
     }
 
     /**
-     * Fin du tick : un événement par réseau où une boucle a été vue, quel que soit le nombre de switchs
-     * qui l'ont vue, et au plus un événement de saturation. La limite de fréquence (une fois par
-     * minute) n'est pas ici : elle appartient au module des messages, qui décide qui prévenir et quand.
+     * End of the tick: one event per network where a loop was seen, whatever the number of switches
+     * that saw it, and at most one saturation event. The rate limit (once per
+     * minute) is not here: it belongs to the message module, which decides whom to notify and when.
      */
     private void flushReports() {
         if (!this.loopPoints.isEmpty()) {
@@ -207,7 +207,7 @@ public final class NetworkSimulation {
         }
     }
 
-    // ---- Interne ----
+    // ---- Internal ----
 
     private void start(NetworkNode node) {
         DeviceLogic logic = DeviceLogics.create(node);
@@ -217,12 +217,12 @@ public final class NetworkSimulation {
 
     private void notifyLink(Link link, boolean up) {
         if (up && !this.isInGraph(link)) {
-            return; // débranché depuis : son débranchement suit dans la file
+            return; // unplugged since: its unplugging follows in the queue
         }
         for (PortRef end : List.of(link.a(), link.b())) {
             DeviceLogic logic = this.logics.get(end.device());
             if (logic == null || this.graph.node(end.device()).isEmpty()) {
-                continue; // appareil retiré depuis : son comportement va être oublié
+                continue; // device removed since: its behavior is about to be forgotten
             }
             Context context = new Context(end.device(), logic, null);
             if (up) {
@@ -241,7 +241,7 @@ public final class NetworkSimulation {
         this.tap.onFrame(this.now, egress, FrameDirection.SENT, frame);
         Optional<Link> link = this.graph.linkAt(egress);
         if (link.isEmpty()) {
-            return; // aucun câble sur ce port : la trame est perdue
+            return; // no cable on this port: the frame is lost
         }
         if (this.queue.size() >= this.limits.maxQueued()) {
             this.saturatedThisTick = true;
@@ -254,7 +254,7 @@ public final class NetworkSimulation {
         PortRef ingress = delivery.ingress();
         Optional<Link> link = this.graph.linkAt(ingress);
         if (link.isEmpty() || !link.get().id().equals(delivery.linkId())) {
-            return; // câble retiré (ou remplacé) avant la livraison
+            return; // cable removed (or replaced) before delivery
         }
         DeviceLogic logic = this.logics.get(ingress.device());
         if (logic == null) {
@@ -269,7 +269,7 @@ public final class NetworkSimulation {
     }
 
 
-    /** Contexte d'un appareil pendant un appel ; {@code trace} est la trame en cours, s'il y en a une. */
+    /** Context of a device during a call; {@code trace} is the current frame, if there is one. */
     private final class Context implements DeviceContext {
         private final DeviceId device;
         private final DeviceLogic logic;
@@ -294,7 +294,7 @@ public final class NetworkSimulation {
         @Override
         public MacAddress mac(int port) {
             return graph.macOf(new PortRef(this.device, port))
-                    .orElseThrow(() -> new IllegalArgumentException("Port " + port + " inconnu sur " + this.device));
+                    .orElseThrow(() -> new IllegalArgumentException("Unknown port " + port + " on " + this.device));
         }
 
         @Override

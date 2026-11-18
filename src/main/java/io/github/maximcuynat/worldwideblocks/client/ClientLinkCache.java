@@ -11,9 +11,9 @@ import io.github.maximcuynat.worldwideblocks.network.sync.ClientLink;
 import net.minecraft.core.BlockPos;
 
 /**
- * Copie, côté client, des câbles que le joueur peut voir. Elle ne sert qu'à l'affichage : le serveur
- * la vide à l'arrivée dans une dimension, puis la tient à jour lien par lien. Elle est vidée à la
- * déconnexion. Recevoir deux fois le même câble est sans effet : tout est indexé par son identifiant.
+ * Client-side copy of the cables the player can see. It is only used for display: the server
+ * empties it on arrival in a dimension, then keeps it up to date link by link. It is emptied on
+ * disconnection. Receiving the same cable twice has no effect: everything is indexed by its identifier.
  */
 public final class ClientLinkCache {
     private final Map<UUID, ClientLink> links = new LinkedHashMap<>();

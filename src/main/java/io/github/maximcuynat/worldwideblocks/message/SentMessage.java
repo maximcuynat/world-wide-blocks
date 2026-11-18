@@ -5,12 +5,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Un message effectivement envoyé, tel que le reçoivent les écouteurs ({@link MessageListener}) : les
- * tests vérifient ainsi le canal, la clé, les valeurs et le destinataire sans passer par le chat d'un
- * joueur.
+ * A message actually sent, as received by the listeners ({@link MessageListener}): tests thus
+ * check the channel, the key, the values and the recipient without going through a player's
+ * chat.
  *
- * @param recipient joueur destinataire, vide pour le log
- * @param gameTime  temps de jeu de l'envoi, en ticks (celui de la simulation réseau)
+ * @param recipient recipient player, empty for the log
+ * @param gameTime  game time of the sending, in ticks (that of the network simulation)
  */
 public record SentMessage(MessageChannel channel, MessageLevel level, String key, List<MessageArg> args,
         Optional<UUID> recipient, long gameTime) {

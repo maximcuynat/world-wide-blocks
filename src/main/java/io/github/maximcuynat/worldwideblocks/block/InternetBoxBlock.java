@@ -16,16 +16,16 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * Box internet, modèle provisoire générique : boîtier plat et carré de 7 x 7 x 3 px, centré dans le bloc
- * (183 x 183 x 80 mm réels, agrandis d'environ 2,4 comme la tour PC). Les 4 prises réseau local sont
- * en façade, l'arrivée de ligne à l'arrière. FACING désigne la direction vers laquelle regarde la façade.
+ * Internet box, generic placeholder model: a flat square case of 7 x 7 x 3 px, centered in the block
+ * (183 x 183 x 80 mm in real life, scaled up by about 2.4 like the PC tower). The 4 local network ports are
+ * on the front, the line input at the back. FACING is the direction the front faces.
  */
 public class InternetBoxBlock extends NetworkDeviceBlock {
-    /** Ports 1 à 4 : réseau local. Port 5 : arrivée de ligne, inactive jusqu'au lot 3. */
+    /** Ports 1 to 4: local network. Port 5: line input, inactive until lot 3. */
     public static final List<PortKind> PORTS = List.of(
             PortKind.ETHERNET, PortKind.ETHERNET, PortKind.ETHERNET, PortKind.ETHERNET, PortKind.LINE);
 
-    // Carré : la même forme dans les quatre orientations.
+    // Square: the same shape in all four orientations.
     private static final VoxelShape SHAPE = Block.box(4.5, 0.0, 4.5, 11.5, 3.0, 11.5);
 
     public InternetBoxBlock(BlockBehaviour.Properties properties) {
@@ -35,7 +35,7 @@ public class InternetBoxBlock extends NetworkDeviceBlock {
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        // La façade regarde le joueur qui pose le bloc.
+        // The front faces the player who places the block.
         return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 

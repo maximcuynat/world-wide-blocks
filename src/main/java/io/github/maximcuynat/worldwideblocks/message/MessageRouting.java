@@ -3,22 +3,22 @@ package io.github.maximcuynat.worldwideblocks.message;
 import java.util.Optional;
 
 /**
- * Règle des canaux : le code qui envoie un message dit pourquoi (usage) et à quel point c'est grave
- * (niveau) ; il ne choisit jamais le canal.
+ * Channel rule: the code that sends a message says why (use) and how serious it is
+ * (level); it never chooses the channel.
  *
  * <ul>
- * <li>geste : barre d'action du joueur, quel que soit le niveau, et une ligne DEBUG ;</li>
- * <li>événement réseau, avertissement ou erreur : chat des joueurs concernés, et une ligne WARN ou ERROR ;</li>
- * <li>événement réseau, information ou succès : log seulement (INFO).</li>
+ * <li>gesture: the player's action bar, whatever the level, and a DEBUG line;</li>
+ * <li>network event, warning or error: chat of the players concerned, and a WARN or ERROR line;</li>
+ * <li>network event, info or success: log only (INFO).</li>
  * </ul>
  */
 public final class MessageRouting {
 
     /**
-     * Destination d'un message.
+     * Destination of a message.
      *
-     * @param player canal montré aux joueurs, vide si le message ne va qu'au log
-     * @param log    niveau de la ligne écrite dans le log
+     * @param player channel shown to players, empty if the message only goes to the log
+     * @param log    level of the line written in the log
      */
     public record Route(Optional<MessageChannel> player, LogLevel log) {
     }

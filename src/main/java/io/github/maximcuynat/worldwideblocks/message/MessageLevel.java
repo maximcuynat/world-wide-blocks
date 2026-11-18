@@ -1,8 +1,8 @@
 package io.github.maximcuynat.worldwideblocks.message;
 
 /**
- * Gravité d'un message. Le serveur n'envoie que le niveau : c'est le client qui en tire l'apparence
- * (symbole ou mot, couleur), toujours avec un symbole ou un mot, jamais la couleur seule.
+ * Severity of a message. The server only sends the level: the client derives the look from it
+ * (symbol or word, color), always with a symbol or a word, never color alone.
  */
 public enum MessageLevel {
     INFO,
@@ -10,7 +10,7 @@ public enum MessageLevel {
     WARNING,
     ERROR;
 
-    /** Avertissement ou erreur : un problème que le joueur doit connaître. */
+    /** Warning or error: a problem the player must know about. */
     public boolean isProblem() {
         return this == WARNING || this == ERROR;
     }

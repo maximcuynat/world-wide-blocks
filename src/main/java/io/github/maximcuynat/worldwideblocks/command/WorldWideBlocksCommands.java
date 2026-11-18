@@ -16,9 +16,9 @@ import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 /**
- * Commandes de contrôle du réseau, réservées aux opérateurs. {@code /worldwideblocks liens} lit directement
- * l'état du serveur : elle sert à vérifier qu'un lien existe toujours quand sa zone n'est pas chargée
- * ou après un redémarrage.
+ * Network control commands, reserved for operators. {@code /worldwideblocks liens} reads the
+ * server state directly: it is used to check that a link still exists when its area is not loaded
+ * or after a restart.
  */
 public final class WorldWideBlocksCommands {
 
@@ -58,7 +58,7 @@ public final class WorldWideBlocksCommands {
         return links.size();
     }
 
-    /** Appareil au format commun des messages, suivi de sa dimension : « Tour PC [12, 64, -3] (minecraft:overworld) ». */
+    /** Device in the common message format, followed by its dimension: "PC Tower [12, 64, -3] (minecraft:overworld)". */
     private static Component describe(NetworkManager network, PortRef port) {
         DeviceId id = port.device();
         Component name = network.node(id).map(NetworkDevices::displayName).orElse(Component.literal("?"));

@@ -22,15 +22,15 @@ import net.minecraft.world.phys.HitResult;
 import net.neoforged.neoforge.client.gui.GuiLayer;
 
 /**
- * Indicateur d'état : en visant un appareil réseau, un petit panneau en haut au centre de l'écran
- * affiche son nom puis les lignes de {@link StatusPanel} : compactes par défaut, détaillées quand le
- * joueur est accroupi. Le contenu (clés, valeurs, voyants) vient de {@link StatusPanel}, en Java pur ;
- * cette classe ne fait que le dessiner, et une future interface HUD pourra la remplacer seule.
+ * Status indicator: when aiming at a network device, a small panel at the top center of the screen
+ * shows its name then the lines of {@link StatusPanel}: compact by default, detailed when the
+ * player is sneaking. The content (keys, values, indicator lights) comes from {@link StatusPanel}, in plain Java;
+ * this class only draws it, and a future HUD can replace it alone.
  *
- * <p>Le branchement vient du {@link ClientLinkCache} ; les adresses viennent du
- * {@link ClientDeviceStatus}, envoyé par le serveur pour l'appareil visé.
+ * <p>The connection comes from the {@link ClientLinkCache}; the addresses come from the
+ * {@link ClientDeviceStatus}, sent by the server for the targeted device.
  *
- * <p>Limite connue : le panneau occupe la même place que les barres de boss.
+ * <p>Known limitation: the panel takes the same place as the boss bars.
  */
 final class PortStatusLayer implements GuiLayer {
     private static final int TOP = 4;
@@ -102,7 +102,7 @@ final class PortStatusLayer implements GuiLayer {
         }
     }
 
-    /** Couleur du voyant ; {@code null} pour une ligne de détail, sans voyant. */
+    /** Color of the indicator light; {@code null} for a detail line, without a light. */
     private static Integer color(StatusPanel.Light light) {
         return switch (light) {
             case CONNECTED -> COLOR_CONNECTED;
@@ -112,7 +112,7 @@ final class PortStatusLayer implements GuiLayer {
         };
     }
 
-    /** L'état reçu du serveur, sous la forme que lit {@link StatusPanel} ; {@code null} s'il n'est pas arrivé. */
+    /** The state received from the server, in the form read by {@link StatusPanel}; {@code null} if it has not arrived. */
     private static StatusPanel.DeviceStatus toStatus(DeviceStatusPayload status) {
         if (status == null) {
             return null;

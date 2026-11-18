@@ -11,19 +11,19 @@ import org.junit.jupiter.api.Test;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 
 class MacTableTest {
-    private static final long DELAI = 100;
+    private static final long DELAY = 100;
     private static final MacAddress A = new MacAddress(0x02_00_00_00_00_0AL);
     private static final MacAddress B = new MacAddress(0x02_00_00_00_00_0BL);
 
-    private final MacTable table = new MacTable(DELAI);
+    private final MacTable table = new MacTable(DELAY);
 
     @Test
-    void leDelaiParDefautEst300SecondesDeJeu() {
+    void theDefaultDelayIs300GameSeconds() {
         assertEquals(6000, MacTable.DEFAULT_AGING_TICKS);
     }
 
     @Test
-    void retientLePortDUneMacSource() {
+    void remembersThePortOfASourceMac() {
         table.learn(A, 2, 0);
 
         assertEquals(OptionalInt.of(2), table.lookup(A, 0));
@@ -32,14 +32,14 @@ class MacTableTest {
     }
 
     @Test
-    void nApprendJamaisUneAdresseDeGroupe() {
+    void neverLearnsAGroupAddress() {
         table.learn(MacAddress.BROADCAST, 0, 0);
 
         assertTrue(table.entries().isEmpty());
     }
 
     @Test
-    void uneMacQuiChangeDePortEstDeplacee() {
+    void aMacThatChangesPortIsMoved() {
         table.learn(A, 0, 0);
         table.learn(A, 3, 5);
 
@@ -48,18 +48,18 @@ class MacTableTest {
     }
 
     @Test
-    void uneEntreeExpireApresLeDelaiSansEmission() {
+    void anEntryExpiresAfterTheDelayWithoutTransmission() {
         table.learn(A, 1, 0);
 
-        assertEquals(OptionalInt.of(1), table.lookup(A, DELAI - 1));
-        assertTrue(table.lookup(A, DELAI).isEmpty());
+        assertEquals(OptionalInt.of(1), table.lookup(A, DELAY - 1));
+        assertTrue(table.lookup(A, DELAY).isEmpty());
 
-        table.purgeExpired(DELAI);
+        table.purgeExpired(DELAY);
         assertTrue(table.entries().isEmpty());
     }
 
     @Test
-    void chaqueEmissionRepousseLExpiration() {
+    void eachTransmissionPushesBackTheExpiry() {
         table.learn(A, 1, 0);
         table.learn(A, 1, 80);
 
@@ -69,7 +69,7 @@ class MacTableTest {
     }
 
     @Test
-    void retirerLeCableOublieLesMacDeCePortSeulement() {
+    void removingTheCableForgetsTheMacsOfThatPortOnly() {
         table.learn(A, 1, 0);
         table.learn(B, 2, 0);
 

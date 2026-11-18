@@ -1,15 +1,15 @@
 package io.github.maximcuynat.worldwideblocks.network.sim;
 
 /**
- * Garde-fous de la simulation, pour qu'un réseau mal câblé ne fasse jamais tomber le serveur.
+ * Safeguards of the simulation, so a badly cabled network never brings the server down.
  *
- * @param maxDeliveriesPerTick trames livrées au plus par tick ; les suivantes attendent le tick d'après
- * @param maxQueued            trames en attente au plus ; au-delà, les nouvelles sont perdues
- * @param reportIntervalTicks  délai minimal entre deux signalements du même problème, appliqué par le
- *                             module des messages (la simulation, elle, signale chaque tick où elle voit le problème)
+ * @param maxDeliveriesPerTick frames delivered at most per tick; the next ones wait for the following tick
+ * @param maxQueued            frames queued at most; beyond that, new ones are lost
+ * @param reportIntervalTicks  minimum delay between two reports of the same problem, applied by the
+ *                             message module (the simulation itself reports every tick where it sees the problem)
  */
 public record SimulationLimits(int maxDeliveriesPerTick, int maxQueued, long reportIntervalTicks) {
-    /** Valeurs validées par Max le 2026-11-17 : 10 000 trames par tick, 50 000 en file, un signalement par minute. */
+    /** Values approved by Max on 2026-11-17: 10,000 frames per tick, 50,000 queued, one report per minute. */
     public static final SimulationLimits DEFAULT = new SimulationLimits(10_000, 50_000, 60L * 20L);
 
     public SimulationLimits {

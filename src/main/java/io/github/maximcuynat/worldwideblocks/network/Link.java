@@ -3,11 +3,11 @@ package io.github.maximcuynat.worldwideblocks.network;
 import java.util.UUID;
 
 /**
- * Un câble branché entre deux ports.
+ * A cable connected between two ports.
  *
- * @param cableConsumed vrai si un cordon a été retiré de l'inventaire au branchement. Seul un lien
- *                      qui a consommé un cordon en rend un quand on le débranche, sinon brancher en
- *                      créatif puis casser en survie fabriquerait des cordons gratuits.
+ * @param cableConsumed true if a cord was taken from the inventory when connecting. Only a link
+ *                      that consumed a cord gives one back when it is unplugged, otherwise connecting in
+ *                      creative then breaking in survival would make free cords.
  */
 public record Link(UUID id, PortRef a, PortRef b, LinkMedium medium, boolean cableConsumed) {
 
@@ -15,7 +15,7 @@ public record Link(UUID id, PortRef a, PortRef b, LinkMedium medium, boolean cab
         return this.a.device().equals(device) || this.b.device().equals(device);
     }
 
-    /** Extrémité opposée à {@code port}. */
+    /** End opposite to {@code port}. */
     public PortRef otherEnd(PortRef port) {
         if (this.a.equals(port)) {
             return this.b;

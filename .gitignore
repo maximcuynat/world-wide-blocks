@@ -37,21 +37,21 @@ bin/
 .Spotlight-V100
 .Trashes
 
-### Éditeurs ###
+### Editors ###
 .fleet/
 *.swp
 *~
 
 ### Minecraft Modding ###
 run/
-# Monde jetable du serveur de tests en jeu (./gradlew runGameTestServer)
+# Throwaway world of the game test server (./gradlew runGameTestServer)
 run-gametest/
 !**/src/**/run/
 **/src/generated/**/.cache/
 repo/
 !**/src/**/repo/
 
-### Journaux, captures, plantages (normalement sous run/, ici partout) ###
+### Logs, screenshots, crashes (normally under run/, here everywhere) ###
 *.log
 logs/
 crash-reports/
@@ -60,7 +60,7 @@ hs_err_pid*.log
 *.hprof
 *.jfr
 
-### Secrets et réglages locaux ###
+### Secrets and local settings ###
 .env
 .env.*
 *.pem

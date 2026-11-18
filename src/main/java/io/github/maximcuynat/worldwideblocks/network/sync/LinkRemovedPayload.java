@@ -9,7 +9,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
-/** Un câble vient d'être retiré dans la dimension du joueur. */
+/** A cable was just removed in the player's dimension. */
 public record LinkRemovedPayload(UUID id) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<LinkRemovedPayload> TYPE = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(WorldWideBlocks.MODID, "link_removed"));
 

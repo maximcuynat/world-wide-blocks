@@ -13,7 +13,7 @@ class SavedNodeTest {
     private static final DeviceId ID = new DeviceId("minecraft:overworld", 0, 64, 0);
 
     @Test
-    void unMondeDAvantLeLot1bNAQueDesPostesAPortsEthernetEtAucuneMac() {
+    void aWorldFromBeforeLot1bOnlyHasHostsWithEthernetPortsAndNoMac() {
         SavedNode saved = SavedNode.decode(ID, "worldwideblocks:pc_tower", Optional.empty(), 1, Optional.empty(), List.of());
 
         assertEquals(DeviceRole.HOST, saved.node().role());
@@ -22,7 +22,7 @@ class SavedNodeTest {
     }
 
     @Test
-    void leRoleEtLesTypesDePortEcritsFontFoi() {
+    void theWrittenRoleAndPortTypesAreTrusted() {
         List<PortKind> kinds = List.of(PortKind.ETHERNET, PortKind.LINE);
         MacAddress mac = MacAddress.parse("02:00:00:00:00:01").orElseThrow();
 

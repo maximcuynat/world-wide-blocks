@@ -12,15 +12,15 @@ import io.github.maximcuynat.worldwideblocks.network.ChunkKey;
 import io.github.maximcuynat.worldwideblocks.network.Link;
 
 /**
- * Ce qu'un joueur a le droit de connaître du réseau : seuls les câbles dont une extrémité se trouve
- * dans un chunk que son client a reçu. Un joueur ne peut donc pas localiser des appareils hors de
- * sa vue en lisant les paquets.
+ * What a player is allowed to know about the network: only the cables with one end
+ * in a chunk its client has received. A player therefore cannot locate devices outside
+ * their view by reading the packets.
  *
- * <p>La vue tient sa propre liste des chunks reçus (événement {@code Sent}) et retirés
- * ({@code UnWatch}) au lieu d'interroger la vue de suivi de Minecraft : pendant {@code UnWatch},
- * celle-ci n'est pas encore mise à jour et donnerait de faux résultats lors d'un téléport.
+ * <p>The view keeps its own list of received chunks ({@code Sent} event) and removed ones
+ * ({@code UnWatch}) instead of querying Minecraft's tracking view: during {@code UnWatch},
+ * it is not updated yet and would give wrong results during a teleport.
  *
- * <p>Java pur : testable sans lancer le jeu. Une instance par joueur, portée par le joueur côté serveur.
+ * <p>Plain Java: testable without the game. One instance per player, held by the player server side.
  */
 public final class PlayerLinkView {
     private String dimension;
@@ -28,10 +28,10 @@ public final class PlayerLinkView {
     private final Set<UUID> known = new HashSet<>();
 
     /**
-     * Le joueur reçoit des chunks de cette dimension. S'il vient d'en changer (ou s'il vient d'arriver),
-     * la vue repart de zéro.
+     * The player receives chunks of this dimension. If the player just changed dimension (or just arrived),
+     * the view starts again from zero.
      *
-     * @return vrai si le client doit oublier tous ses câbles
+     * @return true if the client must forget all its cables
      */
     public boolean enterDimension(String newDimension) {
         if (Objects.equals(this.dimension, newDimension)) {
@@ -44,10 +44,10 @@ public final class PlayerLinkView {
     }
 
     /**
-     * Le client vient de recevoir ce chunk.
+     * The client just received this chunk.
      *
-     * @param touching câbles dont une extrémité est dans ce chunk
-     * @return les câbles à lui envoyer, ceux qu'il ne connaît pas encore
+     * @param touching cables with one end in this chunk
+     * @return the cables to send to it, those it does not know yet
      */
     public List<Link> chunkSent(ChunkKey chunk, Collection<Link> touching) {
         if (!chunk.dimension().equals(this.dimension)) {
@@ -64,11 +64,11 @@ public final class PlayerLinkView {
     }
 
     /**
-     * Le joueur ne suit plus ce chunk. Un câble n'est oublié que si aucune de ses deux extrémités
-     * n'est encore dans un chunk suivi.
+     * The player no longer tracks this chunk. A cable is forgotten only if neither of its two ends
+     * is still in a tracked chunk.
      *
-     * @param touching câbles dont une extrémité est dans ce chunk
-     * @return les identifiants des câbles que le client doit oublier
+     * @param touching cables with one end in this chunk
+     * @return the identifiers of the cables the client must forget
      */
     public List<UUID> chunkUnwatched(ChunkKey chunk, Collection<Link> touching) {
         if (!this.watched.remove(chunk)) {
@@ -83,12 +83,12 @@ public final class PlayerLinkView {
         return toForget;
     }
 
-    /** Un câble vient d'être branché : vrai s'il faut l'envoyer à ce joueur. */
+    /** A cable was just connected: true if it must be sent to this player. */
     public boolean linkAdded(Link link) {
         return this.isVisible(link) && this.known.add(link.id());
     }
 
-    /** Un câble vient d'être retiré : vrai si ce joueur le connaissait et doit l'oublier. */
+    /** A cable was just removed: true if this player knew it and must forget it. */
     public boolean linkRemoved(UUID id) {
         return this.known.remove(id);
     }

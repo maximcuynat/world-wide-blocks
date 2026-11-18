@@ -4,9 +4,9 @@ import io.github.maximcuynat.worldwideblocks.network.sync.DeviceStatusPayload;
 import net.minecraft.core.BlockPos;
 
 /**
- * Dernier état d'appareil reçu du serveur, pour l'indicateur. Le serveur ne l'envoie que pour l'appareil
- * visé ; il ne sert que si le joueur vise toujours cette position. Oublié à la déconnexion et à
- * l'arrivée dans une dimension.
+ * Last device state received from the server, for the indicator. The server only sends it for the targeted
+ * device; it is only used if the player still targets this position. Forgotten on disconnection and on
+ * arrival in a dimension.
  */
 final class ClientDeviceStatus {
     private DeviceStatusPayload status;
@@ -19,7 +19,7 @@ final class ClientDeviceStatus {
         this.status = null;
     }
 
-    /** L'état de l'appareil à cette position, ou {@code null} s'il n'est pas connu. */
+    /** The state of the device at this position, or {@code null} if it is not known. */
     DeviceStatusPayload at(BlockPos pos) {
         return this.status != null && this.status.pos().equals(pos) ? this.status : null;
     }

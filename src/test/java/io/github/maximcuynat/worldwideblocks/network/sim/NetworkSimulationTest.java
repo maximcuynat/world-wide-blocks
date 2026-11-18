@@ -30,7 +30,7 @@ class NetworkSimulationTest {
     private static final List<PortKind> BOX_PORTS =
             List.of(PortKind.ETHERNET, PortKind.ETHERNET, PortKind.ETHERNET, PortKind.ETHERNET, PortKind.LINE);
 
-    /** Ce que le point d'écoute a vu passer. */
+    /** What the tap has seen go by. */
     private record Seen(long now, PortRef port, FrameDirection direction, EthernetFrame frame) {
     }
 
@@ -49,7 +49,7 @@ class NetworkSimulationTest {
         this.sim.setTap((now, port, direction, frame) -> this.seen.add(new Seen(now, port, direction, frame)));
     }
 
-    // ---- Montage du réseau, comme le fait NetworkManager ----
+    // ---- Network setup, the way NetworkManager does it ----
 
     private DeviceId host(int x) {
         NetworkNode node = new NetworkNode(new DeviceId(OVERWORLD, x, 64, 0), "worldwideblocks:pc_tower", 1);
@@ -81,7 +81,7 @@ class NetworkSimulationTest {
         this.sim.deviceRemoved(device);
     }
 
-    // ---- Lecture ----
+    // ---- Reading ----
 
     private MacAddress mac(DeviceId device, int port) {
         return this.graph.macOf(new PortRef(device, port)).orElseThrow();
@@ -108,198 +108,198 @@ class NetworkSimulationTest {
         }
     }
 
-    // ---- Scénarios ----
+    // ---- Scenarios ----
 
     @Test
-    void laBoxApprendQuelleMacEstDerriereQuelPort() {
+    void theBoxLearnsWhichMacIsBehindWhichPort() {
         DeviceId box = box(0);
-        DeviceId tour = host(5);
-        DeviceId portable = host(10);
-        plug(box, 0, tour, 0);
-        plug(box, 1, portable, 0);
+        DeviceId tower = host(5);
+        DeviceId laptop = host(10);
+        plug(box, 0, tower, 0);
+        plug(box, 1, laptop, 0);
 
         sim.tick(0);
 
-        assertEquals(List.of(0), learnedPorts(box, mac(tour, 0)));
-        assertEquals(List.of(1), learnedPorts(box, mac(portable, 0)));
+        assertEquals(List.of(0), learnedPorts(box, mac(tower, 0)));
+        assertEquals(List.of(1), learnedPorts(box, mac(laptop, 0)));
         assertEquals(2, learned(box).size());
         assertEquals(0, sim.pendingFrames());
     }
 
     @Test
-    void laPresenceEstUneDiffusionDeTypeExperimentalRelayeeAuxAutresPostes() {
+    void thePresenceIsAnExperimentalTypeBroadcastRelayedToTheOtherComputers() {
         DeviceId box = box(0);
-        DeviceId tour = host(5);
-        DeviceId portable = host(10);
-        plug(box, 0, tour, 0);
-        plug(box, 1, portable, 0);
+        DeviceId tower = host(5);
+        DeviceId laptop = host(10);
+        plug(box, 0, tower, 0);
+        plug(box, 1, laptop, 0);
 
         sim.tick(0);
 
-        Seen recu = seen.stream()
-                .filter(s -> s.direction() == FrameDirection.RECEIVED && s.port().device().equals(portable))
-                .filter(s -> s.frame().source().equals(mac(tour, 0)))
+        Seen received = seen.stream()
+                .filter(s -> s.direction() == FrameDirection.RECEIVED && s.port().device().equals(laptop))
+                .filter(s -> s.frame().source().equals(mac(tower, 0)))
                 .findFirst().orElseThrow();
-        assertTrue(recu.frame().isBroadcast());
-        assertEquals(EtherType.LOCAL_EXPERIMENTAL, recu.frame().type());
-        // La box l'a reçue sur le port 0 et l'a renvoyée sur les ports 1, 2 et 3, pas sur l'arrivée de ligne.
-        List<Integer> sortiesBox = seen.stream()
+        assertTrue(received.frame().isBroadcast());
+        assertEquals(EtherType.LOCAL_EXPERIMENTAL, received.frame().type());
+        // The box received it on port 0 and sent it back on ports 1, 2 and 3, not on the line input.
+        List<Integer> boxOutputs = seen.stream()
                 .filter(s -> s.direction() == FrameDirection.SENT && s.port().device().equals(box))
-                .filter(s -> s.frame().source().equals(mac(tour, 0)))
+                .filter(s -> s.frame().source().equals(mac(tower, 0)))
                 .map(s -> s.port().index()).toList();
-        assertEquals(List.of(1, 2, 3), sortiesBox);
+        assertEquals(List.of(1, 2, 3), boxOutputs);
     }
 
     @Test
-    void lePosteRediffuseSaPresenceToutesLes30Secondes() {
+    void aComputerRebroadcastsItsPresenceEvery30Seconds() {
         DeviceId box = box(0);
-        DeviceId tour = host(5);
-        plug(box, 0, tour, 0);
+        DeviceId tower = host(5);
+        plug(box, 0, tower, 0);
 
         tickUntil(0, 1300);
 
-        assertEquals(3, presencesSentBy(tour, 0, 1300)); // ticks 0, 600 et 1200
+        assertEquals(3, presencesSentBy(tower, 0, 1300)); // ticks 0, 600 and 1200
     }
 
     @Test
-    void retirerLeCableOublieLaMacAuTickSuivantEtArreteLaPresence() {
+    void removingTheCableForgetsTheMacAtTheNextTickAndStopsThePresence() {
         DeviceId box = box(0);
-        DeviceId tour = host(5);
-        DeviceId portable = host(10);
-        plug(box, 0, tour, 0);
-        plug(box, 1, portable, 0);
+        DeviceId tower = host(5);
+        DeviceId laptop = host(10);
+        plug(box, 0, tower, 0);
+        plug(box, 1, laptop, 0);
         sim.tick(0);
 
         unplug(box, 0);
         sim.tick(1);
 
-        assertTrue(learnedPorts(box, mac(tour, 0)).isEmpty());
-        assertEquals(List.of(1), learnedPorts(box, mac(portable, 0)));
+        assertTrue(learnedPorts(box, mac(tower, 0)).isEmpty());
+        assertEquals(List.of(1), learnedPorts(box, mac(laptop, 0)));
         tickUntil(2, 700);
-        assertEquals(0, presencesSentBy(tour, 1, 700));
+        assertEquals(0, presencesSentBy(tower, 1, 700));
     }
 
     @Test
-    void uneEntreeApriseAuLoinExpireApres300Secondes() {
-        // box1 port 0 <-> box2 port 0, tour sur box2 port 1.
+    void anEntryLearnedFarAwayExpiresAfter300Seconds() {
+        // box1 port 0 <-> box2 port 0, tower on box2 port 1.
         DeviceId box1 = box(0);
         DeviceId box2 = box(20);
-        DeviceId tour = host(25);
+        DeviceId tower = host(25);
         plug(box1, 0, box2, 0);
-        plug(box2, 1, tour, 0);
+        plug(box2, 1, tower, 0);
         sim.tick(0);
-        assertEquals(List.of(0), learnedPorts(box1, mac(tour, 0)));
+        assertEquals(List.of(0), learnedPorts(box1, mac(tower, 0)));
 
         unplug(box2, 1);
         sim.tick(1);
 
-        // box2 l'oublie au tick suivant, box1 (dont le câble est toujours là) seulement après le délai.
-        assertTrue(learnedPorts(box2, mac(tour, 0)).isEmpty());
+        // box2 forgets it at the next tick, box1 (whose cable is still there) only after the delay.
+        assertTrue(learnedPorts(box2, mac(tower, 0)).isEmpty());
         sim.tick(MacTable.DEFAULT_AGING_TICKS - 10);
-        assertEquals(List.of(0), learnedPorts(box1, mac(tour, 0)));
+        assertEquals(List.of(0), learnedPorts(box1, mac(tower, 0)));
         sim.tick(MacTable.DEFAULT_AGING_TICKS + 10);
-        assertTrue(learnedPorts(box1, mac(tour, 0)).isEmpty());
+        assertTrue(learnedPorts(box1, mac(tower, 0)).isEmpty());
     }
 
     @Test
-    void uneTrameEnRouteSurUnCableRetireNEstPasLivree() {
-        // Une seule livraison par tick : la présence du portable reste dans la file après le tick 0.
+    void aFrameInTransitOnARemovedCableIsNotDelivered() {
+        // Only one delivery per tick: the laptop's presence stays in the queue after tick 0.
         useLimits(new SimulationLimits(1, 50_000, 1200));
         DeviceId box = box(0);
-        DeviceId tour = host(5);
-        DeviceId portable = host(10);
-        plug(box, 0, tour, 0);
-        plug(box, 1, portable, 0);
+        DeviceId tower = host(5);
+        DeviceId laptop = host(10);
+        plug(box, 0, tower, 0);
+        plug(box, 1, laptop, 0);
         sim.tick(0);
-        // Restent en file : la présence du portable et la présence de la tour relayée vers lui.
+        // Still queued: the laptop's presence and the tower's presence relayed to it.
         assertTrue(sim.pendingFrames() > 0);
 
         unplug(box, 1);
         tickUntil(1, 2);
 
-        assertEquals(List.of(0), learnedPorts(box, mac(tour, 0)));
-        assertTrue(learnedPorts(box, mac(portable, 0)).isEmpty());
+        assertEquals(List.of(0), learnedPorts(box, mac(tower, 0)));
+        assertTrue(learnedPorts(box, mac(laptop, 0)).isEmpty());
         assertEquals(0, sim.pendingFrames());
     }
 
     @Test
-    void unAppareilRetireNEmetPlusRien() {
+    void aRemovedDeviceSendsNothingMore() {
         DeviceId box = box(0);
-        DeviceId tour = host(5);
-        plug(box, 0, tour, 0);
+        DeviceId tower = host(5);
+        plug(box, 0, tower, 0);
         sim.tick(0);
 
-        remove(tour);
+        remove(tower);
         tickUntil(1, 700);
 
-        assertEquals(0, presencesSentBy(tour, 1, 700));
+        assertEquals(0, presencesSentBy(tower, 1, 700));
         assertTrue(learned(box).isEmpty());
-        assertTrue(sim.logic(tour).isEmpty());
+        assertTrue(sim.logic(tower).isEmpty());
     }
 
     @Test
-    void auDemarrageChaqueCableExistantEstAnnonce() {
-        // Graphe relu depuis la sauvegarde : les câbles existent avant la simulation.
+    void atStartupEveryExistingCableIsAnnounced() {
+        // Graph read back from the save: the cables exist before the simulation.
         DeviceId box = new DeviceId(OVERWORLD, 0, 64, 0);
-        DeviceId tour = new DeviceId(OVERWORLD, 5, 64, 0);
+        DeviceId tower = new DeviceId(OVERWORLD, 5, 64, 0);
         graph.putNode(new NetworkNode(box, "worldwideblocks:internet_box", DeviceRole.BOX, BOX_PORTS));
-        graph.putNode(new NetworkNode(tour, "worldwideblocks:pc_tower", 1));
-        graph.connect(new PortRef(box, 2), new PortRef(tour, 0), LinkMedium.COPPER_ETHERNET, true);
+        graph.putNode(new NetworkNode(tower, "worldwideblocks:pc_tower", 1));
+        graph.connect(new PortRef(box, 2), new PortRef(tower, 0), LinkMedium.COPPER_ETHERNET, true);
 
         sim.tick(100);
 
-        assertEquals(List.of(2), learnedPorts(box, mac(tour, 0)));
+        assertEquals(List.of(2), learnedPorts(box, mac(tower, 0)));
     }
 
     @Test
-    void deuxBoxEnBoucleNeTournentPasALInfiniEtLaBoucleEstSignalee() {
-        // Deux câbles entre les deux box : une trame diffusée reviendrait sans fin.
+    void twoBoxesInALoopDoNotSpinForeverAndTheLoopIsReported() {
+        // Two cables between the two boxes: a broadcast frame would come back endlessly.
         DeviceId box1 = box(0);
         DeviceId box2 = box(20);
-        DeviceId tour = host(5);
+        DeviceId tower = host(5);
         plug(box1, 1, box2, 1);
         plug(box1, 2, box2, 2);
-        plug(box1, 0, tour, 0);
+        plug(box1, 0, tower, 0);
 
         sim.tick(0);
 
         assertEquals(0, sim.pendingFrames());
         long receptions = seen.stream().filter(s -> s.direction() == FrameDirection.RECEIVED).count();
-        assertTrue(receptions < 10, "réceptions : " + receptions);
-        // Les deux box voient la boucle : un seul événement, qui les cite toutes les deux.
+        assertTrue(receptions < 10, "receptions: " + receptions);
+        // Both boxes see the loop: a single event, which names both of them.
         List<SimulationEvent> events = sim.drainEvents();
         assertEquals(1, events.size(), events.toString());
         SimulationEvent.LoopDetected loop = (SimulationEvent.LoopDetected) events.getFirst();
         assertEquals(box1, loop.network());
         assertTrue(loop.points().contains(new SimulationEvent.LoopPoint(box1, 2)), loop.toString());
         assertTrue(loop.points().contains(new SimulationEvent.LoopPoint(box2, 2)), loop.toString());
-        // La MAC du poste n'a pas basculé de port à cause des copies supprimées.
-        assertEquals(List.of(0), learnedPorts(box1, mac(tour, 0)));
+        // The computer's MAC did not flip ports because of the dropped copies.
+        assertEquals(List.of(0), learnedPorts(box1, mac(tower, 0)));
     }
 
     @Test
-    void laSimulationSignaleLaBoucleAChaqueTickOuElleLaVoitSansLimiteDeFrequence() {
-        // La limite d'une fois par minute appartient au module des messages, pas au moteur.
+    void theSimulationReportsTheLoopAtEveryTickWhereItSeesItWithoutRateLimit() {
+        // The once-per-minute limit belongs to the message module, not to the engine.
         DeviceId box1 = box(0);
         DeviceId box2 = box(20);
-        DeviceId tour = host(5);
+        DeviceId tower = host(5);
         plug(box1, 1, box2, 1);
         plug(box1, 2, box2, 2);
-        plug(box1, 0, tour, 0);
+        plug(box1, 0, tower, 0);
         sim.tick(0);
         sim.drainEvents();
 
         sim.tick(599);
-        assertTrue(sim.drainEvents().isEmpty(), "aucune trame entre deux présences");
+        assertTrue(sim.drainEvents().isEmpty(), "no frame between two presences");
 
-        sim.tick(600); // nouvelle présence, même boucle
+        sim.tick(600); // new presence, same loop
         List<SimulationEvent> events = sim.drainEvents();
         assertEquals(1, events.size(), events.toString());
         assertEquals(box1, ((SimulationEvent.LoopDetected) events.getFirst()).network());
     }
 
     @Test
-    void deuxBouclesDansDeuxReseauxDonnentDeuxEvenements() {
+    void twoLoopsInTwoNetworksGiveTwoEvents() {
         DeviceId a1 = box(0);
         DeviceId a2 = box(20);
         plug(a1, 1, a2, 1);
@@ -320,13 +320,13 @@ class NetworkSimulationTest {
     }
 
     @Test
-    void auDelaDeLaLimiteParTickLesTramesAttendentLeTickSuivant() {
+    void beyondThePerTickLimitFramesWaitForTheNextTick() {
         useLimits(new SimulationLimits(2, 50_000, 1200));
         DeviceId box = box(0);
-        DeviceId tour = host(5);
-        DeviceId portable = host(10);
-        plug(box, 0, tour, 0);
-        plug(box, 1, portable, 0);
+        DeviceId tower = host(5);
+        DeviceId laptop = host(10);
+        plug(box, 0, tower, 0);
+        plug(box, 1, laptop, 0);
 
         sim.tick(0);
         assertTrue(sim.pendingFrames() > 0);
@@ -338,7 +338,7 @@ class NetworkSimulationTest {
     }
 
     @Test
-    void uneFilePleinePerdLesNouvellesTramesEtLeSignale() {
+    void aFullQueueDropsNewFramesAndReportsIt() {
         useLimits(new SimulationLimits(10_000, 1, 1200));
         DeviceId box = box(0);
         plug(box, 0, host(5), 0);
@@ -346,123 +346,123 @@ class NetworkSimulationTest {
 
         sim.tick(0);
 
-        // Au plus un événement par tick, même si beaucoup de trames sont perdues.
+        // At most one event per tick, even if many frames are lost.
         assertEquals(List.of(new SimulationEvent.QueueSaturated()), sim.drainEvents());
     }
 
-    // ---- Horloge : changements survenus entre deux ticks ----
+    // ---- Clock: changes that happen between two ticks ----
 
     @Test
-    void unBranchementEntreDeuxTicksPartDuTickSuivant() {
+    void aConnectionBetweenTwoTicksStartsAtTheNextTick() {
         DeviceId box = box(0);
         sim.tick(100);
-        DeviceId tour = host(5);
-        plug(box, 0, tour, 0); // entre le tick 100 et le tick 101, comme un clic de joueur
+        DeviceId tower = host(5);
+        plug(box, 0, tower, 0); // between tick 100 and tick 101, like a player click
 
         sim.tick(101);
-        // Apprise au tick même de l'envoi : la trame est livrée dans le tick où elle part.
+        // Learned at the very tick of sending: the frame is delivered in the tick where it leaves.
         assertEquals(101L, learned(box).getFirst().lastSeen());
         tickUntil(102, 800);
 
-        List<Long> envois = seen.stream()
-                .filter(s -> s.direction() == FrameDirection.SENT && s.port().device().equals(tour))
+        List<Long> sends = seen.stream()
+                .filter(s -> s.direction() == FrameDirection.SENT && s.port().device().equals(tower))
                 .map(Seen::now).toList();
-        assertEquals(List.of(101L, 701L), envois);
+        assertEquals(List.of(101L, 701L), sends);
     }
 
     @Test
-    void uneBoucleNeeEntreDeuxTicksEstSignaleeToutesLesMinutesExactement() {
-        // Défaut relevé le 2026-11-18 par le test en jeu : signalements à 1 800 ticks d'écart au lieu de 1 200.
-        // Le moteur voit la boucle à chaque présence (toutes les 600 ticks) ; le module des messages,
-        // avec le même temps, n'en transmet qu'une par minute.
+    void aLoopBornBetweenTwoTicksIsReportedEveryMinuteExactly() {
+        // Defect found on 2026-11-18 by the game test: reports 1,800 ticks apart instead of 1,200.
+        // The engine sees the loop at every presence (every 600 ticks); the message module,
+        // with the same time, forwards only one per minute.
         DeviceId box1 = box(0);
         DeviceId box2 = box(20);
         plug(box1, 1, box2, 1);
         plug(box1, 2, box2, 2);
         sim.tick(50);
-        DeviceId tour = host(5);
-        plug(box1, 0, tour, 0); // entre le tick 50 et le tick 51
+        DeviceId tower = host(5);
+        plug(box1, 0, tower, 0); // between tick 50 and tick 51
 
         MessageThrottle throttle = new MessageThrottle(SimulationLimits.DEFAULT.reportIntervalTicks());
-        List<Long> vues = new ArrayList<>();
-        List<Long> signalements = new ArrayList<>();
+        List<Long> sightings = new ArrayList<>();
+        List<Long> reports = new ArrayList<>();
         for (long t = 51; t <= 2500; t++) {
             sim.tick(t);
             for (SimulationEvent event : sim.drainEvents()) {
                 if (event instanceof SimulationEvent.LoopDetected loop) {
-                    vues.add(t);
+                    sightings.add(t);
                     if (throttle.allow("loop:" + loop.network(), t)) {
-                        signalements.add(t);
+                        reports.add(t);
                     }
                 }
             }
         }
 
-        assertEquals(List.of(51L, 651L, 1251L, 1851L, 2451L), vues);
-        assertEquals(List.of(51L, 1251L, 2451L), signalements);
+        assertEquals(List.of(51L, 651L, 1251L, 1851L, 2451L), sightings);
+        assertEquals(List.of(51L, 1251L, 2451L), reports);
     }
 
     @Test
-    void uneMacExpireExactement300SecondesApresSaDerniereTrame() {
+    void aMacExpiresExactly300SecondsAfterItsLastFrame() {
         DeviceId box1 = box(0);
         DeviceId box2 = box(20);
         plug(box1, 0, box2, 0);
         sim.tick(0);
-        DeviceId tour = host(25);
-        plug(box2, 1, tour, 0); // entre le tick 0 et le tick 1 : présence livrée au tick 1
+        DeviceId tower = host(25);
+        plug(box2, 1, tower, 0); // between tick 0 and tick 1: presence delivered at tick 1
         sim.tick(1);
         unplug(box2, 1);
         assertEquals(1L, learned(box1).getFirst().lastSeen());
 
         long expiration = 1 + MacTable.DEFAULT_AGING_TICKS;
         tickUntil(2, expiration - 1);
-        assertEquals(List.of(0), learnedPorts(box1, mac(tour, 0)));
-        // Expirée à 6001 ; retirée de la table au nettoyage suivant, au plus une seconde après.
+        assertEquals(List.of(0), learnedPorts(box1, mac(tower, 0)));
+        // Expired at 6001; removed from the table at the next cleanup, one second later at most.
         tickUntil(expiration, expiration + BoxLogic.PURGE_INTERVAL_TICKS - 1);
-        assertTrue(learnedPorts(box1, mac(tour, 0)).isEmpty());
+        assertTrue(learnedPorts(box1, mac(tower, 0)).isEmpty());
     }
 
     @Test
-    void unPosteBrancheEtRetireEntreDeuxTicksNeFaitRienEtNePlantePas() {
-        // Plantage du serveur de tests le 2026-11-18 : un test pose, câble et retire un poste dans le même
-        // tick ; au tick suivant, le branchement en attente visait un poste qui n'existait plus.
+    void aComputerConnectedAndRemovedBetweenTwoTicksDoesNothingAndDoesNotCrash() {
+        // Test server crash on 2026-11-18: a test places, cables and removes a computer in the same
+        // tick; at the next tick, the pending connection targeted a computer that no longer existed.
         DeviceId box = box(0);
         sim.tick(0);
-        DeviceId tour = host(5);
-        plug(box, 0, tour, 0);
-        remove(tour);
+        DeviceId tower = host(5);
+        plug(box, 0, tower, 0);
+        remove(tower);
 
         sim.tick(1);
 
-        assertEquals(0, presencesSentBy(tour, 0, 1));
+        assertEquals(0, presencesSentBy(tower, 0, 1));
         assertTrue(learned(box).isEmpty());
-        assertTrue(sim.logic(tour).isEmpty());
+        assertTrue(sim.logic(tower).isEmpty());
     }
 
     @Test
-    void unCableBrancheEtDebrancheEntreDeuxTicksNEmetRien() {
+    void aCableConnectedAndUnpluggedBetweenTwoTicksSendsNothing() {
         DeviceId box = box(0);
-        DeviceId tour = host(5);
+        DeviceId tower = host(5);
         sim.tick(0);
-        plug(box, 1, tour, 0); // le port 0 n'a pas de câble au démarrage
+        plug(box, 1, tower, 0); // port 0 has no cable at startup
         unplug(box, 1);
 
         tickUntil(1, 700);
 
-        assertEquals(0, presencesSentBy(tour, 1, 700));
+        assertEquals(0, presencesSentBy(tower, 1, 700));
         assertTrue(learned(box).isEmpty());
     }
 
     @Test
-    void unAppareilRemplaceEntreDeuxTicksDemarreAvecSonNouveauRole() {
+    void aDeviceReplacedBetweenTwoTicksStartsWithItsNewRole() {
         DeviceId id = new DeviceId(OVERWORLD, 0, 64, 0);
         sim.tick(0);
-        NetworkNode poste = new NetworkNode(id, "worldwideblocks:pc_tower", 1);
-        graph.putNode(poste);
-        sim.deviceAdded(poste);
-        NetworkNode boxAuMemeEndroit = new NetworkNode(id, "worldwideblocks:internet_box", DeviceRole.BOX, BOX_PORTS);
-        graph.putNode(boxAuMemeEndroit);
-        sim.deviceAdded(boxAuMemeEndroit);
+        NetworkNode computer = new NetworkNode(id, "worldwideblocks:pc_tower", 1);
+        graph.putNode(computer);
+        sim.deviceAdded(computer);
+        NetworkNode boxAtTheSameSpot = new NetworkNode(id, "worldwideblocks:internet_box", DeviceRole.BOX, BOX_PORTS);
+        graph.putNode(boxAtTheSameSpot);
+        sim.deviceAdded(boxAtTheSameSpot);
 
         sim.tick(1);
 

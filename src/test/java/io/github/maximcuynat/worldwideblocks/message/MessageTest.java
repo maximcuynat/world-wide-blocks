@@ -9,7 +9,7 @@ import io.github.maximcuynat.worldwideblocks.network.DeviceId;
 class MessageTest {
 
     @Test
-    void leLogEcritLaCleEtLesValeursSansRienTraduire() {
+    void theLogWritesTheKeyAndTheValuesWithoutTranslatingAnything() {
         Message message = Message.of(MessageLevel.SUCCESS, "message.worldwideblocks.cable.connected",
                 MessageArg.device(new DeviceId("minecraft:overworld", 1, 64, -2), "worldwideblocks:pc_tower"),
                 MessageArg.number(1),
@@ -21,19 +21,19 @@ class MessageTest {
     }
 
     @Test
-    void unMessageSansValeurSEcritParSaCleSeule() {
+    void aMessageWithoutValuesIsWrittenAsItsKeyAlone() {
         assertEquals("message.worldwideblocks.cable.cancelled", Message.of(MessageLevel.INFO, "message.worldwideblocks.cable.cancelled").logText());
     }
 
     @Test
-    void lesDistancesSontArrondiesALEntierLePlusProche() {
+    void distancesAreRoundedToTheNearestInteger() {
         assertEquals(new MessageArg.Number(4), MessageArg.blocks(4.4));
         assertEquals(new MessageArg.Number(5), MessageArg.blocks(4.5));
         assertEquals(new MessageArg.Number(99), MessageArg.blocks(99.0));
     }
 
     @Test
-    void unAppareilDonneLaCleDeSonNom() {
+    void aDeviceGivesTheKeyOfItsName() {
         MessageArg.Device device = new MessageArg.Device("worldwideblocks:internet_box", "minecraft:overworld", 0, 0, 0);
         assertEquals("block.worldwideblocks.internet_box", device.nameKey());
     }

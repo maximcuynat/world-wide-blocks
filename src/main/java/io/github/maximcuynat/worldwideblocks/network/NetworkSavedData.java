@@ -16,14 +16,14 @@ import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
 /**
- * Persistance du graphe réseau, dans le stockage global du serveur ({@code MinecraftServer#getDataStorage}),
- * fichier {@code data/worldwideblocks/network.dat} du monde.
+ * Persistence of the network graph, in the server's global storage ({@code MinecraftServer#getDataStorage}),
+ * file {@code data/worldwideblocks/network.dat} of the world.
  *
- * <p>Ce stockage ne dépend d'aucun chunk : un lien existe même quand ses deux extrémités sont
- * déchargées. Il appartient à l'instance du serveur : en solo, chaque monde ouvert a le sien.
+ * <p>This storage depends on no chunk: a link exists even when both of its ends are
+ * unloaded. It belongs to the server instance: in singleplayer, each opened world has its own.
  *
- * <p>Il porte aussi la simulation et l'état du module des messages, qui ne sont pas sauvegardés : ils
- * vivent et meurent avec le serveur, sans aucun état statique.
+ * <p>It also holds the simulation and the state of the message module, which are not saved: they
+ * live and die with the server, with no static state.
  */
 public final class NetworkSavedData extends SavedData {
     private static final Codec<NetworkSavedData> CODEC = RecordCodecBuilder.create(i -> i.group(
@@ -31,7 +31,7 @@ public final class NetworkSavedData extends SavedData {
             NetworkCodecs.LINK.listOf().fieldOf("links").forGetter(data -> List.copyOf(data.graph.links()))
     ).apply(i, NetworkSavedData::new));
 
-    /** Public pour les tests en jeu, qui relisent le fichier par un stockage neuf. */
+    /** Public for the game tests, which reread the file through a fresh storage. */
     public static final SavedDataType<NetworkSavedData> TYPE = new SavedDataType<>(
             Identifier.fromNamespaceAndPath(WorldWideBlocks.MODID, "network"), () -> new NetworkSavedData(), CODEC);
 
@@ -48,7 +48,7 @@ public final class NetworkSavedData extends SavedData {
             macsGenerated |= !this.graph.restoreNode(saved.node(), saved.macs());
         }
         if (macsGenerated) {
-            // Monde d'avant le lot 1b : on écrit tout de suite les adresses générées, pour qu'elles ne changent plus.
+            // World from before lot 1b: write the generated addresses right away, so they do not change anymore.
             this.setDirty();
         }
         for (Link link : links) {
@@ -70,7 +70,7 @@ public final class NetworkSavedData extends SavedData {
         return this.graph;
     }
 
-    // ---- Lecture seule, pour comparer des données relues du disque (tests en jeu) ----
+    // ---- Read only, to compare data reread from disk (game tests) ----
 
     public Optional<NetworkNode> node(DeviceId id) {
         return this.graph.node(id);
@@ -88,7 +88,7 @@ public final class NetworkSavedData extends SavedData {
         return this.simulation;
     }
 
-    /** Anti-répétition et écouteurs du module des messages (voir {@code MessageCenter}). */
+    /** Throttle and listeners of the message module (see {@code MessageCenter}). */
     public MessageHub messageHub() {
         return this.messageHub;
     }

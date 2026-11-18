@@ -12,13 +12,13 @@ public final class ModAttachments {
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES = DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, WorldWideBlocks.MODID);
 
     /**
-     * Câbles que le client d'un joueur connaît, côté serveur. Non sauvegardé et non copié à la mort :
-     * un joueur qui réapparaît repart de zéro et reçoit de nouveau ce qu'il voit.
+     * Cables that a player's client knows about, on the server side. Not saved and not copied on death:
+     * a player who respawns starts from zero and receives again what they see.
      */
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<PlayerLinkView>> PLAYER_LINK_VIEW = ATTACHMENT_TYPES.register("player_link_view",
             () -> AttachmentType.builder(() -> new PlayerLinkView()).build());
 
-    /** Dernier état d'appareil envoyé à l'indicateur du joueur. Non sauvegardé, non copié à la mort. */
+    /** Last device state sent to the player's indicator. Not saved, not copied on death. */
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<PlayerStatusView>> PLAYER_STATUS_VIEW = ATTACHMENT_TYPES.register("player_status_view",
             () -> AttachmentType.builder(() -> new PlayerStatusView()).build());
 

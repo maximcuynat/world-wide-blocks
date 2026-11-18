@@ -6,7 +6,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
-/** Un câble vient d'être branché dans la dimension du joueur. */
+/** A cable was just connected in the player's dimension. */
 public record LinkAddedPayload(ClientLink link) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<LinkAddedPayload> TYPE = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(WorldWideBlocks.MODID, "link_added"));
 

@@ -23,28 +23,28 @@ import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
 /**
- * Tests en jeu automatiques de World Wide Blocks, lancés sans fenêtre ni joueur par
- * {@code ./gradlew runGameTestServer}, dans un monde jetable ({@code run-gametest/}).
+ * Automatic game tests of World Wide Blocks, run without a window or a player by
+ * {@code ./gradlew runGameTestServer}, in a throwaway world ({@code run-gametest/}).
  *
- * <p>Chaque test est une fonction (registre {@code test_function}) et une instance de test qui dit
- * dans quel lot il tourne, sur quelle structure et pendant combien de ticks au plus. Minecraft
- * exécute les lots l'un après l'autre et les tests d'un même lot en même temps.
+ * <p>Each test is a function ({@code test_function} registry) and a test instance that says in
+ * which batch it runs, on which structure and for how many ticks at most. Minecraft runs the
+ * batches one after the other and the tests of one batch at the same time.
  *
- * <p>Jeu de sources {@code gametest} : chargé par les runs de développement, absent du jar.
+ * <p>Source set {@code gametest}: loaded by the development runs, absent from the jar.
  */
 @EventBusSubscriber(modid = WorldWideBlocks.MODID)
 public final class WorldWideBlocksGameTests {
-    /** Zone vide de 16 x 4 x 16 blocs posée sur le sol plat du monde de test. */
+    /** Empty area of 16 x 4 x 16 blocks placed on the flat ground of the test world. */
     private static final Identifier STRUCTURE = id("empty_16x4x16");
 
-    /** Lot d'exécution. Un lot = un environnement de test distinct. */
+    /** Execution batch. One batch = one distinct test environment. */
     enum Batch {
-        /** Tests indépendants qui ne s'approchent pas des limites globales du moteur. */
+        /** Independent tests that do not come near the engine's global limits. */
         SHARED("shared"),
         /**
-         * Tests qui touchent une limite globale du moteur (trames par tick, taille de la file,
-         * limite des signalements) : chacun seul dans son propre lot, pour que le résultat ne
-         * dépende ni des autres tests ni de l'ordre d'exécution.
+         * Tests that hit a global limit of the engine (frames per tick, queue size, report limit):
+         * each one alone in its own batch, so that the result depends neither on the other tests
+         * nor on the execution order.
          */
         ENGINE_LIMITS("engine_limits");
 
@@ -66,13 +66,13 @@ public final class WorldWideBlocksGameTests {
             new Case("cable_dimension_change", Batch.SHARED, 100, CableTests::dimensionChange),
             new Case("cable_start_broken_while_disconnected", Batch.SHARED, 100, CableTests::startBrokenWhileDisconnected),
             new Case("network_save_and_reload", Batch.SHARED, 20, NetworkTests::networkSurvivesSaveAndReload),
-            // 300 s d'expiration : le serveur de tests ne marque pas de pause entre deux ticks, quelques secondes réelles.
+            // 300 s expiry: the test server does not pause between two ticks, so a few real seconds.
             new Case("mac_expires_after_300_seconds", Batch.SHARED, 6200, NetworkTests::macExpiresAfter300Seconds),
             new Case("loop_reported_once_per_minute", Batch.ENGINE_LIMITS, 4200, NetworkTests::loopReportedOncePerMinute),
             new Case("loop_forgotten_only_for_changed_network", Batch.ENGINE_LIMITS, 1000, NetworkTests::loopForgottenOnlyForChangedNetwork),
             new Case("trial_command_refused_outside_trial_world", Batch.SHARED, 20, SceneTests::commandRefusedOutsideTrialWorld)),
-            // Décors de /worldwideblocks test, sauf « distance » (99 blocs, plus grand que la zone de test).
-            // Le décor de boucle touche les limites globales du moteur : lot à part.
+            // Scenes of /worldwideblocks test, except "distance" (99 blocks, larger than the test area).
+            // The loop scene hits the engine's global limits: separate batch.
             Arrays.stream(TrialScenario.values())
                     .filter(scenario -> scenario != TrialScenario.DISTANCE)
                     .map(scenario -> new Case("trial_scene_" + scenario.id(),
@@ -90,8 +90,8 @@ public final class WorldWideBlocksGameTests {
 
     @SubscribeEvent
     static void registerTests(RegisterGameTestsEvent event) {
-        // Minecraft regroupe en un lot les tests d'un même environnement : un environnement par test
-        // isolé, un seul pour les tests partagés.
+        // Minecraft groups the tests of one environment into a batch: one environment per isolated
+        // test, a single one for the shared tests.
         Map<String, Holder<TestEnvironmentDefinition<?>>> environments = new HashMap<>();
         for (Case test : CASES) {
             String environment = test.batch() == Batch.SHARED ? test.batch().path : test.batch().path + "/" + test.name();

@@ -1,18 +1,18 @@
 package io.github.maximcuynat.worldwideblocks.network;
 
 /**
- * Règle d'un branchement en attente : un cordon tenu en main dont un bout est déjà branché sur un
- * appareil (premier clic fait, ou bout retiré d'un appareil). Java pur, testable sans le jeu.
+ * Rule of a pending connection: a cord held in hand with one end already plugged into a
+ * device (first click done, or end removed from a device). Plain Java, testable without the game.
  */
 public final class PendingCable {
 
-    /** État d'un branchement en attente. */
+    /** State of a pending connection. */
     public enum Status {
-        /** Le branchement peut encore être terminé. */
+        /** The connection can still be completed. */
         VALID,
-        /** L'appareil de départ n'existe plus (cassé, explosé, remplacé) : l'attente est annulée. */
+        /** The start device no longer exists (broken, exploded, replaced): the wait is cancelled. */
         START_GONE,
-        /** Celui qui tient le cordon n'est plus dans la dimension du départ : l'attente est annulée. */
+        /** Whoever holds the cord is no longer in the start dimension: the wait is cancelled. */
         OTHER_DIMENSION
     }
 
@@ -20,11 +20,11 @@ public final class PendingCable {
     }
 
     /**
-     * @param start           port de départ mémorisé sur le cordon
-     * @param holderDimension dimension où se trouve celui qui tient le cordon
+     * @param start           start port remembered on the cord
+     * @param holderDimension dimension where the holder of the cord is
      */
     public static Status check(NetworkGraph graph, PortRef start, String holderDimension) {
-        // Un départ disparu prime : revenir dans la bonne dimension n'y changerait rien.
+        // A vanished start takes precedence: going back to the right dimension would change nothing.
         if (graph.node(start.device()).filter(node -> node.hasPort(start.index())).isEmpty()) {
             return Status.START_GONE;
         }

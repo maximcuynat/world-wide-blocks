@@ -5,31 +5,31 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 
 /**
- * Ce qu'un appareil peut faire pendant qu'il réagit à un événement de la simulation. Un contexte
- * n'est valable que pendant l'appel qui le reçoit.
+ * What a device can do while it reacts to a simulation event. A context
+ * is only valid during the call that receives it.
  */
 public interface DeviceContext {
 
-    /** Temps de jeu, en ticks. */
+    /** Game time, in ticks. */
     long now();
 
     DeviceId device();
 
-    /** Adresse MAC du port. */
+    /** MAC address of the port. */
     MacAddress mac(int port);
 
-    /** Vrai si un câble est branché sur ce port. */
+    /** True if a cable is connected to this port. */
     boolean isLinked(int port);
 
-    /** Émet une nouvelle trame par ce port. Sans câble, elle est perdue. */
+    /** Sends a new frame through this port. Without a cable, it is lost. */
     void send(int port, EthernetFrame frame);
 
     /**
-     * Relaie par ce port la trame en cours de traitement, comme un switch : la simulation la suit
-     * pour détecter les boucles. Seulement pendant {@link DeviceLogic#onFrame}.
+     * Relays the frame being processed through this port, like a switch: the simulation tracks it
+     * to detect loops. Only during {@link DeviceLogic#onFrame}.
      */
     void relay(int port, EthernetFrame frame);
 
-    /** Demande un appel à {@link DeviceLogic#onTimer} avec cette clé, dans {@code delayTicks} ticks. */
+    /** Requests a call to {@link DeviceLogic#onTimer} with this key, in {@code delayTicks} ticks. */
     void schedule(long delayTicks, Object key);
 }

@@ -1,13 +1,13 @@
 package io.github.maximcuynat.worldwideblocks.network;
 
 /**
- * Désigne un port précis d'un appareil.
+ * Designates a specific port of a device.
  *
- * @param index numéro du port, à partir de 0 (affiché à partir de 1 au joueur)
+ * @param index port number, from 0 (shown from 1 to the player)
  */
 public record PortRef(DeviceId device, int index) {
 
-    /** Numéro du port tel qu'il est montré au joueur. */
+    /** Port number as shown to the player. */
     public int displayNumber() {
         return this.index + 1;
     }

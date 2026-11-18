@@ -11,12 +11,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
 /**
- * Seul endroit qui décide de l'apparence d'un message : le serveur n'envoie que le canal, le niveau,
- * la clé et les valeurs. Remplacer ce dessin (future interface HUD) ne touche ni au serveur ni aux
- * textes.
+ * The only place that decides how a message looks: the server only sends the channel, the level,
+ * the key and the values. Replacing this drawing (future HUD) touches neither the server nor the
+ * texts.
  *
- * <p>Le niveau se lit toujours par un symbole ou un mot, jamais par la couleur seule. L'affichage passe
- * par le {@code ChatListener} du jeu, qui garde la narration et les réglages de chat du joueur.
+ * <p>The level is always read through a symbol or a word, never through color alone. Display goes
+ * through the game's {@code ChatListener}, which keeps the player's narration and chat settings.
  */
 final class ClientMessages {
     private final WorldWideBlocksClientConfig config;
@@ -32,7 +32,7 @@ final class ClientMessages {
             case ACTION_BAR -> minecraft.gui.chatListener().handleOverlay(text);
             case CHAT -> minecraft.gui.chatListener().handleSystemMessage(text, true);
             case LOG -> {
-                // Jamais envoyé au client : le log reste sur le serveur.
+                // Never sent to the client: the log stays on the server.
             }
         }
     }

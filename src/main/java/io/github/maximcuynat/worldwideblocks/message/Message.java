@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Un message destiné aux joueurs : un niveau, une clé de langue et des valeurs. Aucun texte rédigé ni
- * aucune mise en forme : le client décide seul de l'apparence.
+ * A message for players: a level, a language key and values. No written text and
+ * no formatting: the client alone decides how it looks.
  */
 public record Message(MessageLevel level, String key, List<MessageArg> args) {
 
@@ -17,7 +17,7 @@ public record Message(MessageLevel level, String key, List<MessageArg> args) {
         return new Message(level, key, List.of(args));
     }
 
-    /** Écriture dans le log, en anglais : la clé puis les valeurs, par exemple {@code message.worldwideblocks.cable.unplugged [worldwideblocks:pc_tower [1, 64, 2] minecraft:overworld, 1]}. */
+    /** Log line, in English: the key then the values, for example {@code message.worldwideblocks.cable.unplugged [worldwideblocks:pc_tower [1, 64, 2] minecraft:overworld, 1]}. */
     public String logText() {
         if (this.args.isEmpty()) {
             return this.key;

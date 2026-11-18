@@ -3,18 +3,18 @@ package io.github.maximcuynat.worldwideblocks.network.protocol;
 import java.util.Optional;
 
 /**
- * Type d'une trame Ethernet : il dit quel protocole lit son contenu. Les valeurs sont les valeurs
- * officielles du registre IANA « IEEE 802 Numbers » (https://www.iana.org/assignments/ieee-802-numbers),
- * vérifiées le 2026-11-17.
+ * Type of an Ethernet frame: it says which protocol reads its content. The values are the
+ * official values of the IANA "IEEE 802 Numbers" registry (https://www.iana.org/assignments/ieee-802-numbers),
+ * checked on 2026-11-17.
  */
 public enum EtherType {
-    /** IPv4 (registre IANA, RFC 9542). Utilisé à partir du lot 1b-2 (DHCP). */
+    /** IPv4 (IANA registry, RFC 9542). Used from lot 1b-2 (DHCP). */
     IPV4(0x0800),
-    /** ARP, résolution d'adresse (registre IANA, RFC 9542). Utilisé au lot 1c. */
+    /** ARP, address resolution (IANA registry, RFC 9542). Used in lot 1c. */
     ARP(0x0806),
     /**
-     * « IEEE Std 802 Local Experimental », réservé aux essais. Il ne sert qu'à la trame de présence,
-     * échafaudage du lot 1b-1 à retirer au lot 1c (voir {@link PresencePayload}).
+     * "IEEE Std 802 Local Experimental", reserved for experiments. It is only used by the presence frame,
+     * scaffolding of lot 1b-1 to remove in lot 1c (see {@link PresencePayload}).
      */
     LOCAL_EXPERIMENTAL(0x88B5);
 
@@ -24,7 +24,7 @@ public enum EtherType {
         this.value = value;
     }
 
-    /** Valeur sur 16 bits écrite dans l'en-tête de la trame. */
+    /** 16-bit value written in the frame header. */
     public int value() {
         return this.value;
     }

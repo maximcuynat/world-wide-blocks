@@ -3,15 +3,15 @@ package io.github.maximcuynat.worldwideblocks.network;
 import java.util.Comparator;
 
 /**
- * Identifie un appareil réseau par sa position : dimension et coordonnées du bloc.
- * Un appareil ne se déplace jamais (il refuse les pistons), sa position suffit donc à l'identifier.
+ * Identifies a network device by its position: dimension and block coordinates.
+ * A device never moves (it refuses pistons), so its position is enough to identify it.
  *
- * <p>Java pur, sans classe Minecraft : le moteur reste testable sans lancer le jeu.
+ * <p>Plain Java, no Minecraft class: the engine stays testable without launching the game.
  *
- * @param dimension identifiant de la dimension, par exemple {@code minecraft:overworld}
+ * @param dimension identifier of the dimension, for example {@code minecraft:overworld}
  */
 public record DeviceId(String dimension, int x, int y, int z) {
-    /** Ordre total et stable : dimension, puis x, y, z. Sert à désigner un réseau par un de ses appareils. */
+    /** Total, stable order: dimension, then x, y, z. Used to designate a network by one of its devices. */
     public static final Comparator<DeviceId> ORDER = Comparator.comparing(DeviceId::dimension)
             .thenComparingInt(DeviceId::x)
             .thenComparingInt(DeviceId::y)
@@ -21,7 +21,7 @@ public record DeviceId(String dimension, int x, int y, int z) {
         return this.dimension.equals(other.dimension);
     }
 
-    /** Distance en ligne droite entre les centres des deux blocs, en blocs. */
+    /** Straight-line distance between the centers of the two blocks, in blocks. */
     public double distanceTo(DeviceId other) {
         double dx = this.x - other.x;
         double dy = this.y - other.y;

@@ -11,15 +11,15 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
 /**
- * État de l'appareil que le joueur vise, pour l'indicateur : il n'est envoyé que pour cet appareil,
- * et seulement quand il change. Lot 1b-2 : s'y ajouteront l'état DHCP du poste (le bail sera envoyé
- * comme une heure d'expiration en temps de jeu, pas comme un compte à rebours) et les adresses
- * prêtées par la box.
+ * State of the device the player is aiming at, for the status panel: it is sent only for that device,
+ * and only when it changes. Lot 1b-2: the computer's DHCP state will be added (the lease will be sent
+ * as an expiry time in game time, not as a countdown) and the addresses
+ * leased by the box.
  *
- * @param switching vrai pour un appareil qui commute (box, switch) : l'indicateur montre alors les
- *                  MAC apprises derrière chaque port plutôt que la MAC de chaque port
- * @param portMacs  MAC de chaque port, dans l'ordre des ports (valeurs sur 48 bits)
- * @param learned   MAC apprises, pour un appareil qui commute
+ * @param switching true for a device that switches (box, switch): the status panel then shows the
+ *                  MACs learned behind each port rather than the MAC of each port
+ * @param portMacs  MAC of each port, in port order (48-bit values)
+ * @param learned   learned MACs, for a device that switches
  */
 public record DeviceStatusPayload(BlockPos pos, boolean switching, List<Long> portMacs, List<LearnedMac> learned)
         implements CustomPacketPayload {

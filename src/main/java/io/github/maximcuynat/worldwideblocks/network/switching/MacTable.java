@@ -11,19 +11,19 @@ import java.util.function.Predicate;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 
 /**
- * Table d'apprentissage d'un switch : pour chaque MAC source vue, le port derrière lequel elle se
- * trouve. Une entrée expire si sa MAC n'a plus émis depuis le délai d'expiration, et disparaît
- * dès que le câble de son port est retiré.
+ * Learning table of a switch: for each source MAC seen, the port behind which it
+ * is. An entry expires if its MAC has not sent since the expiry delay, and disappears
+ * as soon as the cable of its port is removed.
  *
- * <p>Le temps est celui du jeu, en ticks, fourni par l'appelant.
+ * <p>Time is the game's, in ticks, supplied by the caller.
  *
- * <p>Java pur, sans classe Minecraft. Pas thread-safe.
+ * <p>Plain Java, no Minecraft class. Not thread-safe.
  */
 public final class MacTable {
-    /** 300 s, délai d'expiration recommandé par IEEE 802.1D, en ticks de jeu (20 par seconde). */
+    /** 300 s, expiry delay recommended by IEEE 802.1D, in game ticks (20 per second). */
     public static final long DEFAULT_AGING_TICKS = 300L * 20L;
 
-    /** Ce que la table sait d'une MAC. */
+    /** What the table knows about a MAC. */
     public record Entry(MacAddress mac, int port, long lastSeen) {
     }
 
@@ -38,8 +38,8 @@ public final class MacTable {
     }
 
     /**
-     * Retient que {@code mac} vient d'émettre depuis {@code port}. Une adresse de groupe n'est jamais
-     * apprise : elle ne désigne pas un appareil.
+     * Remembers that {@code mac} just sent from {@code port}. A group address is never
+     * learned: it does not designate a device.
      */
     public void learn(MacAddress mac, int port, long now) {
         if (mac.isMulticast()) {
@@ -48,23 +48,23 @@ public final class MacTable {
         this.entries.put(mac, new Entry(mac, port, now));
     }
 
-    /** Port derrière lequel se trouve {@code mac}, si elle est connue et n'a pas expiré. */
+    /** Port behind which {@code mac} is, if it is known and has not expired. */
     public OptionalInt lookup(MacAddress mac, long now) {
         Entry entry = this.entries.get(mac);
         return entry == null || this.isExpired(entry, now) ? OptionalInt.empty() : OptionalInt.of(entry.port());
     }
 
-    /** Oublie tout ce qui était appris derrière ce port (câble retiré). */
+    /** Forgets everything learned behind this port (cable removed). */
     public void flushPort(int port) {
         this.removeIf(entry -> entry.port() == port);
     }
 
-    /** Retire les entrées expirées. */
+    /** Removes the expired entries. */
     public void purgeExpired(long now) {
         this.removeIf(entry -> this.isExpired(entry, now));
     }
 
-    /** Entrées encore présentes, dans l'ordre d'apprentissage. Elles peuvent inclure des entrées expirées pas encore purgées. */
+    /** Entries still present, in learning order. They may include expired entries not yet purged. */
     public List<Entry> entries() {
         return Collections.unmodifiableList(new ArrayList<>(this.entries.values()));
     }

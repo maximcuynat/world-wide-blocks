@@ -19,17 +19,17 @@ import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * Construction et retrait des décors d'essai. Les appareils sont de vrais blocs, posés comme par un
- * joueur ; les câbles passent par le moteur, sans cordon consommé (comme en créatif).
+ * Building and removal of the trial scenes. Devices are real blocks, placed as if by a player;
+ * cables go through the engine, with no cord used (as in creative).
  */
 public final class TrialScenes {
-    /** Distance entre les pieds du joueur et le point de départ du décor. */
+    /** Distance between the player's feet and the start of the scene. */
     public static final int DISTANCE_FROM_PLAYER = 3;
 
     private TrialScenes() {
     }
 
-    /** Résultat d'une construction : les positions des appareils posés, ou la raison d'un refus. */
+    /** Result of a build: the positions of the placed devices, or the reason for a refusal. */
     public record Result(List<BlockPos> devices, int cables, Optional<String> refusal) {
         static Result refused(String reason) {
             return new Result(List.of(), 0, Optional.of(reason));
@@ -37,26 +37,26 @@ public final class TrialScenes {
     }
 
     /**
-     * Position d'un appareil du décor.
+     * Position of a device of the scene.
      *
-     * @param origin  point de départ du décor, au niveau des pieds
-     * @param forward direction dans laquelle le joueur regarde (horizontale)
+     * @param origin  start of the scene, at feet level
+     * @param forward direction the player is looking in (horizontal)
      */
     public static BlockPos positionOf(TrialScenario.Device device, BlockPos origin, Direction forward) {
         return origin.relative(forward.getClockWise(), device.right()).relative(forward, device.forward());
     }
 
     /**
-     * Construit le décor si toute sa zone est vide (deux blocs de haut au-dessus du sol). Les
-     * appareils regardent le joueur.
+     * Builds the scene if its whole area is empty (two blocks high above the ground). Devices face
+     * the player.
      */
     public static Result build(ServerLevel level, TrialScenario scenario, BlockPos origin, Direction forward) {
         Optional<BlockPos> obstacle = firstObstacle(level, scenario, origin, forward);
         if (obstacle.isPresent()) {
             BlockPos at = obstacle.get();
-            return Result.refused("La zone du décor n'est pas vide : bloc « "
-                    + level.getBlockState(at).getBlock().getName().getString() + " » en "
-                    + at.getX() + " " + at.getY() + " " + at.getZ() + ". Placez-vous face à un terrain dégagé.");
+            return Result.refused("The scene area is not empty: block \""
+                    + level.getBlockState(at).getBlock().getName().getString() + "\" at "
+                    + at.getX() + " " + at.getY() + " " + at.getZ() + ". Stand in front of clear ground.");
         }
         List<BlockPos> placed = new ArrayList<>();
         for (TrialScenario.Device device : scenario.devices()) {
@@ -74,18 +74,18 @@ public final class TrialScenes {
             Optional<PortRef> fromPort = network.firstFreePort(from, LinkMedium.COPPER_ETHERNET);
             Optional<PortRef> toPort = network.firstFreePort(to, LinkMedium.COPPER_ETHERNET);
             if (fromPort.isEmpty() || toPort.isEmpty()) {
-                return new Result(placed, cables, Optional.of("Câble " + (cables + 1) + " impossible : plus de port libre."));
+                return new Result(placed, cables, Optional.of("Cable " + (cables + 1) + " impossible: no free port left."));
             }
             ConnectOutcome outcome = network.connect(fromPort.get(), toPort.get(), LinkMedium.COPPER_ETHERNET, false);
             if (!outcome.isSuccess()) {
-                return new Result(placed, cables, Optional.of("Câble " + (cables + 1) + " refusé par le moteur : " + outcome.result()));
+                return new Result(placed, cables, Optional.of("Cable " + (cables + 1) + " refused by the engine: " + outcome.result()));
             }
             cables++;
         }
         return new Result(placed, cables, Optional.empty());
     }
 
-    /** Retire les appareils encore présents à ces positions (leurs câbles partent avec eux). */
+    /** Removes the devices still present at these positions (their cables go with them). */
     public static int remove(ServerLevel level, List<BlockPos> devices) {
         int removed = 0;
         for (BlockPos pos : devices) {

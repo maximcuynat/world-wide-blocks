@@ -4,11 +4,11 @@ import io.github.maximcuynat.worldwideblocks.network.PortRef;
 import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 
 /**
- * Point d'écoute : chaque trame qui entre dans un appareil ou en sort y passe. Il ne fait rien pour
- * l'instant ; il servira à l'analyseur de trames en jeu, et les tests s'en servent pour observer les
- * échanges.
+ * Tap: every frame that enters or leaves a device goes through it. It does nothing for
+ * now; it will serve the in-game frame analyzer, and the tests use it to observe the
+ * exchanges.
  *
- * <p>Il ne doit pas modifier le réseau : il observe seulement.
+ * <p>It must not modify the network: it only observes.
  */
 @FunctionalInterface
 public interface FrameTap {
@@ -16,8 +16,8 @@ public interface FrameTap {
     };
 
     /**
-     * @param now       temps de jeu, en ticks
-     * @param port      port de l'appareil par lequel passe la trame
+     * @param now       game time, in ticks
+     * @param port      device port the frame goes through
      */
     void onFrame(long now, PortRef port, FrameDirection direction, EthernetFrame frame);
 }

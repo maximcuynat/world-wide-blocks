@@ -6,10 +6,10 @@ import java.util.Optional;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 
 /**
- * Un appareil tel qu'il est écrit dans la sauvegarde : sa description et les adresses MAC de ses ports.
- * Java pur : la relecture des anciens formats se teste sans lancer le jeu.
+ * A device as written in the save: its description and the MAC addresses of its ports.
+ * Plain Java: rereading old formats can be tested without launching the game.
  *
- * @param macs vide pour un monde sauvegardé avant le lot 1b ; le graphe en génère alors de nouvelles
+ * @param macs empty for a world saved before lot 1b; the graph then generates new ones
  */
 record SavedNode(NetworkNode node, List<MacAddress> macs) {
 
@@ -18,9 +18,9 @@ record SavedNode(NetworkNode node, List<MacAddress> macs) {
     }
 
     /**
-     * Relit un appareil. Avant le lot 1b, seul le nombre de ports était écrit : tous les appareils
-     * étaient des postes et tous leurs ports des prises Ethernet. Depuis, le rôle et le type de
-     * chaque port sont écrits et font foi.
+     * Rereads a device. Before lot 1b, only the number of ports was written: all devices
+     * were computers and all their ports Ethernet jacks. Since then, the role and the kind of
+     * each port are written and are authoritative.
      */
     static SavedNode decode(DeviceId id, String type, Optional<DeviceRole> role, int portCount,
             Optional<List<PortKind>> portKinds, List<MacAddress> macs) {

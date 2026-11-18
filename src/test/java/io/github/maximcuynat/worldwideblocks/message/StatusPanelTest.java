@@ -23,7 +23,7 @@ class StatusPanelTest {
 
     private static final Line HINT = new Line(Light.NONE, "hud.worldwideblocks.sneak_for_details", List.of());
 
-    /** Box aux ports 1, 2 et 3 connectés : 2 MAC derrière le port 1, une derrière le port 2, aucune encore derrière le port 3. */
+    /** Box with ports 1, 2 and 3 connected: 2 MACs behind port 1, one behind port 2, none yet behind port 3. */
     private static final DeviceStatus BOX_STATUS = new DeviceStatus(true, List.of(), Map.of(0, List.of(A, B), 1, List.of(C)));
 
     private static List<Line> box(boolean detailed) {
@@ -32,21 +32,21 @@ class StatusPanelTest {
     }
 
     @Test
-    void laBoxCompacteResumeSesPortsReseauLocal() {
+    void theCompactBoxSummarizesItsLocalNetworkPorts() {
         assertEquals(List.of(
                 new Line(Light.CONNECTED, "hud.worldwideblocks.ports_connected", List.of(MessageArg.number(3), MessageArg.number(4))),
                 HINT), box(false));
     }
 
     @Test
-    void laBoxSansCableEstAuVoyantLibre() {
+    void aBoxWithoutCableShowsTheFreeLight() {
         assertEquals(List.of(
                 new Line(Light.FREE, "hud.worldwideblocks.ports_connected", List.of(MessageArg.number(0), MessageArg.number(4))),
                 HINT), StatusPanel.lines(BOX, port -> false, null, false));
     }
 
     @Test
-    void laBoxDetailleeMontreChaquePortAvecSesMac() {
+    void theDetailedBoxShowsEachPortWithItsMacs() {
         assertEquals(List.of(
                 new Line(Light.CONNECTED, "hud.worldwideblocks.port.connected_learned_more",
                         List.of(MessageArg.number(1), MessageArg.text(A.toString()), MessageArg.number(1))),
@@ -57,7 +57,7 @@ class StatusPanelTest {
     }
 
     @Test
-    void lePosteCompactDitSIlEstConnecte() {
+    void theCompactComputerTellsWhetherItIsConnected() {
         DeviceStatus status = new DeviceStatus(false, List.of(A), Map.of());
 
         assertEquals(List.of(new Line(Light.CONNECTED, "hud.worldwideblocks.connected", List.of()), HINT),
@@ -67,7 +67,7 @@ class StatusPanelTest {
     }
 
     @Test
-    void lePosteDetailleMontreSonPortEtSaMac() {
+    void theDetailedComputerShowsItsPortAndItsMac() {
         DeviceStatus status = new DeviceStatus(false, List.of(A), Map.of());
 
         assertEquals(List.of(
@@ -77,7 +77,7 @@ class StatusPanelTest {
     }
 
     @Test
-    void sansEtatDuServeurLePanneauDetailleMontreQuandMemeLesPorts() {
+    void withoutServerStateTheDetailedPanelStillShowsThePorts() {
         assertEquals(List.of(new Line(Light.FREE, "hud.worldwideblocks.port.free", List.of(MessageArg.number(1)))),
                 StatusPanel.lines(TOWER, port -> false, null, true));
     }

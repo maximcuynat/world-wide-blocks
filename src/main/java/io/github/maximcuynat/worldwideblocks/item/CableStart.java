@@ -11,9 +11,9 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
 /**
- * Première extrémité choisie avec un cordon, mémorisée sur l'objet en attendant le second clic.
+ * First end chosen with a cord, remembered on the item while waiting for the second click.
  *
- * @param port numéro du port choisi, à partir de 0
+ * @param port number of the chosen port, starting at 0
  */
 public record CableStart(GlobalPos device, int port) {
     public static final Codec<CableStart> CODEC = RecordCodecBuilder.create(i -> i.group(
@@ -26,7 +26,7 @@ public record CableStart(GlobalPos device, int port) {
             ByteBufCodecs.VAR_INT, CableStart::port,
             CableStart::new);
 
-    /** Le port de départ, tel que le moteur réseau le désigne. */
+    /** The start port, as the network engine designates it. */
     public PortRef portRef() {
         DeviceId id = new DeviceId(this.device.dimension().identifier().toString(),
                 this.device.pos().getX(), this.device.pos().getY(), this.device.pos().getZ());

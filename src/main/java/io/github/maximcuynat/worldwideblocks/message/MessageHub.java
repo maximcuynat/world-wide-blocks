@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * État du module des messages pour le serveur en cours : anti-répétition et écouteurs. Porté par les
- * données du serveur (aucun état statique), il disparaît avec lui.
+ * State of the message module for the running server: repeat limit and listeners. Held by the
+ * server data (no static state), it disappears with it.
  */
 public final class MessageHub {
 
-    /** Abonnement d'un écouteur ; le fermer le retire. */
+    /** Subscription of a listener; closing it removes it. */
     public interface Subscription extends AutoCloseable {
         @Override
         void close();
@@ -31,7 +31,7 @@ public final class MessageHub {
         return () -> this.listeners.remove(listener);
     }
 
-    /** Prévient les écouteurs d'un message envoyé. */
+    /** Notifies the listeners of a sent message. */
     public void publish(SentMessage message) {
         for (MessageListener listener : this.listeners) {
             listener.onSent(message);

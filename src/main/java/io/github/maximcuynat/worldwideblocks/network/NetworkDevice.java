@@ -3,15 +3,15 @@ package io.github.maximcuynat.worldwideblocks.network;
 import java.util.List;
 
 /**
- * Bloc qui est un appareil réseau. Ses ports (nombre et type) sont fixes pour un type d'appareil :
- * ils ne dépendent ni de l'état du bloc ni de sa configuration.
+ * Block that is a network device. Its ports (count and kind) are fixed for a device type:
+ * they depend neither on the block state nor on its configuration.
  */
 public interface NetworkDevice {
 
-    /** Comportement de l'appareil dans la simulation. */
+    /** Behavior of the device in the simulation. */
     DeviceRole role();
 
-    /** Type de chaque port, dans l'ordre des numéros de port. */
+    /** Kind of each port, in port number order. */
     List<PortKind> ports();
 
     default int portCount() {

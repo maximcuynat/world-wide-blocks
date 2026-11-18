@@ -1,11 +1,11 @@
 package io.github.maximcuynat.worldwideblocks.network.protocol;
 
 /**
- * Contenu d'une trame Ethernet. Chaque protocole porté par Ethernet en est une variante, qui déclare
- * son {@link EtherType}. Les couches suivantes s'ajoutent ici : {@code Ipv4Packet} (lot 1b-2), qui
- * portera UDP puis DHCP, et {@code ArpPacket} (lot 1c).
+ * Content of an Ethernet frame. Each protocol carried by Ethernet is a variant of it, which declares
+ * its {@link EtherType}. The next layers are added here: {@code Ipv4Packet} (lot 1b-2), which
+ * will carry UDP then DHCP, and {@code ArpPacket} (lot 1c).
  *
- * <p>Les contenus sont des records immuables : une trame relayée par un switch est le même objet.
+ * <p>The contents are immutable records: a frame relayed by a switch is the same object.
  */
 public sealed interface EthernetPayload permits PresencePayload {
 

@@ -18,12 +18,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
 /**
- * Appareil réseau orientable, aux ports fixes : s'enregistre dans le moteur réseau à la pose et en sort, avec ses
- * câbles, quand il quitte sa position. Il doit refuser les pistons ({@code PushReaction.IMMOVEABLE}),
- * car le moteur l'identifie par sa position.
+ * Orientable network device with fixed ports: registers itself in the network engine when placed and leaves it,
+ * with its cables, when it leaves its position. It must refuse pistons ({@code PushReaction.IMMOVEABLE}),
+ * because the engine identifies it by its position.
  *
- * <p>Accroupi + clic droit main vide : on retire de l'appareil le bout de son câble et on le garde
- * en main, l'autre bout restant branché. Le clic droit simple est propre à chaque appareil
+ * <p>Sneaking + empty-hand right-click: the end of its cable is taken off the device and kept
+ * in hand, the other end staying connected. A plain right-click is specific to each device
  * ({@link #useDevice}).
  */
 public abstract class NetworkDeviceBlock extends HorizontalDirectionalBlock implements NetworkDevice {
@@ -57,7 +57,7 @@ public abstract class NetworkDeviceBlock extends HorizontalDirectionalBlock impl
         return this.useDevice(state, level, pos, player, hitResult);
     }
 
-    /** Clic droit simple, main vide, sur l'appareil. Par défaut : rien. */
+    /** Plain empty-hand right-click on the device. By default: nothing. */
     protected InteractionResult useDevice(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         return InteractionResult.PASS;
     }
@@ -65,7 +65,7 @@ public abstract class NetworkDeviceBlock extends HorizontalDirectionalBlock impl
     @Override
     protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
         super.onPlace(state, level, pos, oldState, movedByPiston);
-        // Un simple changement d'état (écran du portable ouvert ou fermé) n'est pas une nouvelle pose.
+        // A simple state change (laptop screen opened or closed) is not a new placement.
         if (level instanceof ServerLevel serverLevel && !oldState.is(this)) {
             NetworkDevices.dropCables(serverLevel, pos, NetworkDevices.onPlaced(serverLevel, pos));
         }

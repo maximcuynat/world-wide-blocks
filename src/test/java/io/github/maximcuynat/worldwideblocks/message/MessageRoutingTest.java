@@ -11,7 +11,7 @@ import io.github.maximcuynat.worldwideblocks.message.MessageRouting.Route;
 class MessageRoutingTest {
 
     @Test
-    void unGesteVaDansLaBarreDActionQuelQueSoitSonNiveau() {
+    void aGestureGoesToTheActionBarWhateverItsLevel() {
         for (MessageLevel level : MessageLevel.values()) {
             assertEquals(new Route(Optional.of(MessageChannel.ACTION_BAR), LogLevel.DEBUG),
                     MessageRouting.route(MessageUsage.GESTURE, level), level.name());
@@ -19,19 +19,19 @@ class MessageRoutingTest {
     }
 
     @Test
-    void unEvenementAvertissementVaDansLeChatEtEnWarn() {
+    void aWarningEventGoesToTheChatAndToWarn() {
         assertEquals(new Route(Optional.of(MessageChannel.CHAT), LogLevel.WARN),
                 MessageRouting.route(MessageUsage.EVENT, MessageLevel.WARNING));
     }
 
     @Test
-    void unEvenementErreurVaDansLeChatEtEnError() {
+    void anErrorEventGoesToTheChatAndToError() {
         assertEquals(new Route(Optional.of(MessageChannel.CHAT), LogLevel.ERROR),
                 MessageRouting.route(MessageUsage.EVENT, MessageLevel.ERROR));
     }
 
     @Test
-    void unEvenementInformationOuSuccesNeVaQuAuLog() {
+    void anInfoOrSuccessEventGoesOnlyToTheLog() {
         assertEquals(new Route(Optional.empty(), LogLevel.INFO), MessageRouting.route(MessageUsage.EVENT, MessageLevel.INFO));
         assertEquals(new Route(Optional.empty(), LogLevel.INFO), MessageRouting.route(MessageUsage.EVENT, MessageLevel.SUCCESS));
     }

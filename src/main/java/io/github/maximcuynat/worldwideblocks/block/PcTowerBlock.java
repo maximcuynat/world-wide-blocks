@@ -18,14 +18,14 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * Tour PC : 8 px de large, 14 px de profondeur, 15 px de haut, centrée dans le bloc.
- * FACING désigne la direction vers laquelle regarde la face avant.
+ * PC tower: 8 px wide, 14 px deep, 15 px high, centered in the block.
+ * FACING is the direction the front face looks toward.
  */
 public class PcTowerBlock extends NetworkDeviceBlock {
-    /** Une carte réseau intégrée. */
+    /** One built-in network card. */
     public static final List<PortKind> PORTS = List.of(PortKind.ETHERNET);
 
-    // Forme pour une tour alignée sur l'axe Z (face avant au nord ou au sud), tournée pour l'axe X.
+    // Shape for a tower aligned on the Z axis (front face north or south), rotated for the X axis.
     private static final Map<Direction.Axis, VoxelShape> SHAPES = Shapes.rotateHorizontalAxis(Block.boxZ(8.0, 0.0, 15.0, 1.0, 15.0));
 
     public PcTowerBlock(BlockBehaviour.Properties properties) {
@@ -35,7 +35,7 @@ public class PcTowerBlock extends NetworkDeviceBlock {
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        // La face avant regarde le joueur qui pose le bloc.
+        // The front face looks at the player who places the block.
         return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 

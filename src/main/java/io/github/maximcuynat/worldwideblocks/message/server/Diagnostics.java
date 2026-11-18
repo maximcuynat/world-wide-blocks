@@ -5,8 +5,8 @@ import org.slf4j.Logger;
 import io.github.maximcuynat.worldwideblocks.WorldWideBlocks;
 
 /**
- * Canal « log » du module des messages, pour le détail technique : toujours en anglais, au niveau
- * DEBUG (en développement, dans {@code run/logs/debug.log}). Aucun état : seulement le logger du mod.
+ * "Log" channel of the message module, for technical detail: always in English, at the
+ * DEBUG level (in development, in {@code run/logs/debug.log}). No state: only the mod's logger.
  */
 public final class Diagnostics {
     private static final Logger LOGGER = WorldWideBlocks.LOGGER;
@@ -14,7 +14,7 @@ public final class Diagnostics {
     private Diagnostics() {
     }
 
-    /** Vrai si le détail technique est écrit : à tester avant de calculer une description coûteuse. */
+    /** True if the technical detail is written: to test before computing an expensive description. */
     public static boolean enabled() {
         return LOGGER.isDebugEnabled();
     }

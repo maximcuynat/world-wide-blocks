@@ -6,7 +6,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
-/** Le joueur arrive dans une dimension : le client oublie tous les câbles qu'il connaissait. */
+/** The player arrives in a dimension: the client forgets all the cables it knew. */
 public record LinksResetPayload() implements CustomPacketPayload {
     public static final LinksResetPayload INSTANCE = new LinksResetPayload();
 

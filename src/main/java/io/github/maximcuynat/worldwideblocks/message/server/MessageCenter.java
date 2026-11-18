@@ -23,12 +23,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
- * Point d'entrée unique des messages côté serveur. L'appelant dit pourquoi il parle (geste, événement)
- * et donne un niveau, une clé et des valeurs ; le centre choisit le canal ({@link MessageRouting}),
- * envoie au client un {@link MessagePayload} sans aucun texte rédigé, écrit le log en anglais et
- * prévient les écouteurs.
+ * Single entry point of messages on the server side. The caller says why it speaks (gesture, event)
+ * and gives a level, a key and values; the center chooses the channel ({@link MessageRouting}),
+ * sends the client a {@link MessagePayload} without any written text, writes the log in English and
+ * notifies the listeners.
  *
- * <p>Aucun état statique : façade légère sur l'état porté par les données du serveur en cours.
+ * <p>No static state: a light facade over the state held by the running server's data.
  */
 public final class MessageCenter {
     private static final Logger LOGGER = WorldWideBlocks.LOGGER;
@@ -45,21 +45,21 @@ public final class MessageCenter {
         return new MessageCenter(server, server.getDataStorage().computeIfAbsent(NetworkSavedData.TYPE).messageHub());
     }
 
-    /** Abonne un écouteur à tous les messages envoyés (tests) ; fermer l'abonnement le retire. */
+    /** Subscribes a listener to all sent messages (tests); closing the subscription removes it. */
     public MessageHub.Subscription listen(MessageListener listener) {
         return this.hub.listen(listener);
     }
 
     /**
-     * Événement du réseau, sans geste du joueur. Un même problème ({@code problemKey}) n'est transmis
-     * qu'une fois par minute de jeu, quel que soit le nombre d'appareils qui le voient. Avertissement
-     * ou erreur : chaque destinataire reçoit son message dans le chat ; dans tous les cas, une ligne en
-     * anglais dans le log.
+     * Network event, without a player gesture. The same problem ({@code problemKey}) is only passed on
+     * once per game minute, whatever the number of devices that see it. Warning
+     * or error: each recipient gets their message in the chat; in all cases, a line in
+     * English in the log.
      *
-     * @param summary    le message, tel qu'il est retenu pour le log et les écouteurs
-     * @param logText    la ligne du log, en anglais, avec tout le détail technique
-     * @param recipients message de chaque joueur concerné (il peut différer d'un joueur à l'autre)
-     * @return faux si le problème a déjà été signalé dans la minute, et rien n'a été envoyé
+     * @param summary    the message, as kept for the log and the listeners
+     * @param logText    the log line, in English, with all the technical detail
+     * @param recipients message of each player concerned (it may differ from one player to another)
+     * @return false if the problem has already been reported within the minute, and nothing was sent
      */
     public boolean event(String problemKey, Message summary, String logText, Map<ServerPlayer, Message> recipients) {
         long now = this.gameTime();
@@ -76,12 +76,12 @@ public final class MessageCenter {
         return true;
     }
 
-    /** Oublie un problème déjà signalé (son réseau a changé) : il pourra l'être de nouveau tout de suite. */
+    /** Forgets an already reported problem (its network changed): it can be reported again right away. */
     public void forgetProblem(String problemKey) {
         this.hub.throttle().forget(problemKey);
     }
 
-    /** Réponse immédiate au geste d'un joueur. */
+    /** Immediate answer to a player's gesture. */
     public void gesture(ServerPlayer player, Message message) {
         this.deliver(player, MessageUsage.GESTURE, message);
     }
@@ -102,12 +102,12 @@ public final class MessageCenter {
         this.hub.publish(new SentMessage(channel, message.level(), message.key(), message.args(), recipient, gameTime));
     }
 
-    /** Temps de jeu de l'Overworld, le même que celui de la simulation réseau. */
+    /** Overworld game time, the same as that of the network simulation. */
     private long gameTime() {
         return this.server.overworld().getGameTime();
     }
 
-    /** Écrit une ligne en anglais ; un {@link Message} n'est mis en texte que si la ligne est écrite. */
+    /** Writes a line in English; a {@link Message} is only turned into text if the line is written. */
     private static void log(LogLevel level, String format, Object... args) {
         boolean enabled = switch (level) {
             case DEBUG -> LOGGER.isDebugEnabled();

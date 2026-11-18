@@ -3,14 +3,14 @@ package io.github.maximcuynat.worldwideblocks.network.protocol;
 import java.util.Objects;
 
 /**
- * Trame Ethernet : la seule unité qui circule sur un câble. Les couches supérieures (IP, UDP, DHCP,
- * ARP, ICMP) voyagent dans son contenu.
+ * Ethernet frame: the only unit that travels on a cable. The upper layers (IP, UDP, DHCP,
+ * ARP, ICMP) travel in its content.
  *
- * <p>Immuable : un switch qui la relaie, sur un ou plusieurs ports, transmet le même objet.
+ * <p>Immutable: a switch that relays it, on one or several ports, passes on the same object.
  *
- * @param source      MAC de l'émetteur, toujours une adresse unicast
- * @param destination MAC du destinataire, ou {@link MacAddress#BROADCAST} pour tous
- * @param type        type de la trame ; il doit être celui du contenu
+ * @param source      MAC of the sender, always a unicast address
+ * @param destination MAC of the recipient, or {@link MacAddress#BROADCAST} for all
+ * @param type        type of the frame; it must be that of the content
  */
 public record EthernetFrame(MacAddress source, MacAddress destination, EtherType type, EthernetPayload payload) {
 
@@ -27,12 +27,12 @@ public record EthernetFrame(MacAddress source, MacAddress destination, EtherType
         }
     }
 
-    /** Trame dont le type est déduit de son contenu. */
+    /** Frame whose type is deduced from its content. */
     public EthernetFrame(MacAddress source, MacAddress destination, EthernetPayload payload) {
         this(source, destination, payload.etherType(), payload);
     }
 
-    /** Destinée à tous les appareils du réseau. */
+    /** Meant for all devices of the network. */
     public boolean isBroadcast() {
         return this.destination.isBroadcast();
     }

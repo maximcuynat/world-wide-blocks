@@ -12,9 +12,9 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
 /**
- * Un message pour un joueur : le canal, puis le niveau, la clé et les valeurs. Aucun texte rédigé ni
- * aucune mise en forme : le client décide seul de l'apparence, si bien que le dessin peut changer
- * sans toucher au serveur.
+ * A message for a player: the channel, then the level, the key and the values. No written text and
+ * no formatting: the client alone decides the look, so the design can change
+ * without touching the server.
  */
 public record MessagePayload(MessageChannel channel, Message message) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<MessagePayload> TYPE = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(WorldWideBlocks.MODID, "message"));
@@ -27,7 +27,7 @@ public record MessagePayload(MessageChannel channel, Message message) implements
     private static final int KEY = 2;
     private static final int DEVICE = 3;
 
-    /** Une valeur : son genre, puis son contenu. */
+    /** A value: its kind, then its content. */
     private static final StreamCodec<ByteBuf, MessageArg> ARG = StreamCodec.of(MessagePayload::encodeArg, MessagePayload::decodeArg);
 
     private static final StreamCodec<ByteBuf, Message> MESSAGE = StreamCodec.composite(

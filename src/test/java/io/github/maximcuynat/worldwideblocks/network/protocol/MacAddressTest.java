@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 class MacAddressTest {
 
     @Test
-    void sEcritEnSixOctetsHexadecimauxMinuscules() {
+    void isWrittenAsSixLowercaseHexadecimalOctets() {
         MacAddress mac = new MacAddress(0x02_4F_A0_00_1B_7CL);
 
         assertEquals("02:4f:a0:00:1b:7c", mac.toString());
@@ -22,7 +22,7 @@ class MacAddressTest {
     }
 
     @Test
-    void seRelitDepuisSonTexte() {
+    void canBeReadBackFromItsText() {
         MacAddress mac = new MacAddress(0x02_4F_A0_00_1B_7CL);
 
         assertEquals(Optional.of(mac), MacAddress.parse(mac.toString()));
@@ -30,7 +30,7 @@ class MacAddressTest {
     }
 
     @Test
-    void refuseUnTexteMalForme() {
+    void rejectsAMalformedText() {
         assertTrue(MacAddress.parse("02:4f:a0:00:1b").isEmpty());
         assertTrue(MacAddress.parse("02:4f:a0:00:1b:7c:00").isEmpty());
         assertTrue(MacAddress.parse("02:4f:a0:00:1b:7g").isEmpty());
@@ -39,20 +39,20 @@ class MacAddressTest {
     }
 
     @Test
-    void refuseUneValeurDePlusDe48Bits() {
+    void rejectsAValueOfMoreThan48Bits() {
         assertThrows(IllegalArgumentException.class, () -> new MacAddress(1L << 48));
         assertThrows(IllegalArgumentException.class, () -> new MacAddress(-1L));
     }
 
     @Test
-    void laDiffusionEstUneAdresseDeGroupe() {
+    void broadcastIsAGroupAddress() {
         assertEquals("ff:ff:ff:ff:ff:ff", MacAddress.BROADCAST.toString());
         assertTrue(MacAddress.BROADCAST.isBroadcast());
         assertTrue(MacAddress.BROADCAST.isMulticast());
     }
 
     @Test
-    void uneAdresseTireeAuHasardCommencePar02() {
+    void aRandomlyDrawnAddressStartsWith02() {
         SplittableRandom random = new SplittableRandom(1);
         for (int i = 0; i < 1000; i++) {
             MacAddress mac = MacAddress.randomLocal(random);

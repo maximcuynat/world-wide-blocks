@@ -3,8 +3,8 @@ package io.github.maximcuynat.worldwideblocks.client;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 /**
- * Réglages du client, dans {@code config/worldwideblocks-client.toml}. Instance portée par le client (aucun
- * état statique) ; NeoForge relit le fichier quand il change, sans relancer le jeu.
+ * Client settings, in {@code config/worldwideblocks-client.toml}. Instance held by the client (no static
+ * state); NeoForge rereads the file when it changes, without restarting the game.
  */
 final class WorldWideBlocksClientConfig {
     private final ModConfigSpec spec;
@@ -23,7 +23,7 @@ final class WorldWideBlocksClientConfig {
         return this.spec;
     }
 
-    /** Vrai : symbole devant les messages ; faux : mot traduit (« Attention : … »). */
+    /** True: symbol before messages; false: translated word ("Warning: ..."). */
     boolean messageSymbols() {
         return this.messageSymbols.getAsBoolean();
     }

@@ -17,7 +17,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 
-// La valeur doit correspondre au modId déclaré dans META-INF/neoforge.mods.toml
+// The value must match the modId declared in META-INF/neoforge.mods.toml
 @Mod(WorldWideBlocks.MODID)
 public class WorldWideBlocks {
     public static final String MODID = "worldwideblocks";

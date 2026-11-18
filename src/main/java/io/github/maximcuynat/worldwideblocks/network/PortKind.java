@@ -5,13 +5,13 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Type d'un port : il décide quels câbles s'y branchent. Le type d'un port est fixe pour un type
- * d'appareil et sauvegardé avec lui.
+ * Kind of a port: it decides which cables plug into it. A port's kind is fixed for a device
+ * type and saved with it.
  */
 public enum PortKind {
-    /** Prise RJ45 : reçoit le cordon Ethernet. */
+    /** RJ45 jack: takes the Ethernet cord. */
     ETHERNET("ethernet"),
-    /** Arrivée de ligne de la box. Aucun câble ne s'y branche avant le lot 3. */
+    /** Line input of the box. No cable plugs into it before lot 3. */
     LINE("line");
 
     private final String serializedName;
@@ -20,7 +20,7 @@ public enum PortKind {
         this.serializedName = serializedName;
     }
 
-    /** Nom stocké dans la sauvegarde : ne jamais le changer une fois publié. */
+    /** Name stored in the save: never change it once published. */
     public String serializedName() {
         return this.serializedName;
     }
@@ -34,7 +34,7 @@ public enum PortKind {
         return Optional.empty();
     }
 
-    /** {@code count} ports Ethernet : la configuration de tous les appareils sauvegardés avant le lot 1b. */
+    /** {@code count} Ethernet ports: the configuration of all devices saved before lot 1b. */
     public static List<PortKind> ethernet(int count) {
         if (count < 0) {
             throw new IllegalArgumentException("Negative port count: " + count);

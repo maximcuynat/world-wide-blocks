@@ -6,7 +6,7 @@ import java.util.List;
 import io.github.maximcuynat.worldwideblocks.network.NetworkNode;
 import io.github.maximcuynat.worldwideblocks.network.PortKind;
 
-/** Crée le comportement d'un appareil d'après son rôle. */
+/** Creates the behavior of a device from its role. */
 final class DeviceLogics {
 
     private DeviceLogics() {

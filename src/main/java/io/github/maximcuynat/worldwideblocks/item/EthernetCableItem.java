@@ -42,13 +42,13 @@ import net.minecraft.world.level.Level;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Cordon Ethernet : un clic droit sur un appareil, puis un clic droit sur un autre, les relie.
- * Accroupi + clic droit sur un appareil, cordon en main : débranche son câble des deux bouts.
- * Accroupi + clic droit main vide : retire un seul bout et le garde en main (voir {@link #takeCableEnd}).
- * Accroupi + clic droit dans le vide : annule un branchement commencé, ou range un bout tenu en main.
- * Avec un branchement commencé, un clic droit sur l'appareil où l'autre bout est branché le débranche.
+ * Ethernet cord: a right-click on a device, then a right-click on another, connects them.
+ * Sneaking + right-click on a device, cord in hand: unplugs its cable at both ends.
+ * Sneaking + empty-hand right-click: takes off a single end and keeps it in hand (see {@link #takeCableEnd}).
+ * Sneaking + right-click in the air: cancels a started connection, or puts away an end held in hand.
+ * With a started connection, a right-click on the device where the other end is connected unplugs it.
  *
- * <p>Toute la logique tourne sur le serveur ; le client se contente de confirmer le clic.
+ * <p>All the logic runs on the server; the client only confirms the click.
  */
 public class EthernetCableItem extends Item {
     private static final LinkMedium MEDIUM = LinkMedium.COPPER_ETHERNET;
@@ -57,24 +57,24 @@ public class EthernetCableItem extends Item {
         super(properties);
     }
 
-    /** Consignes permanentes, trop longues pour la barre d'action : dans l'infobulle de l'inventaire. */
+    /** Permanent instructions, too long for the action bar: in the inventory tooltip. */
     @Override
-    @SuppressWarnings("deprecation") // marquée obsolète par Minecraft pour l'appel, mais c'est la méthode à surcharger
+    @SuppressWarnings("deprecation") // marked deprecated by Minecraft for the call, but it is the method to override
     public void appendHoverText(ItemStack stack, Item.TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag flag) {
         builder.accept(Component.translatable("item.worldwideblocks.ethernet_cable.tooltip.connect").withStyle(ChatFormatting.GRAY));
         builder.accept(Component.translatable("item.worldwideblocks.ethernet_cable.tooltip.unplug").withStyle(ChatFormatting.GRAY));
         builder.accept(Component.translatable("item.worldwideblocks.ethernet_cable.tooltip.cancel").withStyle(ChatFormatting.GRAY));
     }
 
-    /** Branchement commencé : l'objet brille, comme un objet enchanté. */
+    /** Connection started: the item glows, like an enchanted item. */
     @Override
     public boolean isFoil(ItemStack stack) {
         return stack.has(ModDataComponents.CABLE_START.get()) || super.isFoil(stack);
     }
 
     /**
-     * Appelé avant le clic droit du bloc : avec le cordon en main, un clic sur le portable branche
-     * au lieu d'ouvrir ou fermer l'écran.
+     * Called before the block's right-click: with the cord in hand, a click on the laptop connects
+     * instead of opening or closing the screen.
      */
     @Override
     public InteractionResult onItemUseFirst(ItemStack stack, UseOnContext context) {
@@ -94,7 +94,7 @@ public class EthernetCableItem extends Item {
         }
         CableStart pending = stack.get(ModDataComponents.CABLE_START.get());
         if (pending != null && pending.device().equals(GlobalPos.of(level.dimension(), pos))) {
-            // Clic sur l'appareil où l'autre bout est branché : on le débranche, le cordon reste libre en main.
+            // Click on the device where the other end is connected: unplug it, the cord stays free in hand.
             stack.remove(ModDataComponents.CABLE_START.get());
             tell(player, MessageLevel.SUCCESS, "message.worldwideblocks.cable.retracted", NetworkDevices.nameArg(node.get()));
         } else if (player.isSecondaryUseActive()) {
@@ -108,10 +108,10 @@ public class EthernetCableItem extends Item {
     }
 
     /**
-     * Côté serveur, à chaque tick, pour chaque cordon d'un inventaire : un branchement en attente dont
-     * le départ a disparu (cassé, explosé, remplacé, y compris pendant une déconnexion) ou dont le
-     * porteur a changé de dimension est annulé, et le joueur prévenu. Seule l'attente est effacée : le
-     * cordon reste dans l'inventaire, aucun n'est créé ni perdu.
+     * Server side, on every tick, for each cord of an inventory: a pending connection whose
+     * start has disappeared (broken, exploded, replaced, including during a disconnection) or whose
+     * holder changed dimension is cancelled, and the player is notified. Only the pending state is erased: the
+     * cord stays in the inventory, none is created or lost.
      */
     @Override
     public void inventoryTick(ItemStack stack, ServerLevel level, Entity owner, @Nullable EquipmentSlot slot) {
@@ -132,7 +132,7 @@ public class EthernetCableItem extends Item {
         }
     }
 
-    /** Accroupi + clic droit dans le vide : annule le branchement commencé. */
+    /** Sneaking + right-click in the air: cancels the started connection. */
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
@@ -164,7 +164,7 @@ public class EthernetCableItem extends Item {
         CableStart pending = stack.get(ModDataComponents.CABLE_START.get());
         DeviceId startId = pending.portRef().device();
 
-        // La première extrémité a pu disparaître depuis le premier clic : on la revérifie.
+        // The first end may have disappeared since the first click: check it again.
         if (!startId.sameDimension(end.id())) {
             refuse(player, ConnectResult.OTHER_DIMENSION, end, 0);
             return;
@@ -182,7 +182,7 @@ public class EthernetCableItem extends Item {
             return;
         }
 
-        // Pas de port libre en face : on vise le port 0 pour obtenir le refus « port occupé ».
+        // No free port opposite: aim at port 0 to get the "port in use" refusal.
         PortRef endPort = network.firstFreePort(end.id(), MEDIUM).orElse(end.port(0));
         boolean consume = !player.hasInfiniteMaterials();
         ConnectOutcome outcome = network.connect(startPort, endPort, MEDIUM, consume);
@@ -201,14 +201,14 @@ public class EthernetCableItem extends Item {
                 MessageArg.blocks(link.length()));
     }
 
-    /** Accroupi + clic droit, cordon en main : débranche les deux bouts et range le cordon. */
+    /** Sneaking + right-click, cord in hand: unplugs both ends and puts the cord away. */
     private void unplug(ServerLevel level, Player player, NetworkNode node) {
         Optional<Link> removed = disconnectFirst(level, node);
         if (removed.isEmpty()) {
             tell(player, MessageLevel.ERROR, "message.worldwideblocks.cable.nothing_to_unplug", NetworkDevices.nameArg(node));
             return;
         }
-        // Seul un câble qui a consommé un cordon en rend un.
+        // Only a cable that consumed a cord gives one back.
         if (removed.get().cableConsumed()) {
             player.getInventory().placeItemBackInInventory(new ItemStack(this), Prediction.SERVER_ONLY);
         }
@@ -217,13 +217,13 @@ public class EthernetCableItem extends Item {
     }
 
     /**
-     * Accroupi + clic droit main vide sur un appareil : on retire de cet appareil le bout de son câble
-     * et on le garde en main, l'autre bout restant branché. Le cordon en main porte cette autre
-     * extrémité comme un branchement commencé : un clic droit sur un appareil le rebranche,
-     * accroupi + clic dans le vide le débranche aussi de l'autre bout et le range.
+     * Sneaking + empty-hand right-click on a device: takes the end of its cable off this device
+     * and keeps it in hand, the other end staying connected. The cord in hand carries this other
+     * end like a started connection: a right-click on a device reconnects it,
+     * sneaking + click in the air also unplugs it from the other end and puts it away.
      *
-     * <p>Un câble posé en créatif (sans cordon consommé) ne donne pas de cordon en survie : il est
-     * simplement débranché des deux bouts, sinon on fabriquerait des cordons gratuits.
+     * <p>A cable placed in creative (no cord consumed) does not give a cord in survival: it is
+     * simply unplugged at both ends, otherwise free cords would be made.
      */
     public static void takeCableEnd(ServerLevel level, Player player, BlockPos pos) {
         Optional<NetworkNode> node = NetworkDevices.validate(level, NetworkDevices.idOf(level, pos));
@@ -258,7 +258,7 @@ public class EthernetCableItem extends Item {
                 NetworkDevices.nameArg(node.get()), otherName, MessageArg.number(other.displayNumber()));
     }
 
-    /** Débranche le câble du premier port occupé de l'appareil. */
+    /** Unplugs the cable from the first occupied port of the device. */
     private static Optional<Link> disconnectFirst(ServerLevel level, NetworkNode node) {
         NetworkManager network = NetworkManager.of(level.getServer());
         for (int i = 0; i < node.portCount(); i++) {
@@ -270,15 +270,15 @@ public class EthernetCableItem extends Item {
         return Optional.empty();
     }
 
-    /** Extrémité du lien qui se trouve sur cet appareil. */
+    /** End of the link that is on this device. */
     private static PortRef portOn(Link link, NetworkNode node) {
         return link.a().device().equals(node.id()) ? link.a() : link.b();
     }
 
     /**
-     * Réponse au geste du joueur, par le module des messages. Niveaux : la réussite est un succès ;
-     * une étape ou une annulation voulue par le joueur, une information ; une annulation causée par
-     * autre chose (départ disparu, dimension), un avertissement ; un geste refusé, une erreur.
+     * Answer to the player's gesture, through the message module. Levels: success is a success;
+     * a step or a cancellation wanted by the player, an info; a cancellation caused by
+     * something else (start gone, dimension), a warning; a refused gesture, an error.
      */
     private static void tell(Player player, MessageLevel level, String key, MessageArg... args) {
         if (player instanceof ServerPlayer serverPlayer) {
@@ -287,9 +287,9 @@ public class EthernetCableItem extends Item {
     }
 
     /**
-     * Refus du moteur au second clic. « Port occupé » vise l'appareil d'arrivée (le départ est
-     * vérifié avant) : c'est le même message qu'au premier clic sur un appareil plein. La distance
-     * n'est utile qu'au refus « trop loin ».
+     * Engine refusal at the second click. "Port in use" targets the end device (the start is
+     * checked before): it is the same message as at the first click on a full device. The distance
+     * is only useful for the "too far" refusal.
      */
     private static void refuse(Player player, ConnectResult result, NetworkNode end, double distance) {
         if (result == ConnectResult.PORT_IN_USE) {

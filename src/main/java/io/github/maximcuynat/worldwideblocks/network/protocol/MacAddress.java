@@ -5,18 +5,18 @@ import java.util.Optional;
 import java.util.random.RandomGenerator;
 
 /**
- * Adresse matérielle Ethernet (MAC) sur 48 bits, rangée dans les 48 bits de poids faible de {@code value}.
- * Le premier octet est celui de poids fort : c'est lui qu'on écrit en premier ({@code 02:…}).
+ * 48-bit Ethernet hardware address (MAC), stored in the low 48 bits of {@code value}.
+ * The first byte is the most significant one: it is the one written first ({@code 02:…}).
  *
- * <p>Java pur, sans classe Minecraft.
+ * <p>Plain Java, no Minecraft class.
  */
 public record MacAddress(long value) {
     private static final long MASK = 0xFFFF_FFFF_FFFFL;
 
-    /** Adresse de diffusion : la trame est destinée à tous les appareils du réseau. */
+    /** Broadcast address: the frame is meant for all devices of the network. */
     public static final MacAddress BROADCAST = new MacAddress(MASK);
 
-    /** Premier octet des adresses générées : bit « administrée localement » levé, bit multicast à zéro. */
+    /** First byte of generated addresses: "locally administered" bit set, multicast bit clear. */
     private static final long LOCAL_PREFIX = 0x02L << 40;
 
     public MacAddress {
@@ -26,14 +26,14 @@ public record MacAddress(long value) {
     }
 
     /**
-     * Adresse unicast administrée localement, tirée au hasard : premier octet {@code 02}, les cinq
-     * autres aléatoires. Elle ne peut pas entrer en conflit avec une adresse attribuée par un fabricant.
+     * Locally administered unicast address, drawn at random: first byte {@code 02}, the other
+     * five random. It cannot conflict with an address assigned by a manufacturer.
      */
     public static MacAddress randomLocal(RandomGenerator random) {
         return new MacAddress(LOCAL_PREFIX | (random.nextLong() & 0xFF_FFFF_FFFFL));
     }
 
-    /** Lit une adresse écrite sous la forme {@code 02:4f:a0:00:1b:7c} (majuscules acceptées). */
+    /** Reads an address written as {@code 02:4f:a0:00:1b:7c} (uppercase accepted). */
     public static Optional<MacAddress> parse(String text) {
         String[] parts = text.split(":", -1);
         if (parts.length != 6) {
@@ -54,7 +54,7 @@ public record MacAddress(long value) {
         return Optional.of(new MacAddress(value));
     }
 
-    /** Octet numéro {@code index}, de 0 (le premier écrit) à 5. */
+    /** Byte number {@code index}, from 0 (the first written) to 5. */
     public int octet(int index) {
         if (index < 0 || index > 5) {
             throw new IndexOutOfBoundsException(index);
@@ -66,12 +66,12 @@ public record MacAddress(long value) {
         return this.value == MASK;
     }
 
-    /** Adresse de groupe (bit de poids faible du premier octet) ; la diffusion en est un cas particulier. */
+    /** Group address (low bit of the first byte); broadcast is a special case of it. */
     public boolean isMulticast() {
         return (this.octet(0) & 0x01) != 0;
     }
 
-    /** Adresse administrée localement (deuxième bit du premier octet), et non attribuée par un fabricant. */
+    /** Locally administered address (second bit of the first byte), not assigned by a manufacturer. */
     public boolean isLocallyAdministered() {
         return (this.octet(0) & 0x02) != 0;
     }
