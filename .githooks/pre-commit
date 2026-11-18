@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Cherche des secrets (mots de passe, jetons, clés) dans les changements indexés, avec gitleaks.
+# Si gitleaks n'est pas installé, avertit sans bloquer le commit.
+# Si gitleaks est installé mais n'a pas pu analyser (erreur), bloque : une analyse ratée ne vaut pas « aucun secret ».
+set -uo pipefail
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+    echo "pre-commit : gitleaks n'est pas installé, recherche de secrets sautée." >&2
+    echo "             Installation : https://github.com/gitleaks/gitleaks#installing (macOS : brew install gitleaks)" >&2
+    exit 0
+fi
+
+output="$(gitleaks git --pre-commit --staged --redact --no-banner --no-color --verbose 2>&1)"
+status=$?
+printf '%s\n' "$output"
+
+if [ "$status" -ne 0 ]; then
+    cat >&2 <<'EOF'
+
+pre-commit : gitleaks a trouvé un secret possible dans les changements indexés (valeur masquée ci-dessus).
+  1. Retirez le secret du fichier, puis indexez à nouveau (git add).
+  2. Si ce secret a déjà servi, considérez-le comme compromis et renouvelez-le.
+  3. Faux positif : ajoutez le commentaire « gitleaks:allow » sur la ligne concernée.
+EOF
+    exit 1
+fi
+
+# gitleaks répond « no leaks found » même quand il n'a pas pu lire les changements : on vérifie ses erreurs.
+if printf '%s\n' "$output" | grep -q -E '(^| )(ERR|FTL) '; then
+    echo "" >&2
+    echo "pre-commit : gitleaks a rencontré une erreur (ci-dessus), l'analyse n'est pas fiable : commit bloqué." >&2
+    exit 1
+fi

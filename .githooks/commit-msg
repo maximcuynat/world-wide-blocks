@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Vérifie que le message de commit suit Conventional Commits :
+#   <type>(<portée>)!: <description>
+# Types : feat, fix, docs, test, refactor, chore, perf, style, build, ci, revert.
+# La portée et le « ! » (changement incompatible) sont facultatifs.
+# Laisse passer les commits de fusion, de retour arrière (Revert) et fixup!/squash!/amend!.
+set -euo pipefail
+
+message_file="$1"
+
+# Première ligne utile : ni vide, ni commentaire (git retire les commentaires après le hook).
+subject="$(grep -v -E '^[[:space:]]*(#|$)' "$message_file" | head -n 1 || true)"
+
+if [ -z "$subject" ]; then
+    echo "commit-msg : message vide." >&2
+    exit 1
+fi
+
+types='feat|fix|docs|test|refactor|chore|perf|style|build|ci|revert'
+conventional="^(${types})(\([a-z0-9._/-]+\))?!?: [^[:space:]].*"
+special='^(Merge |Revert "|(fixup|squash|amend)! )'
+
+if printf '%s\n' "$subject" | grep -q -E "$conventional|$special"; then
+    exit 0
+fi
+
+cat >&2 <<EOF
+commit-msg : le message ne suit pas la convention du projet.
+
+  Reçu    : $subject
+  Attendu : <type>(<portée>): <description courte et impérative>
+  Types   : ${types//|/, }
+  Exemple : fix(cordon): annuler l'attente quand le point de départ disparaît
+
+Voir CONTRIBUTING.md, section « Messages de commit ».
+EOF
+exit 1
