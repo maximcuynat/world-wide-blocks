@@ -32,3 +32,8 @@
 
 - Pour chaque geste qui consomme un objet en survie, vérifier que le geste inverse reste possible quand le joueur n'a plus cet objet : débrancher exigeait un cordon en main, impossible après avoir utilisé le dernier. Tester mentalement le parcours « survie, un seul exemplaire » avant de proposer une interaction. (2026-11-17)
 - Avant d'attribuer un geste (accroupi + clic droit, etc.), relire le plan pour les gestes déjà promis aux lots suivants (ici l'écran du portable au lot 1c). (2026-11-17)
+
+## GitHub CLI and assisted commands
+
+- Never give a `gh` command as working without checking its `--help` or its documentation: `gh project link --owner @me` was refused, the login is needed (`--owner <login>`). Mark an unchecked command as such. (2026-11-18)
+- A command that waits for an answer (`scripts/dev` confirmations, `gh auth refresh`) cannot be run through the assistant's shell (`!` included): tell the maintainer to run it in a real terminal. (2026-11-18)
