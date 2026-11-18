@@ -1,6 +1,6 @@
 # World Wide Blocks: lot plan
 
-Written on 2026-11-17, revised the same day after review; revised again on 2026-11-18 (lot E renamed 1e, lot 6c split in two, tool-crafting decision added). Status: proposed, awaiting approval. Lots coded: 0 and 1a (see the status of each lot).
+Written on 2026-11-17, revised the same day after review; revised again on 2026-11-18 (lot E renamed 1e, lot 6c split in two, tool-crafting decision added; TCP lot 1f, shared console and terminal decisions added). Status: proposed, awaiting approval. Lots coded: 0 and 1a (see the status of each lot).
 
 ## Principles
 
@@ -21,7 +21,13 @@ Written on 2026-11-17, revised the same day after review; revised again on 2026-
 | Decision | Before lot | Proposal | Status |
 |---|---|---|---|
 | Choice of the exact port | 1d | No proposal for now. Today the Ethernet cord takes the first free local network port; with a desktop switch, the player will want to choose the port | To decide |
-| Role of the screen, keyboard and mouse | 1c | The terminal opens directly on the tower; the peripherals of lot 2c stay decorative and do not condition access. Alternative: make them mandatory, which would change the behaviour of the tower at lot 2c | To approve |
+| Role of the screen, keyboard and mouse (issue #10) | 1c | The terminal opens directly on the tower; the peripherals of lot 2c enrich the computer but never condition access to it. Alternative: make them mandatory, which would change the behaviour of the tower at lot 2c | To approve |
+| Language of the terminal | 1c | The output of the tools stays literal English, as on a real system; help and advice lines are translated through language keys. A third way next to the rules of `docs/messages.md`, to write there once approved | To approve |
+| Two players at the same computer | 1c | One player at a time ("computer busy"); a shared read-only console can come later | To approve |
+| Time shown by `ping` | 1c | Game milliseconds, 1 tick = 50 ms, to keep the real format (`time=50.0 ms`) | To approve |
+| `ping` without a count | 1c | Continuous, as on Linux, until Ctrl+C; stopped when the console closes | To approve |
+| Frame capture (`tcpdump`) | 1c | In a small lot right after 1c, so as not to weigh on the success criterion of lot 1 | To approve |
+| Monospaced font of the terminal | 1c | A free font whose licence is compatible with the LGPL, to choose | To decide |
 | Laptop battery | 1e | The laptop runs on battery when it is not plugged in and recharges on a socket | To approve |
 | Electricity mandatory or not | 1e | "Power required" configuration option, enabled by default; when disabled, all devices work without power | To approve |
 | Making cables by hand | 2b | The tools of lot 9a (spool, connector, crimping tool, tester) are brought forward just before 2b, so that the fixed home cabling uses cables cut to the wanted length. Alternative: keep them at 9a and use only finished cords until then | To decide |
@@ -42,6 +48,7 @@ This document describes the design. The tasks of each lot are GitHub issues, one
 | 1c | Screen and ping command | From a computer, `ping` to the other computer, which answers |
 | 1d | Desktop switch | More computers than the box has ports |
 | 1e | Electricity | A device without power is off |
+| 1f | TCP | A connection opens between two computers, carries a message and closes |
 | 2a | Wi-Fi | The laptop connects without a cable |
 | 2b | Fixed home cabling | Cables go through wall sockets and trunking |
 | 2c | Peripherals and local services | A shared file and a network print |
@@ -267,6 +274,12 @@ Consequence on the laptop: the right-click will open the terminal, and the scree
 
 Proposed choice: the commands follow the Linux convention (`ip addr`, `ping`, `traceroute`, `nslookup`), which is also the closest to network equipment.
 
+The terminal is designed as a shared "console" component: a grid of characters and a stream of keys, linked on the server side to a command interpreter. The consoles planned later reuse it with another interpreter or another way in: the router console (7a), the switch console and its console cable (8b), the screen and keyboard console of the rack (8d), and SSH sessions.
+
+Lot 1c is also where the IP stack per interface is laid down, with its services bound to a port (idea issue "Services API shared by the network engine and the computer OS"): ARP and ICMP need a real IP layer on the computers, and the DHCP client and server of lot 1b-2 move onto it.
+
+A throwaway prototype of the terminal screen comes before the lot (issue in the lot 1c milestone): keyboard input (SDL3), monospaced font, character grid at 854 x 480 and 1920 x 1080, a screen that does not pause the game in single player.
+
 ### 1d: desktop switch
 
 | Type | Equipment | Role |
@@ -294,6 +307,18 @@ Short lot, numbered in the 1 series because it is placed right after lot 1, so a
 Playable at the end: unplug the box, and the whole home network goes down.
 
 Proposed choice: since the mod must work on its own, the electrical panel supplies energy itself. Plugging it into another mod stays possible but never mandatory.
+
+## Lot 1f: TCP
+
+Numbered in the 1 series like lot 1e: it completes the protocols of lot 1 (IPv4, UDP, DHCP, ARP, ICMP) and comes before lot 2c, whose file sharing relies on it, as do the web server (7b) and SSH (8d). Simplified version: no sliding window or congestion control at first.
+
+| Type | Equipment | Role |
+|---|---|---|
+| Mechanic | Connection | Three-way handshake (SYN, SYN-ACK, ACK), then close (FIN) |
+| Mechanic | Sequence and acknowledgement numbers | Each side counts what it sent and what it received |
+| Mechanic | Simple retransmission | A segment not acknowledged in time is sent again |
+
+Playable at the end: from the terminal, a connection opens between two computers, carries a message and closes; each step can be followed in the exchanged segments.
 
 ## Lot 2: complete local network
 
@@ -665,6 +690,7 @@ Cord on the ground, idea to refine when we reach the lot:
 
 - Lot 1a is required by everything else.
 - 1c depends on 1b: without an address, no `ping`.
+- 1f (TCP) depends on 1c (IP stack per interface) and is required by 2c (file sharing), 7b (web server) and 8d (SSH).
 - Lot 1e is required by the powerline adapter, the PoE injector and room power (8e).
 - Lot 3 needs the test block as long as lots 4 to 6 are not done.
 - The 19-inch rack (6a) is required by 6b, 7b and the whole of lot 8.
