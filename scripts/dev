@@ -17,7 +17,7 @@
 #   project sync                create the labels, milestones and issues of scripts/project/ on GitHub
 #                               (can be run again: nothing is created twice)
 #   project update-issues       rewrite the body of the issues already on GitHub from their files
-#                               (issues with ticked boxes are skipped)
+#                               (boxes ticked on GitHub stay ticked)
 #   project board               sort the issues on the Projects board of scripts/project/board.conf,
 #                               creating the missing Status options
 #                               [--start n,m: move to In Progress] [--review n,m: move to In review]

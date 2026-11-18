@@ -208,13 +208,47 @@ cmd_project_sync() {
     say "$n_actions change(s) applied on $slug."
 }
 
+# Prints the body of a definition file ($2) with the boxes ticked on GitHub ($1) ticked as well: a
+# box is ticked if it is ticked in either, matched by the text after the box, and is never
+# unticked. The texts of boxes ticked on GitHub that no longer exist in the file go to $3.
+merge_ticks() {
+    tr -d '\r' <"$1" >"$1.lf"
+    awk -v lost="$3" '
+        function box_text(line) {
+            if (!match(line, /^[[:space:]]*[-*] \[[ xX]\] /)) return ""
+            text = substr(line, RLENGTH + 1)
+            sub(/[[:space:]]+$/, "", text)
+            return text
+        }
+        NR == FNR {
+            if (match($0, /^[[:space:]]*[-*] \[[xX]\] /)) ticked[box_text($0)] = 1
+            next
+        }
+        {
+            line = $0
+            text = box_text(line)
+            if (text != "") {
+                seen[text] = 1
+                if ((text in ticked) && match(line, /^[[:space:]]*[-*] \[ \] /)) {
+                    head = substr(line, 1, RLENGTH)
+                    sub(/\[ \]/, "[x]", head)
+                    line = head text
+                }
+            }
+            print line
+        }
+        END { for (text in ticked) if (!(text in seen)) print text > lost }
+    ' "$1.lf" "$2"
+}
+
 # Rewrites the body of the issues already on GitHub from their definition files, for example after a
-# document they link to was renamed. Only the body changes: title, labels, milestone, state and
-# comments are left alone. An issue whose GitHub body has a ticked box ("- [x]") is skipped, since
-# its body was edited on GitHub and rewriting it would untick the box: update it by hand.
+# document they link to was renamed or boxes were ticked in a file. Only the body changes: title,
+# labels, milestone, state and comments are left alone. Boxes ticked on GitHub stay ticked
+# (merge_ticks); an issue with a box ticked on GitHub whose line is no longer in its file is
+# skipped: update it by hand.
 cmd_project_update_issues() {
     [ $# -eq 0 ] || die "usage: scripts/dev project update-issues"
-    local slug existing_keys file key number title current expected n_updates=0 n_skipped=0
+    local slug existing_keys file key number title current expected lost n_updates=0 n_skipped=0
     require_gh
     slug="$(repo_slug)"
     project_validate
@@ -237,14 +271,18 @@ cmd_project_update_issues() {
         fi
         current="$DEV_TMPDIR/update/$number.current"
         expected="$DEV_TMPDIR/update/$number.expected"
+        lost="$DEV_TMPDIR/update/$number.lost"
         gh issue view "$number" --repo "$slug" --json body --jq '.body' >"$current"
-        issue_body "$file" >"$expected"
+        issue_body "$file" >"$expected.file"
+        : >"$lost"
+        merge_ticks "$current" "$expected.file" "$lost" >"$expected"
         if [ "$(normalized_text "$current")" = "$(normalized_text "$expected")" ]; then
             echo "  = #$number $title"
             continue
         fi
-        if grep -q -i -E '^[[:space:]]*[-*] \[x\]' "$current"; then
-            echo "  ! #$number $title: ticked boxes on GitHub, skipped (update it by hand)"
+        if [ -s "$lost" ]; then
+            echo "  ! #$number $title: skipped (update it by hand), box(es) ticked on GitHub no longer in the file:"
+            sed 's/^/      /' "$lost"
             n_skipped=$((n_skipped + 1))
             continue
         fi
@@ -256,7 +294,7 @@ cmd_project_update_issues() {
     done
 
     echo
-    [ "$n_skipped" -eq 0 ] || warn "$n_skipped issue(s) skipped: their body has ticked boxes."
+    [ "$n_skipped" -eq 0 ] || warn "$n_skipped issue(s) skipped: boxes ticked on GitHub are missing from their file."
     if [ "$n_updates" -eq 0 ]; then
         say "no issue body to update on $slug."
         return 0
