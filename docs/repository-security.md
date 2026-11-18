@@ -4,6 +4,37 @@ Settings that Max makes by hand on GitHub and on his computer (Claude has no acc
 
 In the paths, "Repository settings" means the **Settings** tab of the repository, and "Account settings" means the menu **profile picture (top right) > Settings**.
 
+## State checked on 2026-11-19
+
+Read by Claude through the GitHub API (read-only `gh api` calls, no setting changed), for the repository `maximcuynat/world-wide-blocks`. Account settings (two-factor authentication, private email, vigilant mode) cannot be read this way: they are not covered.
+
+**Active**
+
+| Setting | State |
+|---|---|
+| Visibility | Public |
+| Default branch, merges | `developement`; merge commits only (squash and rebase disabled); merged branches deleted automatically |
+| GitHub Actions | Disabled (`actions/permissions`: `enabled: false`) |
+| Secret scanning and push protection | Enabled |
+| Private vulnerability reporting | Enabled |
+| Dependabot alerts | Enabled (`vulnerability-alerts` answers 204); Dependabot security updates disabled |
+
+**Verified signatures**
+
+| Object | Result |
+|---|---|
+| Merge commit of pull request #42 (`fdb779c`, `release/v0.1.0-alpha.1` into `main`, merged from the GitHub interface) | Signed by GitHub, **Verified** (`verified: true`, reason `valid`, committer `GitHub`). Same for the merge commit of pull request #41 (`6c6f25c`) |
+| Release commit `df8ccc1` (`chore(release): v0.1.0-alpha.1`) | Signed, **Verified** |
+| Tag `v0.1.0-alpha.1` (annotated tag object `d7a8bd8`, on `fdb779c`) | Signed, **Verified** (reason `valid`, tagger `maximcuynat`): the SSH signing key of section 3 works |
+
+**Remaining**
+
+| Step | State |
+|---|---|
+| 7. Protection of `main` and `developement` | **Not in place**: no ruleset (`rulesets` answers `[]`), both branches unprotected, although the repository is already public |
+| 11. Require signed commits on `main` | Not in place |
+| Account settings (steps 1 and 2, vigilant mode) | Not readable through the repository API: to check by Max in the account settings |
+
 ## Order of operations
 
 Many protections do not exist for a **private** repository on a GitHub Free account: branch protection rules (classic or rulesets) are only available on a private repository with GitHub Pro, Team or Enterprise. Hence this order (see also [`going-public.md`](going-public.md) for the steps to make the repository public):
@@ -186,7 +217,7 @@ GitHub refuses to merge a pull request that contains unsigned commits, even old 
 2. Make the first release: the pull request `release/v…` > `main` brings the unsigned history into `main`, which is still allowed.
 3. Enable **Require signed commits** in the `main` ruleset. The following pull requests will only bring signed commits.
 
-To verify at the next release after the first: the documentation does not say clearly whether GitHub signs the merge commit it creates from the interface (it only confirms it for the squash). If the merge is refused for this reason, come back here before disabling anything.
+Checked on 2026-11-19: GitHub signs the merge commit it creates from the interface. The merge commits of pull requests #41 and #42 are signed by GitHub and marked **Verified** (see "State checked on 2026-11-19"), so a merge from the interface does not break this rule.
 
 ## Sources
 
