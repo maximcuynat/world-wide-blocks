@@ -54,7 +54,7 @@ Read first:
 Every message goes through the message module (`message/`, full rules in `docs/messages.md`):
 
 - Server side, `MessageCenter.of(server)`: `gesture(player, message)` answers a gesture, `event(problem key, …)` reports a network event. The caller gives a level, a language key and values; the channel follows from the use and the level, never from the caller.
-- The server never sends written text or formatting: key, values and level only. The client alone decides how it looks (`client/ClientMessages`, `client/PortStatusLayer`).
+- The server never sends written text or formatting: key, values and level only. The client alone decides how it looks (`client/ClientMessages`, `client/PortStatusLayer`). Only exception: the output of the terminal commands, literal English built by the server (`docs/messages.md`, section 3).
 - A problem is reported once per minute at most; the limit of a network is forgotten when that network changes.
 - Status panel content is built in plain Java (`StatusPanel`). Technical details go to the log, in English, at DEBUG level (`Diagnostics`).
 - Both language files `en_us.json` and `fr_fr.json` keep the same keys (`LangFilesTest`); a new key of a checked family needs its sample values in `LangFilesTest` (80 characters for the action bar, 45 for the panel and tooltip, 90 for the chat).
