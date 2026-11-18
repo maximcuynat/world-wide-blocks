@@ -190,7 +190,18 @@ Limites connues, à reprendre plus tard :
 
 #### Module des messages (avant le 1b-2)
 
-Audit, conception et règles dans `docs/messages.md` (validés par Max le 2026-11-18). Codé le 2026-11-18 en 6 étapes, un commit chacune après un build vert (`./gradlew build test` : 123 tests unitaires ; `./gradlew runGameTestServer` : 17 tests en jeu). **Vérification à l'œil à faire** (procédure ci-dessous).
+Audit, conception et règles dans `docs/messages.md` (validés par Max le 2026-11-18). Codé le 2026-11-18 en 6 étapes, un commit chacune après un build vert (`./gradlew build test` : 123 tests unitaires ; `./gradlew runGameTestServer` : 17 tests en jeu). **Vérification à l'œil faite par Max le 2026-11-18** (jeu en français, monde « Essais messages » en superflat, aucun plantage) ; rendu validé comme base de la future interface HUD (lot F).
+
+Résultat de la vérification, d'après les captures (`run/screenshots`) et le log :
+
+| Point | Vu | Non prouvé par une capture ou le log |
+|---|---|---|
+| 1. Infobulle et barre d'action | Infobulle : 3 lignes grises (la deuxième passe à la ligne dans une fenêtre de 854 x 480) ; « ✖ Box internet : aucun port libre. » en rouge | |
+| 2. Panneau de la box | Compact « 3/4 ports connectés » et « Accroupi : détails » ; détaillé : ports 1 à 3 avec la MAC en entier, port 4 libre, port 5 (ligne) inactif ; postes compacts « Connecté » | Panneau détaillé d'un poste (port et MAC) |
+| 3. 2 MAC sur un port (« chaine ») | Box de gauche : « Port 1 : connecté, 02:… (+1) » | Box de droite détaillée |
+| 4. Portable au bout des 99 blocs | Portable « Connecté », câble arrivant au portable | Câble sur toute sa longueur, panneau détaillé du portable |
+| 5. Message de boucle | Un seul message jaune « ⚠ Boucle réseau près de Box internet [x, y, z]… », de nouveau un seul plus tard ; une ligne « Network loop » en anglais par message | Écart d'une minute de jeu (jeu mis en pause entre les deux, prouvé par le test en jeu) ; arrêt des messages après le retrait d'un câble (aucun câble retiré) |
+| 6. Textes français | Tous les textes vus sont en français et au vouvoiement ; symboles ✖ et ⚠ bien rendus | `/netcraft liens` (non lancé) ; rendu de ✔ et ℹ ; repli `messageSymbols = false` (non essayé) |
 
 | Sujet | État |
 |---|---|
@@ -619,9 +630,9 @@ Jouable à la fin : tout le mod est accessible sans le mode créatif.
 | Sons | Ventilateurs, clics de branchement, bips |
 | Modèles | Reprise des modèles et textures provisoires |
 | Cordon au sol | Le cordon est rendu posé au sol au lieu d'une ligne tendue (idée notée le 2026-11-17, non validée) |
-| Interface HUD | Vraie interface soignée pour le panneau d'état et les messages, qui remplace le dessin provisoire (demandée par Max le 2026-11-18) |
+| Interface HUD | HUD plus professionnel et plus soigné pour le panneau d'état et les messages (demandé par Max le 2026-11-18) |
 
-Interface HUD : le module des messages (voir `docs/messages.md`) sépare les données du dessin. Le serveur n'envoie que des clés, des valeurs et un niveau ; les lignes du panneau sont construites en Java pur ; seul le client décide de l'apparence. La nouvelle interface remplace donc le dessin (`client/`) sans toucher au moteur, aux paquets ni aux textes.
+Interface HUD : le rendu actuel (panneau compact ou détaillé, messages avec symbole et couleur) est **validé par Max le 2026-11-18 comme base** ; rien n'est à changer avant le lot F. Le travail futur porte sur l'apparence : un HUD plus professionnel et plus soigné. Le module des messages (voir `docs/messages.md`) sépare les données du dessin : le serveur n'envoie que des clés, des valeurs et un niveau, les lignes du panneau sont construites en Java pur (`StatusPanel`), et seul le client décide de l'apparence. La nouvelle interface remplace donc le dessin (`client/ClientMessages`, `client/PortStatusLayer`) sans toucher au moteur, aux paquets ni aux textes.
 
 Cordon au sol, idée à préciser en arrivant au lot :
 
