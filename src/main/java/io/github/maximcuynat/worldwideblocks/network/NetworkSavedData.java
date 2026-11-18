@@ -34,7 +34,8 @@ public final class NetworkSavedData extends SavedData {
             NetworkCodecs.NODE.listOf().fieldOf("nodes").forGetter(NetworkSavedData::savedNodes),
             NetworkCodecs.LINK.listOf().fieldOf("links").forGetter(data -> List.copyOf(data.graph.links())),
             // Since lot 1b-2: absent from older worlds.
-            NetworkCodecs.DHCP_SERVER.listOf().optionalFieldOf("dhcp_servers", List.of()).forGetter(NetworkSavedData::savedDhcpServers)
+            NetworkCodecs.DHCP_SERVER.listOf().optionalFieldOf("dhcp_servers", List.of()).forGetter(NetworkSavedData::savedDhcpServers),
+            NetworkCodecs.DHCP_CLIENT.listOf().optionalFieldOf("dhcp_clients", List.of()).forGetter(NetworkSavedData::savedDhcpClients)
     ).apply(i, NetworkSavedData::new));
 
     /** Public for the game tests, which reread the file through a fresh storage. */
@@ -49,7 +50,8 @@ public final class NetworkSavedData extends SavedData {
     private NetworkSavedData() {
     }
 
-    private NetworkSavedData(List<SavedNode> nodes, List<Link> links, List<SavedDhcpServer> dhcpServers) {
+    private NetworkSavedData(List<SavedNode> nodes, List<Link> links, List<SavedDhcpServer> dhcpServers,
+            List<SavedDhcpClient> dhcpClients) {
         boolean macsGenerated = false;
         for (SavedNode saved : nodes) {
             macsGenerated |= !this.graph.restoreNode(saved.node(), saved.macs(), saved.serviceMac());
@@ -71,8 +73,17 @@ public final class NetworkSavedData extends SavedData {
                 dhcpRestored++;
             }
         }
-        Diagnostics.debug("Network loaded: {} devices, {} cables, {} DHCP servers, MAC addresses {}", nodes.size(),
-                this.graph.links().size(), dhcpRestored, macsGenerated
+        int leasesRestored = 0;
+        for (SavedDhcpClient saved : dhcpClients) {
+            // Only for a port of a computer still in the graph.
+            if (this.graph.node(saved.port().device())
+                    .filter(node -> node.role() == DeviceRole.HOST && node.hasPort(saved.port().index())).isPresent()) {
+                this.dhcp.restoreClient(saved.port(), saved.lease());
+                leasesRestored++;
+            }
+        }
+        Diagnostics.debug("Network loaded: {} devices, {} cables, {} DHCP servers, {} computer leases, MAC addresses {}",
+                nodes.size(), this.graph.links().size(), dhcpRestored, leasesRestored, macsGenerated
                         ? "generated for at least one device (world from before lot 1b or 1b-2, or invalid addresses)"
                         : "all taken from the save");
     }
@@ -88,6 +99,12 @@ public final class NetworkSavedData extends SavedData {
         for (Map.Entry<DeviceId, DhcpServerState> server : this.dhcp.servers().entrySet()) {
             saved.add(new SavedDhcpServer(server.getKey(), server.getValue().enabled(), server.getValue().bindings()));
         }
+        return saved;
+    }
+
+    private List<SavedDhcpClient> savedDhcpClients() {
+        List<SavedDhcpClient> saved = new ArrayList<>();
+        this.dhcp.clients().forEach((port, lease) -> saved.add(new SavedDhcpClient(port, lease)));
         return saved;
     }
 

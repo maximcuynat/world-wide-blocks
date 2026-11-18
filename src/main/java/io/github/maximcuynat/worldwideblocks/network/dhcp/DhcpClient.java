@@ -20,10 +20,13 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
  * <li>At T1 (half of the lease): REQUEST to the server alone, RENEWING; at T2 (87.5%): REQUEST broadcast,
  * REBINDING; at the end of the lease without acknowledgement, the address is lost: INIT.</li>
  * <li>Cable unplugged: the address is lost at once (decision of lot 1b-2).</li>
+ * <li>Cable already connected when the server starts, with a lease still running in the saved memory:
+ * INIT-REBOOT, REQUEST of that address broadcast without server identifier, REBOOTING (3.2, 4.4.2). ACK: BOUND;
+ * NAK: INIT; no answer after 60 s: INIT (decision of lot 1b-2; 4.4.2 also allows keeping the address).</li>
  * </ul>
  *
  * <p>Retransmissions, without the random +/-1 s of RFC 2131 4.1 (decision of lot 1b-2: exact timings):
- * DISCOVER after 4, 8, 16, 32 and 64 s, then every 64 s; REQUEST of REQUESTING after 4, 8 and 16 s, then back
+ * DISCOVER after 4, 8, 16, 32 and 64 s, then every 64 s; REQUEST of REQUESTING and REBOOTING after 4, 8 and 16 s, then back
  * to INIT 32 s after the last one, 60 s in all ("for a total delay of 60 seconds", 3.1); in RENEWING and
  * REBINDING, "one-half of the remaining time until T2 [...] and one-half of the remaining lease time [...],
  * down to a minimum of 60 seconds" (4.4.5).
@@ -59,6 +62,28 @@ public final class DhcpClient {
         void schedule(long delayTicks, Timer timer);
     }
 
+    /**
+     * Where the client keeps its lease across a server restart: saved with the network ({@link DhcpStore}).
+     * The client writes it at each change of its lease.
+     */
+    public interface Memory {
+        /** A memory that keeps nothing: the client always starts with a DISCOVER. */
+        Memory NONE = new Memory() {
+            @Override
+            public Optional<DhcpLease> recall() {
+                return Optional.empty();
+            }
+
+            @Override
+            public void remember(Optional<DhcpLease> lease) {
+            }
+        };
+
+        Optional<DhcpLease> recall();
+
+        void remember(Optional<DhcpLease> lease);
+    }
+
     /** Timer of the client; only the latest one is valid. */
     public record Timer(long epoch) {
     }
@@ -67,16 +92,25 @@ public final class DhcpClient {
     private record Offer(Ipv4Address address, Ipv4Address serverId) {
     }
 
+    private final Memory memory;
     private DhcpClientState state = DhcpClientState.UNPLUGGED;
     private int xid;
     /** Sends already made in the current transaction. */
     private int sends;
     private Offer offer;
     private DhcpLease lease;
+    /** Address asked for again in REBOOTING. */
+    private Ipv4Address previous;
     private long epoch;
 
+    /** Client whose lease is not saved. */
     public DhcpClient(RandomGenerator random) {
+        this(random, Memory.NONE);
+    }
+
+    public DhcpClient(RandomGenerator random, Memory memory) {
         this.xid = random.nextInt();
+        this.memory = memory;
     }
 
     // ---- Reading ----
@@ -92,14 +126,22 @@ public final class DhcpClient {
 
     // ---- Events ----
 
-    /** The cable is connected: the client looks for a server. */
+    /**
+     * The cable is connected: the client asks again for the address it remembers, if its lease still runs (only
+     * after a server restart: unplugging makes it forget), otherwise it looks for a server.
+     */
     public void linkUp(Port port) {
-        this.init(port);
+        Optional<DhcpLease> remembered = this.memory.recall().filter(lease -> lease.expiresAt() > port.now());
+        if (remembered.isPresent()) {
+            this.reboot(port, remembered.get().address());
+        } else {
+            this.init(port);
+        }
     }
 
     /** The cable is removed: the address is lost, nothing more is sent. */
     public void linkDown() {
-        this.lease = null;
+        this.setLease(null);
         this.offer = null;
         this.state = DhcpClientState.UNPLUGGED;
         this.epoch++;
@@ -120,7 +162,6 @@ public final class DhcpClient {
                 if (message.type() == DhcpMessageType.ACK) {
                     this.bind(port, serverMac, message);
                 } else if (message.type() == DhcpMessageType.NAK) {
-                    this.lease = null;
                     this.init(port); // "DHCPNAK/Restart", "Halt network" (figure 5)
                 }
             }
@@ -137,11 +178,13 @@ public final class DhcpClient {
         long now = port.now();
         switch (this.state) {
             case SELECTING -> this.sendDiscover(port);
-            case REQUESTING -> {
-                if (this.sends < REQUEST_SENDS) {
+            case REQUESTING, REBOOTING -> {
+                if (this.sends >= REQUEST_SENDS) {
+                    this.init(port);
+                } else if (this.state == DhcpClientState.REQUESTING) {
                     this.sendSelectedRequest(port);
                 } else {
-                    this.init(port);
+                    this.sendPreviousRequest(port);
                 }
             }
             case BOUND, RENEWING, REBINDING -> {
@@ -164,11 +207,22 @@ public final class DhcpClient {
 
     /** INIT: the address is lost, a new transaction starts with a DISCOVER. */
     private void init(Port port) {
-        this.lease = null;
+        this.setLease(null);
         this.offer = null;
+        this.previous = null;
         this.state = DhcpClientState.SELECTING;
         this.newTransaction();
         this.sendDiscover(port);
+    }
+
+    /** INIT-REBOOT then REBOOTING: the remembered address is asked for again; it is not used until the ACK. */
+    private void reboot(Port port, Ipv4Address address) {
+        this.state = DhcpClientState.INIT_REBOOT;
+        this.lease = null;
+        this.previous = address;
+        this.newTransaction();
+        this.state = DhcpClientState.REBOOTING;
+        this.sendPreviousRequest(port);
     }
 
     private void select(Port port, DhcpMessage offer) {
@@ -191,10 +245,11 @@ public final class DhcpClient {
             return; // incomplete acknowledgement: ignored
         }
         long now = port.now();
-        this.lease = new DhcpLease(ack.yourAddress(), options.subnetMask().get(), options.router().get(),
+        this.setLease(new DhcpLease(ack.yourAddress(), options.subnetMask().get(), options.router().get(),
                 options.dnsServer().get(), options.serverId().get(), serverMac, now,
-                now + options.leaseSeconds().getAsLong() * SECOND);
+                now + options.leaseSeconds().getAsLong() * SECOND));
         this.offer = null;
+        this.previous = null;
         this.state = DhcpClientState.BOUND;
         this.epoch++;
         port.schedule(this.lease.renewAt() - now, new Timer(this.epoch));
@@ -212,6 +267,12 @@ public final class DhcpClient {
         this.state = DhcpClientState.REBINDING;
         this.newTransaction();
         this.sendExtension(port, true);
+    }
+
+    /** The lease in use changes: the memory follows it. */
+    private void setLease(DhcpLease lease) {
+        this.lease = lease;
+        this.memory.remember(Optional.ofNullable(lease));
     }
 
     private void newTransaction() {
@@ -232,6 +293,15 @@ public final class DhcpClient {
     private void sendSelectedRequest(Port port) {
         port.send(DhcpFrames.fromClient(port.mac(), Ipv4Address.ANY, MacAddress.BROADCAST, Ipv4Address.BROADCAST,
                 DhcpMessage.requestSelected(this.xid, port.mac(), this.offer.serverId(), this.offer.address())));
+        long wait = FIRST_RETRY << this.sends;
+        this.sends++;
+        this.retryIn(port, wait);
+    }
+
+    /** REQUEST of INIT-REBOOT: broadcast, the remembered address requested, no server identifier, {@code ciaddr} zero. */
+    private void sendPreviousRequest(Port port) {
+        port.send(DhcpFrames.fromClient(port.mac(), Ipv4Address.ANY, MacAddress.BROADCAST, Ipv4Address.BROADCAST,
+                DhcpMessage.requestPrevious(this.xid, port.mac(), this.previous)));
         long wait = FIRST_RETRY << this.sends;
         this.sends++;
         this.retryIn(port, wait);

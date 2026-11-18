@@ -1,5 +1,6 @@
 package io.github.maximcuynat.worldwideblocks.network.sim;
 
+import java.util.function.IntFunction;
 import java.util.random.RandomGenerator;
 
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpClient;
@@ -31,11 +32,14 @@ public final class HostLogic implements DeviceLogic {
     private final long[] generation;
     private final DhcpClient[] dhcp;
 
-    public HostLogic(int portCount, RandomGenerator random) {
+    /**
+     * @param memories saved lease of each port, which its DHCP client asks for again after a server restart
+     */
+    public HostLogic(int portCount, RandomGenerator random, IntFunction<DhcpClient.Memory> memories) {
         this.generation = new long[portCount];
         this.dhcp = new DhcpClient[portCount];
         for (int i = 0; i < portCount; i++) {
-            this.dhcp[i] = new DhcpClient(random);
+            this.dhcp[i] = new DhcpClient(random, memories.apply(i));
         }
     }
 

@@ -8,6 +8,7 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpBinding;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpLease;
 import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Address;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 
@@ -77,6 +78,23 @@ final class NetworkCodecs {
             Codec.LONG.fieldOf("assigned_at").forGetter(DhcpBinding::assignedAt),
             Codec.BOOL.fieldOf("offered").forGetter(DhcpBinding::offered)
     ).apply(i, DhcpBinding::new));
+
+    static final Codec<DhcpLease> DHCP_LEASE = RecordCodecBuilder.create(i -> i.group(
+            IPV4.fieldOf("address").forGetter(DhcpLease::address),
+            IPV4.fieldOf("subnet_mask").forGetter(DhcpLease::subnetMask),
+            IPV4.fieldOf("router").forGetter(DhcpLease::router),
+            IPV4.fieldOf("dns_server").forGetter(DhcpLease::dnsServer),
+            IPV4.fieldOf("server_id").forGetter(DhcpLease::serverId),
+            MAC.fieldOf("server_mac").forGetter(DhcpLease::serverMac),
+            Codec.LONG.fieldOf("obtained_at").forGetter(DhcpLease::obtainedAt),
+            Codec.LONG.fieldOf("expires_at").forGetter(DhcpLease::expiresAt)
+    ).apply(i, DhcpLease::new));
+
+    /** Lease of a computer port, since lot 1b-2. */
+    static final Codec<SavedDhcpClient> DHCP_CLIENT = RecordCodecBuilder.create(i -> i.group(
+            PORT_REF.fieldOf("port").forGetter(SavedDhcpClient::port),
+            DHCP_LEASE.fieldOf("lease").forGetter(SavedDhcpClient::lease)
+    ).apply(i, SavedDhcpClient::new));
 
     /** Memory of a box's DHCP server, since lot 1b-2. */
     static final Codec<SavedDhcpServer> DHCP_SERVER = RecordCodecBuilder.create(i -> i.group(

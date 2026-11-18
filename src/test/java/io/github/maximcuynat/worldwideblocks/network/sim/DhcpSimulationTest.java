@@ -23,7 +23,10 @@ import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpClient;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpClientState;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpFrames;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpLease;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpServer;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpServerConfig;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpStore;
+import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpMessage;
 import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpMessageType;
 import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Address;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
@@ -202,6 +205,99 @@ class DhcpSimulationTest {
         assertTrue(address(tower).isEmpty());
         assertEquals(DhcpClientState.SELECTING, client(tower).state());
         assertEquals(List.of(0L, 80L, 240L, 560L, 1_200L, 2_480L, 3_760L, 5_040L), sentBy(tower, DhcpMessageType.DISCOVER));
+    }
+
+    // ---- Server restart: the runtime state is lost, the saved memory stays (INIT-REBOOT) ----
+
+    /** A new simulation over the same graph and the same memory, as after a server restart. */
+    private void restart() {
+        this.sim = new NetworkSimulation(this.graph, this.store, SimulationLimits.DEFAULT);
+        this.sim.setTap((now, port, direction, frame) -> {
+            if (direction == FrameDirection.SENT) {
+                DhcpFrames.toServer(frame).or(() -> DhcpFrames.toClient(frame))
+                        .ifPresent(message -> this.dhcpSent.add(new Sent(now, port, frame.source(), message.type())));
+            }
+        });
+        this.dhcpSent.clear();
+    }
+
+    @Test
+    void afterARestartTheComputerAsksForItsAddressAgainAndGetsIt() {
+        DeviceId box = box(0);
+        DeviceId tower = host(5);
+        DeviceId laptop = host(10);
+        plug(box, 0, laptop, 0);
+        sim.tick(0);
+        plug(box, 1, tower, 0);
+        sim.tick(1);
+        Ipv4Address before = address(tower).orElseThrow();
+
+        restart();
+        sim.tick(5_000);
+
+        assertEquals(Optional.of(before), address(tower));
+        assertEquals(5_000 + LEASE, client(tower).lease().orElseThrow().expiresAt());
+        assertTrue(sentBy(tower, DhcpMessageType.DISCOVER).isEmpty(), "INIT-REBOOT: no DISCOVER");
+        assertEquals(List.of(5_000L), sentBy(tower, DhcpMessageType.REQUEST));
+    }
+
+    @Test
+    void afterARestartWithAnotherBoxTheComputerIsRefusedThenGetsANewAddress() {
+        DeviceId box = box(0);
+        DeviceId tower = host(5);
+        plug(box, 0, tower, 0);
+        sim.tick(0);
+        // The box knows the tower under another address (as if it had been reset and had lent .10 to someone else).
+        MacAddress towerMac = graph.macOf(new PortRef(tower, 0)).orElseThrow();
+        store.forget(box);
+        DhcpServerConfig config = DhcpServerConfig.INTERNET_BOX;
+        new DhcpServer(config, store.server(box)).handle(DhcpMessage.discover(1, new MacAddress(0x02_00_00_00_99_99L)), 0);
+        new DhcpServer(config, store.server(box)).handle(DhcpMessage.discover(2, towerMac), 0);
+
+        restart();
+        sim.tick(10);
+
+        // What the tower sends, and what the box's server sends back on the tower's port.
+        MacAddress server = graph.serviceMacOf(box).orElseThrow();
+        assertEquals(List.of(DhcpMessageType.REQUEST, DhcpMessageType.NAK, DhcpMessageType.DISCOVER,
+                DhcpMessageType.OFFER, DhcpMessageType.REQUEST, DhcpMessageType.ACK), dhcpSent.stream()
+                .filter(s -> s.port().equals(new PortRef(tower, 0))
+                        || s.port().equals(new PortRef(box, 0)) && s.source().equals(server))
+                .map(Sent::type).toList());
+        assertEquals(Optional.of(Ipv4Address.of(192, 168, 1, 11)), address(tower));
+    }
+
+    @Test
+    void afterARestartABoxThatForgotTheComputerStaysSilentAndTheComputerStartsAgainAfter60Seconds() {
+        DeviceId box = box(0);
+        DeviceId tower = host(5);
+        plug(box, 0, tower, 0);
+        sim.tick(0);
+        store.forget(box); // the box remembers nothing: "MUST remain silent" (4.3.2)
+
+        restart();
+        tickUntil(100, 100 + 1_200);
+
+        assertEquals(List.of(100L, 180L, 340L, 660L), sentBy(tower, DhcpMessageType.REQUEST).subList(0, 4));
+        assertEquals(List.of(1_300L), sentBy(tower, DhcpMessageType.DISCOVER));
+        assertEquals(Optional.of(Ipv4Address.of(192, 168, 1, 10)), address(tower));
+    }
+
+    @Test
+    void aComputerUnpluggedBeforeTheRestartDoesNotAskForItsOldAddress() {
+        DeviceId box = box(0);
+        DeviceId tower = host(5);
+        plug(box, 0, tower, 0);
+        sim.tick(0);
+        unplug(box, 0);
+        sim.tick(1);
+        assertTrue(store.clients().isEmpty());
+
+        plug(box, 0, tower, 0);
+        restart();
+        sim.tick(2);
+
+        assertEquals(List.of(2L), sentBy(tower, DhcpMessageType.DISCOVER));
     }
 
     @Test

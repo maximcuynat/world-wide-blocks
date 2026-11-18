@@ -303,6 +303,124 @@ class DhcpClientTest {
         assertEquals(sent, this.port.sent.size(), "the stale timer sends nothing");
     }
 
+    // ---- Saved lease and INIT-REBOOT (RFC 2131, 3.2 and 4.4.2) ----
+
+    /** A memory like the store's, readable by the test. */
+    private static final class Remembered implements DhcpClient.Memory {
+        Optional<DhcpLease> lease = Optional.empty();
+        int writes;
+
+        @Override
+        public Optional<DhcpLease> recall() {
+            return this.lease;
+        }
+
+        @Override
+        public void remember(Optional<DhcpLease> lease) {
+            this.lease = lease;
+            this.writes++;
+        }
+    }
+
+    private static final DhcpLease SAVED = new DhcpLease(ADDRESS, MASK, SERVER, SERVER, SERVER, SERVICE, 0, 24_000);
+
+    private Remembered withMemory() {
+        Remembered memory = new Remembered();
+        this.client = new DhcpClient(new SplittableRandom(3), memory);
+        return memory;
+    }
+
+    @Test
+    void theLeaseIsRememberedWhenObtainedRenewedAndForgottenWhenUnplugged() {
+        Remembered memory = this.withMemory();
+
+        this.bindAtZero();
+        assertEquals(this.client.lease(), memory.lease);
+
+        this.port.fire(); // T1
+        this.reply(SERVICE, DhcpMessage.ack(this.port.last(), ADDRESS, LEASE));
+        assertEquals(36_000, memory.lease.orElseThrow().expiresAt());
+
+        this.client.linkDown();
+        assertTrue(memory.lease.isEmpty());
+    }
+
+    @Test
+    void anExpiredOrRefusedLeaseIsForgotten() {
+        Remembered memory = this.withMemory();
+        this.bindAtZero();
+        while (this.client.state() != DhcpClientState.SELECTING) {
+            this.port.fire();
+        }
+        assertTrue(memory.lease.isEmpty(), "expired");
+
+        this.reply(SERVICE, DhcpMessage.offer(this.port.last(), ADDRESS, LEASE));
+        this.reply(SERVICE, DhcpMessage.ack(this.port.last(), ADDRESS, LEASE));
+        this.port.fire(); // T1
+        this.reply(SERVICE, DhcpMessage.nak(this.port.last(), SERVER));
+        assertTrue(memory.lease.isEmpty(), "refused");
+    }
+
+    @Test
+    void withARememberedLeaseStillRunningTheClientAsksForTheSameAddressAgain() {
+        Remembered memory = this.withMemory();
+        memory.lease = Optional.of(SAVED);
+        this.port.now = 5_000;
+
+        this.client.linkUp(this.port);
+
+        assertEquals(DhcpClientState.REBOOTING, this.client.state());
+        assertTrue(this.client.lease().isEmpty(), "not used before the ACK");
+        DhcpMessage request = this.port.last();
+        assertEquals(DhcpMessage.requestPrevious(request.xid(), PC, ADDRESS), request);
+        assertTrue(this.port.lastFrame().isBroadcast());
+        assertEquals(Ipv4Address.ANY, ((Ipv4Packet) this.port.lastFrame().payload()).source());
+
+        this.reply(SERVICE, DhcpMessage.ack(request, ADDRESS, LEASE));
+        assertEquals(DhcpClientState.BOUND, this.client.state());
+        assertEquals(5_000 + 24_000, this.client.lease().orElseThrow().expiresAt());
+        assertEquals(this.client.lease(), memory.lease);
+    }
+
+    @Test
+    void aNakAfterInitRebootStartsAgainWithADiscover() {
+        Remembered memory = this.withMemory();
+        memory.lease = Optional.of(SAVED);
+        this.client.linkUp(this.port);
+
+        this.reply(SERVICE, DhcpMessage.nak(this.port.last(), SERVER));
+
+        assertEquals(DhcpClientState.SELECTING, this.client.state());
+        assertEquals(DhcpMessageType.DISCOVER, this.port.last().type());
+        assertTrue(memory.lease.isEmpty());
+    }
+
+    @Test
+    void withoutAnswerAfterInitRebootTheClientStartsAgain60SecondsLater() {
+        Remembered memory = this.withMemory();
+        memory.lease = Optional.of(SAVED);
+        this.client.linkUp(this.port);
+        for (int i = 0; i < 4; i++) {
+            this.port.fire();
+        }
+
+        assertEquals(List.of(0L, 80L, 240L, 560L, 1_200L), this.port.sentAt);
+        assertEquals(DhcpMessageType.DISCOVER, this.port.last().type());
+        assertTrue(memory.lease.isEmpty());
+    }
+
+    @Test
+    void aRememberedLeaseAlreadyOverIsNotAskedFor() {
+        Remembered memory = this.withMemory();
+        memory.lease = Optional.of(SAVED);
+        this.port.now = 24_000;
+
+        this.client.linkUp(this.port);
+
+        assertEquals(DhcpMessageType.DISCOVER, this.port.last().type());
+        assertTrue(memory.lease.isEmpty());
+    }
+
     @Test
     void anIncompleteAcknowledgementIsIgnored() {
         this.client.linkUp(this.port);

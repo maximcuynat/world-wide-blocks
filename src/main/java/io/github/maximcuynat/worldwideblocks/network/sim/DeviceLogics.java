@@ -19,7 +19,7 @@ final class DeviceLogics {
     static DeviceLogic create(NetworkNode node, DhcpStore dhcp) {
         return switch (node.role()) {
             // The xid of the DHCP transactions starts at random (RFC 2131, 4.1).
-            case HOST -> new HostLogic(node.portCount(), RandomGenerator.getDefault());
+            case HOST -> new HostLogic(node.portCount(), RandomGenerator.getDefault(), port -> dhcp.client(node.port(port)));
             case BOX -> new BoxLogic(portsOfKind(node, PortKind.ETHERNET),
                     new DhcpServer(DhcpServerConfig.INTERNET_BOX, dhcp.server(node.id())));
         };
