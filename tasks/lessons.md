@@ -6,6 +6,8 @@
 
 - Only commit code that passed `./gradlew build test` on Max's machine. Splitting a commit by hand (removing log lines, splitting files) creates a state that was never compiled: run it through the build before committing, or commit only the state that is already compiled. Commits c178668 and 5014267 were made without a build. (2026-11-18)
 
+- Several sessions can share the repository (worktrees such as `../netcraft-proto`). Right before any `git switch`, run `git status` and `git worktree list`: never switch a folder whose uncommitted changes are not mine, and stay in the folder the maintainer named. A switch carried another session's prototype changes onto a new branch. (2026-11-19)
+
 ## Tests
 
 - The engine has global limits (frames per tick, queue size, report limit) shared by everything that runs on the server. An automatic test that touches these limits runs apart, in its own batch, so that its result does not depend on the other tests or on the order of execution. (2026-11-18)
