@@ -39,7 +39,8 @@ repositories {
 }
 
 base {
-    archivesName = mod_id
+    // Le nom du jar porte la version de Minecraft : netcraft-26.3-0.1.0-alpha.1.jar
+    archivesName = "${mod_id}-${minecraft_version}"
 }
 
 // Mojang ships Java 25 to end users in 26.3, so mods should target Java 25.
