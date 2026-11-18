@@ -1,25 +1,28 @@
 #!/usr/bin/env bash
-# Avant chaque push : compile, lance les tests unitaires puis les tests en jeu, et refuse le push en cas d'échec.
+# Before each push: builds, runs the unit tests then the game tests, and refuses the push on failure.
 #   ./gradlew build test
 #   ./gradlew runGameTestServer
-# Les tests sont sautés seulement si tous les fichiers des commits envoyés sont des .md ou sont dans docs/.
-# Les tests portent sur l'arbre de travail : il doit être propre et le commit envoyé doit être HEAD.
+# Gradle's output goes to build/pre-push.log; only its last lines are shown when something fails.
+# The tests are skipped only when every file of the pushed commits is a .md file or lives in docs/.
+# The tests run on the working tree: it must be clean and the pushed commit must be HEAD.
 set -euo pipefail
 
 remote="$1"
 zero='^0+$'
 
 cd "$(git rev-parse --show-toplevel)"
+# shellcheck source=../scripts/lib/checks.sh
+. scripts/lib/checks.sh
 
-# git donne une ligne par référence envoyée : <réf locale> <sha local> <réf distante> <sha distant>.
+# git gives one line per pushed ref: <local ref> <local sha> <remote ref> <remote sha>.
 pushed_commits=""
 while read -r local_ref local_sha remote_ref remote_sha; do
     [ -z "${local_ref:-}" ] && continue
-    # Suppression d'une référence distante : rien à tester.
+    # Deleting a remote ref: nothing to test.
     if printf '%s' "$local_sha" | grep -q -E "$zero"; then
         continue
     fi
-    # Un tag annoté désigne un objet tag : on teste le commit qu'il désigne.
+    # An annotated tag points to a tag object: test the commit it points to.
     commit="$(git rev-parse "${local_sha}^{commit}")"
     pushed_commits="$pushed_commits $commit"
 done
@@ -28,12 +31,13 @@ if [ -z "$pushed_commits" ]; then
     exit 0
 fi
 
-# Fichiers touchés par les commits qui ne sont encore sur aucune branche de ce dépôt distant.
-# Pour une fusion, on compte ce qu'elle apporte à son premier parent.
+# Files touched by the commits that are not yet on any branch of this remote.
+# For a merge, count what it brings to its first parent.
+# shellcheck disable=SC2086 # pushed_commits is a list of hashes
 changed_files="$(git log --format= --name-only --diff-merges=first-parent $pushed_commits --not --remotes="$remote" | sort -u | sed '/^$/d')"
 
 if [ -z "$changed_files" ]; then
-    echo "pre-push : aucun commit nouveau pour $remote, tests sautés."
+    echo "pre-push: no new commit for $remote, tests skipped."
     exit 0
 fi
 
@@ -48,15 +52,15 @@ $changed_files
 EOF
 
 if [ "$needs_tests" -eq 0 ]; then
-    echo "pre-push : seulement des .md ou des fichiers de docs/, tests sautés."
+    echo "pre-push: only .md files or files in docs/, tests skipped."
     exit 0
 fi
 
-# Les tests tournent sur l'arbre de travail : il doit correspondre exactement à ce qui est envoyé.
+# The tests run on the working tree: it must match exactly what is pushed.
 if [ -n "$(git status --porcelain)" ]; then
     cat >&2 <<'EOF'
-pre-push : l'arbre de travail n'est pas propre (modifications ou fichiers non suivis).
-Les tests porteraient sur autre chose que ce qui est envoyé. Commitez ou mettez de côté (git stash -u), puis relancez le push.
+pre-push: the working tree is not clean (changes or untracked files).
+The tests would run on something else than what is pushed. Commit or stash (git stash -u), then push again.
 EOF
     exit 1
 fi
@@ -65,23 +69,14 @@ head="$(git rev-parse HEAD)"
 for commit in $pushed_commits; do
     if [ "$commit" != "$head" ]; then
         cat >&2 <<EOF
-pre-push : le commit envoyé ($commit) n'est pas HEAD ($head).
-Placez-vous sur ce que vous envoyez (git switch <branche>) pour qu'il soit testé, puis relancez le push.
+pre-push: the pushed commit ($commit) is not HEAD ($head).
+Switch to what you push (git switch <branch>) so that it is tested, then push again.
 EOF
         exit 1
     fi
 done
 
-echo "pre-push : ./gradlew build test"
-if ! ./gradlew build test; then
-    echo "pre-push : build ou tests unitaires en échec, push refusé." >&2
+if ! run_checks build/pre-push.log pre-push; then
+    echo "pre-push: push refused." >&2
     exit 1
 fi
-
-echo "pre-push : ./gradlew runGameTestServer"
-if ! ./gradlew runGameTestServer; then
-    echo "pre-push : tests en jeu en échec, push refusé (détail dans run-gametest/logs/latest.log)." >&2
-    exit 1
-fi
-
-echo "pre-push : build, tests unitaires et tests en jeu au vert."
