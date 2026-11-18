@@ -1,6 +1,6 @@
 # World Wide Blocks: lot plan
 
-Written on 2026-11-17, revised the same day after review. Status: proposed, awaiting approval. Lots coded: 0 and 1a (see the status of each lot).
+Written on 2026-11-17, revised the same day after review; revised again on 2026-11-18 (lot E renamed 1e, lot 6c split in two, tool-crafting decision added). Status: proposed, awaiting approval. Lots coded: 0 and 1a (see the status of each lot).
 
 ## Principles
 
@@ -20,9 +20,11 @@ Written on 2026-11-17, revised the same day after review. Status: proposed, awai
 
 | Decision | Before lot | Proposal | Status |
 |---|---|---|---|
+| Choice of the exact port | 1d | No proposal for now. Today the Ethernet cord takes the first free local network port; with a desktop switch, the player will want to choose the port | To decide |
 | Role of the screen, keyboard and mouse | 1c | The terminal opens directly on the tower; the peripherals of lot 2c stay decorative and do not condition access. Alternative: make them mandatory, which would change the behaviour of the tower at lot 2c | To approve |
-| Laptop battery | E | The laptop runs on battery when it is not plugged in and recharges on a socket | To approve |
-| Electricity mandatory or not | E | "Power required" configuration option, enabled by default; when disabled, all devices work without power | To approve |
+| Laptop battery | 1e | The laptop runs on battery when it is not plugged in and recharges on a socket | To approve |
+| Electricity mandatory or not | 1e | "Power required" configuration option, enabled by default; when disabled, all devices work without power | To approve |
+| Making cables by hand | 2b | The tools of lot 9a (spool, connector, crimping tool, tester) are brought forward just before 2b, so that the fixed home cabling uses cables cut to the wanted length. Alternative: keep them at 9a and use only finished cords until then | To decide |
 | Scale of rack equipment | 6a | Scale per family: racks at player scale, small equipment enlarged. With the factor 2.4 of the PC tower, a 42U rack would be about 4.8 blocks high | To approve |
 | Cord laid on the ground, separated by a wall | F | No proposal for now: what to do when a wall separates the two devices of a cord drawn on the ground (see lot F) | To decide |
 
@@ -39,7 +41,7 @@ This document describes the design. The tasks of each lot are GitHub issues, one
 | 1b | The box assigns addresses | Each computer connected to the box receives an address |
 | 1c | Screen and ping command | From a computer, `ping` to the other computer, which answers |
 | 1d | Desktop switch | More computers than the box has ports |
-| E | Electricity | A device without power is off |
+| 1e | Electricity | A device without power is off |
 | 2a | Wi-Fi | The laptop connects without a cable |
 | 2b | Fixed home cabling | Cables go through wall sockets and trunking |
 | 2c | Peripherals and local services | A shared file and a network print |
@@ -52,7 +54,8 @@ This document describes the design. The tasks of each lot are GitHub issues, one
 | 5b | The neighbourhood in copper | Same for copper lines |
 | 6a | The rack | Equipment is mounted in a rack, at a precise position |
 | 6b | The ISP site | The neighbourhood lines arrive on the operator's equipment |
-| 6c | The ISP service | The box receives a public address, two subscribers reach each other |
+| 6c-1 | Public address | The box receives a public address from the aggregation router |
+| 6c-2 | Address translation | Two subscribers reach each other; a private address cannot be reached directly |
 | 7a | Routing between operators | Two subscribers of different ISPs reach each other |
 | 7b | Servers and domain names | A name resolves, a server answers |
 | 7c | The mesh of the internet | One link cut, the traffic takes another path |
@@ -167,7 +170,7 @@ The lot is split in two sub-lots (architecture approved by Max on 2026-11-17):
 Chosen architecture:
 
 - Layered frames (`network/protocol/`): an Ethernet frame carries a source MAC, a destination MAC (or broadcast), a type and a typed content. IPv4 (0x0800), then UDP and DHCP, ARP (official type 0x0806) and ICMP are each added as a variant of the layer below.
-- One MAC per port, first byte `02` (locally administered address), unique in the world and saved; a device that is broken then placed again gets new ones. Each port has a type: Ethernet or line input. The Ethernet cord takes the first free local network port; the choice of port will come at lot 3.
+- One MAC per port, first byte `02` (locally administered address), unique in the world and saved; a device that is broken then placed again gets new ones. Each port has a type: Ethernet or line input. The Ethernet cord takes the first free local network port; how to choose the exact port is an open decision, to take before lot 1d (see "Open decisions").
 - Simulation (`network/sim/`): delivery queue processed at each server tick, timers, a tap on each incoming or outgoing frame (for a future analyzer), clock on game time. A change that happens between two ticks (connection, unplugging, device placed or removed) is applied at the start of the next tick, with the time of that tick: its frames, timers and reports start from the tick where its frames are delivered (fixed on 2026-11-18, see the in-game test of the loop). It runs even when chunks are not loaded.
 - Switching (`network/switching/`): learning of MACs on received frames, broadcast if the destination is unknown or addressed to all, entries expire after 300 game seconds (value recommended by IEEE 802.1D), forgotten at the next tick when the cable is removed. The box is this switch plus a local point, on which its own service will be plugged (DHCP at 1b-2); the desktop switch of lot 1d will be the same switch, without a local point.
 - Loop protection, until the STP of lot 8b: a broadcast frame that comes back to a switch it has already crossed is dropped and reported (log, and a message to players within 32 blocks, at most one per minute and per device). Safety net: 10,000 frames processed per tick at most, 50,000 in the queue.
@@ -273,9 +276,9 @@ Proposed choice: the commands follow the Linux convention (`ip addr`, `ping`, `t
 
 Playable at the end: six or more computers on the same box, all reachable by `ping`.
 
-## Lot E: electricity
+## Lot 1e: electricity
 
-Short lot, placed right after lot 1 so as not to have to rework dozens of blocks later.
+Short lot, numbered in the 1 series because it is placed right after lot 1, so as not to have to rework dozens of blocks later. It is not part of the network simulation itself.
 
 | Type | Equipment | Role |
 |---|---|---|
@@ -337,14 +340,14 @@ The role of the screen, keyboard and mouse depends on the decision taken before 
 | Block | IP phone | Telephony over the network |
 | Block | IP camera | Video surveillance over the network |
 | Block | Smart television | Network client of the living room |
-| Block | Powerline adapter | Carries the network over the electrical circuit (depends on lot E) |
-| Block | PoE injector | Powers a device through its network cable (depends on lot E) |
+| Block | Powerline adapter | Carries the network over the electrical circuit (depends on lot 1e) |
+| Block | PoE injector | Powers a device through its network cable (depends on lot 1e) |
 
 Playable at the end: each new device obtains an address and answers `ping`.
 
 ## Lot 3: arrival at the subscriber
 
-So that this lot is playable before the street exists, a test block provides the line.
+So that this lot is playable before the street exists, a test block provides the line. This block is brought forward to lot 1d (proposed issue): the line input port of the box can then be tested (state "inactive" until the block is connected) long before lot 3, which then only adds the real equipment.
 
 | Type | Equipment | Role |
 |---|---|---|
@@ -448,9 +451,20 @@ Playable at the end: the "test operator line" block is no longer needed, the rea
 
 ### 6c: the ISP service
 
+Split in two sub-lots: address translation (NAT) is the most structuring change of the plan after DHCP. It redefines addressing (private against public), adds a stateful translation to the box and conditions `traceroute`, so it is trialled on its own.
+
+#### 6c-1: public address
+
 | Type | Equipment | Role |
 |---|---|---|
 | Block | Subscriber aggregation router | Groups the sessions of the boxes and gives them a public address |
+
+Playable at the end: each connected box obtains a public address from the aggregation router and shows it in the status indicator, while its computers keep their private addresses.
+
+#### 6c-2: address translation and traceroute
+
+| Type | Equipment | Role |
+|---|---|---|
 | Mechanic | Address translation in the box | The box shares its public address between the computers of the home (NAT) |
 | Command | `traceroute <address>` | Shows the equipment crossed up to the destination |
 
@@ -480,6 +494,8 @@ Playable at the end: `ping` to the public address of the box of a subscriber of 
 Playable at the end: `ping` to a name rather than to an address.
 
 ### 7c: the mesh
+
+Dynamic routing is, with the DHCP of lot 1b and the NAT of 6c-2, one of the heaviest algorithmic pieces of the mod. Its cost moves towards the server in multiplayer: routing tables and re-advertised routes add traffic to the engine, so the safety limits of lot 1a (10,000 frames processed per tick, 50,000 in the queue) are to be reviewed when this lot is designed.
 
 | Type | Equipment | Role |
 |---|---|---|
@@ -649,11 +665,11 @@ Cord on the ground, idea to refine when we reach the lot:
 
 - Lot 1a is required by everything else.
 - 1c depends on 1b: without an address, no `ping`.
-- Lot E is required by the powerline adapter, the PoE injector and room power (8e).
+- Lot 1e is required by the powerline adapter, the PoE injector and room power (8e).
 - Lot 3 needs the test block as long as lots 4 to 6 are not done.
 - The 19-inch rack (6a) is required by 6b, 7b and the whole of lot 8.
 - The decision on the scale of rack equipment must be taken before 6a.
-- The tools (9a) can be brought forward if we want to craft the cables earlier.
+- The decision on making cables by hand must be taken before 2b; if the tools of 9a are brought forward, lot 9a keeps their certifier and fibre tools and the crafting recipes move to 9d.
 
 ## Real-world operation: what was verified
 
