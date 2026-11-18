@@ -1,136 +1,163 @@
-# NetCraft : suivi
+# Session notes
 
-Notes de session seulement. Les tâches sont des tickets GitHub, rangés par milestone (un lot, une version) : `scripts/dev status` et `docs/project-management.md`. Les tâches ouvertes et les idées qui étaient ici sont devenues des tickets le 2026-11-18 (`scripts/project/issues/`, créés par `scripts/dev project sync`).
+Session notes only. Tasks are GitHub issues, grouped by milestone (one lot, one version): `scripts/dev status` and `docs/project-management.md`. The open tasks and the ideas that used to be here became issues on 2026-11-18 (`scripts/project/issues/`, created by `scripts/dev project sync`).
 
-## Bloquant pour la publication
+## Blocking for publication
 
-- [ ] **Renommer le mod avant de rendre le dépôt public.** « Netcraft » est le nom d'une société britannique (netcraft.com) qui travaille dans le même domaine que le mod (réseau, sécurité internet) : risque de conflit de nom. Max cherche un autre nom ; le renommage (nom affiché, `mod_id`, package `dev.netcraft`, ressources, dépôt GitHub, docs) fera l'objet d'une session dédiée. Rien ne sera rendu public, ni publié sur CurseForge ou Modrinth, avant. (décidé le 2026-11-18)
+- [x] **Rename the mod before making the repository public.** The former name of the mod was also the name of a British company working in the same field (networking, internet security): risk of a name conflict. Max looked for another name; the rename (display name, `mod_id`, package, resources, GitHub repository, docs) was left to a dedicated session. Nothing is made public, nor published on CurseForge or Modrinth, before. (decided on 2026-11-18) Done on 2026-11-18: renamed World Wide Blocks (session C).
 
-## À faire dans la session de renommage
+## Done in the renaming session (session C)
 
-- [ ] Traduire en anglais l'existant : `docs/plan-lots.md`, `docs/messages.md`, `docs/equipements-reseau.md`, `docs/securite-depot.md`, `tasks/`, `CLAUDE.md`, le code et ses commentaires, les messages des hooks. Objectif de Max : un dépôt entièrement en anglais. Depuis la session B, tout ce qui est nouveau est déjà en anglais (commits, changelog, modèles, labels, tickets, nouveaux documents). (décidé le 2026-11-18)
+- [x] Translate the existing content into English: `docs/lot-plan.md`, `docs/messages.md`, `docs/network-equipment.md`, `docs/repository-security.md`, `tasks/`, `CLAUDE.md`, the code and its comments, the hook messages. Max's goal: a repository entirely in English. Since session B, everything new is already in English (commits, changelog, templates, labels, issues, new documents). (decided on 2026-11-18) Done on 2026-11-18 (session C).
 
-## Session B : gestion de projet sur GitHub et commandes assistées (2026-11-18)
+## Session C: rename to World Wide Blocks, repository in English, listing texts (2026-11-18)
 
-Conception validée par Max le 2026-11-18 : `developement` branche par défaut (« Closes # » ne marche que vers elle), branches `lot/<id>`, `release/v<version>` et `hotfix/<version>`, tag signé posé sur le commit de fusion de `main` par `release publish`, feuille de route 0.1.0 à 1.0.0 dans l'ordre de `plan-lots.md`, milestones de 0.1.0 et 0.2.0 seulement, reste de ce fichier transformé en tickets (idées comprises, renommage exclu), notes de 0.1.0-alpha.1 réécrites à la main (relecture et modification prévues dans `release publish`). Rien n'est créé sur GitHub par Claude : Max lance les scripts.
+Plan and decisions approved by Max on 2026-11-18: display name World Wide Blocks, mod id `worldwideblocks`, package and Maven group `io.github.maximcuynat.worldwideblocks`, repository and Modrinth and CurseForge address `world-wide-blocks` (free on both, checked through the Modrinth API and by Max in a browser for CurseForge). No migration of existing worlds. README and SECURITY in English only; the electricity lot becomes plain lot E; subcommands and scenes in English; docs renamed `lot-plan.md`, `network-equipment.md`, `repository-security.md`; branch `chore/rename-and-english`. Short command alias `/wwb` (no vanilla command of that name in the 26.3 sources). Max takes care of his own worlds in `run/saves`.
 
-Un commit par sujet (en anglais), testé dans un clone jetable avec de faux `gradlew` et `gh` :
+One commit per step, code commits only after Max's green build:
 
-- [x] 1. `cliff.toml` en anglais, section « Breaks existing worlds » en tête, `CHANGELOG.md` régénéré. Essayé sur un historique avec tags sur les commits de fusion de `main` : un commit de lot daté d'avant une version mais fusionné après tombe bien dans la version suivante, `docs!:` a sa section. Trouvé au passage : sans `--github-repo`, les liens de comparaison du changelog restaient vides (`release.sh` de la session A) ; `scripts/dev` passe le dépôt lu dans la remote.
-- [x] 2. Hook avant push : sortie de Gradle dans `build/pre-push.log`, 40 dernières lignes en cas d'échec, code dans `scripts/lib/checks.sh` (5 cas essayés).
-- [x] 3. Modèles GitHub : ticket de bug, ticket d'idée (`config.yml` sans ticket vide), pull request avec « Closes # » et la case « Breaks existing worlds ».
-- [x] 4. `scripts/dev` : socle, `status`, `lot start`, `lot finish`.
-- [x] 5. `scripts/dev` : `release prepare`, `release publish`, `hotfix start` ; `scripts/release.sh` retiré.
-- [x] 6. `scripts/dev project sync` et ses données : 16 labels, 10 milestones, 28 tickets (7 + 7 + 3 pour les lots 1b-2, 1c, 1d ; 4 tâches de ce fichier ; 7 idées).
-- [x] 7. `CONTRIBUTING.md` réécrit en anglais, `docs/project-management.md`, `docs/securite-depot.md` (section 4 et tableau), phrase en tête du `README.md`.
-- [x] 8. `CLAUDE.md` (langue, branches, outil, tickets), ce fichier réduit aux notes de session, renvoi dans `docs/plan-lots.md`.
+- [x] C1 `refactor!`: rename (packages, resources, keys, `gradle.properties`, saved data `data/worldwideblocks/network.dat` checked in `SavedDataStorage`, client config, commands, `/wwb` alias redirected to the node Brigadier keeps, checked in Brigadier 1.3.11; the refusal game test runs both forms). Build, 123 unit tests, 17 game tests green (Max).
+- [x] C2: code comments, test names and messages in English, by 4 agents in parallel with a glossary. Checked by a script that compares the Java token streams without comments with the previous commit (only consistent renames and test messages allowed, plus two exception messages listed one by one), and a search for renames that collide with an existing name. Build and tests green (Max).
+- [x] C3: `links`, `test clear`, scenes `box_hosts`, `chain`, `loop`, `full_ports`, trial world prefix "Trials"; the game test refuses "Test Level" (the game test server's world, `GameTestServer`) explicitly. Build and tests green (Max).
+- [x] `scripts/dev project update-issues` (asked by Max): rewrites issue bodies from their files, dry run with a diff per issue, confirmation, issues with ticked boxes skipped. Tried in a throwaway clone with a fake `gh` (dry run, CRLF bodies, ticked box, no terminal, yes in a pseudo-terminal, second run with nothing to do).
+- [x] C4: design documents translated and renamed, links updated, lot E, `SECURITY.md` and language notes of `CLAUDE.md` and `CONTRIBUTING.md`.
+- [x] C5: `tasks/` translated; historical lines that named the old identity reworded without it.
+- [x] C6 README rewritten for discoverability; C7 `docs/listing.md`; C8 `docs/going-public.md`.
 
-Revue de la session B (2026-11-18) :
+Final checks (2026-11-18, tracked files only):
 
-- Vérifié seulement dans des clones jetables, avec un faux `gradlew`, un faux `gh` (état en JSON, `--jq` passé au vrai `jq`), une clé de signature SSH jetable et un pseudo-terminal pour répondre aux questions : chaque commande en essai à blanc (aucun changement git, aucune écriture GitHub), sans terminal (réponse non), réponse non, échec des vérifications, réponse oui ; cas vide (aucun tag, ticket, milestone ni pull request) ; cycle complet alpha, beta (gel, `--allow-features`), release (milestone de version fermée), correctifs 0.1.1 à 0.1.3 (changement cassant refusé, report avec commit de fusion, conflit sur `CHANGELOG.md` gardé côté `developement`, autre conflit arrêté) ; `project sync` relancé : aucune écriture au second passage.
-- Pas vérifié : le vrai `gh` (API des milestones, renommage des labels, `capture` de gojq dans `--jq`), les automatismes du tableau Projects, la signature avec la clé de Max, le build Gradle dans un worktree neuf (durée du premier build), Gradle tout court (aucun code du mod touché). Premier essai réel de chaque commande par Max avec `--dry-run`.
-- Choix faits par Claude, signalés à Max : couleurs et descriptions des labels, label `type: idea` en plus des cinq types demandés, option `--allow-features`, notes de version gardées dans `build/release/` entre l'essai à blanc et la vraie publication, release toujours créée en brouillon, correctif possible seulement tant que la version à corriger est la dernière sur `main`, URL de clonage remplacée par un exemple dans `CONTRIBUTING.md` (renommage à venir).
-- Reste à faire par Max, dans l'ordre : réglages GitHub de `docs/project-management.md` (branche par défaut, fusions, tableau Projects et ses automatismes), puis `scripts/dev project sync --dry-run` et `scripts/dev project sync`, puis `scripts/dev status`.
+- Old name, case-insensitive: only two old entries of `CHANGELOG.md`; no path.
+- Accents, French quotes, em dash (outside `fr_fr.json` and `CHANGELOG.md`): only the angle quotation marks of `gradlew`, Gradle's own wrapper script, left as generated.
+- French words: only inside three source URLs.
+
+Review of session C:
+
+- Checked for real: build, unit and game tests after C1, C2 and C3 (Max); JSON files, resource references, package declarations; Java logic unchanged (script); local links of every document.
+- Not checked: the check by eye in a new "Trials" world (asked from Max at the end of the session); `scripts/dev project update-issues` against the real `gh` (first run with `--dry-run` by Max, after the merge); `gh repo view` field names and the summary limits of Modrinth and CurseForge, marked "(to verify)" in the docs; whether `gh repo rename` updates the `origin` remote.
+- Choices made by Claude and reported to Max: class names `WorldWideBlocks*`, the 16 topics and the description, Modrinth categories `technology` and `utility`, CurseForge Technology and Education, British spelling in the docs, the milestone selected by the end of its title so the command needs no accented letter.
+- Left to Max, in order: check by eye, push and pull request, merge, then `docs/going-public.md`.
+
+## Session B: project management on GitHub and assisted commands (2026-11-18)
+
+Design approved by Max on 2026-11-18: `developement` as default branch ("Closes #" only works towards it), branches `lot/<id>`, `release/v<version>` and `hotfix/<version>`, signed tag set on the merge commit of `main` by `release publish`, roadmap from 0.1.0 to 1.0.0 in the order of `lot-plan.md`, milestones for 0.1.0 and 0.2.0 only, the rest of this file turned into issues (ideas included, rename excluded), notes of 0.1.0-alpha.1 rewritten by hand (review and edit planned in `release publish`). Nothing is created on GitHub by Claude: Max runs the scripts.
+
+One commit per subject (in English), tested in a throwaway clone with fake `gradlew` and `gh`:
+
+- [x] 1. `cliff.toml` in English, "Breaks existing worlds" section first, `CHANGELOG.md` regenerated. Tried on a history with tags on the merge commits of `main`: a lot commit dated before a version but merged after it lands in the next version, as it should, `docs!:` has its section. Found on the way: without `--github-repo`, the comparison links of the changelog stayed empty (`release.sh` of session A); `scripts/dev` passes the repository read from the remote.
+- [x] 2. Pre-push hook: Gradle output in `build/pre-push.log`, last 40 lines on failure, code in `scripts/lib/checks.sh` (5 cases tried).
+- [x] 3. GitHub templates: bug issue, idea issue (`config.yml` without blank issue), pull request with "Closes #" and the "Breaks existing worlds" box.
+- [x] 4. `scripts/dev`: base, `status`, `lot start`, `lot finish`.
+- [x] 5. `scripts/dev`: `release prepare`, `release publish`, `hotfix start`; `scripts/release.sh` removed.
+- [x] 6. `scripts/dev project sync` and its data: 16 labels, 10 milestones, 28 issues (7 + 7 + 3 for lots 1b-2, 1c, 1d; 4 tasks from this file; 7 ideas).
+- [x] 7. `CONTRIBUTING.md` rewritten in English, `docs/project-management.md`, `docs/repository-security.md` (section 4 and table), sentence at the top of `README.md`.
+- [x] 8. `CLAUDE.md` (language, branches, tool, issues), this file reduced to session notes, pointer in `docs/lot-plan.md`.
+
+Review of session B (2026-11-18):
+
+- Checked only in throwaway clones, with a fake `gradlew`, a fake `gh` (state in JSON, `--jq` passed to the real `jq`), a throwaway SSH signing key and a pseudo-terminal to answer the questions: each command in dry run (no git change, no GitHub write), without a terminal (answer no), answer no, checks failing, answer yes; empty case (no tag, issue, milestone or pull request); full cycle alpha, beta (freeze, `--allow-features`), release (version milestone closed), fixes 0.1.1 to 0.1.3 (breaking change refused, carry-over with merge commit, conflict on `CHANGELOG.md` kept on the `developement` side, other conflict stopped); `project sync` run again: no write on the second pass.
+- Not checked: the real `gh` (milestones API, label renaming, gojq `capture` in `--jq`), the automations of the Projects board, signing with Max's key, the Gradle build in a fresh worktree (duration of the first build), Gradle at all (no mod code touched). First real try of each command by Max with `--dry-run`.
+- Choices made by Claude, reported to Max: colours and descriptions of the labels, `type: idea` label in addition to the five requested types, `--allow-features` option, release notes kept in `build/release/` between the dry run and the real publication, release always created as a draft, fix possible only while the version to fix is the last one on `main`, clone URL replaced by an example in `CONTRIBUTING.md` (rename to come).
+- Left to Max, in order: GitHub settings of `docs/project-management.md` (default branch, merges, Projects board and its automations), then `scripts/dev project sync --dry-run` and `scripts/dev project sync`, then `scripts/dev status`.
 - Follow-up (2026-11-18, done by the maintainer): first push of the rewritten pre-push hook green (real build, unit and game tests); default branch `developement` (`gh repo edit --default-branch`); merge commits only, automatic branch deletion (`gh repo edit`), default merge message checked; "Roadmap" board (#4) linked with `gh project link 4 --owner <login>` (`--owner @me` refused), Status field and workflows set in the interface; `scripts/dev project sync`: 54 changes, issues #1 to #28, second run "everything is up to date". Commands that ask for an answer must run in a real terminal. Docs updated accordingly; `CLAUDE.md` rewritten in English for this organisation. Session B closed.
 
-## Session A : dépôt propre, sécurisé et outillé (2026-11-18)
+## Session A: clean, secure and equipped repository (2026-11-18)
 
-Audit de l'historique fait et validé par Max le 2026-11-18 : aucun secret (gitleaks, 57 commits), auteurs avec l'adresse masquée de GitHub, aucun fichier indésirable jamais commité, aucun chemin du poste. `CLAUDE.md`, `tasks/` et les mentions de Max restent publics. Aucun changement au code du mod, pas de GitHub Actions.
+Audit of the history done and approved by Max on 2026-11-18: no secret (gitleaks, 57 commits), authors with GitHub's masked address, no unwanted file ever committed, no local path. `CLAUDE.md`, `tasks/` and the mentions of Max stay public. No change to the mod code, no GitHub Actions.
 
-Décisions de Max : licence LGPL-3.0, titulaire « maximcuynat » ; version SemVer `0.1.0-alpha.1` dans `gradle.properties` (seule source), canal déduit du suffixe (alpha, beta, rien = release), tag `v0.1.0-alpha.1`, jar `netcraft-26.3-0.1.0-alpha.1.jar` ; `main` ne reçoit que les versions publiées, par une pull request depuis `developement` fusionnée avec un commit de fusion ; le tag 0.1.0-alpha.1 pourra devenir une pré-version GitHub, CurseForge et Modrinth attendront la fin du lot 1 ; hook avant push : tests sautés seulement si tous les fichiers modifiés sont des `.md` ou dans `docs/` ; gitleaks absent : avertissement.
+Decisions of Max: LGPL-3.0 license, holder "maximcuynat"; SemVer version `0.1.0-alpha.1` in `gradle.properties` (only source), channel deduced from the suffix (alpha, beta, nothing = release), tag `v0.1.0-alpha.1`, jar `<mod_id>-26.3-0.1.0-alpha.1.jar`; `main` only receives published versions, through a pull request from `developement` merged with a merge commit; the 0.1.0-alpha.1 tag may become a GitHub pre-release, CurseForge and Modrinth wait for the end of lot 1; pre-push hook: tests skipped only if all modified files are `.md` or in `docs/`; gitleaks missing: warning.
 
-Un commit par sujet, après le build vert de Max (Gradle ne tourne pas dans le bac à sable de Claude) :
+One commit per subject, after Max's green build (Gradle does not run in Claude's sandbox):
 
-- [x] 1. Wrapper Gradle régénéré en 9.2.1 avec l'empreinte de l'archive (`distributionSha256Sum`). Le jar actuel est un wrapper officiel 8.14.x, authentique mais périmé. Commande lancée par Max, puis contrôle : SHA-256 du jar = `423cb469…` (wrapper officiel 9.2.1), `build test` vert (Max, 2026-11-18). Fins de ligne fixées dans `.gitattributes` (`gradlew` en LF, `*.bat` en CRLF, `*.jar` binaire). L'empreinte n'est contrôlée qu'au téléchargement de la distribution : la distribution 9.2.1 déjà en cache n'a pas été revérifiée.
-- [x] 2. `.gitignore` complété (`.env`, logs, captures, rapports de plantage, fichiers macOS et éditeurs) ; `git ls-files -ci --exclude-standard` reste vide.
-- [x] 3. Licence LGPL-3.0 : `COPYING.LESSER` (LGPL) et `COPYING` (GPL, à laquelle la LGPL renvoie), `mod_license=LGPL-3.0-only`. `TEMPLATE_LICENSE.txt` (MIT du MDK) conservé. Build vert, `license="LGPL-3.0-only"` dans le jar (Max, 2026-11-18). Hooks installés et gitleaks vérifié chez Max.
-- [x] 4. Version `0.1.0-alpha.1` et nom du jar avec la version de Minecraft. Build, tests en jeu verts (FML accepte la version) et `netcraft-26.3-0.1.0-alpha.1.jar` produit, `version="0.1.0-alpha.1"` dans le jar (Max, 2026-11-18).
-- [x] 5. Hooks versionnés (`.githooks/`) et `scripts/install-hooks.sh` : messages de commit (rejoués sur les 57 sujets existants), gitleaks avant commit, build et tests en jeu avant push (sauf `.md` et `docs/` seuls ; arbre propre exigé). Hook avant push testé dans un clone jetable avec un faux `gradlew` (11 scénarios). Le hook avant commit bloque aussi quand gitleaks signale une erreur : en essai, gitleaks répondait « no leaks found » alors que git avait échoué. Installés et vérifiés chez Max.
-- [x] 6. Releases : `cliff.toml` (Keep a Changelog en français : Ajouté, Modifié, Corrigé), `CHANGELOG.md`, `scripts/release.sh` (mode `--dry-run`, commit et tag signés, confirmation avant tout envoi, release GitHub en brouillon). Déroulé complet essayé dans un clone jetable avec de faux `gradlew` et `gh` (refus, envoi atomique, pull request, garde-fous de `--publish`, brouillon en pré-version, pas de terminal = non). Premier vrai essai : `scripts/release.sh --dry-run 0.1.0-alpha.1` par Max.
-- [x] 7. `README.md` (français et anglais), `SECURITY.md` (signalement privé par GitHub), `CONTRIBUTING.md` (commits, branches, hooks, tests, releases).
-- [x] 8. `docs/securite-depot.md` : réglages GitHub à faire par Max, chemins de l'interface, ordre des opérations, signature SSH des commits et des tags.
-- [x] 9. `CLAUDE.md` : hooks, script de release, modèle de branches. Revue de la session ci-dessous.
+- [x] 1. Gradle wrapper regenerated as 9.2.1 with the archive checksum (`distributionSha256Sum`). The current jar is an official 8.14.x wrapper, authentic but outdated. Command run by Max, then check: SHA-256 of the jar = `423cb469…` (official 9.2.1 wrapper), `build test` green (Max, 2026-11-18). Line endings set in `.gitattributes` (`gradlew` in LF, `*.bat` in CRLF, `*.jar` binary). The checksum is only checked when the distribution is downloaded: the 9.2.1 distribution already in the cache was not rechecked.
+- [x] 2. `.gitignore` completed (`.env`, logs, screenshots, crash reports, macOS and editor files); `git ls-files -ci --exclude-standard` stays empty.
+- [x] 3. LGPL-3.0 license: `COPYING.LESSER` (LGPL) and `COPYING` (GPL, which the LGPL refers to), `mod_license=LGPL-3.0-only`. `TEMPLATE_LICENSE.txt` (MIT of the MDK) kept. Build green, `license="LGPL-3.0-only"` in the jar (Max, 2026-11-18). Hooks installed and gitleaks checked on Max's machine.
+- [x] 4. Version `0.1.0-alpha.1` and jar name with the Minecraft version. Build and game tests green (FML accepts the version) and `<mod_id>-26.3-0.1.0-alpha.1.jar` produced, `version="0.1.0-alpha.1"` in the jar (Max, 2026-11-18).
+- [x] 5. Versioned hooks (`.githooks/`) and `scripts/install-hooks.sh`: commit messages (replayed on the 57 existing subjects), gitleaks before commit, build and game tests before push (except `.md` and `docs/` only; clean tree required). Pre-push hook tested in a throwaway clone with a fake `gradlew` (11 scenarios). The pre-commit hook also blocks when gitleaks reports an error: in a trial, gitleaks answered "no leaks found" while git had failed. Installed and checked on Max's machine.
+- [x] 6. Releases: `cliff.toml` (Keep a Changelog in French at the time: Added, Changed, Fixed), `CHANGELOG.md`, `scripts/release.sh` (`--dry-run` mode, signed commit and tag, confirmation before any push, GitHub release as a draft). Full flow tried in a throwaway clone with fake `gradlew` and `gh` (refusal, atomic push, pull request, safeguards of `--publish`, draft as a pre-release, no terminal = no). First real try: `scripts/release.sh --dry-run 0.1.0-alpha.1` by Max.
+- [x] 7. `README.md` (French and English), `SECURITY.md` (private report through GitHub), `CONTRIBUTING.md` (commits, branches, hooks, tests, releases).
+- [x] 8. `docs/repository-security.md`: GitHub settings for Max to make, interface paths, order of operations, SSH signing of commits and tags.
+- [x] 9. `CLAUDE.md`: hooks, release script, branch model. Review of the session below.
 
-Revue de la session A (2026-11-18) :
+Review of session A (2026-11-18):
 
-- Fait : audit, 10 commits sur `developement` (identité masquée, non signés), tous après un build vert de Max ou sans effet sur le build (hooks, docs, outillage de release).
-- Vérifié pour de vrai : wrapper officiel 9.2.1, build et tests, licence et version dans le jar, tests en jeu avec `0.1.0-alpha.1`, hook gitleaks chez Max. Vérifié seulement dans des clones jetables : hook avant push (faux `gradlew`), `scripts/release.sh` (faux `gradlew` et `gh`, signature avec une clé jetable). Le premier push de Max sera le premier vrai passage du hook avant push.
-- Reste à faire par Max : `scripts/release.sh --dry-run 0.1.0-alpha.1` (premier vrai essai du script), signature SSH puis réglages GitHub dans l'ordre de `docs/securite-depot.md`, choix 3.8 (signature des commits de Claude) avant d'exiger des commits signés sur `main`.
-- Bloquant avant de rendre le dépôt public : renommage du mod (session dédiée).
-- Choix faits par Claude et signalés à Max : `LGPL-3.0-only` plutôt que `-or-later`, fichiers `COPYING` et `COPYING.LESSER` au lieu d'un `LICENSE` (vérifier le badge de licence GitHub après le push), engagements de `SECURITY.md` (dernière version seulement, sans délai garanti) et parcours fork puis pull request de `CONTRIBUTING.md`.
-- Gestion de projet GitHub (labels, jalons, tableau) : session B.
+- Done: audit, 10 commits on `developement` (masked identity, unsigned), all after a green build by Max or with no effect on the build (hooks, docs, release tooling).
+- Really checked: official 9.2.1 wrapper, build and tests, license and version in the jar, game tests with `0.1.0-alpha.1`, gitleaks hook on Max's machine. Checked only in throwaway clones: pre-push hook (fake `gradlew`), `scripts/release.sh` (fake `gradlew` and `gh`, signing with a throwaway key). Max's first push will be the first real run of the pre-push hook.
+- Left to Max: `scripts/release.sh --dry-run 0.1.0-alpha.1` (first real try of the script), SSH signing then GitHub settings in the order of `docs/repository-security.md`, choice 3.8 (signing Claude's commits) before requiring signed commits on `main`.
+- Blocking before making the repository public: rename of the mod (dedicated session).
+- Choices made by Claude and reported to Max: `LGPL-3.0-only` rather than `-or-later`, `COPYING` and `COPYING.LESSER` files instead of a `LICENSE` (check GitHub's license badge after the push), commitments of `SECURITY.md` (latest version only, no guaranteed delay) and fork then pull request path of `CONTRIBUTING.md`.
+- GitHub project management (labels, milestones, board): session B.
 
-## Étape 1 : environnement de dev
+## Step 1: dev environment
 
-- [x] Choisir le loader et la version de Minecraft : NeoForge 26.3.0.103 sur Minecraft 26.3 (le mod doit d'abord fonctionner seul)
-- [x] JDK 25 : téléchargé automatiquement par Gradle au premier build (toolchain foojay), le Java 17 Homebrew suffit pour lancer Gradle 9.2.1
-- [x] Générer le projet depuis le modèle officiel MDK-26.3-ModDevGradle
-- [x] Renseigner l'identité du mod (id `netcraft`, package `dev.netcraft`, nom NetCraft, version 0.1.0)
-- [x] Initialiser git et pousser sur le dépôt privé https://github.com/maximcuynat/netcraft (commit 41eadcb, lancé par Max)
-- [x] `./gradlew build` passe : BUILD SUCCESSFUL en 3 min 53 s, `build/libs/netcraft-0.1.0.jar` produit (lancé par Max, Gradle ne peut pas ouvrir de socket local dans le bac à sable de Claude)
-- [x] Le jeu se lance via `./gradlew runClient` (confirmé par Max le 2026-11-17). Monde de test : « Netcraft », créatif, superflat Redstone Ready. Présence de NetCraft dans l'écran Mods non confirmée explicitement.
+- [x] Choose the loader and the Minecraft version: NeoForge 26.3.0.103 on Minecraft 26.3 (the mod must first work alone)
+- [x] JDK 25: downloaded automatically by Gradle at the first build (foojay toolchain), the Homebrew Java 17 is enough to run Gradle 9.2.1
+- [x] Generate the project from the official MDK-26.3-ModDevGradle template
+- [x] Set the mod identity (mod identity: the former id, package and name, replaced on 2026-11-18; version 0.1.0)
+- [x] Initialise git and push to the private GitHub repository (commit 41eadcb, run by Max)
+- [x] `./gradlew build` passes: BUILD SUCCESSFUL in 3 min 53 s, the jar produced in `build/libs/` (run by Max, Gradle cannot open a local socket in Claude's sandbox)
+- [x] The game starts through `./gradlew runClient` (confirmed by Max on 2026-11-17). Test world: a creative world, superflat Redstone Ready. Presence of the mod in the Mods screen not explicitly confirmed.
 
-## Blocs
+## Blocks
 
-- [x] Tour PC (`pc_tower`) : bloc, modèle, texture
-- Ticket : PC portable (`laptop`), code et ressources écrits le 2026-11-17, vérification en jeu à faire (`scripts/project/issues/0.1.0/01-laptop-in-game.md`).
+- [x] PC tower (`pc_tower`): block, model, texture
+- Issue: laptop (`laptop`), code and resources written on 2026-11-17, in-game check to do (`scripts/project/issues/0.1.0/01-laptop-in-game.md`).
 
-## Plan par lots
+## Lot plan
 
-Le découpage complet (lots, équipements, dépendances) et son statut de validation sont dans `docs/plan-lots.md` ; feuille de route des versions dans `docs/project-management.md`.
+The full breakdown (lots, equipment, dependencies) and its approval status are in `docs/lot-plan.md`; roadmap of the versions in `docs/project-management.md`.
 
-Inventaire et dimensions réelles : `docs/equipements-reseau.md`.
+Inventory and real dimensions: `docs/network-equipment.md`.
 
-- [x] Lot 1a (câble et branchement) : codé et validé en jeu le 2026-11-17 (procédure dans `docs/plan-lots.md`).
-- [x] Principe « vrais échanges de protocoles » dans `docs/plan-lots.md` et `CLAUDE.md` (commit 132fbc6).
-- [x] Lot 1b-1 (box, MAC, commutation) : validé par Max le 2026-11-18 (état et méthode de test dans `docs/plan-lots.md`, lot 1b). Étapes, un commit chacune :
-  - [x] Ports typés (Ethernet, ligne) et MAC par port dans le graphe, sauvegarde compatible avec les mondes du lot 1a, tests (53 tests au vert)
-  - [x] Couche trames : `MacAddress`, `EtherType`, `EthernetFrame`, contenu typé, tests
-  - [x] Commutation réutilisable : table d'apprentissage avec expiration, décision de transfert, tests (75 tests au vert)
-  - [x] Simulation : file de livraison, minuteries, point d'écoute, détection de boucle et limite par tick, logique du poste et de la box, rôle des appareils, tests (87 tests au vert)
-  - [x] Branchement Minecraft : tick serveur, événements de câble, message de boucle
-  - [x] Bloc box internet (modèle 7 x 7 x 3 px, texture provisoire, ressources)
-  - [x] Indicateur : MAC du poste, MAC apprises par la box (paquet d'état), build vert, essai en jeu à faire
-  - [x] Bug du cordon : l'attente restait accrochée à un point de départ cassé (relevé par Max le 2026-11-17). Reproduit par `PendingCableTest`, corrigé (annulation aussi au changement de dimension)
-  - [x] Retirer les traces temporaires `[ESSAI 1b-1]` (`debug/TrialLog` et ses appels) : fait à l'étape 5 du module des messages ; les traces utiles passent par `Diagnostics` (DEBUG, anglais)
-  - [x] Build de contrôle de c178668 et 5014267 (commités sans build, voir `tasks/lessons.md`) : vert sur 5014267 le 2026-11-18
-  - [x] Tests en jeu automatiques et décors d'essai : conception validée par Max le 2026-11-18. Un commit par étape, seulement après un build vert :
-    - [x] Jeu de sources `src/gametest/` exclu du jar, branché sur les runs ; run `gameTestServer` dans `run-gametest/` (ignoré par git) ; `./gradlew build` compile aussi ce jeu de sources
-    - [x] Structure vide 16 x 4 x 16, joueur de test connecté (sur le modèle de `GameTestPlayer` de NeoForge, messages captés), nettoyage des appareils de chaque test à sa fin, réussie ou non
-    - [x] Tests du lot commun (verts le 2026-11-18) : départ détruit (casse et explosion, créatif et survie, compte des cordons), changement de dimension, déconnexion et reconnexion, expiration des MAC, sauvegarde et relecture
-    - [x] Lot à part (environnement dédié) pour ce qui touche les limites globales du moteur : boucle et limite d'un signalement par minute
-    - [x] Horloge du moteur (demandé par Max le 2026-11-18) : un changement survenu entre deux ticks prenait le temps du tick précédent, la boucle était signalée toutes les 90 s au lieu de 60. Changements appliqués au début du tick suivant, tests unitaires de l'horloge, tests en jeu de la boucle (écart exact) et de l'expiration (bornes exactes) resserrés
-    - [x] `/netcraft test <scénario>` et `/netcraft test effacer` (décors testés en jeu, vérification à l'œil faite par Max le 2026-11-18) : développement seulement (jeu de sources `gametest`), refus hors d'un monde dont le nom commence par « Essais », refus si la zone n'est pas vide
-    - [x] Test automatique du refus hors d'un monde « Essais » (règle du nom et vraie commande), second poste sur la box de droite du décor « chaine » (2 MAC sur le port 1)
-  - [x] Procédure de test en jeu (ce qui demande des yeux) et état du lot dans `docs/plan-lots.md`
-  - [x] Vérification à l'œil du module des messages : faite par Max le 2026-11-18 (jeu en français, monde « Essais messages »), aucun plantage, rendu validé comme base du futur HUD (lot F). Tableau des 6 points dans `docs/plan-lots.md`.
-  - [x] Points sans capture (panneau détaillé d'un poste et du portable, box de droite du décor « chaine », câble de 99 blocs sur toute sa longueur, arrêt des messages de boucle après le retrait d'un câble, `/netcraft liens`, rendu de ✔ et ℹ, repli `messageSymbols = false`) : vus à l'œil par Max pendant la même session, validés sur son témoignage le 2026-11-18
-  - Ticket : lot F (interface HUD), rendu sur plusieurs tailles de fenêtre (`scripts/project/issues/backlog/02-hud-window-sizes.md`).
-  - [x] Module des messages, avant le 1b-2 : audit et conception validés par Max le 2026-11-18 (`docs/messages.md`), 7 étapes codées et commitées le même jour après des builds verts, vérification à l'œil faite le même jour (résultat dans `docs/plan-lots.md`). Étapes :
-    - [x] 1. Noyau en Java pur (`message/`) : niveaux, usages, canaux, valeurs, routage, anti-répétition, message envoyé et écouteur ; tests unitaires du routage et de l'anti-répétition. Aucun changement visible.
-    - [x] 2. Transport et affichage : `MessagePayload` (canal, niveau, clé, valeurs), `MessageCenter` porté par les données du serveur, affichage décidé par le client (symbole ou mot selon le réglage `messageSymbols`), messages du cordon migrés, tests en jeu du cordon par l'écouteur. `TestPlayer` capte encore le chat pour le test de boucle, jusqu'à l'étape 4.
-    - [x] 3. Textes : vouvoiement, distances entières, doublon et `result.ok` retirés, format commun d'un appareil, infobulle du cordon, test des fichiers de langue (mêmes clés, longueurs maximales).
-    - [x] 4. Boucle et saturation : un événement par réseau et par tick, limite par minute dans le module, oubli au changement du réseau, message à l'appareil le plus proche du joueur, saturation aux opérateurs et au propriétaire en solo ; tests du moteur, du module et en jeu (une seule série de messages pour deux box).
-    - [x] 5. Log en anglais et nettoyage : traces utiles passées par le module (DEBUG, anglais), `TrialLog` et `graphForTrial` retirés, exceptions en anglais.
-    - [x] 6. Panneau d'état : lignes construites en Java pur (compact, détaillé accroupi, ligne « Accroupi : détails »), le client ne fait que dessiner ; tests unitaires.
-    - [x] 7. Documents : `CLAUDE.md` (log en anglais, règles du module, données séparées du dessin), état dans `docs/plan-lots.md`, procédure de vérification à l'œil.
-- Lot 1b-2 (DHCP) : architecture validée avec le 1b-1, pas commencé. Tâches : tickets de la milestone « Lot 1b-2: DHCP » (INIT-REBOOT compris).
+- [x] Lot 1a (cable and connection): coded and approved in game on 2026-11-17 (procedure in `docs/lot-plan.md`).
+- [x] Principle "real protocol exchanges" in `docs/lot-plan.md` and `CLAUDE.md` (commit 132fbc6).
+- [x] Lot 1b-1 (box, MAC, switching): approved by Max on 2026-11-18 (state and test method in `docs/lot-plan.md`, lot 1b). Steps, one commit each:
+  - [x] Typed ports (Ethernet, line) and MAC per port in the graph, save compatible with lot 1a worlds, tests (53 tests green)
+  - [x] Frame layer: `MacAddress`, `EtherType`, `EthernetFrame`, typed content, tests
+  - [x] Reusable switching: learning table with expiry, forwarding decision, tests (75 tests green)
+  - [x] Simulation: delivery queue, timers, tap, loop detection and per-tick limit, computer and box logic, device role, tests (87 tests green)
+  - [x] Minecraft connection: server tick, cable events, loop message
+  - [x] Internet box block (7 x 7 x 3 px model, provisional texture, resources)
+  - [x] Indicator: computer MAC, MACs learned by the box (status packet), green build, in-game trial to do
+  - [x] Cord bug: the pending state stayed attached to a broken start point (reported by Max on 2026-11-17). Reproduced by `PendingCableTest`, fixed (cancel also on dimension change)
+  - [x] Remove the temporary trial log lines of lot 1b-1 (`debug/TrialLog` and its calls): done at step 5 of the message module; the useful log lines go through `Diagnostics` (DEBUG, English)
+  - [x] Check build of c178668 and 5014267 (committed without a build, see `tasks/lessons.md`): green on 5014267 on 2026-11-18
+  - [x] Automatic game tests and trial scenes: design approved by Max on 2026-11-18. One commit per step, only after a green build:
+    - [x] Source set `src/gametest/` excluded from the jar, wired to the runs; `gameTestServer` run in `run-gametest/` (ignored by git); `./gradlew build` also compiles this source set
+    - [x] Empty 16 x 4 x 16 structure, connected test player (modelled on NeoForge's `GameTestPlayer`, messages captured), cleanup of each test's devices at its end, passed or not
+    - [x] Tests of the common batch (green on 2026-11-18): start destroyed (break and explosion, creative and survival, cord count), dimension change, disconnection and reconnection, MAC expiry, save and reload
+    - [x] Separate batch (dedicated environment) for what touches the engine's global limits: loop and limit of one report per minute
+    - [x] Engine clock (requested by Max on 2026-11-18): a change that happened between two ticks took the time of the previous tick, the loop was reported every 90 s instead of 60. Changes applied at the start of the next tick, unit tests of the clock, game tests of the loop (exact gap) and of the expiry (exact bounds) tightened
+    - [x] `/worldwideblocks test <scene>` and `/worldwideblocks test clear` (scenes tested in game, check by eye done by Max on 2026-11-18): development only (`gametest` source set), refused outside a world whose name starts with "Trials", refused if the area is not empty
+    - [x] Automatic test of the refusal outside a trial world (name rule and real command), second computer on the right box of the `chain` scene (2 MAC on port 1)
+  - [x] In-game test procedure (what needs eyes) and state of the lot in `docs/lot-plan.md`
+  - [x] Check by eye of the message module: done by Max on 2026-11-18 (game in French, a trial world), no crash, rendering approved as the base of the future HUD (lot F). Table of the 6 points in `docs/lot-plan.md`.
+  - [x] Points without a capture (detailed panel of a computer and of the laptop, right box of the `chain` scene, 99-block cable along its whole length, loop messages stopping after a cable is removed, `/worldwideblocks links`, rendering of ✔ and ℹ, fallback `messageSymbols = false`): seen by eye by Max during the same session, approved on his word on 2026-11-18
+  - Issue: lot F (HUD interface), rendering on several window sizes (`scripts/project/issues/backlog/02-hud-window-sizes.md`).
+  - [x] Message module, before 1b-2: audit and design approved by Max on 2026-11-18 (`docs/messages.md`), 7 steps coded and committed the same day after green builds, check by eye done the same day (result in `docs/lot-plan.md`). Steps:
+    - [x] 1. Core in plain Java (`message/`): levels, uses, channels, values, routing, repeat limit, sent message and listener; unit tests of routing and of the repeat limit. No visible change.
+    - [x] 2. Transport and display: `MessagePayload` (channel, level, key, values), `MessageCenter` carried by the server data, display decided by the client (symbol or word according to the `messageSymbols` setting), cord messages migrated, game tests of the cord through the listener. `TestPlayer` still captures the chat for the loop test, until step 4.
+    - [x] 3. Texts: formal address in French, whole distances, duplicate and `result.ok` removed, common device format, cord tooltip, test of the language files (same keys, maximum lengths).
+    - [x] 4. Loop and saturation: one event per network and per tick, per-minute limit in the module, forgotten when the network changes, message to the device closest to the player, saturation to the operators and to the owner in single player; tests of the engine, of the module and in game (a single series of messages for two boxes).
+    - [x] 5. Log in English and cleanup: useful log lines passed through the module (DEBUG, English), `TrialLog` and `graphForTrial` removed, exceptions in English.
+    - [x] 6. Status panel: lines built in plain Java (compact, detailed when sneaking, "Sneak: details" line), the client only draws; unit tests.
+    - [x] 7. Documents: `CLAUDE.md` (log in English, module rules, data separated from drawing), state in `docs/lot-plan.md`, check-by-eye procedure.
+- Lot 1b-2 (DHCP): architecture approved with 1b-1, not started. Tasks: issues of the milestone "Lot 1b-2: DHCP" (INIT-REBOOT included).
 
-## Tests multijoueur
+## Multiplayer tests
 
-Devenus des tickets le 2026-11-18 : fin du lot 1 (milestone « v0.1.0 », `scripts/project/issues/0.1.0/02-multiplayer-dedicated-server.md`) et deux joueurs vers la fin du lot 3 (`scripts/project/issues/backlog/01-multiplayer-two-players.md`). En attendant, garder la séparation client et serveur stricte dans le code (voir les règles du `CLAUDE.md`).
+Became issues on 2026-11-18: end of lot 1 (milestone "v0.1.0", `scripts/project/issues/0.1.0/02-multiplayer-dedicated-server.md`) and two players towards the end of lot 3 (`scripts/project/issues/backlog/01-multiplayer-two-players.md`). Meanwhile, keep the client and server split strict in the code (see the rules in `CLAUDE.md`).
 
-## Idées en vrac
+## Loose ideas
 
-Devenues des tickets `type: idea` le 2026-11-18 (`scripts/project/issues/ideas/`). Vision de Max : un Packet Tracer en blocs, fidèle au réel, complet, pour tout le monde et pour les passionnés de réseau. « Postes : PC à poser et à câbler » est fait (lots 0 et 1a) et n'a pas de ticket.
+Became `type: idea` issues on 2026-11-18 (`scripts/project/issues/ideas/`). Max's vision: a Packet Tracer made of blocks, faithful to reality, complete, for everyone and for networking enthusiasts. "Computers: PCs to place and cable" is done (lots 0 and 1a) and has no issue.
 
-## Faits vérifiés le 2026-11-17
+## Facts checked on 2026-11-17
 
-- Dernière version de Minecraft : 26.3 (2026-09-15), Java 25. La 1.21.1 demande Java 21.
-- NeoForge : builds 26.3.0.x disponibles, modèles officiels MDK-26.3-ModDevGradle et MDK-1.21.1-ModDevGradle.
-- Builds NeoForge sur Modrinth :
-  - 1.21.1 : Mekanism, Create, AE2, CC:Tweaked, Powah, Energized Power
-  - 26.3 : AE2, CC:Tweaked, Powah, Energized Power (pas Mekanism, pas Create)
-- Immersive Engineering s'arrête à 1.21.1, Thermal Expansion à 1.20.1 (Forge seulement).
-- NeoForge 21.9 (Minecraft 1.21.9) a refondu les API de transfert (énergie, items, fluides) et FML : un portage 1.21.1 vers 26.x touche la couche énergie.
-- Machine : Java 17 Homebrew (insuffisant), VS Code présent, IntelliJ absent.
+- Latest Minecraft version: 26.3 (2026-09-15), Java 25. 1.21.1 needs Java 21.
+- NeoForge: builds 26.3.0.x available, official templates MDK-26.3-ModDevGradle and MDK-1.21.1-ModDevGradle.
+- NeoForge builds on Modrinth:
+  - 1.21.1: Mekanism, Create, AE2, CC:Tweaked, Powah, Energized Power
+  - 26.3: AE2, CC:Tweaked, Powah, Energized Power (no Mekanism, no Create)
+- Immersive Engineering stops at 1.21.1, Thermal Expansion at 1.20.1 (Forge only).
+- NeoForge 21.9 (Minecraft 1.21.9) reworked the transfer APIs (energy, items, fluids) and FML: a port from 1.21.1 to 26.x touches the energy layer.
+- Machine: Homebrew Java 17 (not enough), VS Code present, IntelliJ absent.

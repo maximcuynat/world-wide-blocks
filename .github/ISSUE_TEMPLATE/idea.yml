@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        The mod aims to be faithful to real networks. Ideas are triaged by the maintainer and, when kept, planned in a lot (see docs/plan-lots.md).
+        The mod aims to be faithful to real networks. Ideas are triaged by the maintainer and, when kept, planned in a lot (see docs/lot-plan.md).
   - type: textarea
     id: idea
     attributes:

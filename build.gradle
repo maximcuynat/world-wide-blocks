@@ -17,8 +17,8 @@ tasks.named('wrapper', Wrapper).configure {
 version = mod_version
 group = mod_group_id
 
-// Tests en jeu automatiques (GameTest) et commande /netcraft test : chargés par les runs de
-// développement, jamais dans le jar distribué (le jar ne contient que sourceSets.main).
+// Automatic game tests (GameTest) and the /worldwideblocks test command: loaded by the development runs,
+// never in the distributed jar (the jar only contains sourceSets.main).
 sourceSets {
     gametest {
     }
@@ -39,7 +39,7 @@ repositories {
 }
 
 base {
-    // Le nom du jar porte la version de Minecraft : netcraft-26.3-0.1.0-alpha.1.jar
+    // The jar name carries the Minecraft version: worldwideblocks-26.3-0.1.0-alpha.1.jar
     archivesName = "${mod_id}-${minecraft_version}"
 }
 
@@ -78,7 +78,7 @@ neoForge {
         gameTestServer {
             type = "gameTestServer"
             sourceSet = sourceSets.gametest
-            // Monde jetable, recréé à chaque lancement : jamais dans run/, où se trouvent les mondes de Max.
+            // Throwaway world, recreated at each launch: never in run/, where Max's worlds are.
             gameDirectory = project.file('run-gametest')
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
@@ -129,10 +129,10 @@ configurations {
 }
 
 dependencies {
-    // Les tests en jeu voient le code du mod ; l'inverse est impossible.
+    // The game tests see the mod's code; the reverse is impossible.
     gametestImplementation sourceSets.main.output
 
-    // Tests unitaires du moteur réseau (Java pur, sans lancer le jeu) : ./gradlew test
+    // Unit tests of the network engine (plain Java, without launching the game): ./gradlew test
     testImplementation platform('org.junit:junit-bom:5.13.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -201,7 +201,7 @@ tasks.named('test', Test).configure {
     useJUnitPlatform()
 }
 
-// ./gradlew build compile aussi les tests en jeu, pour qu'une API cassée se voie sans lancer de serveur.
+// ./gradlew build also compiles the game tests, so that a broken API shows without launching a server.
 tasks.named('check').configure {
     dependsOn tasks.named('gametestClasses')
 }

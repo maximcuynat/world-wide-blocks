@@ -1,218 +1,220 @@
 # Messages
 
-Audit des messages des lots 1a et 1b-1 (2026-11-18), puis conception du module des messages. Statut : **validé par Max le 2026-11-18, codé le même jour** (état et vérification à l'œil dans `docs/plan-lots.md`, lot 1b), avec ces décisions :
+Audit of the messages of lots 1a and 1b-1 (2026-11-18), then design of the message module. Status: **approved by Max on 2026-11-18, coded the same day** (state and checks by eye in `docs/lot-plan.md`, lot 1b), with these decisions:
 
-- Réseau saturé : prévenir les opérateurs connectés, plus le propriétaire du monde en solo.
-- Symboles des niveaux : d'accord, à vérifier à l'œil, avec un repli en texte simple (réglage du client).
-- Ligne « Accroupi : détails » gardée dans le panneau compact.
-- Textes de `/netcraft test` en dur et en français.
-- Vouvoiement partout, comme la traduction française de Minecraft.
-- Distances arrondies à l'entier le plus proche (« 4 blocs »), dans toutes les langues.
-- **Données séparées du dessin** : le serveur envoie clé, valeurs et niveau ; le client décide seul de l'apparence (symbole, couleur, place). Une future interface HUD soignée (lot de finition) doit pouvoir remplacer le dessin sans toucher au moteur ni aux messages.
+- Saturated network: warn the connected operators, plus the world owner in single player.
+- Level symbols: agreed, to check by eye, with a plain-text fallback (client setting).
+- "Sneak: details" line kept in the compact panel.
+- Texts of `/worldwideblocks test` hard-coded and in English.
+- The French texts use formal address everywhere, like the French translation of Minecraft.
+- Distances rounded to the nearest integer ("4 blocks"), in all languages.
+- **Data separated from drawing**: the server sends key, values and level; the client alone decides how it looks (symbol, colour, place). A future polished HUD (finishing lot) must be able to replace the drawing without touching the engine or the messages.
 
 ## 1. Audit
 
-### Barre d'action (au-dessus de la barre d'objets)
+### Action bar (above the hotbar)
 
-Tous envoyés par `EthernetCableItem.tell()` (`player.sendOverlayMessage`), au seul joueur qui fait le geste, une fois par geste. Chaque envoi est aussi tracé en `[ESSAI 1b-1]` (DEBUG, en français, texte rendu par le serveur).
+All sent by `EthernetCableItem.tell()` (`player.sendOverlayMessage`), to the player who makes the gesture only, once per gesture. Each send was also logged with a temporary trial trace (DEBUG, in French, text rendered by the server).
 
-| Clé (`message.netcraft.cable.…`) | Texte français actuel | Déclencheur |
+| Key (`message.worldwideblocks.cable.…`) | Text (English) | Trigger |
 |---|---|---|
-| `start` | Extrémité 1 : %s, port %s. Clic droit sur le second appareil (accroupi + clic dans le vide pour annuler). | Premier clic, cordon en main |
-| `no_free_port` | %s : aucun port libre. | Premier clic sur un appareil plein |
-| `cancelled` | Branchement annulé. | Accroupi + clic dans le vide, branchement commencé |
-| `start_gone` | La première extrémité n'existe plus : branchement annulé. | Second clic, ou chaque tick d'inventaire, si le départ a disparu |
-| `cancelled_dimension` | Changement de dimension : branchement annulé, le cordon est libre. | Tick d'inventaire après un changement de dimension |
-| `start_taken` | Le port de la première extrémité est désormais occupé : branchement annulé. | Second clic, port de départ pris entre-temps |
-| `connected` | Connecté : %s port %s ↔ %s port %s (%s blocs). | Second clic réussi |
-| `unplugged` | %s : port %s débranché. | Accroupi + clic, cordon en main ; ou bout retiré d'un câble posé en créatif, en survie |
-| `nothing_to_unplug` | %s : aucun câble branché. | Accroupi + clic sur un appareil sans câble |
-| `end_taken` | %s : bout débranché, l'autre reste sur %s port %s. Clic droit sur un appareil pour le rebrancher, accroupi + clic dans le vide pour le ranger. | Accroupi + clic main vide |
-| `retracted` | %s : câble débranché, le cordon est libre dans ta main. | Clic sur l'appareil où l'autre bout est branché |
-| `result.not_a_device` | Ce n'est pas un appareil réseau. | Refus du moteur au second clic |
-| `result.incompatible_port` | Ce port n'accepte pas ce câble. | Idem |
-| `result.same_device` | Choisissez un autre appareil que le premier. | Idem |
-| `result.other_dimension` | Les deux appareils doivent être dans la même dimension. | Idem |
-| `result.too_far` | Trop loin : %s blocs, %s au maximum. | Idem |
-| `result.port_in_use` | Aucun port libre sur cet appareil. | Idem |
-| `result.ok` | Connecté. | Jamais affiché |
+| `start` | %s, port %s: right-click the second device. | First click, cord in hand |
+| `no_free_port` | %s: no free port. | First click on a full device |
+| `cancelled` | Connection cancelled. | Sneak + click in the air, connection started |
+| `start_gone` | The first end no longer exists: connection cancelled. | Second click, or each inventory tick, if the start has disappeared |
+| `cancelled_dimension` | Dimension changed: connection cancelled, the cord is free. | Inventory tick after a dimension change |
+| `start_taken` | The first end's port is now in use: connection cancelled. | Second click, start port taken in the meantime |
+| `connected` | Connected: %s port %s ↔ %s port %s (%s blocks). | Successful second click |
+| `unplugged` | %s: port %s unplugged. | Sneak + click, cord in hand; or end removed from a cable placed in creative, in survival |
+| `nothing_to_unplug` | %s: no cable plugged in. | Sneak + click on a device without a cable |
+| `end_taken` | End removed from %s, the other stays on %s, port %s. | Sneak + click, empty hand |
+| `retracted` | %s: cable unplugged, the cord is free. | Click on the device where the other end is plugged in |
+| `result.not_a_device` | This is not a network device. | Engine refusal at the second click |
+| `result.incompatible_port` | This port does not accept this cable. | Same |
+| `result.same_device` | Pick a device other than the first one. | Same |
+| `result.other_dimension` | Both devices must be in the same dimension. | Same |
+| `result.too_far` | Too far: %s blocks, %s maximum. | Same |
+| `result.port_in_use` | (removed) no free port on the device, same meaning as `no_free_port` | Same |
+| `result.ok` | (removed) a plain "connected" confirmation | Never shown |
+
+The English column quotes `en_us.json` as it is now. The audit measured the earlier French wording, which was longer for `start`, `end_taken` and `retracted` (they also carried the permanent instructions, see defects 4 and 5).
 
 ### Chat
 
-| Clé | Texte français actuel | Déclencheur, destinataire, fréquence |
+| Key | Text (English) | Trigger, recipient, frequency |
 |---|---|---|
-| `message.netcraft.network.loop` | Boucle réseau : une trame diffusée revient à %s [%s, %s, %s] par le port %s. Elle a été supprimée ; retirez un des câbles de la boucle. | Trame revenue à un switch (`SimulationEvent.LoopDetected`). Joueurs à moins de 32 blocs de l'appareil qui la voit. Au plus une fois par minute **et par appareil** |
-| `commands.netcraft.links.*` | %s lien(s) réseau : … | Réponse à `/netcraft liens`, à qui a tapé la commande |
-| (texte en dur) | Décor « … » : …, Commande réservée aux mondes d'essai : ce monde s'appelle « … », Aucun décor à retirer depuis ta connexion., … | Réponses à `/netcraft test`, développement seulement (jeu de sources `gametest`) |
+| `message.worldwideblocks.network.loop` | Network loop near %s. Remove one cable of the loop. | Frame came back to a switch (`SimulationEvent.LoopDetected`). Players within 32 blocks of the device that sees it. At most once per minute **and per device** |
+| `commands.worldwideblocks.links.*` | %s network link(s): … | Reply to `/worldwideblocks links`, to whoever typed the command |
+| (hard-coded text) | Scene "…": …, Command reserved for trial worlds: this world is called "…", No scene to remove since you joined., … | Replies to `/worldwideblocks test`, development only (`gametest` source set) |
 
-### Panneau d'état (client, appareil visé)
+### Status panel (client, targeted device)
 
-Toujours détaillé : le nom, puis une ligne par port avec un voyant (vert connecté, gris libre, gris foncé inactif), et pour un poste une ligne `MAC …` sous chaque port.
+Always detailed: the name, then one line per port with an indicator (green connected, grey free, dark grey inactive), and for a computer a `MAC …` line under each port.
 
-| Clé (`hud.netcraft.…`) | Texte français |
+| Key (`hud.worldwideblocks.…`) | Text (English) |
 |---|---|
-| `port.connected` | Port %s : connecté |
-| `port.free` | Port %s : libre |
-| `port.line` | Port %s (ligne) : inactif |
-| `port.connected_learned` | Port %s : connecté, %s |
+| `port.connected` | Port %s: connected |
+| `port.free` | Port %s: free |
+| `port.line` | Port %s (line): inactive |
+| `port.connected_learned` | Port %s: connected, %s |
 | `mac` | MAC %s |
 | `learned_more` | %s (+%s) |
 
 ### Log
 
-| Niveau | Texte | Où |
+| Level | Text | Where |
 |---|---|---|
-| INFO | NetCraft chargé | `NetCraft` |
-| WARN | Lien réseau incohérent ignoré au chargement : {} | `NetworkSavedData` |
-| WARN | Réseau saturé : plus de {} trames en attente, de nouvelles trames ont été perdues. | `NetworkManager`, au plus une par minute ; aucun joueur prévenu |
-| WARN | Boucle réseau : une trame diffusée revient à {} ({}) par le port {}. Copie supprimée. | `NetworkManager`, une par appareil et par minute |
-| DEBUG | `[ESSAI 1b-1]` message envoyé par le cordon | `EthernetCableItem.tell` |
-| DEBUG | `[ESSAI 1b-1]` appareil enregistré, câble branché, câble débranché, appareil retiré | `NetworkManager` |
-| DEBUG | `[ESSAI 1b-1]` chargement : résumé, puis un appareil et un câble par ligne | `NetworkSavedData` |
-| DEBUG | `[ESSAI 1b-1]` ce qu'affiche l'indicateur de chaque joueur, à chaque changement | `NetworkSync` |
-| DEBUG | `[ESSAI 1b-1]` pose d'un bloc avec sa façade | `NetworkDeviceBlock` |
-| DEBUG | `[ESSAI 1b-1]` MAC apprises et oubliées, relevé chaque seconde | `TrialLog.compareLearned` |
-| INFO | [GameTest] signalements de boucle reçus … | tests en jeu |
-| (exceptions) | Nombre de ports négatif, Limites invalides, Adresse MAC hors de 48 bits, … (une dizaine) | Erreurs de programmation, qui finissent dans le log ou un rapport de plantage |
+| INFO | World Wide Blocks loaded | `WorldWideBlocks` |
+| WARN | Inconsistent network link ignored on load: {} | `NetworkSavedData` |
+| WARN | Network saturated: more than {} frames waiting, new frames were lost. | `NetworkManager`, at most one per minute; no player warned |
+| WARN | Network loop: a broadcast frame comes back to {} ({}) through port {}. Copy dropped. | `NetworkManager`, one per device and per minute |
+| DEBUG | Temporary trial trace: message sent by the cord | `EthernetCableItem.tell` |
+| DEBUG | Temporary trial trace: device registered, cable plugged in, cable unplugged, device removed | `NetworkManager` |
+| DEBUG | Temporary trial trace: on load, a summary, then one device and one cable per line | `NetworkSavedData` |
+| DEBUG | Temporary trial trace: what each player's indicator shows, at each change | `NetworkSync` |
+| DEBUG | Temporary trial trace: placing a block with its facade | `NetworkDeviceBlock` |
+| DEBUG | Temporary trial trace: learned and forgotten MACs, read out every second | `TrialLog.compareLearned` |
+| INFO | [GameTest] loop messages received … | game tests |
+| (exceptions) | Negative port count, Invalid limits, MAC address out of 48 bits, … (about ten) | Programming errors, which end up in the log or a crash report |
 
-### Défauts relevés
+### Defects found
 
-1. **Boucle : deux messages pour un seul problème.** Le signalement est limité par appareil : deux box en boucle donnent deux messages dans le chat, puis deux par minute.
-2. **Log en deux langues.** Phrases en français, nom de l'appareil rendu par le serveur (en anglais, ou la clé brute), traces d'essai en français.
-3. **Doublon** : `no_free_port` et `result.port_in_use` disent la même chose. `result.ok` n'est jamais affiché.
-4. **Trop long pour la barre d'action**, qui s'efface en 3 s : `end_taken` (environ 150 caractères), `start` (environ 100).
-5. **Tutoiement et vouvoiement mélangés** : « dans ta main », « ta connexion » d'un côté, « Choisissez », « retirez » de l'autre.
-6. **Nombres** : les longueurs sont formatées par le serveur avec un point (`4.0 blocs` dans un jeu en français).
-7. **Aucun niveau** : un refus et une réussite ont la même apparence dans la barre d'action.
-8. **Panneau toujours détaillé** : 6 lignes pour la box, une ligne de MAC par port pour un poste.
-9. **Réseau saturé** : seulement dans le log, le joueur n'en sait rien.
-10. **Format des appareils** : `%s [%s, %s, %s]` recopié dans chaque texte (boucle, `/netcraft liens`), autrement dans les traces.
-11. **Tests** : les messages ne sont captés qu'en surchargeant le joueur de test (`TestPlayer.sendSystemMessage`). Le log n'est pas vérifiable, et le test de boucle lit les coordonnées par position dans les arguments.
+1. **Loop: two messages for a single problem.** The report is limited per device: two boxes in a loop give two chat messages, then two per minute.
+2. **Log in two languages.** French sentences, device name rendered by the server (in English, or the raw key), French trial traces.
+3. **Duplicate**: `no_free_port` and `result.port_in_use` say the same thing. `result.ok` is never shown.
+4. **Too long for the action bar**, which fades after 3 s: `end_taken` (about 150 characters), `start` (about 100).
+5. **Informal and formal address mixed** in the French texts: some used informal address (the cord "in your hand", "your connection"), others formal address ("Pick", "remove").
+6. **Numbers**: lengths are formatted by the server with a point (`4.0 blocks`, even in a French-language game).
+7. **No level**: a refusal and a success look the same in the action bar.
+8. **Panel always detailed**: 6 lines for the box, one MAC line per port for a computer.
+9. **Saturated network**: only in the log, the player does not know.
+10. **Device format**: `%s [%s, %s, %s]` copied into each text (loop, `/worldwideblocks links`), written differently in the traces.
+11. **Tests**: messages are only captured by overriding the test player (`TestPlayer.sendSystemMessage`). The log cannot be checked, and the loop test reads the coordinates by position in the arguments.
 
-## 2. Conception proposée
+## 2. Proposed design
 
-### Usages, niveaux et canaux
+### Uses, levels and channels
 
-Chaque message déclare un **usage** et un **niveau** ; le canal en découle, le code appelant ne le choisit pas.
+Each message declares a **use** and a **level**; the channel follows from them, the calling code does not choose it.
 
-| Usage | Niveau | Canal |
+| Use | Level | Channel |
 |---|---|---|
-| Geste (réponse immédiate au joueur qui agit) | tous | Barre d'action du joueur, plus une ligne DEBUG dans le log |
-| Événement réseau | avertissement, erreur | Chat des joueurs concernés, plus une ligne WARN ou ERROR dans le log |
-| Événement réseau | information, succès | Log seulement (INFO) |
-| Diagnostic | (aucun) | Log, DEBUG |
-| Appareil visé | (voyants) | Panneau d'état, côté client |
+| Gesture (immediate reply to the player who acts) | all | The player's action bar, plus a DEBUG line in the log |
+| Network event | warning, error | Chat of the players concerned, plus a WARN or ERROR line in the log |
+| Network event | info, success | Log only (INFO) |
+| Diagnostic | (none) | Log, DEBUG |
+| Targeted device | (indicators) | Status panel, client side |
 
-Exception assumée : la réponse à une commande (`/netcraft liens`, `/netcraft test`) reste dans le chat de qui l'a tapée, comme toutes les commandes de Minecraft. Les textes de `/netcraft test` restent en dur, en français : la commande n'existe qu'en développement (jeu de sources `gametest`, absent du jar), et ses clés n'ont pas leur place dans les fichiers de langue distribués. Seul « ta connexion » passe au vouvoiement.
+Accepted exception: the reply to a command (`/worldwideblocks links`, `/worldwideblocks test`) stays in the chat of whoever typed it, like all Minecraft commands. The texts of `/worldwideblocks test` stay hard-coded, in English (`TrialSceneCommand`): the command only exists in development (`gametest` source set, absent from the jar), and its keys do not belong in the distributed language files.
 
-Niveau d'un geste : la réussite est un **succès** ; une étape ou une annulation voulue par le joueur, une **information** ; une annulation causée par autre chose (départ disparu, changement de dimension, port pris entre-temps), un **avertissement** ; un geste refusé, une **erreur**.
+Level of a gesture: success is a **success**; a step or a cancellation wanted by the player is an **info**; a cancellation caused by something else (start disappeared, dimension change, port taken in the meantime) is a **warning**; a refused gesture is an **error**.
 
-| Niveau | Couleur | Symbole |
+| Level | Colour | Symbol |
 |---|---|---|
-| Information | blanc | ℹ |
-| Succès | vert | ✔ |
-| Avertissement | jaune | ⚠ |
-| Erreur | rouge | ✖ |
+| Info | white | ℹ |
+| Success | green | ✔ |
+| Warning | yellow | ⚠ |
+| Error | red | ✖ |
 
-Le symbole et la couleur sont choisis par le client à partir du niveau reçu : ils ne sont ni dans les fichiers de langue ni envoyés par le serveur. Repli : un réglage du client (`netcraft-client.toml`, `messageSymbols = false`) remplace le symbole par un mot traduit (« Info », « OK », « Attention », « Erreur »). Rendu des symboles à vérifier à l'œil.
+The symbol and the colour are chosen by the client from the received level: they are neither in the language files nor sent by the server. Fallback: a client setting (`worldwideblocks-client.toml`, `messageSymbols = false`) replaces the symbol with a translated word ("Info", "OK", "Warning", "Error"). Symbol rendering to check by eye.
 
-### Anti-répétition
+### Repeat limit
 
-- Un événement réseau porte une **clé de problème**. Le module ne le transmet qu'une fois par minute de jeu pour une même clé (valeur déjà validée), quel que soit le nombre d'appareils qui le voient. Le temps est celui du tick de la simulation (pas d'écart possible avec l'horloge corrigée le 2026-11-18).
-- La boucle a pour clé le **réseau** où elle se trouve (l'ensemble des appareils reliés par des câbles, désigné par son plus petit identifiant d'appareil). Le moteur regroupe toutes les détections d'un même tick par réseau et émet un seul événement, avec la liste des appareils et ports où les trames sont revenues. La limite par minute passe du moteur au module : le moteur constate, le module décide qui prévenir et quand.
-- **Oubli des clés de boucle** : à chaque changement d'un réseau (appareil posé ou retiré, câble branché ou débranché), la clé de boucle de ce réseau est oubliée, avant comme après le changement (un câble retiré peut le couper en deux, un câble ajouté en réunir deux). Les autres réseaux gardent leur limite : un joueur qui bricole ailleurs ne relance pas les messages d'une boucle qu'il ne touche pas. Retirer un câble est justement le geste qui répare une boucle : si elle est toujours là, le joueur le sait au signalement suivant au lieu d'attendre la minute. Cela couvre aussi `/netcraft test effacer` puis `boucle` au même endroit, et un réseau dont le plus petit identifiant change (ce qui n'arrive que par un changement du réseau). Fréquence maximale : une fois par minute, plus une fois par geste du joueur.
-- Réseau saturé : clé unique, au plus un message par minute, jamais oubliée avant.
-- La barre d'action n'a pas besoin d'anti-répétition : un message remplace le précédent, et chacun répond à un clic.
+- A network event carries a **problem key**. The module only passes it on once per game minute for a given key (value already approved), whatever the number of devices that see it. Time is the simulation tick (no gap possible with the clock fixed on 2026-11-18).
+- The loop key is the **network** where it happens (the set of devices linked by cables, named by its smallest device id). The engine groups all detections of the same tick by network and emits a single event, with the list of devices and ports where the frames came back. The per-minute limit moves from the engine to the module: the engine states the fact, the module decides who to warn and when.
+- **Forgetting loop keys**: at each change of a network (device placed or removed, cable plugged in or unplugged), the loop key of that network is forgotten, before and after the change (a removed cable can split it in two, an added cable can join two). Other networks keep their limit: a player tinkering elsewhere does not restart the messages of a loop they do not touch. Removing a cable is precisely the gesture that repairs a loop: if it is still there, the player knows at the next report instead of waiting for the minute. This also covers `/worldwideblocks test clear` followed by `loop` at the same place, and a network whose smallest id changes (which only happens through a change of the network). Maximum frequency: once per minute, plus once per player gesture.
+- Saturated network: single key, at most one message per minute, never forgotten before.
+- The action bar needs no repeat limit: a message replaces the previous one, and each answers a click.
 
-### Destinataires
+### Recipients
 
-- Boucle : chaque joueur à moins de 32 blocs d'un des appareils touchés reçoit **un** message, qui nomme l'appareil touché le plus proche de lui.
-- Réseau saturé : le problème est global au serveur. Proposition : les opérateurs connectés, plus le propriétaire du monde en solo. Vérifié dans les sources (`PlayerList.isOp`) : en solo sans triches, le joueur n'est pas opérateur, d'où le second cas.
+- Loop: each player within 32 blocks of one of the affected devices receives **one** message, which names the affected device closest to them.
+- Saturated network: the problem is global to the server. Proposal: the connected operators, plus the world owner in single player. Checked in the sources (`PlayerList.isOp`): in single player without cheats, the player is not an operator, hence the second case.
 
-### Textes
+### Texts
 
-- Le serveur n'envoie que des clés et des valeurs : nombres entiers, coordonnées, et noms d'appareils sous forme de clé (`block.netcraft.…`).
-- Un appareil s'écrit partout avec la même clé `message.netcraft.device` : `%s [%s, %s, %s]`, par exemple « Box internet [12, 64, -5] ».
-- Longueurs en blocs entiers, arrondies à l'entier le plus proche (plus de séparateur décimal, dans aucune langue).
-- Vouvoiement partout, ou tournure impersonnelle.
-- Doublon fusionné (`result.port_in_use` remplacé par `no_free_port`), `result.ok` retiré.
-- Longueurs maximales, valeurs les plus longues comprises (nom « Box internet » ou « Internet Box », port à un chiffre, 3 chiffres de longueur, coordonnées à 5 caractères) : **80 caractères** pour la barre d'action (en interface automatique sur un écran 1920 x 1080, elle tient environ 85 caractères), **45** pour une ligne du panneau, **90** pour le chat (deux lignes de chat). Vérifié par un test sur les deux fichiers de langue.
-- Les consignes permanentes (« accroupi + clic dans le vide pour annuler », « clic droit sur un appareil pour rebrancher ») quittent la barre d'action, où elles ne tiennent pas, pour l'infobulle du cordon dans l'inventaire.
-- Les erreurs de programmation (exceptions) passent en anglais : elles finissent dans le log.
+- The server only sends keys and values: integers, coordinates, and device names as a key (`block.worldwideblocks.…`).
+- A device is written everywhere with the same key `message.worldwideblocks.device`: `%s [%s, %s, %s]`, for example "Internet Box [12, 64, -5]".
+- Lengths in whole blocks, rounded to the nearest integer (no more decimal separator, in any language).
+- The French texts use formal address everywhere, or an impersonal wording.
+- Duplicate merged (`result.port_in_use` replaced by `no_free_port`), `result.ok` removed.
+- Maximum lengths, longest values included (device name in the longest language, one-digit port, 3-digit length, 5-character coordinates): **80 characters** for the action bar (with the automatic GUI scale on a 1920 x 1080 screen, it fits about 85 characters), **45** for a panel line, **90** for the chat (two chat lines). Checked by a test on both language files.
+- The permanent instructions ("sneak + click in the air to cancel", "right-click a device to plug it in again") leave the action bar, where they do not fit, for the cord's tooltip in the inventory.
+- Programming errors (exceptions) switch to English: they end up in the log.
 
-Textes réécrits (français, avec la longueur du cas le plus long ; l'anglais suit le même sens et la même limite) :
+Rewritten texts (English, same meaning in French). The "Chars" column is the length of the longest case of the French text, measured at the design; `LangFilesTest` checks the current limits in both languages:
 
-| Clé | Proposition | Car. |
+| Key | Proposal | Chars (French) |
 |---|---|---|
-| `cable.start` | %s, port %s : clic droit sur le second appareil. | 58 |
-| `cable.end_taken` | Bout retiré de %s, l'autre reste sur %s, port %s. | 68 |
-| `cable.retracted` | %s : câble débranché, le cordon est libre. | 54 |
-| `cable.connected` | Connecté : %s port %s ↔ %s port %s (%s blocs). | 66 |
-| `network.loop` | Boucle réseau près de %s. Retirez un câble de la boucle. | 85 |
-| `network.saturated` | Réseau saturé : des trames sont perdues. Cherchez une boucle. | 60 |
-| `item.netcraft.ethernet_cable.tooltip` (3 lignes) | Clic droit sur deux appareils : les relier. / Accroupi + clic sur un appareil : débrancher. / Accroupi + clic dans le vide : annuler. | 45 par ligne |
+| `cable.start` | %s, port %s: right-click the second device. | 58 |
+| `cable.end_taken` | End removed from %s, the other stays on %s, port %s. | 68 |
+| `cable.retracted` | %s: cable unplugged, the cord is free. | 54 |
+| `cable.connected` | Connected: %s port %s ↔ %s port %s (%s blocks). | 66 |
+| `network.loop` | Network loop near %s. Remove one cable of the loop. | 85 |
+| `network.saturated` | Network saturated: frames are being lost. Look for a loop. | 60 |
+| `item.worldwideblocks.ethernet_cable.tooltip` (3 lines) | Right-click two devices to connect them. / Sneak + click a device: unplug. / Sneak + click in the air: cancel. | 45 per line |
 
-### Panneau d'état
+### Status panel
 
-Compact par défaut, détaillé quand le joueur est accroupi. Exemple, la box avec 3 ports connectés et 2 MAC derrière le port 1 :
+Compact by default, detailed when the player is sneaking. Example, the box with 3 connected ports and 2 MACs behind port 1:
 
 ```
-Compact                       Accroupi
+Compact                       Sneaking
 ┌──────────────────────┐      ┌─────────────────────────────────────────────┐
-│ Box internet         │      │ Box internet                                │
-│ ● 3/4 ports connectés│      │ ● Port 1 : connecté, 02:5e:11:a0:7c:1a (+1) │
-│   Accroupi : détails │      │ ● Port 2 : connecté, 02:5e:11:a0:7c:2b      │
-└──────────────────────┘      │ ● Port 3 : connecté                         │
-                              │ ○ Port 4 : libre                            │
-                              │ ▪ Port 5 (ligne) : inactif                  │
+│ Internet Box         │      │ Internet Box                                │
+│ ● 3/4 ports connected│      │ ● Port 1: connected, 02:5e:11:a0:7c:1a (+1) │
+│   Sneak: details     │      │ ● Port 2: connected, 02:5e:11:a0:7c:2b      │
+└──────────────────────┘      │ ● Port 3: connected                         │
+                              │ ○ Port 4: free                              │
+                              │ ▪ Port 5 (line): inactive                   │
                               └─────────────────────────────────────────────┘
 ```
 
-Les MAC restent affichées en entier (42 caractères pour la ligne la plus longue).
+MACs stay displayed in full (42 characters for the longest line).
 
-- Box : compact, le nombre de ports réseau local connectés ; accroupi, une ligne par port comme aujourd'hui.
-- Poste : compact, « Connecté » ou « Non connecté » ; accroupi, le port et sa MAC.
-- La ligne « Accroupi : détails » (grise) n'apparaît qu'en compact : proposition, à retirer si elle encombre.
-- Les lignes du panneau sont construites par une classe en Java pur, testée sans lancer le jeu ; le client ne fait que les dessiner.
+- Box: compact, the number of connected local network ports; sneaking, one line per port as today.
+- Computer: compact, "Connected" or "Not connected"; sneaking, the port and its MAC.
+- The (grey) "Sneak: details" line only appears in compact mode: proposal, to remove if it clutters.
+- The panel lines are built by a plain Java class, tested without starting the game; the client only draws them.
 
 ### Log
 
-- Entièrement en anglais, textes écrits dans le code (le serveur ne traduit rien) ; un appareil s'y écrit `netcraft:internet_box [12, 64, -5] minecraft:overworld`.
-- Chaque message envoyé à un joueur y est tracé en DEBUG : canal, clé, valeurs, destinataire.
-- Événements réseau en WARN (boucle : tous les appareils et ports touchés, en une ligne).
+- Entirely in English, texts written in the code (the server translates nothing); a device is written there as `worldwideblocks:internet_box [12, 64, -5] minecraft:overworld`.
+- Each message sent to a player is logged there at DEBUG: channel, key, values, recipient.
+- Network events at WARN (loop: all affected devices and ports, on one line).
 
-### Traces `[ESSAI 1b-1]`
+### Temporary trial traces (removed)
 
-| Trace | Sort |
+| Trace | Fate |
 |---|---|
-| Message du cordon | Remplacée par la trace DEBUG de tout message envoyé |
-| Appareil enregistré ou retiré, câble branché ou débranché | Gardée, en anglais, DEBUG, par le module |
-| Chargement : résumé | Gardée (nombre d'appareils et de câbles, MAC générées) |
-| Chargement : une ligne par appareil et par câble | Retirée (illisible sur un grand monde ; `/netcraft liens` existe) |
-| Indicateur de chaque joueur | Retirée |
-| Pose d'un bloc | Retirée (l'enregistrement de l'appareil la couvre) |
-| MAC apprises et oubliées chaque seconde | Retirée |
+| Cord message | Replaced by the DEBUG trace of every message sent |
+| Device registered or removed, cable plugged in or unplugged | Kept, in English, DEBUG, by the module |
+| On load: summary | Kept (number of devices and cables, generated MACs) |
+| On load: one line per device and per cable | Removed (unreadable on a large world; `/worldwideblocks links` exists) |
+| Each player's indicator | Removed |
+| Placing a block | Removed (the device registration covers it) |
+| Learned and forgotten MACs every second | Removed |
 
-`debug/TrialLog` et `NetworkManager.graphForTrial()` disparaissent.
+`debug/TrialLog` and `NetworkManager.graphForTrial()` disappear.
 
 ### Tests
 
-- Le module garde, pour le serveur en cours, une liste d'écouteurs. Un test s'abonne et reçoit chaque message envoyé : canal, niveau, clé, valeurs, destinataire (aucun pour le log), temps de jeu. Rien ne passe par le chat d'un joueur ; `TestPlayer` ne capte plus les messages. Les tests d'un même lot partagent le serveur : chacun filtre ce qu'il capte par son joueur de test ou par ses appareils, et le test de boucle reste dans son lot à part.
-- Les tests de la limite par minute ne disparaissent pas, ils suivent la limite : les trois tests du moteur sur la boucle (dont l'écart exact de 1 200 ticks) deviennent « un événement par réseau et par tick » côté moteur et « un message par minute, exactement » côté module ; le test en jeu garde ses instants exacts (0, 1 200, 2 400 ticks), avec une seule série au lieu d'une par box.
-- Tests unitaires (Java pur) :
-  - choix du canal selon l'usage et le niveau ;
-  - anti-répétition : même clé dans la minute refusée, acceptée à 1 200 ticks exactement, clés différentes indépendantes ;
-  - moteur : deux box en boucle donnent un seul événement, qui cite les deux box ;
-  - panneau : compact et détaillé pour la box et le poste, « (+N) » ;
-  - fichiers de langue : mêmes clés en français et en anglais, longueurs maximales respectées.
-- Tests en jeu : les tests du cordon vérifient leurs messages par l'écouteur (barre d'action, destinataire) ; le test de boucle vérifie **un seul** message de chat par minute pour deux box, et une seule ligne WARN.
+- The module keeps, for the running server, a list of listeners. A test subscribes and receives every message sent: channel, level, key, values, recipient (none for the log), game time. Nothing goes through a player's chat; `TestPlayer` no longer captures messages. The tests of a lot share the server: each filters what it captures by its test player or its devices, and the loop test stays in its own lot.
+- The tests of the per-minute limit do not disappear, they follow the limit: the three engine tests on the loop (including the exact gap of 1,200 ticks) become "one event per network and per tick" on the engine side and "one message per minute, exactly" on the module side; the game test keeps its exact instants (0, 1,200, 2,400 ticks), with a single series instead of one per box.
+- Unit tests (plain Java):
+  - channel choice by use and level;
+  - repeat limit: same key within the minute refused, accepted at exactly 1,200 ticks, different keys independent;
+  - engine: two boxes in a loop give a single event, which names both boxes;
+  - panel: compact and detailed for the box and the computer, "(+N)";
+  - language files: same keys in French and English, maximum lengths respected.
+- Game tests: the cord tests check their messages through the listener (action bar, recipient); the loop test checks **a single** chat message per minute for two boxes, and a single WARN line.
 
 ### Code
 
-Données séparées du dessin, pour qu'une future interface HUD remplace le dessin sans toucher au reste :
+Data separated from drawing, so that a future HUD can replace the drawing without touching the rest:
 
-- `message/` en Java pur, sans classe Minecraft : niveaux, usages, canaux, valeurs d'un message (texte brut, nombre, clé à traduire, appareil), message (niveau, clé, valeurs), routage, anti-répétition, message envoyé (pour les écouteurs), lignes du panneau d'état.
-- `message/MessageCenter`, porté par les données du serveur comme la simulation : routage, anti-répétition, envoi, log en anglais, écouteurs. Aucun état statique.
-- `network/sync/MessagePayload` : canal, niveau, clé et valeurs, vers le client. Le serveur n'envoie jamais de texte ni de mise en forme.
-- `client/` : seul endroit qui décide de l'apparence (symbole, couleur, barre d'action ou chat, dessin du panneau). Il passe par le `ChatListener` du jeu (`gui.chatListener()`), ce qui garde la narration et les réglages de chat du joueur.
-- Les réponses aux commandes restent des textes de commande Minecraft (exception ci-dessus).
+- `message/` in plain Java, without any Minecraft class: levels, uses, channels, values of a message (plain text, number, key to translate, device), message (level, key, values), routing, repeat limit, sent message (for the listeners), status panel lines.
+- `message/server/MessageCenter`, carried by the server's data like the simulation: routing, repeat limit, sending, English log, listeners. No static state.
+- `network/sync/MessagePayload`: channel, level, key and values, to the client. The server never sends text or formatting.
+- `client/`: the only place that decides how it looks (symbol, colour, action bar or chat, panel drawing). It goes through the game's `ChatListener` (`gui.chatListener()`), which keeps the player's narration and chat settings.
+- Command replies stay Minecraft command texts (exception above).

@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# Vérifie que le message de commit suit Conventional Commits :
-#   <type>(<portée>)!: <description>
-# Types : feat, fix, docs, test, refactor, chore, perf, style, build, ci, revert.
-# La portée et le « ! » (changement incompatible) sont facultatifs.
-# Laisse passer les commits de fusion, de retour arrière (Revert) et fixup!/squash!/amend!.
+# Checks that the commit message follows Conventional Commits:
+#   <type>(<scope>)!: <description>
+# Types: feat, fix, docs, test, refactor, chore, perf, style, build, ci, revert.
+# The scope and the "!" (breaking change) are optional.
+# Lets merge commits, revert commits (Revert) and fixup!/squash!/amend! pass.
 set -euo pipefail
 
 message_file="$1"
 
-# Première ligne utile : ni vide, ni commentaire (git retire les commentaires après le hook).
+# First useful line: neither empty nor a comment (git removes the comments after the hook).
 subject="$(grep -v -E '^[[:space:]]*(#|$)' "$message_file" | head -n 1 || true)"
 
 if [ -z "$subject" ]; then
-    echo "commit-msg : message vide." >&2
+    echo "commit-msg: empty message." >&2
     exit 1
 fi
 
@@ -25,13 +25,13 @@ if printf '%s\n' "$subject" | grep -q -E "$conventional|$special"; then
 fi
 
 cat >&2 <<EOF
-commit-msg : le message ne suit pas la convention du projet.
+commit-msg: the message does not follow the project convention.
 
-  Reçu    : $subject
-  Attendu : <type>(<portée>): <description courte et impérative>
+  Received: $subject
+  Expected: <type>(<scope>): <short imperative description>
   Types   : ${types//|/, }
-  Exemple : fix(cordon): annuler l'attente quand le point de départ disparaît
+  Example : fix(cable): cancel the pending connection when the start point disappears
 
-Voir CONTRIBUTING.md, section « Commit messages ».
+See CONTRIBUTING.md, section "Commit messages".
 EOF
 exit 1

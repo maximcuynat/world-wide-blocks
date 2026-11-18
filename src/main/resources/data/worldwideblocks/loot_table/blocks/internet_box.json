@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "condition": {
+        "type": "minecraft:survives_explosion"
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "worldwideblocks:internet_box"
+        }
+      ],
+      "rolls": 1
+    }
+  ],
+  "random_sequence": "worldwideblocks:blocks/internet_box"
+}

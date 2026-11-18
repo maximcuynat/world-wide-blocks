@@ -8,4 +8,4 @@ A PC that had an address before a server restart asks directly for its former ad
 - [ ] After a restart: REQUEST for the saved address; NAK from the box: back to DISCOVER
 - [ ] Game test: save, reload, same address
 
-Noted in `tasks/todo.md` before lot 1b-2 ("ne pas oublier l'état INIT-REBOOT").
+Noted in `tasks/todo.md` before lot 1b-2 ("do not forget the INIT-REBOOT state").
