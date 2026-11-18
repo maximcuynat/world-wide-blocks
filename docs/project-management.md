@@ -9,12 +9,12 @@ No GitHub Actions: everything that checks runs locally (hooks, `scripts/dev`), a
 | What | Where |
 |---|---|
 | Design: content of each lot, architecture, decisions, check procedures in game | [`docs/plan-lots.md`](plan-lots.md) |
-| Tasks: one issue per step, in the milestone of its lot | GitHub issues, created from `scripts/project/issues/` by `scripts/dev project sync` |
-| Progress | GitHub Projects board |
+| Tasks: one issue per step, in the milestone of its lot or version | GitHub issues, defined in `scripts/project/issues/` (one folder per lot or version, plus `backlog/` and `ideas/`) and created by `scripts/dev project sync` |
+| Progress | GitHub Projects board "Roadmap" |
 | Notes of a working session (plan, review) | [`tasks/todo.md`](../tasks/todo.md) |
 | Mistakes not to repeat | [`tasks/lessons.md`](../tasks/lessons.md) |
 
-New tasks are created directly on GitHub (templates "Bug report" and "Idea", or a blank issue for the maintainer). `scripts/project/issues/` holds the issues created in bulk when a lot is planned; once created, an issue lives on GitHub only.
+A new task is either opened directly on GitHub (templates "Bug report" and "Idea", or a blank issue for the maintainer), or proposed as a definition file in `scripts/project/issues/`, then created by `scripts/dev project sync` (this is how an AI assistant proposes issues: it never creates anything on GitHub itself). Once created, an issue lives on GitHub: editing its file afterwards changes nothing.
 
 ## Roadmap
 
@@ -57,15 +57,25 @@ In order. "Repository settings" means the **Settings** tab of the repository.
 
 ### 1. Default branch: `developement`
 
-Repository settings > **General** > section **Default branch** > switch button next to the branch name > `developement` > **Update** **(to verify)**.
+```bash
+gh repo edit --default-branch developement
+git remote set-head origin --auto   # then in each local clone: origin/HEAD now points to developement
+```
+
+Or in the interface: Repository settings > **General** > section **Default branch** > switch button next to the branch name > `developement` > **Update** **(to verify)**.
 
 Why: the keywords `Closes #N` of a pull request are only read when it targets the default branch. Pull requests of lots go to `developement`; with `main` as default branch, they would neither close their issues nor move them on the board. The home page of the repository then shows `developement`, whose README says that released versions are in the Releases page.
 
-Then, in each local clone: `git remote set-head origin --auto`.
-
 ### 2. Merges and branch deletion
 
-Repository settings > **General** > section **Pull Requests**:
+```bash
+gh repo edit --enable-merge-commit --enable-squash-merge=false --enable-rebase-merge=false --delete-branch-on-merge
+# check: true, false, false, true, then MERGE_MESSAGE and PR_TITLE (the "Default message")
+gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed,deleteBranchOnMerge
+gh api repos/{owner}/{repo} --jq '{merge_commit_title, merge_commit_message}'
+```
+
+Or in the interface: Repository settings > **General** > section **Pull Requests**:
 
 - **Allow merge commits**: checked, with the default commit message **Default message** (`Merge pull request #N from …`). git-cliff leaves these merge commits out of the changelog; with "Pull request title", the title of a lot's pull request could land in it.
 - **Allow squash merging**: unchecked. A squash would replace the commits of a lot by one commit: the changelog would lose its lines and the commits their signatures.
@@ -78,10 +88,11 @@ This replaces section 4 of [`docs/securite-depot.md`](securite-depot.md), writte
 
 Create the board **before** the first `scripts/dev project sync`: the automatic addition only sees issues created or updated after it is turned on.
 
-1. Profile picture > **Your projects** > **New project** > template **Board** **(to verify)**. Name without the mod's name, for example "Roadmap".
-2. Link it to the repository: **Projects** tab of the repository > **Link a project** **(to verify)**.
-3. Field **Status**, options in this order: **Ideas**, **To do**, **In progress**, **In review**, **Done** (rename or add the options of the template).
-4. Project menu (top right) > **Workflows**, turn on and save each one:
+1. Give gh access to projects: `gh auth refresh -s project` (in a real terminal: it waits for a confirmation in the browser).
+2. Create the board, named without the mod's name (here "Roadmap"): profile picture > **Your projects** > **New project** > template **Board** **(to verify)**, or `gh project create --owner <login> --title "Roadmap"`.
+3. Link it to the repository: `gh project link <number> --owner <login> --repo <owner>/<repo>`. Give the account login: `--owner @me` is refused by this command.
+4. Field **Status**, options in this order: **Ideas**, **To do**, **In progress**, **In review**, **Done** (rename or add the options of the template).
+5. Project menu (top right) > **Workflows**, turn on and save each one:
 
 | Workflow | Setting | Effect |
 |---|---|---|
@@ -105,6 +116,8 @@ Once the board exists:
 scripts/dev project sync --dry-run   # shows what would be created, renamed or updated
 scripts/dev project sync             # asks for confirmation, then creates
 ```
+
+Run them in a real terminal: like every `scripts/dev` command that asks for a confirmation, the sync reads the answer from the terminal and answers no when there is none (for example in a shell run by an AI assistant). A second run answers "everything is up to date".
 
 The issue templates apply the `type: bug` and `type: idea` labels, which exist only after this first sync.
 

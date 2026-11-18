@@ -2,7 +2,7 @@
 
 Thank you for your interest! This guide describes how the project is organised and checked.
 
-Language: the repository is moving to English. Everything new is written in English (commit messages, changelog, issues, pull requests, new documents). The code, its comments and the design documents of `docs/` are still in French and will be translated. Identifiers (classes, registries, resources) are in English. Log lines and exception messages are in English, like the rest of Minecraft's logs.
+Language: the repository is moving to English. Everything new is written in English: commit messages, changelog, issues, pull requests, documents, code and comments, including additions to files still in French. The existing French content (code comments, design documents of `docs/`, `tasks/`) will be translated. The game itself stays available in English and French. Identifiers (classes, registries, resources) are in English. Log lines and exception messages are in English, like the rest of Minecraft's logs.
 
 ## Set up the project
 
@@ -115,7 +115,7 @@ Bypassing a hook (`--no-verify`) is kept for cases where the same checks have ju
 
 ## Assisted commands (maintainer)
 
-`scripts/dev` groups the commands of the branch model and the release cycle. Each command shows what it is going to do, asks for confirmation on the terminal before any public action (push, pull request, tag, release), and has a `--dry-run` mode that runs every check without changing anything. The GitHub repository is read from the `origin` remote, the mod identity and version from `gradle.properties`.
+`scripts/dev` groups the commands of the branch model and the release cycle. Each command shows what it is going to do, asks for confirmation on the terminal before any public action (push, pull request, tag, release), and has a `--dry-run` mode that runs every check without changing anything. The GitHub repository is read from the `origin` remote, the mod identity and version from `gradle.properties`. Run the commands that ask for a confirmation in a real terminal: without one, the answer is no.
 
 | Command | What it does |
 |---|---|
