@@ -17,6 +17,9 @@
 #                               (can be run again: nothing is created twice)
 #   project update-issues       rewrite the body of the issues already on GitHub from their files
 #                               (issues with ticked boxes are skipped)
+#   project board               sort the issues on the Projects board of scripts/project/board.conf,
+#                               creating the missing Status options
+#                               [--start n,m: move to In Progress] [--review n,m: move to In review]
 #
 # --dry-run (or -n): run every check and show what would be done, without changing anything.
 # Every public action (push, pull request, tag, release) asks for confirmation on the terminal first.
@@ -26,7 +29,7 @@ set -euo pipefail
 
 dev_lib="$(cd "$(dirname "$0")" && pwd)/lib"
 # All the code is loaded now: a command that switches branches cannot change what is running.
-for dev_file in common version checks status lot release project; do
+for dev_file in common version checks status lot release project board; do
     # shellcheck source=/dev/null
     . "$dev_lib/$dev_file.sh"
 done
@@ -62,6 +65,7 @@ main() {
         "hotfix start") shift 2; cmd_hotfix_start "$@" ;;
         "project sync") shift 2; cmd_project_sync "$@" ;;
         "project update-issues") shift 2; cmd_project_update_issues "$@" ;;
+        "project board") shift 2; cmd_project_board "$@" ;;
         "help "*) usage ;;
         *) echo "dev: unknown command \"$*\"." >&2; echo >&2; usage >&2; return 2 ;;
     esac
