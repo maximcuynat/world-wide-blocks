@@ -42,6 +42,19 @@ confirm() {
     esac
 }
 
+# Asks a free question on the terminal and prints the answer (empty without a terminal). The
+# question goes to the error output, so that the answer can be captured with $(...).
+ask() {
+    local answer=""
+    printf '%s ' "$1" >&2
+    if ! { read -r answer </dev/tty; } 2>/dev/null; then
+        echo >&2
+        echo "dev: no terminal to answer, taking an empty answer." >&2
+        answer=""
+    fi
+    printf '%s\n' "$answer"
+}
+
 # Stops before any change in --dry-run mode.
 stop_if_dry_run() {
     if [ "$DRY_RUN" -eq 1 ]; then

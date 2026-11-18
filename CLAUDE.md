@@ -23,6 +23,21 @@ Read first:
 4. **Never push, merge, tag, release or change GitHub settings.** These actions go through the maintainer and `scripts/dev`. Commands that ask for a confirmation (`scripts/dev`, `gh auth`) must be run by the maintainer in a real terminal: through the assistant's shell, the answer is always no.
 5. **Nothing personal or secret in the repository** (no local paths, no personal data, no credentials). Everything in the repository is in English (commits, changelog, issues, docs, code, comments, `tasks/`), except the French game texts of `fr_fr.json`. Older commit messages and old changelog entries stay as they are.
 
+## End of every task
+
+Every session follows this routine at the end of each task (a step of a lot, a fix, a document), before handing over:
+
+1. Say which issue moved forward and what was done.
+2. Tick, in its definition file in `scripts/project/issues/`, only the boxes that are done and proved (green build or check reported by the maintainer). Never tick on GitHub.
+3. Write the follow-up comment, in English, in `build/issue-comments/<n>.md`: what was done, how it was checked, what is left.
+4. Give the maintainer one block of commands to run in a real terminal:
+   ```bash
+   scripts/dev project board --start <n>    # or --review <n> when its pull request is open outside lot finish
+   scripts/dev project update-issues        # carries the ticked boxes to GitHub; boxes ticked there stay ticked
+   gh issue comment <n> --body-file build/issue-comments/<n>.md
+   ```
+5. Update `tasks/todo.md`.
+
 ## Constraints of the sandbox
 
 - Gradle cannot run in Claude Code's sandbox: the maintainer runs `./gradlew build test`, `./gradlew runGameTestServer` and in-game checks, and reports the result. Never claim a build or a test passed without that report.

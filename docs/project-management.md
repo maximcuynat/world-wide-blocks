@@ -10,11 +10,11 @@ No GitHub Actions: everything that checks runs locally (hooks, `scripts/dev`), a
 |---|---|
 | Design: content of each lot, architecture, decisions, check procedures in game | [`docs/lot-plan.md`](lot-plan.md) |
 | Tasks: one issue per step, in the milestone of its lot or version | GitHub issues, defined in `scripts/project/issues/` (one folder per lot or version, plus `backlog/` and `ideas/`) and created by `scripts/dev project sync` |
-| Progress | GitHub Projects board "Roadmap" |
+| Progress | GitHub Projects board "Roadmap", kept sorted by `scripts/dev project board` (see [Board columns](#board-columns-and-sorting)) |
 | Notes of a working session (plan, review) | [`tasks/todo.md`](../tasks/todo.md) |
 | Mistakes not to repeat | [`tasks/lessons.md`](../tasks/lessons.md) |
 
-A new task is either opened directly on GitHub (templates "Bug report" and "Idea", or a blank issue for the maintainer), or proposed as a definition file in `scripts/project/issues/`, then created by `scripts/dev project sync` (this is how an AI assistant proposes issues: it never creates anything on GitHub itself). Once created, an issue lives on GitHub: editing its file afterwards changes nothing.
+A new task is either opened directly on GitHub (templates "Bug report" and "Idea", or a blank issue for the maintainer), or proposed as a definition file in `scripts/project/issues/`, then created by `scripts/dev project sync` (this is how an AI assistant proposes issues: it never creates anything on GitHub itself). Once created, an issue lives on GitHub: editing its file afterwards changes nothing until `scripts/dev project update-issues` rewrites its body (title, labels, milestone, state and comments are never touched, and boxes ticked on GitHub stay ticked).
 
 ## Roadmap
 
@@ -91,22 +91,63 @@ Create the board **before** the first `scripts/dev project sync`: the automatic 
 1. Give gh access to projects: `gh auth refresh -s project` (in a real terminal: it waits for a confirmation in the browser).
 2. Create the board, named without the mod's name (here "Roadmap"): profile picture > **Your projects** > **New project** > template **Board** **(to verify)**, or `gh project create --owner <login> --title "Roadmap"`.
 3. Link it to the repository: `gh project link <number> --owner <login> --repo <owner>/<repo>`. Give the account login: `--owner @me` is refused by this command.
-4. Field **Status**, options in this order: **Ideas**, **To do**, **In progress**, **In review**, **Done** (rename or add the options of the template).
+4. Field **Status**: `scripts/dev project board` creates the missing options, so that the order is **Ideas**, **Todo**, **In Progress**, **In review**, **Done** (the names of the GitHub template are kept). The board's owner and number go in `scripts/project/board.conf`.
 5. Project menu (top right) > **Workflows**, turn on and save each one:
 
 | Workflow | Setting | Effect |
 |---|---|---|
 | Auto-add to project | repository of the mod, filter `is:issue is:open` | Every new issue is added to the board. GitHub Free allows one auto-add workflow. |
-| Item added to project | Status: **To do** | New issues start in To do. |
-| Pull request linked to issue | Status: **In progress** | An issue goes to In progress when a pull request that closes it is opened (`scripts/dev lot finish`). |
+| Item added to project | Status: **Todo** | New issues start in Todo. `scripts/dev project board` then moves idea tickets to Ideas. |
+| Pull request linked to issue | **Turned off** | It would set In Progress when the pull request of a lot opens, while `scripts/dev lot finish` sets In review. To do by hand: project menu > **Workflows** > **Pull request linked to issue** > switch off **(to verify)**. |
 | Item closed | Status: **Done** (on by default) | |
 | Pull request merged | Status: **Done** (on by default) | |
 
 Known limits, without Actions:
 
-- "Item added to project" gives the same status to every new item: idea tickets (`type: idea`) also start in To do. Move them to **Ideas** by hand (board filter `label:"type: idea"`).
-- No built-in workflow moves an item to **In review** for a single maintainer without reviewers: it stays a manual column.
+- "Item added to project" gives the same status to every new item: idea tickets (`type: idea`) also start in Todo. `scripts/dev project board` moves them to **Ideas**.
+- No built-in workflow moves an item to **In review** for a single maintainer without reviewers: `scripts/dev lot finish` does it.
+- Built-in workflows run on GitHub's side, after the API calls of `scripts/dev`: "Item added to project" may set Todo just after `scripts/dev project board` added an issue and gave it another status. A second run puts idea tickets back in Ideas; an issue given to `--start` must then be moved again **(to watch during the first runs)**.
 - Exact names and options of the workflows other than "Auto-add to project", "Auto-archive items" and "Pull request linked to issue" are not listed by the documentation: check them in the **Workflows** menu.
+
+### Board columns and sorting
+
+| Column | Holds | Set by |
+|---|---|---|
+| Ideas | Ideas not planned yet (label `type: idea`) | `scripts/dev project board` |
+| Todo | Planned issues | "Item added to project" workflow, `scripts/dev project board` |
+| In Progress | Issues being worked on | `scripts/dev lot start` (question on the terminal), `scripts/dev project board --start <n>` |
+| In review | Issues whose pull request is open | `scripts/dev lot finish`, `scripts/dev project board --review <n>` |
+| Done | Closed issues | "Item closed" and "Pull request merged" workflows, `scripts/dev project board` |
+
+`scripts/dev project board` (with `--dry-run` first) can be run again at any time. It reads the board named in `scripts/project/board.conf` (`owner=`, `number=`) and the issues of the repository of the `origin` remote, shows what it is going to change and asks for confirmation on the terminal. It:
+
+1. creates the missing Status options. The API replaces the whole list of options: every existing option is sent again with its id, color and description, which keeps the status of the items; the command stops before sending anything if an option would be left out. Options that are not in the list above (such as the template's **No status**) are kept after them;
+2. adds to the board the open issues of the repository that are not on it (closed issues missing from the board stay off it);
+3. sorts each issue with the first rule that applies:
+   - closed issue: **Done**;
+   - `--start <n>,<n>`: **In Progress**; `--review <n>,<n>`: **In review**;
+   - label `type: idea` with no status or **Todo**: **Ideas** (the label decides: an idea that is taken on changes its label);
+   - no status: **Todo** (the option **No status** counts as no status);
+   - any other status, set by hand, is left alone.
+
+`scripts/dev lot start` asks which open issues of the milestone go to In Progress (numbers, `all`, or nothing); `scripts/dev lot finish` moves the issues closed by the pull request to In review. In both, a board problem (no `board.conf`, gh without the `project` scope) is only a warning that gives the `project board` command to run once it is fixed. Done is left to GitHub's workflows, at the merge.
+
+gh needs the `project` scope for all of this: `gh auth refresh -s project`, in a real terminal.
+
+To try the command on a throwaway copy of the board before the real one (what `gh project copy` copies is not documented: if the copy has no items, seed a few, so that the trial checks that a status set before the options change is kept):
+
+```bash
+gh project copy <number> --source-owner <login> --target-owner <login> --title "Roadmap trial"   # note the number of the copy
+gh project item-list <copy> --owner <login> --format json -L 100 --jq '.items | length'        # 0: seed the copy
+gh project item-add <copy> --owner <login> --url https://github.com/<owner>/<repo>/issues/<n>
+gh project item-edit <copy> --owner <login> --url https://github.com/<owner>/<repo>/issues/<n> --field Status --value "In Progress"
+sed -i '' 's/^number=.*/number=<copy>/' scripts/project/board.conf                            # not committed
+scripts/dev project board --dry-run
+scripts/dev project board
+scripts/dev project board --dry-run          # must answer "up to date"; issue <n> still In Progress; columns in order in the browser
+gh project delete <copy> --owner <login>
+git checkout -- scripts/project/board.conf
+```
 
 ### 4. Labels, milestones and issues
 
@@ -122,6 +163,16 @@ Run them in a real terminal: like every `scripts/dev` command that asks for a co
 The issue templates apply the `type: bug` and `type: idea` labels, which exist only after this first sync.
 
 ## Sources
+
+GitHub documentation read on 2026-11-19, for `scripts/dev project board`:
+
+- Using the API to manage Projects (project by number, fields and options, `addProjectV2ItemById` returns the existing item, `updateProjectV2ItemFieldValue`): https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/using-the-api-to-manage-projects
+- GraphQL reference of Projects (`updateProjectV2Field`: "provided values overwrite existing options"; `ProjectV2SingleSelectFieldOptionInput.id`: "Include this to preserve the option's identity during updates, preventing item field values from being cleared"; option colors): https://docs.github.com/en/graphql/reference/projects
+- The `id` input of the options, added in the schema of 2026-04-23: https://docs.github.com/en/graphql/overview/changelog
+- `Issue.projectItems`: https://docs.github.com/en/graphql/reference/issues ; `repositoryOwner` and the `ProjectV2Owner` interface: https://docs.github.com/en/graphql/reference/repos
+- gh 2.103.3: `gh api --help` (GraphQL pagination with `$endCursor`, `--input`), `gh project copy --help`, `gh project delete`.
+
+Not confirmed by the documentation: that the order of the options sent gives the order of the columns, what `gh project copy` copies (workflows, items), and the exact behaviour of `gh api graphql --input` with a full request body (described only in general terms by `gh api --help`).
 
 GitHub documentation read on 2026-11-18:
 

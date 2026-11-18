@@ -120,13 +120,14 @@ Bypassing a hook (`--no-verify`) is kept for cases where the same checks have ju
 | Command | What it does |
 |---|---|
 | `scripts/dev status` | Branch, version, latest tag and suggested next versions, commits not pushed, phase (feature freeze), open issues of the current lot, open pull requests, merged branches to delete locally. Read-only. |
-| `scripts/dev lot start <id>` | Fast-forwards `developement`, creates `lot/<id>` locally and lists the open issues of its milestone. |
-| `scripts/dev lot finish [--except n,m]` | Runs the checks, then pushes `lot/<id>` and opens the pull request to `developement`, with one `Closes #` line per open issue of the milestone (except n, m) and the `breaking` label if a commit is marked `!`. |
+| `scripts/dev lot start <id>` | Fast-forwards `developement`, creates `lot/<id>` locally, lists the open issues of its milestone and asks which ones go to In Progress on the board. |
+| `scripts/dev lot finish [--except n,m]` | Runs the checks, then pushes `lot/<id>` and opens the pull request to `developement`, with one `Closes #` line per open issue of the milestone (except n, m) and the `breaking` label if a commit is marked `!`; these issues go to In review on the board. |
 | `scripts/dev release prepare <version>` | From `developement` (or `hotfix/<version>`): checks the version order, the feature freeze and, for a patch, that nothing breaks worlds; writes the version and the changelog on `release/v<version>`, runs the checks, commits (signed), then pushes and opens the pull request to `main`. |
 | `scripts/dev release publish <version>` | After the merge: signed tag on the merge commit of `main`, jar built from it in a temporary worktree, **draft** GitHub release (pre-release for alpha and beta), `main` brought back into `developement`, finished milestones closed. |
 | `scripts/dev hotfix start <version>` | Creates `hotfix/<version>` from `main`, which must be at the previous release. |
 | `scripts/dev project sync` | Creates the labels, milestones and issues of `scripts/project/` on GitHub. Can be run again: nothing is created twice. |
-| `scripts/dev project update-issues` | Rewrites the body of the issues already on GitHub from their files in `scripts/project/issues/`, for example after a linked document was renamed. Shows the difference for each issue first. Title, labels, milestone, state and comments are left alone; an issue with ticked boxes on GitHub is skipped. |
+| `scripts/dev project update-issues` | Rewrites the body of the issues already on GitHub from their files in `scripts/project/issues/`, for example after a linked document was renamed or boxes were ticked in a file. Shows the difference for each issue first. Title, labels, milestone, state and comments are left alone; boxes ticked on GitHub stay ticked, and an issue with a box ticked on GitHub whose line is gone from its file is skipped. |
+| `scripts/dev project board [--start n,m] [--review n,m]` | Sorts the issues on the Projects board named in `scripts/project/board.conf`: creates the missing Status options, adds the open issues missing from the board, closed to Done, ideas to Ideas, no status to Todo, `--start` to In Progress, `--review` to In review. A status set by hand is kept. Rules: [`docs/project-management.md`](docs/project-management.md#board-columns-and-sorting). |
 
 ### Publish a version
 

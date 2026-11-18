@@ -2,6 +2,42 @@
 
 Session notes only. Tasks are GitHub issues, grouped by milestone (one lot, one version): `scripts/dev status` and `docs/project-management.md`. The open tasks and the ideas that used to be here became issues on 2026-11-18 (`scripts/project/issues/`, created by `scripts/dev project sync`).
 
+## Tooling: Projects board automation (session of 2026-11-19)
+
+Branch `chore/project-board`. Design approved by Max on 2026-11-19.
+
+Facts read from the real board (`gh project field-list` and `item-list` run by Max): Status has the options `No status` (a real option, not the empty value), `Todo`, `In Progress`, `Done`; 37 items, all issues of this repository, 17 in `No status` (the ideas), 20 in `Todo`.
+
+Decisions:
+
+- `scripts/dev [--dry-run] project board [--start n,m] [--review n,m]`. Board owner and number in `scripts/project/board.conf` (`owner=`, `number=`); repository from `origin`.
+- Reads with `gh api graphql`: the project and its Status field (`repositoryOwner(login:) { ... on ProjectV2Owner { projectV2(number:) } }`), then the issues of the repository with their `projectItems` and `fieldValueByName(name: "Status")`, paginated. Only issues of this repository are touched.
+- Options: keep the GitHub names `Todo`, `In Progress`, `Done`; create `Ideas` and `In review`. Wanted order Ideas, Todo, In Progress, In review, Done, then any other existing option (here `No status`) in its current order. `updateProjectV2Field` replaces the whole list: every existing option is sent again with its `id`, `color` and `description`; the command stops if one would be missing. The field is only updated when an option is missing. Options re-read after the update, before moving items.
+- Sorting, first rule that applies: closed issue -> Done; `--start` -> In Progress, `--review` -> In review; open issue missing from the board -> added; `type: idea` with no status or `Todo` -> Ideas (the label decides); no status -> Todo; any other status is left alone. The option `No status` counts as no status.
+- `lot start`: after creating the branch, asks on the terminal which open issues of the milestone go to In Progress (numbers, `all`, empty = none; no terminal = none). Board not configured or gh not ready: warning only.
+- `lot finish`: after `gh pr create`, the issues of its `Closes #` list go to In review. A board failure after the push is a warning, not an error. Done stays with GitHub's built-in workflows; the "Pull request linked to issue" workflow is turned off (it would set In Progress when the pull request opens).
+- `project update-issues`: ticks are merged instead of skipping the issue. A box is ticked if it is ticked in the file or on GitHub (matched by the text of the line), never unticked; the comparison ignores box states; an issue whose GitHub body has a ticked box missing from the file is still skipped.
+- CLAUDE.md, section "End of every task": issue moved forward, boxes ticked in the definition file only when done and proved, follow-up comment written in English in `build/issue-comments/<n>.md`, one block of commands for Max (`project board --start/--review`, `project update-issues`, `gh issue comment <n> --body-file …`), `tasks/todo.md` updated.
+- First real run on a throwaway copy of the board (`gh project copy`), then on board #4.
+
+Not verified, to watch during the run on the copy: that the built-in Status field accepts `updateProjectV2Field` and keeps item values for options sent with their `id` (the `id` input exists since the schema of 2026-04-23); that the order of the list gives the order of the columns; what `gh project copy` copies (workflows, items); whether the target status of the built-in workflows can be changed.
+
+Steps, one commit each, tested in a throwaway clone with a fake `gh` (GraphQL state in JSON) and a pseudo-terminal:
+
+- [x] 1. `scripts/lib/board.sh`, `scripts/project/board.conf`, `scripts/dev project board`
+- [x] 2. `lot start` and `lot finish` hooks
+- [x] 3. Tick merge in `project update-issues`
+- [x] 4. `docs/project-management.md` and `CONTRIBUTING.md`
+- [x] 5. CLAUDE.md "End of every task"
+
+Review (2026-11-19):
+
+- Checked only in throwaway clones, with a fake `gh` in Python (GraphQL operations recognised by name, state in JSON built from Max's real export of board #4, `--jq` passed to the real `jq` per page, pages of 20 issues to exercise `--paginate`; `updateProjectV2Field` modelled from the documentation: an option sent without its id is new, items on a dropped option lose their value), a fake `gradlew`, a bare origin behind the GitHub URL, and a pseudo-terminal to answer the questions.
+- `project board`: dry run on the real data (2 options to create, 2 issues to add, 19 moves, the 7 closed issues of lot 1b-2 left off the board); no terminal (answer no, nothing sent); yes (options created with the existing ids kept, statuses set by hand kept: In Progress on #12, Done on an open issue); second run with nothing to do; `--start` and `--review`, closed issue given to `--start` (left to Done), unknown number, number in both lists, bad lists, unknown argument; gh without the `project` scope, wrong board number, no Status field, no `board.conf`; option update refused by the API (nothing else sent); an existing option without id (stopped before sending).
+- `lot start`: dry run (plan line), answer with commas, spaces, `#` and an unknown number, `all`, empty answer, no terminal (branch created, board unchanged), gh without scope (warning and the command to run later), no `board.conf` (warning). `lot finish`: dry run (plan line), real run with `--except` (the 7 issues closed by the pull request moved to In review), gh without scope after the push (warning, exit 0).
+- `update-issues`: box ticked on GitHub only (now "=", was skipped), ticks on both sides merged, `[X]`, CRLF body, ticked line reworded in the file (skipped, line listed), real run then second run with nothing to do.
+- Not checked: anything against the real GitHub API. First real run on a copy of the board (`gh project copy`), commands given to Max; the points listed as not verified above stay open until then.
+
 ## Lot 1b-2: DHCP (session of 2026-11-18)
 
 Issues #3 to #9, branch `lot/1b-2`. Architecture approved by Max on 2026-11-18 (`docs/lot-plan.md`, lot 1b, will hold the design and the status at the end of the lot). Protocol checked in the text of RFC 2131 and RFC 2132.
