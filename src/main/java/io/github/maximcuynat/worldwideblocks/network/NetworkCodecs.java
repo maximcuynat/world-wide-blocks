@@ -37,7 +37,7 @@ final class NetworkCodecs {
     static final Codec<PortKind> PORT_KIND = Codec.STRING.comapFlatMap(
             name -> PortKind.bySerializedName(name)
                     .map(DataResult::success)
-                    .orElseGet(() -> DataResult.error(() -> "Type de port inconnu : " + name)),
+                    .orElseGet(() -> DataResult.error(() -> "Unknown port kind: " + name)),
             PortKind::serializedName);
 
     /** Written as text ({@code 02:4f:a0:00:1b:7c}) to stay readable in an NBT editor. */
@@ -63,7 +63,7 @@ final class NetworkCodecs {
     static final Codec<LinkMedium> MEDIUM = Codec.STRING.comapFlatMap(
             name -> LinkMedium.bySerializedName(name)
                     .map(DataResult::success)
-                    .orElseGet(() -> DataResult.error(() -> "Support de lien inconnu : " + name)),
+                    .orElseGet(() -> DataResult.error(() -> "Unknown link medium: " + name)),
             LinkMedium::serializedName);
 
     static final Codec<Link> LINK = RecordCodecBuilder.create(i -> i.group(

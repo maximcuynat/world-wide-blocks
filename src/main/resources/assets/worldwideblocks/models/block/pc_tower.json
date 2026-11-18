@@ -10,7 +10,7 @@
   },
   "elements": [
     {
-      "name": "boitier",
+      "name": "case",
       "from": [
         4,
         1,
@@ -79,7 +79,7 @@
       }
     },
     {
-      "name": "pied_avant_gauche",
+      "name": "foot_front_left",
       "from": [
         4.5,
         0,
@@ -148,7 +148,7 @@
       }
     },
     {
-      "name": "pied_avant_droit",
+      "name": "foot_front_right",
       "from": [
         10,
         0,
@@ -217,7 +217,7 @@
       }
     },
     {
-      "name": "pied_arriere_gauche",
+      "name": "foot_back_left",
       "from": [
         4.5,
         0,
@@ -286,7 +286,7 @@
       }
     },
     {
-      "name": "pied_arriere_droit",
+      "name": "foot_back_right",
       "from": [
         10,
         0,
@@ -355,7 +355,7 @@
       }
     },
     {
-      "name": "facade",
+      "name": "front",
       "from": [
         4.5,
         1.5,
@@ -424,7 +424,7 @@
       }
     },
     {
-      "name": "bouton_power",
+      "name": "power_button",
       "from": [
         7.5,
         13,
@@ -493,7 +493,7 @@
       }
     },
     {
-      "name": "lecteur",
+      "name": "drive",
       "from": [
         5,
         11,
@@ -631,7 +631,7 @@
       }
     },
     {
-      "name": "alimentation",
+      "name": "power_supply",
       "from": [
         5,
         11,
@@ -700,7 +700,7 @@
       }
     },
     {
-      "name": "prise_secteur",
+      "name": "power_socket",
       "from": [
         6,
         12,

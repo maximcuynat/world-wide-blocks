@@ -7,3 +7,6 @@ pluginManagement {
 plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
+
+// Fixed name: otherwise Gradle names the project (and the Maven artifact) after the folder of the clone.
+rootProject.name = 'worldwideblocks'
