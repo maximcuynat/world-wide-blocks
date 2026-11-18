@@ -20,7 +20,16 @@ Un commit par sujet, après le build vert de Max (Gradle ne tourne pas dans le b
 - [x] 6. Releases : `cliff.toml` (Keep a Changelog en français : Ajouté, Modifié, Corrigé), `CHANGELOG.md`, `scripts/release.sh` (mode `--dry-run`, commit et tag signés, confirmation avant tout envoi, release GitHub en brouillon). Déroulé complet essayé dans un clone jetable avec de faux `gradlew` et `gh` (refus, envoi atomique, pull request, garde-fous de `--publish`, brouillon en pré-version, pas de terminal = non). Premier vrai essai : `scripts/release.sh --dry-run 0.1.0-alpha.1` par Max.
 - [x] 7. `README.md` (français et anglais), `SECURITY.md` (signalement privé par GitHub), `CONTRIBUTING.md` (commits, branches, hooks, tests, releases).
 - [x] 8. `docs/securite-depot.md` : réglages GitHub à faire par Max, chemins de l'interface, ordre des opérations, signature SSH des commits et des tags.
-- [ ] 9. `CLAUDE.md` : hooks, script de release, modèle de branches. Revue de la session ci-dessous.
+- [x] 9. `CLAUDE.md` : hooks, script de release, modèle de branches. Revue de la session ci-dessous.
+
+Revue de la session A (2026-11-18) :
+
+- Fait : audit, 10 commits sur `developement` (identité masquée, non signés), tous après un build vert de Max ou sans effet sur le build (hooks, docs, outillage de release).
+- Vérifié pour de vrai : wrapper officiel 9.2.1, build et tests, licence et version dans le jar, tests en jeu avec `0.1.0-alpha.1`, hook gitleaks chez Max. Vérifié seulement dans des clones jetables : hook avant push (faux `gradlew`), `scripts/release.sh` (faux `gradlew` et `gh`, signature avec une clé jetable). Le premier push de Max sera le premier vrai passage du hook avant push.
+- Reste à faire par Max : `scripts/release.sh --dry-run 0.1.0-alpha.1` (premier vrai essai du script), signature SSH puis réglages GitHub dans l'ordre de `docs/securite-depot.md`, choix 3.8 (signature des commits de Claude) avant d'exiger des commits signés sur `main`.
+- Bloquant avant de rendre le dépôt public : renommage du mod (session dédiée).
+- Choix faits par Claude et signalés à Max : `LGPL-3.0-only` plutôt que `-or-later`, fichiers `COPYING` et `COPYING.LESSER` au lieu d'un `LICENSE` (vérifier le badge de licence GitHub après le push), engagements de `SECURITY.md` (dernière version seulement, sans délai garanti) et parcours fork puis pull request de `CONTRIBUTING.md`.
+- Gestion de projet GitHub (labels, jalons, tableau) : session B.
 
 ## Étape 1 : environnement de dev
 
