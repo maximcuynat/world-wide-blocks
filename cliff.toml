@@ -1,0 +1,71 @@
+# Configuration de git-cliff : génère CHANGELOG.md depuis les messages de commit.
+# Format Keep a Changelog, en français, destiné aux joueurs : seuls les commits feat, fix,
+# refactor et perf y figurent. docs, test, chore, style, build, ci et les commits hors
+# convention sont écartés.
+# Documentation : https://git-cliff.org/docs/configuration
+#
+#   git-cliff -o CHANGELOG.md                         # tout, section « Non publié » comprise
+#   git-cliff --tag v0.1.0-alpha.1 -o CHANGELOG.md    # au moment d'une release (scripts/release.sh)
+#   git-cliff --latest --strip all                    # notes de la dernière version seule
+
+[changelog]
+header = """
+# Journal des modifications
+
+Toutes les modifications notables de ce projet sont consignées dans ce fichier.
+
+Le format s'appuie sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le projet suit le [versionnage sémantique](https://semver.org/lang/fr/). Tant que la version commence par 0, le mod n'est pas stable : une version mineure peut casser les mondes existants.
+
+"""
+body = """
+{% if version -%}
+    ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else -%}
+    ## [Non publié]
+{% endif -%}
+{% for group, commits in commits | group_by(attribute="group") %}
+    ### {{ group | striptags | trim }}
+    {% for commit in commits %}
+        - {% if commit.breaking %}**Incompatible** : {% endif %}\
+          {% if commit.scope %}*{{ commit.scope }}* : {% endif %}\
+          {{ commit.message | split(pat="\n") | first | replace(from="📝", to="") | trim | upper_first }}\
+    {% endfor %}
+{% endfor %}\n
+"""
+footer = """
+{% for release in releases -%}
+    {% if release.version and release.previous and release.previous.version -%}
+        [{{ release.version | trim_start_matches(pat="v") }}]: \
+            https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}\
+                /compare/{{ release.previous.version }}...{{ release.version }}
+    {% elif release.version -%}
+        [{{ release.version | trim_start_matches(pat="v") }}]: \
+            https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}\
+                /releases/tag/{{ release.version }}
+    {% elif release.previous and release.previous.version -%}
+        [Non publié]: https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}\
+            /compare/{{ release.previous.version }}...HEAD
+    {% endif -%}
+{% endfor %}
+<!-- Généré par git-cliff depuis les messages de commit : ne pas modifier à la main. -->
+"""
+trim = true
+
+[git]
+conventional_commits = true
+# Les commits hors convention (deux commits anciens) n'apparaissent pas.
+filter_unconventional = true
+split_commits = false
+# Le numéro sert à ordonner les sections (ordre de Keep a Changelog), il est retiré à l'affichage.
+commit_parsers = [
+    { message = "^feat", group = "<!-- 0 -->Ajouté" },
+    { message = "^(refactor|perf)", group = "<!-- 1 -->Modifié" },
+    { message = "^fix", group = "<!-- 2 -->Corrigé" },
+    { message = ".*", skip = true },
+]
+# Un changement incompatible (« ! ») reste visible même si son type est écarté.
+protect_breaking_commits = true
+filter_commits = false
+tag_pattern = "^v[0-9]+\\.[0-9]+\\.[0-9]+(-(alpha|beta)\\.[0-9]+)?$"
+topo_order = false
+sort_commits = "oldest"
