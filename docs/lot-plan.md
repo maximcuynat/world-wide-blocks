@@ -1,6 +1,6 @@
 # World Wide Blocks: lot plan
 
-Written on 2026-11-17, revised the same day after review. Status: proposed, awaiting approval. Lots coded: 0 and 1a (see the status of each lot).
+Written on 2026-11-17, revised the same day after review; revised again on 2026-11-18 (lot E renamed 1e, lot 6c split in two, tool-crafting decision added; TCP lot 1f, shared console and terminal decisions added). Status: proposed, awaiting approval. Lots coded: 0 and 1a (see the status of each lot).
 
 ## Principles
 
@@ -20,9 +20,17 @@ Written on 2026-11-17, revised the same day after review. Status: proposed, awai
 
 | Decision | Before lot | Proposal | Status |
 |---|---|---|---|
-| Role of the screen, keyboard and mouse | 1c | The terminal opens directly on the tower; the peripherals of lot 2c stay decorative and do not condition access. Alternative: make them mandatory, which would change the behaviour of the tower at lot 2c | To approve |
-| Laptop battery | E | The laptop runs on battery when it is not plugged in and recharges on a socket | To approve |
-| Electricity mandatory or not | E | "Power required" configuration option, enabled by default; when disabled, all devices work without power | To approve |
+| Choice of the exact port | 1d | No proposal for now. Today the Ethernet cord takes the first free local network port; with a desktop switch, the player will want to choose the port | To decide |
+| Role of the screen, keyboard and mouse (issue #10) | 1c | The terminal opens directly on the tower; the peripherals of lot 2c enrich the computer but never condition access to it. Alternative: make them mandatory, which would change the behaviour of the tower at lot 2c | To approve |
+| Language of the terminal | 1c | The output of the tools stays literal English, as on a real system; help and advice lines are translated through language keys. A third way next to the rules of `docs/messages.md`, to write there once approved | To approve |
+| Two players at the same computer | 1c | One player at a time ("computer busy"); a shared read-only console can come later | To approve |
+| Time shown by `ping` | 1c | Game milliseconds, 1 tick = 50 ms, to keep the real format (`time=50.0 ms`) | To approve |
+| `ping` without a count | 1c | Continuous, as on Linux, until Ctrl+C; stopped when the console closes | To approve |
+| Frame capture (`tcpdump`) | 1c | In a small lot right after 1c, so as not to weigh on the success criterion of lot 1 | To approve |
+| Monospaced font of the terminal | 1c | A free font whose licence is compatible with the LGPL, to choose | To decide |
+| Laptop battery | 1e | The laptop runs on battery when it is not plugged in and recharges on a socket | To approve |
+| Electricity mandatory or not | 1e | "Power required" configuration option, enabled by default; when disabled, all devices work without power | To approve |
+| Making cables by hand | 2b | The tools of lot 9a (spool, connector, crimping tool, tester) are brought forward just before 2b, so that the fixed home cabling uses cables cut to the wanted length. Alternative: keep them at 9a and use only finished cords until then | To decide |
 | Scale of rack equipment | 6a | Scale per family: racks at player scale, small equipment enlarged. With the factor 2.4 of the PC tower, a 42U rack would be about 4.8 blocks high | To approve |
 | Cord laid on the ground, separated by a wall | F | No proposal for now: what to do when a wall separates the two devices of a cord drawn on the ground (see lot F) | To decide |
 
@@ -39,7 +47,8 @@ This document describes the design. The tasks of each lot are GitHub issues, one
 | 1b | The box assigns addresses | Each computer connected to the box receives an address |
 | 1c | Screen and ping command | From a computer, `ping` to the other computer, which answers |
 | 1d | Desktop switch | More computers than the box has ports |
-| E | Electricity | A device without power is off |
+| 1e | Electricity | A device without power is off |
+| 1f | TCP | A connection opens between two computers, carries a message and closes |
 | 2a | Wi-Fi | The laptop connects without a cable |
 | 2b | Fixed home cabling | Cables go through wall sockets and trunking |
 | 2c | Peripherals and local services | A shared file and a network print |
@@ -52,7 +61,8 @@ This document describes the design. The tasks of each lot are GitHub issues, one
 | 5b | The neighbourhood in copper | Same for copper lines |
 | 6a | The rack | Equipment is mounted in a rack, at a precise position |
 | 6b | The ISP site | The neighbourhood lines arrive on the operator's equipment |
-| 6c | The ISP service | The box receives a public address, two subscribers reach each other |
+| 6c-1 | Public address | The box receives a public address from the aggregation router |
+| 6c-2 | Address translation | Two subscribers reach each other; a private address cannot be reached directly |
 | 7a | Routing between operators | Two subscribers of different ISPs reach each other |
 | 7b | Servers and domain names | A name resolves, a server answers |
 | 7c | The mesh of the internet | One link cut, the traffic takes another path |
@@ -167,7 +177,7 @@ The lot is split in two sub-lots (architecture approved by Max on 2026-11-17):
 Chosen architecture:
 
 - Layered frames (`network/protocol/`): an Ethernet frame carries a source MAC, a destination MAC (or broadcast), a type and a typed content. IPv4 (0x0800), then UDP and DHCP, ARP (official type 0x0806) and ICMP are each added as a variant of the layer below.
-- One MAC per port, first byte `02` (locally administered address), unique in the world and saved; a device that is broken then placed again gets new ones. Each port has a type: Ethernet or line input. The Ethernet cord takes the first free local network port; the choice of port will come at lot 3.
+- One MAC per port, first byte `02` (locally administered address), unique in the world and saved; a device that is broken then placed again gets new ones. Each port has a type: Ethernet or line input. The Ethernet cord takes the first free local network port; how to choose the exact port is an open decision, to take before lot 1d (see "Open decisions").
 - Simulation (`network/sim/`): delivery queue processed at each server tick, timers, a tap on each incoming or outgoing frame (for a future analyzer), clock on game time. A change that happens between two ticks (connection, unplugging, device placed or removed) is applied at the start of the next tick, with the time of that tick: its frames, timers and reports start from the tick where its frames are delivered (fixed on 2026-11-18, see the in-game test of the loop). It runs even when chunks are not loaded.
 - Switching (`network/switching/`): learning of MACs on received frames, broadcast if the destination is unknown or addressed to all, entries expire after 300 game seconds (value recommended by IEEE 802.1D), forgotten at the next tick when the cable is removed. The box is this switch plus a local point, on which its own service will be plugged (DHCP at 1b-2); the desktop switch of lot 1d will be the same switch, without a local point.
 - Loop protection, until the STP of lot 8b: a broadcast frame that comes back to a switch it has already crossed is dropped and reported (log, and a message to players within 32 blocks, at most one per minute and per device). Safety net: 10,000 frames processed per tick at most, 50,000 in the queue.
@@ -249,6 +259,64 @@ The game texts below are quoted in English (`en_us.json`); in this French game, 
 
 To report: the screenshots, and any text that is cut off, overflows the panel, is badly translated or whose symbol is displayed badly.
 
+#### Status of lot 1b-2
+
+Coded on 2026-11-18 on the `lot/1b-2` branch (issues #3 to #9), in 7 steps, one commit each after a green build (`./gradlew build test` and `./gradlew runGameTestServer`: 30 game tests). Protocol checked in the text of RFC 2131 and RFC 2132. Check by eye done by Max on 2026-11-18, below (points 9 and 10 rest on automatic tests).
+
+| Type | Equipment | Status |
+|---|---|---|
+| Mechanic | Protocol layers | Done: IPv4 packet in the Ethernet frame (0x0800), UDP datagram (protocol 17), DHCP message (ports 67 and 68), each a variant of the layer below |
+| Mechanic | DHCP server of the box | Done: on the local point of the box's switch, with its own saved MAC; pool 192.168.1.10 to .200 in /24, gateway and name server 192.168.1.1, lease of one game day; same address for the same MAC; expired leases reused, the oldest first, when the pool is full |
+| Mechanic | DHCP client of the computers | Done: DISCOVER, OFFER, REQUEST, ACK and NAK with a transaction id; renewal at T1 to the server alone, at T2 by broadcast; address lost at the end of the lease or when the cable is unplugged |
+| Mechanic | Restart | Done: leases of the box and of the computers saved in `network.dat` (optional fields, lot 1b-1 worlds still load); a computer still plugged in asks for its address again (INIT-REBOOT) |
+| Mechanic | Two DHCP servers | Done: detected by the computer (two answers from different MACs, both boxes being 192.168.1.1); chat warning to the players within 32 blocks, once per minute per network |
+| Setting | "DHCP server enabled" | Done, saved, on by default, without interface: used by the `chain`, `loop` and `dhcp_server_off` scenes and by the game tests |
+| Mechanic | Status indicator | Done: address and DHCP state of a computer, details when sneaking (MAC, mask, gateway, name server, time left on the lease), addresses lent by a box (four lines at most) |
+
+Deviations from RFC 2131, approved by Max on 2026-11-18:
+
+- No random +/-1 s on retransmissions (4.1), for exact timings: DISCOVER after 4, 8, 16, 32 and 64 s, then every 64 s; REQUEST after 4, 8 and 16 s, then back to INIT 60 s after the first one (3.1).
+- INIT-REBOOT without an answer goes back to INIT (4.4.2 also allows keeping the address).
+- The renewal is unicast to the MAC of the server taken from its acknowledgement: no ARP before lot 1c.
+- No DECLINE, RELEASE or ARP probe of the offered address (4.4.1).
+- Lease time in seconds in the message (1,200 s), 24,000 ticks in the engine; an offered address is held 60 s.
+
+Presence frame: still needed until lot 1c (issue #15): a computer with an address is silent until T1 (600 s), while a switch forgets a MAC after 300 s.
+
+Automatic tests: unit tests of the layers, of the server, of the client at the exact tick (renewal, rebinding, expiry, retransmissions, INIT-REBOOT, conflict), of the simulation with boxes and computers, of the panel and of the language files. Game tests `dhcp_*`: address obtained, lost when unplugged, same address when plugged again, renewal at T1, expiry at the exact tick (server turned off), computers without a box, conflict of two boxes, restart through `network.dat` read back (INIT-REBOOT), full pool; plus the build of each new scene.
+
+#### Check by eye of lot 1b-2 (game in French)
+
+**Done by Max on 2026-11-18** (game in French, "Trials DHCP" world, screenshots `run/screenshots` from 17.09.29 to 17.16.23, log `run/logs/latest.log`), analysed by Claude. No text cut off, overflowing or badly translated; the waiting light is the expected yellow-orange. Points 9 and 10 were not seen by eye: they rest on the automatic tests named below.
+
+| Point | Result | Proof |
+|---|---|---|
+| 1. Address of the computers | Passed | 17.09.29 compact "192.168.1.10 (DHCP : obtenue)", green light; 17.09.40 detailed (MAC, address and mask, gateway, DNS server, "Bail : encore 19:14", state); 17.09.44 box "Adresses prêtées : 3" and three lines |
+| 2. Unplugged, plugged again | Passed | Log 17:10:01 cable disconnected, end in hand; 17.10.06 "Non connecté"; log 17:10:14 cable connected; 17.10.23 same address 192.168.1.10 |
+| 3. Renewal | Passed | 17.10.23 "19:52"; `/tick sprint 600s` from 17:10:39 to 17:10:57; 17.11.07 "19:25", state "obtenue" (without renewal, about 9:25) |
+| 4. Chain, one server | Passed for what is shown | No conflict message (17.16.23, and the only conflict line of the log belongs to `dhcp_conflict`). Not captured: the addresses of the computers and the right box's "Serveur DHCP : arrêté", covered by the unit test `DhcpSimulationTest.aComputerPluggedOnASecondBoxWithItsServerDisabledGetsItsAddressFromTheFirst` (no game test) and the panel test `StatusPanelTest.aBoxWhoseServerIsOffSaysSo`; the panel line itself is seen at point 8 |
+| 5. No box | Passed for what is shown | 17.12.10 and 17.12.11: tower "Pas d'adresse (DHCP : recherche)", yellow-orange light. Not captured: the laptop, covered by the game test `dhcp_no_box` |
+| 6. Conflict | Passed for what is shown | 17.12.30 and log line 294: a single message "⚠ Deux serveurs DHCP sur le réseau de Box internet [0, -60, -2]. N'en gardez qu'un."; log line 293 names both boxes. Not captured: the address of the computer, covered by the game test `dhcp_conflict_of_two_boxes` |
+| 7. Full pool | Passed | 17.15.06, 17.15.07 computer searching; 17.15.15 "Adresses prêtées : 191", four lines, "+187 autres" |
+| 8. Server off | Passed | 17.15.56 "Serveur DHCP : arrêté"; 17.16.01, 17.16.02 computer without address |
+| 9. Restart | Not seen by eye | Game test `dhcp_restart_asks_for_the_same_address` (network.dat read back, INIT-REBOOT, same address); the client display after a real quit and reopen is not proved |
+| 10. Loop | Not seen by eye | Game tests `loop_reported_once_per_minute` and `loop_forgotten_only_for_changed_network` (one loop message per minute); "no conflict message" in the `loop` scene is proved only at engine level, by the unit tests `NetworkSimulationTest.twoBoxesInALoop…` and `twoLoopsInTwoNetworks…` (second server off: a single loop event, no conflict) |
+
+Procedure, kept for the next checks. Preparation: `./gradlew runClient`, Options, Language: French, a creative world with cheats whose name starts with "Trials", standing facing a clear area. Aim at each device standing (compact panel) then sneaking (detailed panel), screenshot (F2) at each point marked 📷. `/worldwideblocks test clear` after each scene.
+
+1. **Address of the computers.** `/worldwideblocks test box_hosts`. Each computer, compact: "192.168.1.1x (DHCP : obtenue)" with a green light 📷; sneaking: "Port 1 : connecté", "MAC 02:…", "Adresse 192.168.1.1x / 255.255.255.0", "Passerelle 192.168.1.1", "Serveur DNS 192.168.1.1", "Bail : encore 19:5x" (it counts down), "DHCP : obtenue" 📷. The box, sneaking: under the ports, "Adresses prêtées : 3" and three lines "192.168.1.1x → 02:…" 📷.
+2. **Unplugged, plugged again.** In the same scene, empty hand, sneak + right-click on a computer: the end of its cable comes into your hand ("Bout retiré de Tour PC…") and the computer shows "Non connecté". Right-click the same computer with that cord: it is plugged in again and shows the same address as before 📷.
+3. **Renewal.** Right after building the scene, note the time left on a computer (about 20:00), then `/tick sprint 600s` (half of the lease): the time left shows about the same value again, not 10 minutes less, because the lease was renewed at half time on the way 📷.
+4. **Chain, one server.** `/worldwideblocks test chain`: the three computers have an address from the left box; the right box, sneaking: "Serveur DHCP : arrêté" 📷. No conflict message in the chat.
+5. **No box.** `/worldwideblocks test dhcp_no_box`: both computers "Pas d'adresse (DHCP : recherche)" with a yellow light 📷.
+6. **Conflict.** `/worldwideblocks test dhcp_conflict`: a single yellow message in the chat, "⚠ Deux serveurs DHCP sur le réseau de Box internet [x, y, z]. N'en gardez qu'un." 📷; the computer still has an address. In `run/logs/latest.log`, one line "Two DHCP servers on one network: …" naming both boxes.
+7. **Full pool.** `/worldwideblocks test dhcp_pool_full`: the computer "Pas d'adresse (DHCP : recherche)"; the box, sneaking: "Adresses prêtées : 191", four lines then "+187 autres" 📷.
+8. **Server off.** `/worldwideblocks test dhcp_server_off`: the box, sneaking, "Serveur DHCP : arrêté"; the computer without address 📷.
+9. **Restart.** Build `box_hosts`, note the addresses, save and quit to the title screen, open the world again: the computers show the same addresses at once, state "obtenue" 📷. Then remove the scene by hand: `/worldwideblocks test clear` only knows the scenes built since you joined.
+10. **Loop.** `/worldwideblocks test loop`: still a single loop message per minute, and no conflict message.
+
+To report: the screenshots, and any text cut off, overflowing the panel, badly translated, or a time left that does not count down.
+
 ### 1c: screen on the computer and ping command
 
 | Type | Equipment | Role |
@@ -264,6 +332,12 @@ Consequence on the laptop: the right-click will open the terminal, and the scree
 
 Proposed choice: the commands follow the Linux convention (`ip addr`, `ping`, `traceroute`, `nslookup`), which is also the closest to network equipment.
 
+The terminal is designed as a shared "console" component: a grid of characters and a stream of keys, linked on the server side to a command interpreter. The consoles planned later reuse it with another interpreter or another way in: the router console (7a), the switch console and its console cable (8b), the screen and keyboard console of the rack (8d), and SSH sessions.
+
+Lot 1c is also where the IP stack per interface is laid down, with its services bound to a port (idea issue "Services API shared by the network engine and the computer OS"): ARP and ICMP need a real IP layer on the computers, and the DHCP client and server of lot 1b-2 move onto it.
+
+A throwaway prototype of the terminal screen comes before the lot (issue in the lot 1c milestone): keyboard input (SDL3), monospaced font, character grid at 854 x 480 and 1920 x 1080, a screen that does not pause the game in single player.
+
 ### 1d: desktop switch
 
 | Type | Equipment | Role |
@@ -273,9 +347,9 @@ Proposed choice: the commands follow the Linux convention (`ip addr`, `ping`, `t
 
 Playable at the end: six or more computers on the same box, all reachable by `ping`.
 
-## Lot E: electricity
+## Lot 1e: electricity
 
-Short lot, placed right after lot 1 so as not to have to rework dozens of blocks later.
+Short lot, numbered in the 1 series because it is placed right after lot 1, so as not to have to rework dozens of blocks later. It is not part of the network simulation itself.
 
 | Type | Equipment | Role |
 |---|---|---|
@@ -291,6 +365,18 @@ Short lot, placed right after lot 1 so as not to have to rework dozens of blocks
 Playable at the end: unplug the box, and the whole home network goes down.
 
 Proposed choice: since the mod must work on its own, the electrical panel supplies energy itself. Plugging it into another mod stays possible but never mandatory.
+
+## Lot 1f: TCP
+
+Numbered in the 1 series like lot 1e: it completes the protocols of lot 1 (IPv4, UDP, DHCP, ARP, ICMP) and comes before lot 2c, whose file sharing relies on it, as do the web server (7b) and SSH (8d). Simplified version: no sliding window or congestion control at first.
+
+| Type | Equipment | Role |
+|---|---|---|
+| Mechanic | Connection | Three-way handshake (SYN, SYN-ACK, ACK), then close (FIN) |
+| Mechanic | Sequence and acknowledgement numbers | Each side counts what it sent and what it received |
+| Mechanic | Simple retransmission | A segment not acknowledged in time is sent again |
+
+Playable at the end: from the terminal, a connection opens between two computers, carries a message and closes; each step can be followed in the exchanged segments.
 
 ## Lot 2: complete local network
 
@@ -337,14 +423,14 @@ The role of the screen, keyboard and mouse depends on the decision taken before 
 | Block | IP phone | Telephony over the network |
 | Block | IP camera | Video surveillance over the network |
 | Block | Smart television | Network client of the living room |
-| Block | Powerline adapter | Carries the network over the electrical circuit (depends on lot E) |
-| Block | PoE injector | Powers a device through its network cable (depends on lot E) |
+| Block | Powerline adapter | Carries the network over the electrical circuit (depends on lot 1e) |
+| Block | PoE injector | Powers a device through its network cable (depends on lot 1e) |
 
 Playable at the end: each new device obtains an address and answers `ping`.
 
 ## Lot 3: arrival at the subscriber
 
-So that this lot is playable before the street exists, a test block provides the line.
+So that this lot is playable before the street exists, a test block provides the line. This block is brought forward to lot 1d (proposed issue): the line input port of the box can then be tested (state "inactive" until the block is connected) long before lot 3, which then only adds the real equipment.
 
 | Type | Equipment | Role |
 |---|---|---|
@@ -448,9 +534,20 @@ Playable at the end: the "test operator line" block is no longer needed, the rea
 
 ### 6c: the ISP service
 
+Split in two sub-lots: address translation (NAT) is the most structuring change of the plan after DHCP. It redefines addressing (private against public), adds a stateful translation to the box and conditions `traceroute`, so it is trialled on its own.
+
+#### 6c-1: public address
+
 | Type | Equipment | Role |
 |---|---|---|
 | Block | Subscriber aggregation router | Groups the sessions of the boxes and gives them a public address |
+
+Playable at the end: each connected box obtains a public address from the aggregation router and shows it in the status indicator, while its computers keep their private addresses.
+
+#### 6c-2: address translation and traceroute
+
+| Type | Equipment | Role |
+|---|---|---|
 | Mechanic | Address translation in the box | The box shares its public address between the computers of the home (NAT) |
 | Command | `traceroute <address>` | Shows the equipment crossed up to the destination |
 
@@ -480,6 +577,8 @@ Playable at the end: `ping` to the public address of the box of a subscriber of 
 Playable at the end: `ping` to a name rather than to an address.
 
 ### 7c: the mesh
+
+Dynamic routing is, with the DHCP of lot 1b and the NAT of 6c-2, one of the heaviest algorithmic pieces of the mod. Its cost moves towards the server in multiplayer: routing tables and re-advertised routes add traffic to the engine, so the safety limits of lot 1a (10,000 frames processed per tick, 50,000 in the queue) are to be reviewed when this lot is designed.
 
 | Type | Equipment | Role |
 |---|---|---|
@@ -649,11 +748,12 @@ Cord on the ground, idea to refine when we reach the lot:
 
 - Lot 1a is required by everything else.
 - 1c depends on 1b: without an address, no `ping`.
-- Lot E is required by the powerline adapter, the PoE injector and room power (8e).
+- 1f (TCP) depends on 1c (IP stack per interface) and is required by 2c (file sharing), 7b (web server) and 8d (SSH).
+- Lot 1e is required by the powerline adapter, the PoE injector and room power (8e).
 - Lot 3 needs the test block as long as lots 4 to 6 are not done.
 - The 19-inch rack (6a) is required by 6b, 7b and the whole of lot 8.
 - The decision on the scale of rack equipment must be taken before 6a.
-- The tools (9a) can be brought forward if we want to craft the cables earlier.
+- The decision on making cables by hand must be taken before 2b; if the tools of 9a are brought forward, lot 9a keeps their certifier and fibre tools and the crafting recipes move to 9d.
 
 ## Real-world operation: what was verified
 

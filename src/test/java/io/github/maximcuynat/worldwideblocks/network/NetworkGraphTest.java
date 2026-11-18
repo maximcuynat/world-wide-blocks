@@ -437,28 +437,108 @@ class NetworkGraphTest {
         void takesTheSavedMacs() {
             MacAddress savedMac = MacAddress.parse("02:11:22:33:44:55").orElseThrow();
 
-            assertTrue(graph.restoreNode(this.tower, List.of(savedMac)));
+            assertTrue(graph.restoreNode(this.tower, List.of(savedMac), Optional.empty()));
             assertEquals(List.of(savedMac), graph.macsOf(this.id));
             assertEquals(Optional.of(this.tower), graph.node(this.id));
         }
 
         @Test
         void generatesMacsForAWorldFromBeforeLot1b() {
-            assertFalse(graph.restoreNode(this.tower, List.of()));
+            assertFalse(graph.restoreNode(this.tower, List.of(), Optional.empty()));
             assertEquals(1, graph.macsOf(this.id).size());
         }
 
         @Test
         void generatesMacsWhenTheSavedOnesAreUnusable() {
             MacAddress mac = MacAddress.parse("02:11:22:33:44:55").orElseThrow();
-            graph.restoreNode(this.tower, List.of(mac));
+            graph.restoreNode(this.tower, List.of(mac), Optional.empty());
             DeviceId other = new DeviceId(OVERWORLD, 5, 64, 0);
 
             // Duplicate of another device, broadcast address, wrong count.
-            assertFalse(graph.restoreNode(new NetworkNode(other, "worldwideblocks:pc_tower", 1), List.of(mac)));
+            assertFalse(graph.restoreNode(new NetworkNode(other, "worldwideblocks:pc_tower", 1), List.of(mac), Optional.empty()));
             assertNotEquals(mac, graph.macsOf(other).get(0));
-            assertFalse(graph.restoreNode(new NetworkNode(other, "worldwideblocks:pc_tower", 1), List.of(MacAddress.BROADCAST)));
-            assertFalse(graph.restoreNode(new NetworkNode(other, "worldwideblocks:pc_tower", 1), List.of(mac, mac)));
+            assertFalse(graph.restoreNode(new NetworkNode(other, "worldwideblocks:pc_tower", 1), List.of(MacAddress.BROADCAST), Optional.empty()));
+            assertFalse(graph.restoreNode(new NetworkNode(other, "worldwideblocks:pc_tower", 1), List.of(mac, mac), Optional.empty()));
+        }
+
+        private final NetworkNode box = new NetworkNode(this.id, "worldwideblocks:internet_box", DeviceRole.BOX,
+                List.of(PortKind.ETHERNET, PortKind.LINE));
+        private final MacAddress port1 = MacAddress.parse("02:00:00:00:00:01").orElseThrow();
+        private final MacAddress port2 = MacAddress.parse("02:00:00:00:00:02").orElseThrow();
+        private final MacAddress service = MacAddress.parse("02:00:00:00:00:03").orElseThrow();
+
+        @Test
+        void takesTheSavedServiceMacOfABox() {
+            assertTrue(graph.restoreNode(this.box, List.of(this.port1, this.port2), Optional.of(this.service)));
+            assertEquals(List.of(this.port1, this.port2), graph.macsOf(this.id));
+            assertEquals(Optional.of(this.service), graph.serviceMacOf(this.id));
+        }
+
+        @Test
+        void aBoxFromALot1b1WorldKeepsItsPortMacsAndGetsAServiceMac() {
+            assertFalse(graph.restoreNode(this.box, List.of(this.port1, this.port2), Optional.empty()));
+            assertEquals(List.of(this.port1, this.port2), graph.macsOf(this.id));
+            MacAddress generated = graph.serviceMacOf(this.id).orElseThrow();
+            assertTrue(generated.isLocallyAdministered());
+            assertFalse(generated.isMulticast());
+            assertFalse(List.of(this.port1, this.port2).contains(generated));
+        }
+
+        @Test
+        void generatesTheServiceMacWhenTheSavedOneIsUnusable() {
+            assertFalse(graph.restoreNode(this.box, List.of(this.port1, this.port2), Optional.of(this.port1)));
+            assertEquals(List.of(this.port1, this.port2), graph.macsOf(this.id), "the port MACs stay");
+            assertNotEquals(Optional.of(this.port1), graph.serviceMacOf(this.id));
+
+            DeviceId other = new DeviceId(OVERWORLD, 5, 64, 0);
+            NetworkNode otherBox = new NetworkNode(other, "worldwideblocks:internet_box", DeviceRole.BOX, List.of(PortKind.ETHERNET));
+            assertFalse(graph.restoreNode(otherBox, List.of(MacAddress.parse("02:00:00:00:00:09").orElseThrow()),
+                    Optional.of(MacAddress.BROADCAST)));
+            assertNotEquals(Optional.of(MacAddress.BROADCAST), graph.serviceMacOf(other));
+        }
+
+        @Test
+        void aComputerHasNoServiceMac() {
+            assertTrue(graph.restoreNode(this.tower, List.of(this.port1), Optional.of(this.service)));
+            assertTrue(graph.serviceMacOf(this.id).isEmpty());
+        }
+    }
+
+    @Nested
+    class ServiceMac {
+        private final DeviceId id = new DeviceId(OVERWORLD, 0, 64, 0);
+        private final NetworkNode box = new NetworkNode(this.id, "worldwideblocks:internet_box", DeviceRole.BOX,
+                List.of(PortKind.ETHERNET, PortKind.ETHERNET, PortKind.LINE));
+
+        @Test
+        void onlyADeviceWithAServiceHasOne() {
+            graph.putNode(this.box);
+            NetworkNode tower = new NetworkNode(new DeviceId(OVERWORLD, 3, 64, 0), "worldwideblocks:pc_tower", 1);
+            graph.putNode(tower);
+
+            MacAddress service = graph.serviceMacOf(this.id).orElseThrow();
+            assertFalse(graph.macsOf(this.id).contains(service));
+            assertFalse(graph.macsOf(tower.id()).contains(service));
+            assertTrue(graph.serviceMacOf(tower.id()).isEmpty());
+        }
+
+        @Test
+        void aReplacedBoxGetsANewOneAndARemovedBoxReleasesIt() {
+            graph.putNode(this.box);
+            MacAddress first = graph.serviceMacOf(this.id).orElseThrow();
+            graph.putNode(new NetworkNode(this.id, "worldwideblocks:internet_box", DeviceRole.BOX, List.of(PortKind.ETHERNET)));
+            assertNotEquals(first, graph.serviceMacOf(this.id).orElseThrow());
+
+            graph.removeDevice(this.id);
+            assertTrue(graph.serviceMacOf(this.id).isEmpty());
+        }
+
+        @Test
+        void aBoxReplacedByAComputerLosesIt() {
+            graph.putNode(this.box);
+            graph.putNode(new NetworkNode(this.id, "worldwideblocks:pc_tower", 1));
+
+            assertTrue(graph.serviceMacOf(this.id).isEmpty());
         }
     }
 }

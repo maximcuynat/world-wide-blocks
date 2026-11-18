@@ -40,6 +40,8 @@ class LangFilesTest {
     private static final String X = "-1234";
     private static final String Y = "320";
     private static final String Z = "-5678";
+    private static final String IP = "192.168.100.200";
+    private static final String TIME_LEFT = "9:59:59";
 
     /** Checked key families, with their maximum length. */
     private static final Map<String, Integer> LIMITS = Map.of(
@@ -48,8 +50,8 @@ class LangFilesTest {
             "hud.worldwideblocks.", PANEL,
             "item.worldwideblocks.ethernet_cable.tooltip.", PANEL);
 
-    /** Sample values of each key, built from the longest device name of the language. */
-    private static Map<String, List<String>> samples(String name) {
+    /** Sample values of each key, built from the longest device name and the longest DHCP state of the language. */
+    private static Map<String, List<String>> samples(String name, String state) {
         Map<String, List<String>> samples = new LinkedHashMap<>();
         samples.put("message.worldwideblocks.cable.start", List.of(name, PORT));
         samples.put("message.worldwideblocks.cable.no_free_port", List.of(name));
@@ -68,6 +70,7 @@ class LangFilesTest {
         // A device is written "name [x, y, z]" (key message.worldwideblocks.device).
         samples.put("message.worldwideblocks.network.loop", List.of(name + " [" + X + ", " + Y + ", " + Z + "]"));
         samples.put("message.worldwideblocks.network.saturated", List.of());
+        samples.put("message.worldwideblocks.network.dhcp_conflict", List.of(name + " [" + X + ", " + Y + ", " + Z + "]"));
         samples.put("hud.worldwideblocks.port.connected", List.of(PORT));
         samples.put("hud.worldwideblocks.port.free", List.of(PORT));
         samples.put("hud.worldwideblocks.port.line", List.of(PORT));
@@ -78,6 +81,21 @@ class LangFilesTest {
         samples.put("hud.worldwideblocks.connected", List.of());
         samples.put("hud.worldwideblocks.not_connected", List.of());
         samples.put("hud.worldwideblocks.sneak_for_details", List.of());
+        samples.put("hud.worldwideblocks.dhcp.compact_address", List.of(IP, state));
+        samples.put("hud.worldwideblocks.dhcp.compact_no_address", List.of(state));
+        samples.put("hud.worldwideblocks.dhcp.address", List.of(IP, IP));
+        samples.put("hud.worldwideblocks.dhcp.gateway", List.of(IP));
+        samples.put("hud.worldwideblocks.dhcp.dns", List.of(IP));
+        samples.put("hud.worldwideblocks.dhcp.lease", List.of(TIME_LEFT));
+        samples.put("hud.worldwideblocks.dhcp.state", List.of(state));
+        samples.put("hud.worldwideblocks.dhcp.server_off", List.of());
+        samples.put("hud.worldwideblocks.dhcp.leases", List.of(COUNT));
+        samples.put("hud.worldwideblocks.dhcp.lease_line", List.of(IP, MAC));
+        samples.put("hud.worldwideblocks.dhcp.leases_more", List.of(COUNT));
+        for (String dhcpState : List.of("unplugged", "init", "selecting", "requesting", "bound", "renewing", "rebinding",
+                "init_reboot", "rebooting")) {
+            samples.put("hud.worldwideblocks.dhcp.state." + dhcpState, List.of());
+        }
         samples.put("item.worldwideblocks.ethernet_cable.tooltip.connect", List.of());
         samples.put("item.worldwideblocks.ethernet_cable.tooltip.unplug", List.of());
         samples.put("item.worldwideblocks.ethernet_cable.tooltip.cancel", List.of());
@@ -98,7 +116,12 @@ class LangFilesTest {
                 .map(Map.Entry::getValue)
                 .max((a, b) -> Integer.compare(length(a), length(b)))
                 .orElseThrow();
-        Map<String, List<String>> samples = samples(longestName);
+        String longestState = texts.entrySet().stream()
+                .filter(entry -> entry.getKey().startsWith("hud.worldwideblocks.dhcp.state."))
+                .map(Map.Entry::getValue)
+                .max((a, b) -> Integer.compare(length(a), length(b)))
+                .orElseThrow();
+        Map<String, List<String>> samples = samples(longestName, longestState);
         List<String> problems = new ArrayList<>();
         texts.forEach((key, text) -> LIMITS.forEach((prefix, limit) -> {
             if (!key.startsWith(prefix)) {

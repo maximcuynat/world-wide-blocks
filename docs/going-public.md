@@ -1,10 +1,12 @@
 # Going public
 
+**Status**: the repository is public since 2026-11-18. Steps 1 to 9 are done; the results observed that day replace the former "to verify" notes below.
+
 What the maintainer does by hand, once the rename branch (`chore/rename-and-english`) is merged into `developement`, to move the repository to its new name and make it public. Nothing here is run by a script or by an AI assistant. Written on 2026-11-18.
 
 Run the commands from the root of the local clone, in a **real terminal**: several of them ask for a confirmation, and without a terminal the answer is no. `<login>` is the GitHub account that owns the repository. `{owner}/{repo}` is written as is: `gh api` fills it from the current repository.
 
-Every `gh` option below was checked with `--help` (gh 2.103.3) unless it is marked **(to verify)**.
+Every `gh` option below was checked with `--help` (gh 2.103.3). Run on 2026-11-18 with the result noted: `gh repo rename` (step 2), the description and topics command of `listing.md` (step 4), the license check (step 7) and the `gh api` commands of step 9.
 
 ## 1. Rename the electricity milestone
 
@@ -27,7 +29,7 @@ gh repo rename world-wide-blocks   # asks for confirmation
 git remote -v                       # origin must point to .../world-wide-blocks
 ```
 
-If `origin` still shows the old name, point it to the new one, keeping the same protocol (SSH or HTTPS) as before:
+`gh repo rename` updates the `origin` remote itself: it prints `Updated the "origin" remote` (seen on 2026-11-18). Only if `origin` still shows the old name, point it to the new one, keeping the same protocol (SSH or HTTPS) as before:
 
 ```bash
 git remote set-url origin git@github.com:<login>/world-wide-blocks.git      # SSH
@@ -35,7 +37,7 @@ git remote set-url origin https://github.com/<login>/world-wide-blocks.git  # or
 git fetch origin && git remote set-head origin --auto
 ```
 
-Whether `gh repo rename` updates the `origin` remote itself is not said by its help: check with `git remote -v`. GitHub redirects the old address to the new one, but do not rely on it: a new repository created later under the old name would break the redirection.
+GitHub redirects the old address to the new one, but do not rely on it: a new repository created later under the old name would break the redirection.
 
 ## 3. Update the text of the existing issues
 
@@ -66,13 +68,13 @@ gh project edit <number> --owner <login> --title "<new title>"
 
 ## 7. Check the license
 
-The repository holds the LGPL in `COPYING.LESSER` and the GPL it builds on in `COPYING`. GitHub detects a license from these files and may show the GPL, the LGPL or "Other":
+The repository holds the LGPL in `COPYING.LESSER` and the GPL it builds on in `COPYING`.
 
 ```bash
-gh repo view --json licenseInfo --jq '.licenseInfo'   # field name (to verify)
+gh api 'repos/{owner}/{repo}/license' --jq .license.spdx_id   # expected: LGPL-3.0
 ```
 
-Also look at the right column of the repository home page. Expected: GNU Lesser General Public License v3.0. If GitHub shows something else, the mod's license is still the one declared in `gradle.properties` (`LGPL-3.0-only`) and in the README; the usual fix is to keep the LGPL text in a file GitHub reads first (`LICENSE`), **to decide** before going public.
+On 2026-11-18 it answered `LGPL-3.0`: GitHub recognises `COPYING.LESSER`, no `LICENSE` file is needed. The mod's license is the one declared in `gradle.properties` (`LGPL-3.0-only`) and in the README.
 
 ## 8. Make the repository public
 
@@ -89,15 +91,26 @@ Or: repository **Settings** > **General** > **Danger Zone** > **Change visibilit
 In the order of [`repository-security.md`](repository-security.md):
 
 1. **Branch protection** of `main` and `developement` (rulesets): section 5. Rulesets are only available on a public repository with GitHub Free, hence this order.
-2. **Secret scanning** and **push protection**: section 6. From the command line:
-
-   ```bash
-   gh repo edit --enable-secret-scanning
-   gh repo edit --enable-secret-scanning-push-protection   # secret scanning must be enabled first
-   ```
-
+2. **Secret scanning** and **push protection**: section 6.
 3. **Private vulnerability reporting**: section 7 (needed by `SECURITY.md`).
 4. **Dependabot alerts**: section 8.
+
+Secret scanning and push protection can also be enabled with `gh repo edit` (options checked with `--help`, not run):
+
+```bash
+gh repo edit --enable-secret-scanning
+gh repo edit --enable-secret-scanning-push-protection   # secret scanning must be enabled first
+```
+
+Instead of the interface, points 2 to 4 can be done from the command line (run on 2026-11-18):
+
+```bash
+gh api -X PATCH 'repos/{owner}/{repo}' \
+  -f "security_and_analysis[secret_scanning][status]=enabled" \
+  -f "security_and_analysis[secret_scanning_push_protection][status]=enabled"
+gh api -X PUT 'repos/{owner}/{repo}/private-vulnerability-reporting'
+gh api -X PUT 'repos/{owner}/{repo}/vulnerability-alerts'
+```
 
 ## 10. Optional: local folder
 

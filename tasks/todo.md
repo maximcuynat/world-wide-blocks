@@ -2,6 +2,40 @@
 
 Session notes only. Tasks are GitHub issues, grouped by milestone (one lot, one version): `scripts/dev status` and `docs/project-management.md`. The open tasks and the ideas that used to be here became issues on 2026-11-18 (`scripts/project/issues/`, created by `scripts/dev project sync`).
 
+## Lot 1b-2: DHCP (session of 2026-11-18)
+
+Issues #3 to #9, branch `lot/1b-2`. Architecture approved by Max on 2026-11-18 (`docs/lot-plan.md`, lot 1b, will hold the design and the status at the end of the lot). Protocol checked in the text of RFC 2131 and RFC 2132.
+
+Decisions:
+
+- Layers `Ipv4Packet` > `UdpDatagram` > `DhcpMessage` in `network/protocol/`; DHCP logic in plain Java in `network/dhcp/`, plugged into the box's local point and into each computer port.
+- The DHCP server has its own MAC (`service_mac`, saved, generated for boxes of lot 1b-1 worlds); leases saved in an optional field of `network.dat`; a box removed or replaced forgets everything.
+- Deviations from RFC 2131 approved: no random +/-1 s on retransmissions (4.1); REQUEST without answer retransmitted at 4, 8, 16, 32 s then back to INIT (3.1); INIT-REBOOT without answer goes back to INIT (4.4.2 allows keeping the address); renewal unicast to the server MAC taken from its ACK (no ARP before lot 1c); no DECLINE, RELEASE or ARP probe; lease in seconds in the message (1,200 s = 24,000 ticks); offered address kept 60 s; full pool: no offer, oldest expired lease reused first (2.2).
+- Two boxes share 192.168.1.1: the conflict is detected by a computer that receives two offers from different source MACs for its xid; warning to the players within 32 blocks, at most once per minute and per network.
+- "DHCP server enabled" setting on the box, saved, on by default, no interface in this lot. The `chain` and `loop` scenes turn off the server of the second box; the conflict has its own scene `dhcp_conflict`. The expiry and full pool game tests use the setting.
+- Restart game test: reread `network.dat` into a fresh storage and run that simulation; no public method added for tests (package visibility).
+- Panel: remaining lease time in real minutes and seconds; box detailed panel lists the active leases, 4 lines at most then "(+N)".
+- Presence frame kept until issue #15: a bound computer is silent until T1 (600 s) while the switch forgets a MAC after 300 s.
+- Every existing test that changes: show Max what it checked before and after.
+
+Steps, one commit each after Max's green build:
+
+- [x] 1. IPv4, UDP and DHCP layers (#3)
+- [x] 2. DHCP server, service MAC, local point of the box, "server enabled" setting (#4)
+- [x] 3. DHCP client and its timers (#5)
+- [x] 4. Saved leases and INIT-REBOOT (#6)
+- [x] 5. Conflict between two servers (#8)
+- [x] 6. Status panel, language keys (#7)
+- [x] 7. Game tests, scenes, check procedure and status in `docs/lot-plan.md` (#9)
+
+Review of lot 1b-2 (2026-11-18):
+
+- Checked for real: each step built and tested by Max (`./gradlew build test`, `./gradlew runGameTestServer`), commits made only after; the plain-Java code also compiled and tested locally before each handover; the 6 simulation tests and 2 loop tests that changed were shown to Max with what they checked before and after.
+- Check by eye done by Max on 2026-11-18 ("Trials DHCP" world, game in French), analysed from the screenshots and the log: points 1, 2, 3, 7 and 8 passed; points 4, 5 and 6 passed for what the screenshots show, the rest covered by tests (table in `docs/lot-plan.md`); points 9 (restart) and 10 (loop) not seen by eye, resting on the game tests, as decided by Max.
+- Not checked: the client display after a real quit and reopen of a world (point 9); the absence of a conflict message in the `loop` scene in game (point 10, proved at engine level only); the addresses of the `chain` computers in game (unit test only). The package-private access of the `gametest` source set (`NetworkTestAccess`) works at run time: 30 game tests green.
+- Choices made by Claude and reported to Max: the conflict message names the nearest box (two devices do not fit in a chat line), French names of the DHCP states, colour of the waiting light, the four DHCP scenes.
+- Documentation commits of the same session: results of going public; plan revised by Max (lot 1e, 6c split, ideas as issues); TCP lot 1f, shared console and terminal decisions.
+
 ## Blocking for publication
 
 - [x] **Rename the mod before making the repository public.** The former name of the mod was also the name of a British company working in the same field (networking, internet security): risk of a name conflict. Max looked for another name; the rename (display name, `mod_id`, package, resources, GitHub repository, docs) was left to a dedicated session. Nothing is made public, nor published on CurseForge or Modrinth, before. (decided on 2026-11-18) Done on 2026-11-18: renamed World Wide Blocks (session C).

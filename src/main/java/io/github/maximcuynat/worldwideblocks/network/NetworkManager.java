@@ -1,5 +1,6 @@
 package io.github.maximcuynat.worldwideblocks.network;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -14,6 +15,7 @@ import io.github.maximcuynat.worldwideblocks.message.MessageArg;
 import io.github.maximcuynat.worldwideblocks.message.MessageLevel;
 import io.github.maximcuynat.worldwideblocks.message.server.Diagnostics;
 import io.github.maximcuynat.worldwideblocks.message.server.MessageCenter;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpStore;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 import io.github.maximcuynat.worldwideblocks.network.sim.DeviceLogic;
 import io.github.maximcuynat.worldwideblocks.network.sim.NetworkSimulation;
@@ -38,6 +40,7 @@ public final class NetworkManager {
     private static final String LOOP_MESSAGE = "message.worldwideblocks.network.loop";
     private static final String SATURATED_MESSAGE = "message.worldwideblocks.network.saturated";
     private static final String SATURATED_PROBLEM = "saturated";
+    private static final String DHCP_CONFLICT_MESSAGE = "message.worldwideblocks.network.dhcp_conflict";
 
     private final MinecraftServer server;
     private final NetworkSavedData data;
@@ -106,8 +109,9 @@ public final class NetworkManager {
         Set<DeviceId> touched = this.withNeighbours(node.id());
         Set<DeviceId> networks = this.networksOf(touched);
         List<Link> removed = this.graph().putNode(node);
+        this.data.dhcp().forget(node.id()); // new or replaced device: it remembers nothing
         networks.addAll(this.networksOf(touched));
-        this.forgetLoops(networks);
+        this.forgetProblems(networks);
         if (Diagnostics.enabled()) {
             Diagnostics.debug("Device registered: {}, ports: {}", NetworkDescriptions.device(this.graph(), node.id()),
                     NetworkDescriptions.ports(this.graph(), node));
@@ -125,7 +129,7 @@ public final class NetworkManager {
         ConnectOutcome outcome = this.graph().connect(a, b, medium, cableConsumed);
         outcome.link().ifPresent(link -> {
             networks.addAll(this.networksOf(touched));
-            this.forgetLoops(networks);
+            this.forgetProblems(networks);
             this.data.setDirty();
             this.simulation().linkUp(link);
             if (Diagnostics.enabled()) {
@@ -147,7 +151,7 @@ public final class NetworkManager {
         Optional<Link> removed = this.graph().disconnect(port);
         removed.ifPresent(link -> {
             networks.addAll(this.networksOf(touched));
-            this.forgetLoops(networks);
+            this.forgetProblems(networks);
             this.data.setDirty();
             this.simulation().linkDown(link);
             if (Diagnostics.enabled()) {
@@ -169,9 +173,10 @@ public final class NetworkManager {
         Set<DeviceId> touched = this.withNeighbours(device);
         Set<DeviceId> networks = this.networksOf(touched);
         List<Link> removed = this.graph().removeDevice(device);
+        this.data.dhcp().forget(device); // a broken box starts from zero
         if (known || !removed.isEmpty()) {
             networks.addAll(this.networksOf(touched));
-            this.forgetLoops(networks);
+            this.forgetProblems(networks);
             this.data.setDirty();
         }
         removed.forEach(this.simulation()::linkDown);
@@ -187,10 +192,14 @@ public final class NetworkManager {
         // Overworld game time: saved with the world, it never goes backwards.
         long gameTime = this.server.overworld().getGameTime();
         this.simulation().tick(gameTime);
+        if (this.data.dhcp().consumeChanged()) {
+            this.data.setDirty(); // a lease given or extended, a setting changed: saved with the network
+        }
         for (SimulationEvent event : this.simulation().drainEvents()) {
             switch (event) {
                 case SimulationEvent.LoopDetected loop -> this.reportLoop(loop);
                 case SimulationEvent.QueueSaturated saturated -> this.reportSaturation();
+                case SimulationEvent.DhcpConflict conflict -> this.reportDhcpConflict(conflict);
             }
         }
     }
@@ -218,6 +227,59 @@ public final class NetworkManager {
                 .collect(Collectors.joining(", "));
         MessageCenter.of(this.server).event(loopProblem(loop.network()), this.loopMessage(points.getFirst().device()),
                 "Network loop: copies of a broadcast frame came back to " + where + "; they were dropped.", recipients);
+    }
+
+    private static String dhcpConflictProblem(DeviceId network) {
+        return "dhcp_conflict:" + network;
+    }
+
+    /**
+     * Two DHCP servers on one network, seen by a computer. Each player within 32 blocks of the computer or of one
+     * of the boxes receives one message, which names the box nearest to them (two devices do not fit in a chat
+     * line); the log names the computer and both servers. Once per minute per network, like the loop.
+     */
+    private void reportDhcpConflict(SimulationEvent.DhcpConflict conflict) {
+        List<DeviceId> boxes = conflict.servers().stream()
+                .map(mac -> this.graph().deviceWithServiceMac(mac))
+                .flatMap(Optional::stream)
+                .toList();
+        if (boxes.isEmpty()) {
+            return; // both boxes removed since: nothing left to point at
+        }
+        List<DeviceId> involved = new ArrayList<>(boxes);
+        involved.add(conflict.client());
+        Map<ServerPlayer, Message> recipients = new LinkedHashMap<>();
+        NetworkDevices.levelOf(this.server, conflict.client()).ifPresent(level -> {
+            for (ServerPlayer player : level.players()) {
+                if (this.nearestDevice(involved, player, LOOP_MESSAGE_RADIUS).isPresent()) {
+                    DeviceId box = this.nearestDevice(boxes, player, Double.MAX_VALUE).orElseThrow();
+                    recipients.put(player, Message.of(MessageLevel.WARNING, DHCP_CONFLICT_MESSAGE, this.deviceArg(box)));
+                }
+            }
+        });
+        String servers = conflict.servers().stream()
+                .map(mac -> this.graph().deviceWithServiceMac(mac).map(box -> this.deviceArg(box).logText()).orElse("a removed box")
+                        + " (" + mac + ")")
+                .collect(Collectors.joining(" and "));
+        MessageCenter.of(this.server).event(dhcpConflictProblem(this.graph().networkKey(conflict.client())),
+                Message.of(MessageLevel.WARNING, DHCP_CONFLICT_MESSAGE, this.deviceArg(boxes.getFirst())),
+                "Two DHCP servers on one network: " + this.deviceArg(conflict.client()).logText()
+                        + " received answers from " + servers + ".", recipients);
+    }
+
+    /** The device nearest to the player, within this radius. */
+    private Optional<DeviceId> nearestDevice(List<DeviceId> devices, ServerPlayer player, double radius) {
+        DeviceId best = null;
+        double bestDistance = radius == Double.MAX_VALUE ? Double.MAX_VALUE : radius * radius;
+        for (DeviceId device : devices) {
+            BlockPos pos = NetworkDevices.posOf(device);
+            double distance = player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+            if (distance <= bestDistance) {
+                best = device;
+                bestDistance = distance;
+            }
+        }
+        return Optional.ofNullable(best);
     }
 
     /** The switch that saw the loop nearest to the player, within 32 blocks. */
@@ -281,13 +343,25 @@ public final class NetworkManager {
     }
 
     /**
-     * After a change, the loops already reported in the touched networks (before and after the
-     * change) are forgotten: a loop still there is reported again without waiting for the
+     * After a change, the loops and DHCP conflicts already reported in the touched networks (before and after the
+     * change) are forgotten: a problem still there is reported again without waiting for the
      * minute. The other networks keep their limit.
      */
-    private void forgetLoops(Set<DeviceId> networks) {
+    private void forgetProblems(Set<DeviceId> networks) {
         MessageCenter messages = MessageCenter.of(this.server);
-        networks.forEach(network -> messages.forgetProblem(loopProblem(network)));
+        networks.forEach(network -> {
+            messages.forgetProblem(loopProblem(network));
+            messages.forgetProblem(dhcpConflictProblem(network));
+        });
+    }
+
+    /**
+     * What the devices remember of DHCP, with the "DHCP server enabled" setting of each box. Package visibility:
+     * the setting has no interface yet (lot 1b-2); the trial scenes and the game tests reach it from this package.
+     * A change is saved at the next tick.
+     */
+    DhcpStore dhcp() {
+        return this.data.dhcp();
     }
 
     private NetworkGraph graph() {

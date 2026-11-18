@@ -18,6 +18,9 @@ public interface DeviceContext {
     /** MAC address of the port. */
     MacAddress mac(int port);
 
+    /** MAC address of the device's own service (the DHCP server of a box); only for a device that has one. */
+    MacAddress serviceMac();
+
     /** True if a cable is connected to this port. */
     boolean isLinked(int port);
 
@@ -32,4 +35,7 @@ public interface DeviceContext {
 
     /** Requests a call to {@link DeviceLogic#onTimer} with this key, in {@code delayTicks} ticks. */
     void schedule(long delayTicks, Object key);
+
+    /** Reports something the game turns into a message (see {@link NetworkSimulation#drainEvents()}). */
+    void report(SimulationEvent event);
 }

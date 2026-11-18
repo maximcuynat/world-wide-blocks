@@ -3,6 +3,7 @@ package io.github.maximcuynat.worldwideblocks.network.sim;
 import java.util.List;
 
 import io.github.maximcuynat.worldwideblocks.network.DeviceId;
+import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 
 /**
  * What the simulation reports to the game, which turns it into a message. The simulation observes; the
@@ -25,6 +26,19 @@ public sealed interface SimulationEvent {
     record LoopDetected(DeviceId network, List<LoopPoint> points) implements SimulationEvent {
         public LoopDetected {
             points = List.copyOf(points);
+        }
+    }
+
+    /**
+     * Two DHCP servers answered the same request of a computer: two boxes on the same network, both with their
+     * server enabled. Reported by the computer, at most once per transaction.
+     *
+     * @param client  the computer that received both answers
+     * @param servers MAC addresses of the servers, in the order they answered (service MACs of the boxes)
+     */
+    record DhcpConflict(DeviceId client, List<MacAddress> servers) implements SimulationEvent {
+        public DhcpConflict {
+            servers = List.copyOf(servers);
         }
     }
 

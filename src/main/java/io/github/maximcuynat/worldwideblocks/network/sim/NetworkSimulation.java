@@ -19,6 +19,7 @@ import io.github.maximcuynat.worldwideblocks.network.Link;
 import io.github.maximcuynat.worldwideblocks.network.NetworkGraph;
 import io.github.maximcuynat.worldwideblocks.network.NetworkNode;
 import io.github.maximcuynat.worldwideblocks.network.PortRef;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpStore;
 import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 
@@ -45,12 +46,14 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
  *
  * <p>The runtime state (device behavior, queue, timers) is not saved: at
  * server start, each device starts from zero and each existing cable is announced as
- * connected, as after a power cut.
+ * connected, as after a power cut. Only what the devices remember of DHCP is saved ({@link DhcpStore}),
+ * like the memory of a real box.
  *
  * <p>Plain Java, no Minecraft class. Not thread-safe: access it only from the server thread.
  */
 public final class NetworkSimulation {
     private final NetworkGraph graph;
+    private final DhcpStore dhcp;
     private final SimulationLimits limits;
     private final Map<DeviceId, DeviceLogic> logics = new HashMap<>();
     private final ArrayDeque<Delivery> queue = new ArrayDeque<>();
@@ -79,13 +82,19 @@ public final class NetworkSimulation {
     private record Timer(long due, long sequence, DeviceId device, DeviceLogic logic, Object key) {
     }
 
-    public NetworkSimulation(NetworkGraph graph, SimulationLimits limits) {
+    public NetworkSimulation(NetworkGraph graph, DhcpStore dhcp, SimulationLimits limits) {
         this.graph = graph;
+        this.dhcp = dhcp;
         this.limits = limits;
     }
 
-    public NetworkSimulation(NetworkGraph graph) {
-        this(graph, SimulationLimits.DEFAULT);
+    public NetworkSimulation(NetworkGraph graph, DhcpStore dhcp) {
+        this(graph, dhcp, SimulationLimits.DEFAULT);
+    }
+
+    /** Simulation whose DHCP memory is not saved (tests). */
+    public NetworkSimulation(NetworkGraph graph, SimulationLimits limits) {
+        this(graph, new DhcpStore(), limits);
     }
 
     public void setTap(FrameTap tap) {
@@ -210,7 +219,7 @@ public final class NetworkSimulation {
     // ---- Internal ----
 
     private void start(NetworkNode node) {
-        DeviceLogic logic = DeviceLogics.create(node);
+        DeviceLogic logic = DeviceLogics.create(node, this.dhcp);
         this.logics.put(node.id(), logic);
         logic.onStart(new Context(node.id(), logic, null));
     }
@@ -298,6 +307,12 @@ public final class NetworkSimulation {
         }
 
         @Override
+        public MacAddress serviceMac() {
+            return graph.serviceMacOf(this.device)
+                    .orElseThrow(() -> new IllegalStateException("No service on " + this.device));
+        }
+
+        @Override
         public boolean isLinked(int port) {
             return graph.linkAt(new PortRef(this.device, port)).isPresent();
         }
@@ -317,6 +332,11 @@ public final class NetworkSimulation {
                 throw new IllegalStateException("No frame being relayed");
             }
             emit(new PortRef(this.device, port), frame, this.trace);
+        }
+
+        @Override
+        public void report(SimulationEvent event) {
+            events.add(event);
         }
 
         @Override

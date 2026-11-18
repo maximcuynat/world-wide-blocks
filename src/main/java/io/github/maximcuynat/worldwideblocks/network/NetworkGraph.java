@@ -28,6 +28,7 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
  *
  * <p>Each port gets a MAC address when its device is first registered. It stays with it
  * as long as the device is unchanged; a device removed then placed again, or replaced, gets new ones.
+ * A device with its own service ({@link DeviceRole#hasService()}) also gets a MAC for that service.
  *
  * <p>Not thread-safe: access it only from the server thread.
  */
@@ -37,6 +38,7 @@ public final class NetworkGraph {
     private final Map<PortRef, Link> linksByPort = new HashMap<>();
     private final Map<ChunkKey, Set<Link>> linksByChunk = new HashMap<>();
     private final Map<DeviceId, List<MacAddress>> macs = new HashMap<>();
+    private final Map<DeviceId, MacAddress> serviceMacs = new HashMap<>();
     private final Set<MacAddress> usedMacs = new HashSet<>();
     private final RandomGenerator random;
 
@@ -142,6 +144,21 @@ public final class NetworkGraph {
         return port.index() >= 0 && port.index() < deviceMacs.size() ? Optional.of(deviceMacs.get(port.index())) : Optional.empty();
     }
 
+    /** MAC of the device's own service (the DHCP server of a box); empty for a device without a service. */
+    public Optional<MacAddress> serviceMacOf(DeviceId device) {
+        return Optional.ofNullable(this.serviceMacs.get(device));
+    }
+
+    /** The device whose service has this MAC (the box of a DHCP server), if it is still in the graph. */
+    public Optional<DeviceId> deviceWithServiceMac(MacAddress mac) {
+        for (Map.Entry<DeviceId, MacAddress> entry : this.serviceMacs.entrySet()) {
+            if (entry.getValue().equals(mac)) {
+                return Optional.of(entry.getKey());
+            }
+        }
+        return Optional.empty();
+    }
+
     // ---- Modification ----
 
     /**
@@ -159,17 +176,22 @@ public final class NetworkGraph {
         // New device, or replaced device: new addresses.
         this.releaseMacs(node.id());
         this.macs.put(node.id(), this.generateMacs(node.portCount()));
+        if (node.role().hasService()) {
+            this.serviceMacs.put(node.id(), this.generateMacs(1).getFirst());
+        }
         return removed;
     }
 
     /**
      * Restores a device reread from the save, with its MAC addresses. If they are missing
-     * (world saved before lot 1b) or do not fit (count, duplicate, group address),
-     * new ones are generated.
+     * (world saved before lot 1b, or before lot 1b-2 for the service MAC) or do not fit (count, duplicate,
+     * group address), new ones are generated. The port MACs and the service MAC are checked separately:
+     * a box of a lot 1b-1 world keeps its port MACs and only gets a new service MAC.
      *
-     * @return true if the saved addresses were taken over as they are
+     * @param savedServiceMac MAC of the device's service, if it has one and it was saved
+     * @return true if all the saved addresses were taken over as they are, false if one was generated
      */
-    public boolean restoreNode(NetworkNode node, List<MacAddress> savedMacs) {
+    public boolean restoreNode(NetworkNode node, List<MacAddress> savedMacs, Optional<MacAddress> savedServiceMac) {
         this.removeDevice(node.id());
         this.nodes.put(node.id(), node);
         boolean usable = savedMacs.size() == node.portCount()
@@ -178,7 +200,14 @@ public final class NetworkGraph {
         List<MacAddress> assigned = usable ? List.copyOf(savedMacs) : this.generateMacs(node.portCount());
         this.usedMacs.addAll(assigned);
         this.macs.put(node.id(), assigned);
-        return usable;
+        if (!node.role().hasService()) {
+            return usable;
+        }
+        boolean serviceUsable = savedServiceMac.filter(mac -> !mac.isMulticast() && !this.usedMacs.contains(mac)).isPresent();
+        MacAddress service = serviceUsable ? savedServiceMac.get() : this.generateMacs(1).getFirst();
+        this.usedMacs.add(service);
+        this.serviceMacs.put(node.id(), service);
+        return usable && serviceUsable;
     }
 
     /**
@@ -268,6 +297,10 @@ public final class NetworkGraph {
         List<MacAddress> released = this.macs.remove(device);
         if (released != null) {
             this.usedMacs.removeAll(released);
+        }
+        MacAddress service = this.serviceMacs.remove(device);
+        if (service != null) {
+            this.usedMacs.remove(service);
         }
     }
 
