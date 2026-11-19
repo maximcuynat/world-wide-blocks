@@ -231,3 +231,13 @@ Became `type: idea` issues on 2026-11-18 (`scripts/project/issues/ideas/`). Max'
 - Immersive Engineering stops at 1.21.1, Thermal Expansion at 1.20.1 (Forge only).
 - NeoForge 21.9 (Minecraft 1.21.9) reworked the transfer APIs (energy, items, fluids) and FML: a port from 1.21.1 to 26.x touches the energy layer.
 - Machine: Homebrew Java 17 (not enough), VS Code present, IntelliJ absent.
+
+## Docs: automated checks (session of 2026-11-19)
+
+Branch `docs/automated-checks`, from `developement`.
+
+- [x] 1. CLAUDE.md, section "Automated checks", details in the new `docs/automated-checks.md` (also listed in "Read first"); "Constraints of the sandbox" adjusted
+- [x] 2. Issue definition `scripts/project/issues/1c/09-permanent-capture-runs.md` (type: feature, area: tooling, priority: high, lot 1c-1)
+- [x] 3. `CONTRIBUTING.md` ("Run the tests") and `docs/project-management.md` ("Where things live")
+
+Review: documentation only, nothing to build. The capture run exists only in the uncommitted prototype of the terminal screen, so the docs say that the `runClient` procedures of `docs/lot-plan.md` apply until the new issue is done. Left on purpose for that issue: the "Test method" paragraph and the eye check procedures of lots 1b-1 and 1b-2 in `docs/lot-plan.md`. After the merge: `scripts/dev project sync` creates the issue.
