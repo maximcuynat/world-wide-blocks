@@ -40,7 +40,7 @@ What a strict x 2.4 would give for the tower: 8 x 17.3 x 17.3 px, more than one 
 
 - No face is stretched or squeezed: a face of w x h px takes exactly 4w x 4h texels on the sheet.
 - Geometry grid: 0.25 px (one texel). Outer dimensions on 0.5 px (section 2).
-- Texture sheet: square, power of two, the smallest that holds all the faces (64 x 64 for the box and the switches, 128 x 128 for the tower and the laptop). Faces with the same look may share the same area of the sheet.
+- Texture sheet: square, power of two, the smallest that holds all the faces (64 x 64 for a single-element device such as a switch, 128 x 128 for the box, the tower and the laptop). Faces with the same look may share the same area of the sheet.
 - Faces are mapped one by one (per-face UV), not with the automatic box layout.
 
 Why 4 and not 2: the narrowest port faces decide. A port takes at least 2 texels, with 1 texel between two ports and 1 texel of margin on each side:
@@ -79,8 +79,16 @@ Out of the palette: the Ethernet cable item keeps its own blues (cables are a fa
 - Edges: a 1-texel highlight line along the top edge of the side faces, a 1-texel shadow line along their bottom edge.
 - RJ45 port: 2 x 2 texels in socket colour, pitch of at least 3 texels. On a face with room (pitch of 4 texels or more), 3 x 3 texels with the top row in contacts colour.
 - Ports are texture areas aligned on the 0.25 px grid (whole texels), at positions written in the device sheet (section 9). This keeps the models compatible with choosing a port by aiming at it, if that option is kept (open decision "Choice of the exact port" of `docs/lot-plan.md`, before lot 1d); this guide does not decide it.
-- LED: 1 x 1 texel. Button: at least 2 x 2 texels. Vents: lines of 1 texel in socket colour, 1 texel apart.
+- LED: 1 x 1 texel. Button: at least 2 x 2 texels.
+- Vents: discreet, in the shadow tone of the body (dots or lines of 1 texel, 1 texel apart). The socket colour stays for real openings (ports, slots, holes).
 - Feet: optional, at most 0.5 px high, counted in the height.
+
+Reusable elements (first used on the internet box, `design/blockbench/internet_box.md`; helpers in `design/tools/`):
+
+- **Plinth:** a base set back 0.5 px on each side, 0.5 px high, in dark plastic (shadow tone), so that the device seems to stand off the desk. Counted in the height.
+- **Cover bevel:** the top cover set back 0.25 px on each side, 0.25 px high; its sides and the rim of the body around it in the highlight tone.
+- **Recessed ports:** the front is a panel 0.5 px thick, split around the ports (a strip above, a strip below, posts between the holes). The bottom of each port is the front of the body, seen through the hole, with the contacts row at the bottom so that it stays visible from above. Depth reads from light to dark: floor (dark plastic shadow tone), ceiling and sides (socket), bottom (socket shadow tone). The texture of the front is drawn once and shared out between the elements of the panel (`Sheet.add_slice`).
+- **Rule: relief on the front, painted ports at the back.** The back faces the wall: its ports stay drawn on a flat face.
 - LEDs are drawn lit, in their normal operating colour, and do not change until lot F (lights driven by the state, see the idea issue "Port lights in the finishing lot").
 - Each LED has a fixed position, to the texel, written in the device sheet (face, column, row), so that the off and animated variants of lot F are simple to produce.
 - A port LED sits next to its port: above it on the same face when there is room. When the port face is full (a switch front of 1 px), the LEDs go on the top face, along the edge above that face, each one aligned on its port.
@@ -107,6 +115,7 @@ Limits read in the sources: scale at most 4, translation at most 80 px.
 
 - The front of the device faces north (-Z) in the model. The blockstate turns it with `y` 90, 180 and 270 for east, south and west, as for the three existing blocks.
 - The model is centred on X and Z (from 8 - w/2 to 8 + w/2) and rests on y = 0.
+- Faces that can never be seen (against another element) are left out of the model.
 - Element names in English snake_case: `case`, `front`, `port_lan_1`, `led_power`.
 - The selection and collision shape is written in Java (`Block.box` in the block class, for example `InternetBoxBlock.SHAPE`). Changing the outer dimensions of a model means changing that shape too, then a build by Max.
 
