@@ -155,6 +155,19 @@ public final class NetworkSimulation {
         this.later(() -> this.notifyLink(link, false));
     }
 
+    /**
+     * A line typed in the local console of a device. Like a graph change, it is applied at the start of the next
+     * tick, with the time of that tick; ignored if the device is gone by then.
+     */
+    public void consoleLine(DeviceId device, String line) {
+        this.later(() -> {
+            DeviceLogic logic = this.logics.get(device);
+            if (logic != null && this.graph.node(device).isPresent()) {
+                logic.onConsoleLine(new Context(device, logic, null), line);
+            }
+        });
+    }
+
     private void later(Runnable change) {
         if (this.started) {
             this.pendingChanges.add(change);

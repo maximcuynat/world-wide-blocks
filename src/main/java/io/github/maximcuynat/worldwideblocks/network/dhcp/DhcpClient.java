@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.random.RandomGenerator;
 
+import io.github.maximcuynat.worldwideblocks.network.ip.Ipv4Prefix;
 import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpMessage;
 import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpMessageType;
 import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpOptions;
@@ -95,6 +96,19 @@ public final class DhcpClient {
         void remember(Optional<DhcpLease> lease);
     }
 
+    /**
+     * Told of each change of the lease in use, to configure the interface: the computer applies it to its IP stack
+     * ({@link DhcpClientScript}), as {@code dhclient} runs its script.
+     */
+    @FunctionalInterface
+    public interface LeaseListener {
+        /** A listener that does nothing. */
+        LeaseListener NONE = lease -> {
+        };
+
+        void leaseChanged(Optional<DhcpLease> lease);
+    }
+
     /** Timer of the client; only the latest one is valid. */
     public record Timer(long epoch) {
     }
@@ -104,6 +118,7 @@ public final class DhcpClient {
     }
 
     private final Memory memory;
+    private final LeaseListener listener;
     private DhcpClientState state = DhcpClientState.UNPLUGGED;
     private int xid;
     /** Sends already made in the current transaction. */
@@ -122,8 +137,13 @@ public final class DhcpClient {
     }
 
     public DhcpClient(RandomGenerator random, Memory memory) {
+        this(random, memory, LeaseListener.NONE);
+    }
+
+    public DhcpClient(RandomGenerator random, Memory memory, LeaseListener listener) {
         this.xid = random.nextInt();
         this.memory = memory;
+        this.listener = listener;
     }
 
     // ---- Reading ----
@@ -257,8 +277,8 @@ public final class DhcpClient {
         DhcpOptions options = ack.options();
         if (ack.yourAddress().isAny() || options.serverId().isEmpty() || options.subnetMask().isEmpty()
                 || options.router().isEmpty() || options.dnsServer().isEmpty() || options.leaseSeconds().isEmpty()
-                || options.leaseSeconds().getAsLong() <= 0) {
-            return; // incomplete acknowledgement: ignored
+                || options.leaseSeconds().getAsLong() <= 0 || !Ipv4Prefix.isMask(options.subnetMask().get())) {
+            return; // incomplete acknowledgement, or a mask whose ones are not contiguous: ignored
         }
         long now = port.now();
         this.setLease(new DhcpLease(ack.yourAddress(), options.subnetMask().get(), options.router().get(),
@@ -285,10 +305,11 @@ public final class DhcpClient {
         this.sendExtension(port, true);
     }
 
-    /** The lease in use changes: the memory follows it. */
+    /** The lease in use changes: the memory and the interface follow it. */
     private void setLease(DhcpLease lease) {
         this.lease = lease;
         this.memory.remember(Optional.ofNullable(lease));
+        this.listener.leaseChanged(Optional.ofNullable(lease));
     }
 
     private void newTransaction() {

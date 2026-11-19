@@ -9,7 +9,7 @@ The same console on the PC tower and on the laptop: a view of a machine that run
 - [ ] One local console per machine, kept in server memory while the machine exists: Esc hides the screen, the session and its running commands go on; `exit` or Ctrl+D on an empty line ends the shell session only
 - [ ] One player at the keyboard at a time ("computer busy", through the message module); keyboard freed when the player walks away, disconnects or changes dimension
 - [ ] Client to server packets checked by the server: line size, rate, session and distance
-- [ ] Commands are processes advanced by the server tick, registered in a registry; an error ends its process, never the tick; a cap on running processes per machine
+- [x] Commands are processes advanced by the server tick, registered in a registry; an error ends its process, never the tick; a cap on running processes per machine
 - [ ] Dark game popup panel (`popup/background`) with a white title bar (name of the machine, how to close, "Ctrl+C: stop" while a command runs); game colours as the ANSI palette, grey (AAAAAA) on black with the game's text shadow; blinking block cursor; rows of 12 px; never the dark blue 0000AA for an important text
 - [ ] Prompt `user@<host>:~$` from the data of the machine, `user@host` in green 55FF55 and `~` in blue 5555FF; host name from the type and the last four hex digits of the MAC of the first port (`laptop-…` for a laptop, `tower-…` for a tower)
 - [ ] The terminal's own text size, independent of the GUI scale: by default the largest that gives at least 80 columns; changed in a client option and with Ctrl+= / Ctrl+- in the terminal

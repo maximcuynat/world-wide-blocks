@@ -26,6 +26,10 @@ public interface DeviceLogic {
     default void onTimer(DeviceContext context, Object key) {
     }
 
+    /** A line was typed in the local console of the device and Enter pressed; ignored by a device without one. */
+    default void onConsoleLine(DeviceContext context, String line) {
+    }
+
     /**
      * True for a device that relays frames between its ports (switch, box): the simulation
      * checks that the same frame does not come back to it twice.

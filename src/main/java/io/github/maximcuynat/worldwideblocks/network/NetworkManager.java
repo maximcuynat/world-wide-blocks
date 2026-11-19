@@ -200,6 +200,8 @@ public final class NetworkManager {
                 case SimulationEvent.LoopDetected loop -> this.reportLoop(loop);
                 case SimulationEvent.QueueSaturated saturated -> this.reportSaturation();
                 case SimulationEvent.DhcpConflict conflict -> this.reportDhcpConflict(conflict);
+                case SimulationEvent.CommandFailed failed -> Diagnostics.bug("Command {} failed on {}",
+                        failed.command(), failed.device(), failed.error());
             }
         }
     }

@@ -22,13 +22,19 @@ Decisions of Max (2026-11-19), recorded in `docs/lot-plan.md` ("Decisions taken"
 Plan approved by Max. One commit per step after Max's green build (`./gradlew build test`, `./gradlew runGameTestServer`); every existing test that changes is shown to Max before and after. Every Minecraft or NeoForge name checked in the 26.3 sources (file and line) at its step.
 
 - [x] 0. Findings of #30 applied to the docs (a25b047); decisions recorded (docs commit after the approval)
-- [ ] 1. IPv4 stack per interface and `ip addr`, `ip link`, `ip route` (#12)
-  - [ ] `Ipv4Packet` gets a `ttl` (64 by default)
-  - [ ] `network/ip/`: interfaces `lo` and `eth0` (MAC, MTU, carrier, address with lease lifetime), routing table (`proto kernel` route of the local network, default route), UDP demultiplexing by port
-  - [ ] DHCP client bound to UDP 68: a lease sets the address and the routes, losing it removes them; the box gets its own stack (192.168.1.1 on its service MAC), DHCP server bound to UDP 67
-  - [ ] Plain-Java console core: session, shell, command registry, processes advanced by the tick, cap per machine
-  - [ ] `ip addr` (`a`, `show eth0`), `ip link`, `ip route`, errors of iproute2 read in its sources
-  - [ ] Output tests against the format of `src/test/resources/linux-real-outputs.txt`; DHCP tests still green
+- [x] 1. IPv4 stack per interface and `ip addr`, `ip link`, `ip route` (#12): green build reported by Max on 2026-11-19 (263 unit tests, 30 game tests)
+  - [x] `Ipv4Packet` gets a `ttl` (64 by default)
+  - [x] `network/ip/`: interfaces `lo` and `eth0` (MAC, MTU, carrier, address with lease lifetime), routing table (`proto kernel` route of the local network, default route), UDP demultiplexing by port
+  - [x] DHCP client reading before the IP layer, like `dhclient` through its packet socket (deviation from the plan, told to Max): a lease sets the address and the routes, losing it removes them; the box gets its own stack (192.168.1.1 on its service MAC), DHCP server bound to UDP 67
+  - [x] Plain-Java console core: session, shell, command registry, processes advanced by the tick, cap per machine
+  - [x] `ip addr` (`a`, `show eth0`), `ip link`, `ip route`, errors of iproute2 read in its sources
+  - [x] Output tests against the format of `src/test/resources/linux-real-outputs.txt`; DHCP tests still green
+Review of step 1 (2026-11-19):
+
+- Checked for real: Max's `./gradlew build test` (263 unit tests, 0 failure) and `./gradlew runGameTestServer` (30 game tests); before that, the plain-Java code compiled and tested locally with JDK 25 and JUnit 5.13.4. No existing test changed; one test added to `DhcpClientTest` (mask not contiguous).
+- Outputs compared with the real reference, each adaptation named in `IpCommandTest`; lines the reference cannot show (`dynamic`, lifetimes, `NO-CARRIER`) taken from the sources of iproute2 6.15.0 and of the kernel, not from a real machine.
+- Choices reported to Max: usage texts written for the mod (iproute2 is GPL-2.0-or-later), changes answered with EPERM without checking arguments, unsupported real objects and options answered as unknown, `fq_codel` to check on a real machine, address removed at unplugging (to check at lot 1c-2), bash fork message from memory.
+
 - [ ] 2. ARP (#13): RFC 826 packet, neighbour table with the Linux states and fixed delays, pending packets, box answers for 192.168.1.1, DHCP renewal through ARP, `ip neigh`
 - [ ] 3. ICMP, `ping` and latency (#14): echo and destination unreachable (original packet quoted), box with routing table and code 0, latency carried by each delivery and inherited by replies, `ping` and `ping -c n` in the iputils formats, advice line after a failure
 - [ ] 4. Permanent capture runs (#52): `capture` source set absent from the jar (checked by a task), `runClientCapture -Pscenario=`, throwaway `run-capture/`, world created by the run, values file, exit code; scenarios of lots 1b-1, 1b-2 and the message module
