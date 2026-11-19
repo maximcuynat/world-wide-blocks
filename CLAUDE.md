@@ -12,6 +12,7 @@ Read first:
 - [`CONTRIBUTING.md`](CONTRIBUTING.md): branches, commits, hooks, versions and releases, `scripts/dev`;
 - [`docs/project-management.md`](docs/project-management.md): roadmap, issues, labels, milestones, GitHub settings;
 - [`docs/lot-plan.md`](docs/lot-plan.md): design of each lot, decisions, in-game check procedures;
+- [`docs/automated-checks.md`](docs/automated-checks.md): how changes are checked, what stays by hand;
 - [`docs/messages.md`](docs/messages.md) and [`docs/network-equipment.md`](docs/network-equipment.md) when the task touches them;
 - [`tasks/lessons.md`](tasks/lessons.md): mistakes not to repeat.
 
@@ -38,9 +39,18 @@ Every session follows this routine at the end of each task (a step of a lot, a f
    ```
 5. Update `tasks/todo.md`.
 
+## Automated checks
+
+Details in [`docs/automated-checks.md`](docs/automated-checks.md).
+
+- Every check is automated whenever it can be: unit tests, game tests, and for anything visual a capture run (the game opens a world on its own, builds the scene, takes screenshots, restores the settings and quits); the assistant then reads the screenshots and reports.
+- The maintainer does nothing by hand except what cannot be automated, each such step justified in one line: choices of taste (font, colours, icons: prepare the options side by side), real keystrokes through the operating system (keyboard layouts, dead keys), actions on the GitHub account that ask for the maintainer's confirmation. Launching a Gradle command the sandbox cannot run is not a check by hand.
+- When a lot needs a check by eye, it is written as a capture run, not as a manual procedure.
+- Never ask the maintainer to run a check that a command could run.
+
 ## Constraints of the sandbox
 
-- Gradle cannot run in Claude Code's sandbox: the maintainer runs `./gradlew build test`, `./gradlew runGameTestServer` and in-game checks, and reports the result. Never claim a build or a test passed without that report.
+- Gradle cannot run in Claude Code's sandbox: the maintainer runs `./gradlew build test`, `./gradlew runGameTestServer` and the capture runs (until they exist, the `runClient` procedures of `docs/lot-plan.md`), and reports the result. Never claim a build or a test passed without that report.
 - The sandbox reads neither `~/.gitconfig` nor `~/.ssh`. Prefix git commands with `GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=$TMPDIR/xdg` (otherwise gitleaks sees git's warning and blocks the commit), and commit with the identity of the existing commits passed explicitly (`git log -1 --format='%an <%ae>'`, then `git -c user.name=… -c user.email=… commit`), never an identity guessed from the machine. These commits are unsigned (`docs/repository-security.md`, section 3.8).
 - Commit messages: Conventional Commits, checked by the `commit-msg` hook; `!` marks a change that breaks existing worlds.
 
