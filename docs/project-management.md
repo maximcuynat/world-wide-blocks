@@ -9,6 +9,7 @@ No GitHub Actions: everything that checks runs locally (hooks, `scripts/dev`), a
 | What | Where |
 |---|---|
 | Design: content of each lot, architecture, decisions, check procedures in game | [`docs/lot-plan.md`](lot-plan.md) |
+| How changes are checked: automatic tests, capture runs, what stays by hand | [`docs/automated-checks.md`](automated-checks.md) |
 | Tasks: one issue per step, in the milestone of its lot or version | GitHub issues, defined in `scripts/project/issues/` (one folder per lot or version, plus `backlog/` and `ideas/`) and created by `scripts/dev project sync` |
 | Progress | GitHub Projects board "Roadmap", kept sorted by `scripts/dev project board` (see [Board columns](#board-columns-and-sorting)) |
 | Notes of a working session (plan, review) | [`tasks/todo.md`](../tasks/todo.md) |

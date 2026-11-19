@@ -21,10 +21,10 @@ The default branch is `developement`: a fresh clone is already on it. `scripts/i
 ```bash
 ./gradlew build test         # build (mod and game tests) and unit tests of the network engine, in plain Java
 ./gradlew runGameTestServer  # automatic game tests, on a dedicated server in a throwaway world (run-gametest/)
-./gradlew runClient          # development client, to check by eye what is displayed
+./gradlew runClient          # development client
 ```
 
-`runGameTestServer` runs a dedicated server: it proves nothing about what the client draws. A display change is also checked with `runClient`.
+`runGameTestServer` runs a dedicated server: it proves nothing about what the client draws. A display change is checked by a capture run, a client that opens a trial world, takes the screenshots on its own and quits; only what cannot be automated is done by hand. Rule and current state in [`docs/automated-checks.md`](docs/automated-checks.md): until the capture runs exist, the `runClient` procedures of [`docs/lot-plan.md`](docs/lot-plan.md) apply.
 
 ## Branches
 
