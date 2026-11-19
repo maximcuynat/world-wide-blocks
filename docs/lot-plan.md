@@ -20,7 +20,7 @@ Written on 2026-11-17, revised the same day after review; revised again on 2026-
 
 | Decision | Before lot | Proposal | Status |
 |---|---|---|---|
-| Choice of the exact port | 1d | No proposal for now. Today the Ethernet cord takes the first free local network port; with a desktop switch, the player will want to choose the port | To decide |
+| Choice of the exact port | 1d | No proposal for now. Today the Ethernet cord takes the first free local network port; with a desktop switch, the player will want to choose the port. If the port is chosen by aiming at it, the models already allow it: ports are texture areas on the 0.25 px grid at documented positions (`docs/design-guide.md`, section 5) | To decide |
 | Final font of the terminal | 1c-1 | Choice between Monocraft and the game font drawn cell by cell (Spleen as a fallback), after the screenshots of the prototype at 854 x 480 and 1920 x 1080 | To decide |
 | Reply of the box to a `ping` outside the local network | 1c-1 | No proposal for now: `Destination Net Unreachable` or silence, from the behaviour of a real box without an internet link | To decide |
 | Laptop with its lid closed | 1c-1 | It stays on the network (keeps its address, answers `ping`) until lot 1e; at lot 1e, closing the lid could put it to sleep, as most real laptops do by default (from memory, to verify) | To confirm |
@@ -809,7 +809,7 @@ Playable at the end: the whole mod is accessible without creative mode.
 | Lights | Link and activity lights per port, animated |
 | Textures | Screens and fronts lit or off depending on the state |
 | Sounds | Fans, connection clicks, beeps |
-| Models | Rework of the provisional models and textures |
+| Models | Rework of the provisional models and textures, following `docs/design-guide.md`. `models/block/laptop_open.json` is used by no blockstate (the open laptop uses `laptop.json`): to remove or to use during the rework (noted on 2026-11-19) |
 | Cord on the ground | The cord is rendered laid on the ground instead of a stretched line (idea noted on 2026-11-17, not approved) |
 | HUD interface | More professional and more polished HUD for the status panel and the messages (requested by Max on 2026-11-18) |
 

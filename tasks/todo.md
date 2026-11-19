@@ -241,3 +241,14 @@ Branch `docs/automated-checks`, from `developement`.
 - [x] 3. `CONTRIBUTING.md` ("Run the tests") and `docs/project-management.md` ("Where things live")
 
 Review: documentation only, nothing to build. The capture run exists only in the uncommitted prototype of the terminal screen, so the docs say that the `runClient` procedures of `docs/lot-plan.md` apply until the new issue is done. Left on purpose for that issue: the "Test method" paragraph and the eye check procedures of lots 1b-1 and 1b-2 in `docs/lot-plan.md`. After the merge: `scripts/dev project sync` creates the issue.
+
+## Design: equipment models (session of 2026-11-19)
+
+Branch `design/equipment`. Each device is drawn in Blockbench (`design/blockbench/<id>.bbmodel`, texture embedded), described in a few lines, approved by Max in Blockbench, and only then exported to the assets. Issue definition: `scripts/project/issues/backlog/05-equipment-design-guide.md` (to sync).
+
+Facts read from the code: no `.bbmodel` in the repository; current texture density differs per device (tower 2 texels per px, box 4, laptop 2 with stretched edges); front of every model faces north; Java shapes hard-coded in each block class; `laptop_open.json` used by no blockstate (noted in lot F, not deleted).
+
+- [x] 1. `docs/design-guide.md` (k = 2.4 with a 15 px cap, 4 texels per px, 8-colour palette, fixed LED positions, item display rule, port areas): approved by Max on 2026-11-19
+- [ ] 2. Internet box
+- [ ] 3. 5-port desktop switch (dimensions [TO COMPLETE], plausible 100 x 100 x 25 mm to decide)
+- [ ] 4. PC tower and laptop, aligned on the guide (later)

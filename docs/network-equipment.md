@@ -65,7 +65,7 @@ Limit of this research: the page reading tool was blocked during the session. On
 | Equipment | Role | Real dimensions | Status |
 |---|---|---|---|
 | Wi-Fi router (e.g. TP-Link Archer AX55) | Routing, simple firewall, Wi-Fi | 261.1 x 134.5 x 41 | E |
-| 5-port desktop switch | Multiplies the Ethernet sockets | [TO COMPLETE] | |
+| 5-port desktop switch | Multiplies the Ethernet sockets | ≈ 100 x 100 x 25, provisional value chosen on 2026-11-19 for the model, not verified | M |
 | 8-port desktop switch (e.g. Netgear GS108) | Same, unmanaged | 158 x 102 x 27 | E |
 | 16-port desktop switch | Same | [TO COMPLETE] | |
 | Access point (e.g. Ubiquiti U6 Lite) | Broadcasts the Wi-Fi, ceiling-mounted, PoE, 12 W max | Ø 160 x 32.7 | E |
