@@ -33,6 +33,19 @@ public interface DeviceContext {
      */
     void relay(int port, EthernetFrame frame);
 
+    /**
+     * Time spent since the start of the tick when the device handles this call, in nanoseconds ({@code Latency}):
+     * for a received frame, the latency it carries plus the processing time of the device and what {@link #elapse}
+     * added; 0 in a timer or a console call. A frame sent during the call leaves at that time.
+     */
+    default long latency() {
+        return 0L;
+    }
+
+    /** Time passes inside the device during this call (a computer behind the switch of a box). */
+    default void elapse(long nanos) {
+    }
+
     /** Requests a call to {@link DeviceLogic#onTimer} with this key, in {@code delayTicks} ticks. */
     void schedule(long delayTicks, Object key);
 

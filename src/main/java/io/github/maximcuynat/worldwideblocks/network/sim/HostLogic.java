@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.IntFunction;
 import java.util.random.RandomGenerator;
 
+import io.github.maximcuynat.worldwideblocks.network.Latency;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpClient;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpClientScript;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpFrames;
@@ -110,13 +111,25 @@ public final class HostLogic implements DeviceLogic {
             return; // not for this network card
         }
         DhcpFrames.toClient(frame).ifPresent(message -> this.dhcp[port].receive(this.port(context, port), frame.source(), message));
-        this.stack.receive(new Machine(context), in, frame);
+        this.system.receive(new Machine(context), in, frame);
     }
 
     @Override
     public void onConsoleLine(DeviceContext context, String line) {
         this.interfaces(context);
         this.system.localConsole().submit(new Machine(context), line);
+    }
+
+    @Override
+    public void onConsoleInterrupt(DeviceContext context) {
+        this.interfaces(context);
+        this.system.localConsole().interrupt(new Machine(context));
+    }
+
+    /** A computer takes {@link Latency#COMPUTER_NANOS} to receive a frame. */
+    @Override
+    public long processingNanos() {
+        return Latency.COMPUTER_NANOS;
     }
 
     /** DHCP client of a port (status panel). */
@@ -159,6 +172,16 @@ public final class HostLogic implements DeviceLogic {
         @Override
         public void schedule(long delayTicks, Object key) {
             this.context.schedule(delayTicks, new SystemTimer(key));
+        }
+
+        @Override
+        public long latency() {
+            return this.context.latency();
+        }
+
+        @Override
+        public void elapse(long nanos) {
+            this.context.elapse(nanos);
         }
 
         @Override

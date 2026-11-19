@@ -159,7 +159,8 @@ class ConsoleSessionTest {
         this.console.interrupt(this.machine);
         this.runUntil(200);
 
-        assertEquals(List.of("start", "tick 1"), this.console.lines());
+        assertEquals(List.of("start", "tick 1", "^C"), this.console.lines(),
+                "^C echoed by the terminal, the line ended by bash after a command killed by SIGINT");
         assertEquals(130, this.console.lastStatus());
         assertFalse(this.console.commandRunning());
     }

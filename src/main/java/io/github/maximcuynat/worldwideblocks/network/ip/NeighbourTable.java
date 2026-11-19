@@ -82,6 +82,11 @@ public final class NeighbourTable {
         };
 
         void unreachable(Ipv4Packet packet);
+
+        /** Called by the table, with the context of the call: the stack sends its ICMP errors through it. */
+        default void unreachable(Ipv4Stack.Context context, Ipv4Packet packet) {
+            this.unreachable(packet);
+        }
     }
 
     /** An entry as {@code ip neigh} shows it. */
@@ -208,7 +213,7 @@ public final class NeighbourTable {
             entry.state = State.FAILED;
             entry.updated = now;
             entry.generation++;
-            this.invalidate(entry);
+            this.invalidate(context, entry);
             return;
         }
         if (entry.state.inTimer()) {
@@ -250,11 +255,11 @@ public final class NeighbourTable {
     }
 
     /** {@code neigh_invalidate}: each waiting packet is reported lost. */
-    private void invalidate(Entry entry) {
+    private void invalidate(Ipv4Stack.Context context, Entry entry) {
         List<Waiting> lost = List.copyOf(entry.waiting);
         entry.waiting.clear();
         for (Waiting waiting : lost) {
-            waiting.failure().unreachable(waiting.packet());
+            waiting.failure().unreachable(context, waiting.packet());
         }
     }
 

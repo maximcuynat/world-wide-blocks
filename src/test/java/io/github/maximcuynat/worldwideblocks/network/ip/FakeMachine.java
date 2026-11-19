@@ -21,6 +21,7 @@ public final class FakeMachine implements Ipv4Stack.Context {
     private final List<Sent> sent = new ArrayList<>();
     private long now;
     private long order;
+    private long latency;
 
     public FakeMachine(Ipv4Stack stack) {
         this.stack = stack;
@@ -44,11 +45,28 @@ public final class FakeMachine implements Ipv4Stack.Context {
         this.timers.add(new Due(this.now + delayTicks, this.order++, key));
     }
 
+    /** Time spent since the start of the tick, in nanoseconds: what the frame being handled carries. */
+    @Override
+    public long latency() {
+        return this.latency;
+    }
+
+    @Override
+    public void elapse(long nanos) {
+        this.latency += nanos;
+    }
+
+    /** The next calls run at this latency, as if a frame carrying it had just arrived. */
+    public void setLatency(long latency) {
+        this.latency = latency;
+    }
+
     /** Fires every timer due up to {@code time} included, in order, then sets the clock to it. */
     public void runUntil(long time) {
         while (!this.timers.isEmpty() && this.timers.peek().at() <= time) {
             Due due = this.timers.poll();
             this.now = due.at();
+            this.latency = 0L;
             this.stack.onTimer(this, due.key());
         }
         this.now = time;

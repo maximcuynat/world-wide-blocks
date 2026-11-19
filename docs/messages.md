@@ -232,6 +232,6 @@ The console stream carries two kinds of lines, kept strictly apart:
 
 - The output of a command is what a real Linux would show for the same situation, so that the player can recognise it, and search for it, outside the game. It is built in plain Java and tested in JUnit, like `StatusPanel`.
 - A line of the game is always marked as such: the client draws it apart from the output (its look is chosen by the client, like the symbols of the levels). It never imitates the output of a tool, and no translated text is ever inserted into the output of a running command.
-- Advice comes only after a command has ended, and only after a failure. A client setting turns it off.
+- Advice comes only after a command has ended, and only after a failure. A client setting turns it off. The server sends it as a key of the family `terminal.worldwideblocks.advice.<command>.<case>` with its values (`ConsoleLine.Advice`), never as text; 160 characters at most with the longest values (`LangFilesTest`), two rows of the 80 columns of the terminal. Since lot 1c-1, step 3: the five cases of `ping`.
 - "Computer busy" answers a gesture (a right-click on a computer already in use). Confirmed by Max at the start of lot 1c-1: it goes through `MessageCenter.gesture`, as an error, like the other gestures.
 - The terminal output has no level and no repeat limit: it belongs to the session of the console, not to the message module.

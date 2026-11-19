@@ -4,6 +4,7 @@ import java.util.List;
 
 import java.util.Optional;
 
+import io.github.maximcuynat.worldwideblocks.network.Latency;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpFrames;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpServer;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpServerConfig;
@@ -20,8 +21,12 @@ import io.github.maximcuynat.worldwideblocks.network.switching.MacTable;
 /**
  * Internet box: a switch on its local network ports, with a computer inside plugged into the switch's local point,
  * with its own MAC ({@link DeviceContext#serviceMac()}). That computer has an IPv4 stack with the address of the box,
- * 192.168.1.1/24, permanent, and its DHCP server bound to UDP port 67. The line input port is not part of the
- * switch and stays inactive until lot 3.
+ * 192.168.1.1/24, permanent, and its DHCP server bound to UDP port 67. That computer is the router of the network:
+ * it forwards, and with no route beyond its local network until lot 6c, it answers a packet for another network with
+ * a destination unreachable, code 0. The line input port is not part of the switch and stays inactive until lot 3.
+ *
+ * <p>Latency ({@link Latency}): a frame crossing the switch takes {@link Latency#SWITCH_NANOS}; a frame for the
+ * computer inside also takes {@link Latency#COMPUTER_NANOS}, and its answers cross the switch again.
  */
 public final class BoxLogic implements DeviceLogic {
     /**
@@ -82,9 +87,16 @@ public final class BoxLogic implements DeviceLogic {
         }
     }
 
-    /** A frame reached the local point: it goes to the box's computer. */
+    /** A frame reached the local point: it goes to the box's computer, whose answers cross the switch again. */
     private void serve(DeviceContext context, EthernetFrame frame) {
+        context.elapse(Latency.COMPUTER_NANOS + Latency.SWITCH_NANOS);
         this.stack.receive(new Local(context, this.lan), this.local(context), frame);
+    }
+
+    /** A frame crossing the switch. */
+    @Override
+    public long processingNanos() {
+        return Latency.SWITCH_NANOS;
     }
 
     /**
@@ -94,6 +106,7 @@ public final class BoxLogic implements DeviceLogic {
     private NetInterface local(DeviceContext context) {
         if (this.local == null) {
             this.local = this.stack.addEthernet("br0", NetInterface.NO_PORT, context.serviceMac(), true);
+            this.stack.setForwarding(true);
             DhcpServerConfig config = this.dhcp.config();
             int length = Ipv4Prefix.lengthOf(config.subnetMask());
             this.stack.addAddress(this.local, new InterfaceAddress(config.serverAddress(), length,
@@ -123,6 +136,16 @@ public final class BoxLogic implements DeviceLogic {
         @Override
         public void schedule(long delayTicks, Object key) {
             this.context.schedule(delayTicks, new StackTimer(key));
+        }
+
+        @Override
+        public long latency() {
+            return this.context.latency();
+        }
+
+        @Override
+        public void elapse(long nanos) {
+            this.context.elapse(nanos);
         }
     }
 

@@ -38,6 +38,18 @@ public interface DeviceLogic {
         return false;
     }
 
+    /**
+     * Time the device takes to handle a frame it receives, in nanoseconds, added to the latency the frame carries
+     * ({@code Latency}).
+     */
+    default long processingNanos() {
+        return 0L;
+    }
+
+    /** Ctrl+C typed in the local console of the device; ignored by a device without one. */
+    default void onConsoleInterrupt(DeviceContext context) {
+    }
+
     /** MACs learned behind each port, for a device that switches (status panel); empty otherwise. */
     default List<MacTable.Entry> learnedMacs() {
         return List.of();

@@ -2,6 +2,8 @@ package io.github.maximcuynat.worldwideblocks.os.process;
 
 import java.util.List;
 
+import io.github.maximcuynat.worldwideblocks.network.ip.IcmpSocket;
+
 import io.github.maximcuynat.worldwideblocks.os.MachineContext;
 import io.github.maximcuynat.worldwideblocks.os.OperatingSystem;
 import io.github.maximcuynat.worldwideblocks.os.TerminalOutput;
@@ -22,6 +24,17 @@ public interface ProcessContext {
     default long now() {
         return this.machine().now();
     }
+
+    /** Time spent since the start of the tick in this call, in nanoseconds ({@code Latency}). */
+    default long latency() {
+        return this.machine().network().latency();
+    }
+
+    /**
+     * Opens a ping socket of the machine for this process ({@link Process#onReceive}); it is closed when the process
+     * ends.
+     */
+    IcmpSocket openPingSocket();
 
     /** Calls {@link Process#onTimer} with this key in {@code delayTicks} ticks, if the process still runs. */
     void schedule(long delayTicks, Object key);

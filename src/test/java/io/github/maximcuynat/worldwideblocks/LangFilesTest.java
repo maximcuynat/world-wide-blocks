@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Both language files are kept together, and every text fits its place with the longest values
  * (see {@code docs/messages.md}): 80 characters for the action bar, 45 for a line of the panel or
- * of the tooltip, 90 for the chat.
+ * of the tooltip, 90 for the chat, 160 for an advice line of the terminal (two rows of its 80 columns).
  *
  * <p>Every key of these families must have its sample values below: a key added without a
  * sample makes the test fail, so that nobody forgets it.
@@ -32,6 +32,7 @@ class LangFilesTest {
     private static final int ACTION_BAR = 80;
     private static final int PANEL = 45;
     private static final int CHAT = 90;
+    private static final int TERMINAL_ADVICE = 160;
 
     private static final String PORT = "5";
     private static final String DISTANCE = "100";
@@ -48,7 +49,8 @@ class LangFilesTest {
             "message.worldwideblocks.cable.", ACTION_BAR,
             "message.worldwideblocks.network.", CHAT,
             "hud.worldwideblocks.", PANEL,
-            "item.worldwideblocks.ethernet_cable.tooltip.", PANEL);
+            "item.worldwideblocks.ethernet_cable.tooltip.", PANEL,
+            "terminal.worldwideblocks.advice.", TERMINAL_ADVICE);
 
     /** Sample values of each key, built from the longest device name and the longest DHCP state of the language. */
     private static Map<String, List<String>> samples(String name, String state) {
@@ -99,6 +101,10 @@ class LangFilesTest {
         samples.put("item.worldwideblocks.ethernet_cable.tooltip.connect", List.of());
         samples.put("item.worldwideblocks.ethernet_cable.tooltip.unplug", List.of());
         samples.put("item.worldwideblocks.ethernet_cable.tooltip.cancel", List.of());
+        for (String advice : List.of("no_route", "host_unreachable", "net_unreachable", "no_reply")) {
+            samples.put("terminal.worldwideblocks.advice.ping." + advice, List.of(IP));
+        }
+        samples.put("terminal.worldwideblocks.advice.ping.no_name_service", List.of());
         return samples;
     }
 

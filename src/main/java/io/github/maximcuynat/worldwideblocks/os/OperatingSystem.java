@@ -1,6 +1,8 @@
 package io.github.maximcuynat.worldwideblocks.os;
 
 import io.github.maximcuynat.worldwideblocks.network.ip.Ipv4Stack;
+import io.github.maximcuynat.worldwideblocks.network.ip.NetInterface;
+import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 import io.github.maximcuynat.worldwideblocks.os.command.CommandRegistry;
 import io.github.maximcuynat.worldwideblocks.os.process.ProcessTable;
 
@@ -46,6 +48,13 @@ public final class OperatingSystem {
             this.processes.onTimer(machine, timer);
         } else {
             this.stack.onTimer(machine.network(), key);
+            this.processes.dispatch(machine);
         }
+    }
+
+    /** A frame reached the network card of an interface: the stack takes it, then the processes what it brought. */
+    public void receive(MachineContext machine, NetInterface in, EthernetFrame frame) {
+        this.stack.receive(machine.network(), in, frame);
+        this.processes.dispatch(machine);
     }
 }

@@ -7,6 +7,7 @@ import java.util.TreeMap;
 import java.util.function.Supplier;
 
 import io.github.maximcuynat.worldwideblocks.os.command.ip.IpCommand;
+import io.github.maximcuynat.worldwideblocks.os.command.ping.PingCommand;
 import io.github.maximcuynat.worldwideblocks.os.process.Process;
 
 /** The commands a machine knows, by name: a later lot adds its commands here without touching the shell. */
@@ -15,7 +16,7 @@ public final class CommandRegistry {
 
     /** The commands of the computers. */
     public static CommandRegistry standard() {
-        return new CommandRegistry().register("ip", IpCommand::new);
+        return new CommandRegistry().register("ip", IpCommand::new).register("ping", PingCommand::new);
     }
 
     public CommandRegistry register(String name, Supplier<Process> factory) {

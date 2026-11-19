@@ -5,9 +5,11 @@ import java.util.Optional;
 /**
  * Protocol carried by an IPv4 packet (the "Protocol" field of its header). The values are the
  * official values of the IANA "Assigned Internet Protocol Numbers" registry
- * (https://www.iana.org/assignments/protocol-numbers). ICMP (1) is added in lot 1c.
+ * (https://www.iana.org/assignments/protocol-numbers).
  */
 public enum IpProtocol {
+    /** ICMP, RFC 792. Carries the echo of {@code ping} and the errors of lot 1c. */
+    ICMP(1),
     /** UDP, RFC 768. Carries DHCP from lot 1b-2. */
     UDP(17);
 

@@ -68,5 +68,10 @@
   "hud.worldwideblocks.dhcp.state.renewing": "renewing",
   "hud.worldwideblocks.dhcp.state.rebinding": "rebinding",
   "hud.worldwideblocks.dhcp.state.init_reboot": "init-reboot",
-  "hud.worldwideblocks.dhcp.state.rebooting": "rebooting"
+  "hud.worldwideblocks.dhcp.state.rebooting": "rebooting",
+  "terminal.worldwideblocks.advice.ping.no_route": "This computer has no route to %s: has it got an address? See \"ip addr\" and check its cable.",
+  "terminal.worldwideblocks.advice.ping.no_name_service": "There is no name service in the game yet: give an IPv4 address, such as 192.168.1.1.",
+  "terminal.worldwideblocks.advice.ping.host_unreachable": "No device answered the ARP requests for %s: is it plugged in, and is the address right? See \"ip neigh\".",
+  "terminal.worldwideblocks.advice.ping.net_unreachable": "%s is outside the local network, and the box has no route beyond it yet.",
+  "terminal.worldwideblocks.advice.ping.no_reply": "No reply from %s: the requests or the replies were lost on the way. Check the cables."
 }

@@ -68,5 +68,10 @@
   "hud.worldwideblocks.dhcp.state.renewing": "renouvellement",
   "hud.worldwideblocks.dhcp.state.rebinding": "relance à tous",
   "hud.worldwideblocks.dhcp.state.init_reboot": "reprise",
-  "hud.worldwideblocks.dhcp.state.rebooting": "reprise"
+  "hud.worldwideblocks.dhcp.state.rebooting": "reprise",
+  "terminal.worldwideblocks.advice.ping.no_route": "Cet ordinateur n'a pas de route vers %s : a-t-il une adresse ? Voir « ip addr » et vérifier son câble.",
+  "terminal.worldwideblocks.advice.ping.no_name_service": "Le jeu n'a pas encore de service de noms : indiquez une adresse IPv4, par exemple 192.168.1.1.",
+  "terminal.worldwideblocks.advice.ping.host_unreachable": "Aucun appareil n'a répondu aux requêtes ARP pour %s : est-il branché, l'adresse est-elle juste ? Voir « ip neigh ».",
+  "terminal.worldwideblocks.advice.ping.net_unreachable": "%s est hors du réseau local, et la box n'a pas encore de route au-delà.",
+  "terminal.worldwideblocks.advice.ping.no_reply": "Aucune réponse de %s : les requêtes ou les réponses se sont perdues en chemin. Vérifiez les câbles."
 }

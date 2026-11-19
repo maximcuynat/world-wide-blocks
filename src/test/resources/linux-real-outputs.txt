@@ -76,3 +76,130 @@ pipe 3
 === ip neigh after
 172.17.0.1 dev eth0 lladdr 6a:ce:13:33:39:ce REACHABLE 
 172.17.0.250 dev eth0 FAILED 
+=== ping router
+PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
+64 bytes from 192.168.1.1: icmp_seq=1 ttl=64 time=0.507 ms
+64 bytes from 192.168.1.1: icmp_seq=2 ttl=64 time=0.055 ms
+64 bytes from 192.168.1.1: icmp_seq=3 ttl=64 time=0.049 ms
+
+--- 192.168.1.1 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2043ms
+rtt min/avg/max/mdev = 0.049/0.203/0.507/0.214 ms
+=== ping outside
+PING 10.9.9.9 (10.9.9.9) 56(84) bytes of data.
+From 192.168.1.1 icmp_seq=1 Destination Net Unreachable
+From 192.168.1.1 icmp_seq=2 Destination Net Unreachable
+From 192.168.1.1 icmp_seq=3 Destination Net Unreachable
+
+--- 10.9.9.9 ping statistics ---
+3 packets transmitted, 0 received, +3 errors, 100% packet loss, time 2012ms
+
+=== ping own address
+PING 192.168.1.10 (192.168.1.10) 56(84) bytes of data.
+64 bytes from 192.168.1.10: icmp_seq=1 ttl=64 time=2.99 ms
+64 bytes from 192.168.1.10: icmp_seq=2 ttl=64 time=0.057 ms
+
+--- 192.168.1.10 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1000ms
+rtt min/avg/max/mdev = 0.057/1.524/2.992/1.467 ms
+=== ping loopback
+PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.446 ms
+64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.014 ms
+
+--- 127.0.0.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1006ms
+rtt min/avg/max/mdev = 0.014/0.230/0.446/0.216 ms
+=== ping absent count 2
+PING 192.168.1.250 (192.168.1.250) 56(84) bytes of data.
+From 192.168.1.10 icmp_seq=1 Destination Host Unreachable
+From 192.168.1.10 icmp_seq=2 Destination Host Unreachable
+
+--- 192.168.1.250 ping statistics ---
+2 packets transmitted, 0 received, +2 errors, 100% packet loss, time 1006ms
+pipe 2
+=== ping absent count 6
+PING 192.168.1.250 (192.168.1.250) 56(84) bytes of data.
+From 192.168.1.10 icmp_seq=1 Destination Host Unreachable
+From 192.168.1.10 icmp_seq=2 Destination Host Unreachable
+From 192.168.1.10 icmp_seq=3 Destination Host Unreachable
+From 192.168.1.10 icmp_seq=4 Destination Host Unreachable
+From 192.168.1.10 icmp_seq=5 Destination Host Unreachable
+From 192.168.1.10 icmp_seq=6 Destination Host Unreachable
+
+--- 192.168.1.250 ping statistics ---
+6 packets transmitted, 0 received, +6 errors, 100% packet loss, time 5096ms
+pipe 4
+=== ping absent interrupted
+PING 192.168.1.250 (192.168.1.250) 56(84) bytes of data.
+From 192.168.1.10 icmp_seq=1 Destination Host Unreachable
+From 192.168.1.10 icmp_seq=2 Destination Host Unreachable
+From 192.168.1.10 icmp_seq=3 Destination Host Unreachable
+From 192.168.1.10 icmp_seq=4 Destination Host Unreachable
+From 192.168.1.10 icmp_seq=5 Destination Host Unreachable
+From 192.168.1.10 icmp_seq=6 Destination Host Unreachable
+From 192.168.1.10 icmp_seq=7 Destination Host Unreachable
+From 192.168.1.10 icmp_seq=8 Destination Host Unreachable
+From 192.168.1.10 icmp_seq=9 Destination Host Unreachable
+
+--- 192.168.1.250 ping statistics ---
+12 packets transmitted, 0 received, +9 errors, 100% packet loss, time 11115ms
+pipe 4
+=== ping no destination
+ping: usage error: Destination address required
+=== ping name
+ping: foo: Temporary failure in name resolution
+=== ping count zero
+ping: invalid argument: '0': out of range: 1 <= value <= 9223372036854775807
+=== ping count abc
+ping: invalid argument: 'abc'
+=== ping unknown option
+ping: invalid option -- 'z'
+=== ping broadcast
+ping: Do you want to ping broadcast? Then -b. If not, check your local firewall rules
+=== ping no route
+ping: connect: Network is unreachable
+=== ping route lost
+PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
+64 bytes from 192.168.1.1: icmp_seq=1 ttl=64 time=0.100 ms
+64 bytes from 192.168.1.1: icmp_seq=2 ttl=64 time=0.058 ms
+
+--- 192.168.1.1 ping statistics ---
+4 packets transmitted, 2 received, 50% packet loss, time 3081ms
+rtt min/avg/max/mdev = 0.058/0.079/0.100/0.021 ms
+=== ping interrupted in a terminal
+$ ping 192.168.1.1
+PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
+64 bytes from 192.168.1.1: icmp_seq=1 ttl=64 time=0.351 ms
+64 bytes from 192.168.1.1: icmp_seq=2 ttl=64 time=0.123 ms
+64 bytes from 192.168.1.1: icmp_seq=3 ttl=64 time=0.201 ms
+^C
+--- 192.168.1.1 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2062ms
+rtt min/avg/max/mdev = 0.123/0.225/0.351/0.094 ms
+$ echo status=$?
+status=0
+$ ping 192.168.1.250
+PING 192.168.1.250 (192.168.1.250) 56(84) bytes of data.
+From 192.168.1.10 icmp_seq=1 Destination Host Unreachable
+^C
+--- 192.168.1.250 ping statistics ---
+5 packets transmitted, 0 received, +1 errors, 100% packet loss, time 4079ms
+pipe 4
+$ echo status=$?
+status=1
+$ sleep 5
+^C
+$ echo status=$?
+status=130
+$ ^C
+$ exit
+exit
+=== ping missing count
+ping: option requires an argument -- 'c'
+=== ping count too large
+ping: invalid argument: '99999999999999999999': Numerical result out of range
+=== ping limited broadcast
+ping: Do you want to ping broadcast? Then -b. If not, check your local firewall rules
+=== ping limited broadcast without default route
+ping: connect: Network is unreachable
