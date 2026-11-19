@@ -22,6 +22,10 @@ group = mod_group_id
 sourceSets {
     gametest {
     }
+    // Capture runs (docs/automated-checks.md): a client-only mod of its own, worldwideblocks_capture, loaded by the
+    // clientCapture run alone. Never in the jar, never on a dedicated server.
+    capture {
+    }
 }
 
 sourceSets.main.resources {
@@ -51,9 +55,23 @@ neoForge {
     version = project.neo_version
 
     addModdingDependenciesTo sourceSets.gametest
+    addModdingDependenciesTo sourceSets.capture
 
     // This line is optional. Access Transformers are automatically detected
     // accessTransformers = project.files('src/main/resources/META-INF/accesstransformer.cfg')
+
+    mods {
+        // define mod <-> source bindings
+        // these are used to tell the game which sources are for which mod
+        // multi mod projects should define one per mod
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+            sourceSet(sourceSets.gametest)
+        }
+        worldwideblocks_capture {
+            sourceSet(sourceSets.capture)
+        }
+    }
 
     // Default run configurations.
     // These can be tweaked, removed, or duplicated as needed.
@@ -61,13 +79,26 @@ neoForge {
         client {
             client()
             sourceSet = sourceSets.gametest
+            loadedMods = [neoForge.mods."${mod_id}"]
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        // Capture run: ./gradlew runClientCapture -Pscenario=box. Creates its own trial world in run-capture/, takes
+        // the screenshots of the scenario, writes run-capture/capture-result.txt and quits; checkCaptureResult then
+        // fails the command if the scenario did not go through.
+        clientCapture {
+            client()
+            sourceSet = sourceSets.capture
+            loadedMods = [neoForge.mods."${mod_id}", neoForge.mods.worldwideblocks_capture]
+            gameDirectory = project.file('run-capture')
+            systemProperty 'worldwideblocks.capture.scenario', (project.findProperty('scenario') ?: '').toString()
         }
 
         server {
             server()
             sourceSet = sourceSets.gametest
+            loadedMods = [neoForge.mods."${mod_id}"]
             programArgument '--nogui'
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
@@ -78,6 +109,7 @@ neoForge {
         gameTestServer {
             type = "gameTestServer"
             sourceSet = sourceSets.gametest
+            loadedMods = [neoForge.mods."${mod_id}"]
             // Throwaway world, recreated at each launch: never in run/, where Max's worlds are.
             gameDirectory = project.file('run-gametest')
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
@@ -85,6 +117,7 @@ neoForge {
 
         data {
             clientData()
+            loadedMods = [neoForge.mods."${mod_id}"]
             // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
             // gameDirectory = project.file('run-data')
 
@@ -108,15 +141,6 @@ neoForge {
         }
     }
 
-    mods {
-        // define mod <-> source bindings
-        // these are used to tell the game which sources are for which mod
-        // multi mod projects should define one per mod
-        "${mod_id}" {
-            sourceSet(sourceSets.main)
-            sourceSet(sourceSets.gametest)
-        }
-    }
 }
 
 // Sets up a dependency configuration called 'localRuntime'.
@@ -126,11 +150,15 @@ neoForge {
 configurations {
     runtimeClasspath.extendsFrom localRuntime
     gametestRuntimeClasspath.extendsFrom localRuntime
+    captureRuntimeClasspath.extendsFrom localRuntime
 }
 
 dependencies {
     // The game tests see the mod's code; the reverse is impossible.
     gametestImplementation sourceSets.main.output
+    // The capture runs reuse the trial scenes of the game tests.
+    captureImplementation sourceSets.main.output
+    captureImplementation sourceSets.gametest.output
 
     // Unit tests of the network engine (plain Java, without launching the game): ./gradlew test
     testImplementation platform('org.junit:junit-bom:5.13.4')
@@ -201,9 +229,72 @@ tasks.named('test', Test).configure {
     useJUnitPlatform()
 }
 
-// ./gradlew build also compiles the game tests, so that a broken API shows without launching a server.
+// ./gradlew build also compiles the game tests and the capture runs, so that a broken API shows without launching
+// the game, and checks that none of their files reached the jar.
+var checkJarContents = tasks.register('checkJarContents') {
+    description = 'Fails if a class or resource of the gametest or capture source sets is in the jar.'
+    def jarFile = tasks.named('jar', Jar).flatMap { it.archiveFile }
+    def devOutputs = files(sourceSets.gametest.output, sourceSets.capture.output)
+    inputs.file(jarFile)
+    inputs.files(devOutputs)
+    doLast {
+        Set<String> devEntries = []
+        devOutputs.files.findAll { it.isDirectory() }.each { root ->
+            root.eachFileRecurse(groovy.io.FileType.FILES) { file ->
+                devEntries << root.toPath().relativize(file.toPath()).toString().replace(File.separatorChar, '/' as char)
+            }
+        }
+        // Both mods have a META-INF/neoforge.mods.toml: the one in the jar must be the main mod's.
+        def manifest = 'META-INF/neoforge.mods.toml'
+        devEntries.remove(manifest)
+        def zip = new java.util.zip.ZipFile(jarFile.get().asFile)
+        try {
+            def leaked = zip.entries().toList()*.name.findAll { it in devEntries || it.contains('worldwideblocks_capture') }
+            def jarManifest = zip.getEntry(manifest)
+            if (jarManifest != null && zip.getInputStream(jarManifest).getText('UTF-8').contains('worldwideblocks_capture')) {
+                leaked << manifest
+            }
+            if (!leaked.isEmpty()) {
+                throw new GradleException("Development files in the jar: " + leaked.take(10))
+            }
+            if (devEntries.isEmpty()) {
+                throw new GradleException("No development file found to compare with the jar")
+            }
+            logger.lifecycle("Jar checked: none of the " + devEntries.size() + " files of gametest and capture is in it")
+        } finally {
+            zip.close()
+        }
+    }
+}
 tasks.named('check').configure {
     dependsOn tasks.named('gametestClasses')
+    dependsOn tasks.named('captureClasses')
+    dependsOn checkJarContents
+}
+
+// Result of a capture run: written by the run, read here, so that ./gradlew runClientCapture fails when the scenario
+// failed or never ended.
+def captureResult = project.file('run-capture/capture-result.txt')
+var clearCaptureResult = tasks.register('clearCaptureResult') {
+    doLast {
+        captureResult.delete()
+    }
+}
+var checkCaptureResult = tasks.register('checkCaptureResult') {
+    doLast {
+        if (!captureResult.exists()) {
+            throw new GradleException("Capture run: no result in " + captureResult + " (the game did not reach the end)")
+        }
+        def result = captureResult.getText('UTF-8').trim()
+        logger.lifecycle("Capture run: " + result)
+        if (!result.startsWith('passed')) {
+            throw new GradleException("Capture run " + result)
+        }
+    }
+}
+tasks.matching { it.name == 'runClientCapture' }.configureEach {
+    dependsOn clearCaptureResult
+    finalizedBy checkCaptureResult
 }
 
 tasks.withType(JavaCompile).configureEach {

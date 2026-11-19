@@ -24,6 +24,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.neoforged.neoforge.client.gui.GuiLayer;
+import net.neoforged.neoforge.common.NeoForge;
 
 /**
  * Status indicator: when aiming at a network device, a small panel at the top center of the screen
@@ -35,6 +36,8 @@ import net.neoforged.neoforge.client.gui.GuiLayer;
  * {@link ClientDeviceStatus}, sent by the server for the targeted device.
  *
  * <p>Known limitation: the panel takes the same place as the boss bars.
+ *
+ * <p>Each change of what it draws is posted as a {@link StatusPanelShownEvent} (capture runs).
  */
 final class PortStatusLayer implements GuiLayer {
     private static final int TOP = 4;
@@ -55,6 +58,8 @@ final class PortStatusLayer implements GuiLayer {
 
     private final ClientLinkCache cache;
     private final ClientDeviceStatus deviceStatus;
+    /** What was drawn last, to post a {@link StatusPanelShownEvent} only when it changes; null before the first frame. */
+    private List<String> lastShown;
 
     PortStatusLayer(ClientLinkCache cache, ClientDeviceStatus deviceStatus) {
         this.cache = cache;
@@ -66,11 +71,13 @@ final class PortStatusLayer implements GuiLayer {
         Minecraft minecraft = Minecraft.getInstance();
         HitResult hit = minecraft.hitResult;
         if (minecraft.level == null || minecraft.gui.screen() != null || !(hit instanceof BlockHitResult blockHit) || hit.getType() != HitResult.Type.BLOCK) {
+            this.shown(Optional.empty(), "", List.of());
             return;
         }
         BlockPos pos = blockHit.getBlockPos();
         BlockState state = minecraft.level.getBlockState(pos);
         if (!(state.getBlock() instanceof NetworkDevice device)) {
+            this.shown(Optional.empty(), "", List.of());
             return;
         }
 
@@ -80,6 +87,13 @@ final class PortStatusLayer implements GuiLayer {
         List<StatusPanel.Line> panel = StatusPanel.lines(device.ports(), port -> this.cache.isConnected(pos, port),
                 toStatus(this.deviceStatus.at(pos)), detailed, minecraft.level.getGameTime());
         List<Component> texts = panel.stream().map(line -> (Component) ClientText.of(line.key(), line.args())).toList();
+        List<String> shownLines = new ArrayList<>(texts.size());
+        for (int i = 0; i < texts.size(); i++) {
+            StatusPanel.Light light = panel.get(i).light();
+            shownLines.add((light == StatusPanel.Light.NONE ? "" : "[" + light.name().toLowerCase(java.util.Locale.ROOT) + "] ")
+                    + texts.get(i).getString());
+        }
+        this.shown(Optional.of(pos), name.getString(), shownLines);
 
         Font font = minecraft.font;
         int contentWidth = font.width(name);
@@ -105,6 +119,18 @@ final class PortStatusLayer implements GuiLayer {
             }
             graphics.text(font, texts.get(i), x + LIGHT_SIZE + LIGHT_GAP, y, light != null ? COLOR_TEXT : COLOR_DETAIL);
             y += lineHeight;
+        }
+    }
+
+    /** Posts a {@link StatusPanelShownEvent} if the panel drawn changed since the last frame. */
+    private void shown(Optional<BlockPos> device, String name, List<String> lines) {
+        List<String> key = new ArrayList<>(lines.size() + 2);
+        key.add(device.map(BlockPos::toShortString).orElse(""));
+        key.add(name);
+        key.addAll(lines);
+        if (!key.equals(this.lastShown)) {
+            this.lastShown = key;
+            NeoForge.EVENT_BUS.post(new StatusPanelShownEvent(device, name, lines));
         }
     }
 
