@@ -84,6 +84,11 @@ class ConsoleSessionTest {
                 @Override
                 public void send(NetInterface out, EthernetFrame frame) {
                 }
+
+                @Override
+                public void schedule(long delayTicks, Object key) {
+                    ConsoleSessionTest.this.machine.schedule(delayTicks, key);
+                }
             };
         }
 

@@ -299,7 +299,7 @@ Deviations from RFC 2131, approved by Max on 2026-11-18:
 
 - No random +/-1 s on retransmissions (4.1), for exact timings: DISCOVER after 4, 8, 16, 32 and 64 s, then every 64 s; REQUEST after 4, 8 and 16 s, then back to INIT 60 s after the first one (3.1).
 - INIT-REBOOT without an answer goes back to INIT (4.4.2 also allows keeping the address).
-- The renewal is unicast to the MAC of the server taken from its acknowledgement: no ARP before lot 1c.
+- The renewal is unicast to the MAC of the server taken from its acknowledgement: no ARP before lot 1c. Since lot 1c-1 (issue #13), the computer sends it through its IP stack, which finds the server's MAC by ARP, as `dhclient` does through the kernel.
 - No DECLINE, RELEASE or ARP probe of the offered address (4.4.1).
 - Lease time in seconds in the message (1,200 s), 24,000 ticks in the engine; an offered address is held 60 s.
 
@@ -408,6 +408,8 @@ Pedagogical help stays apart from the output of the tools: translated, marked as
 **IP stack.** Lot 1c-1 lays down the IPv4 stack per interface, with services bound to a port (idea issue "Services API shared by the network engine and the computer OS"): ARP and ICMP need a real IP layer on the computers, and the DHCP client and server of lot 1b-2 move onto it. The rest of that idea (generic saved memory per service, start and stop) waits for the next service (DNS, lot 7b).
 
 Done at step 1 of the lot (issue #12): the box's computer has a stack with 192.168.1.1/24, its DHCP server bound to UDP port 67. The DHCP client of the computers is not bound to UDP port 68: like ISC `dhclient`, which reads through a packet socket on Linux (`PF_PACKET`, `common/lpf.c`), it reads the frames of its interface before the IP layer, since an offer is addressed to an address the interface does not have yet. Each change of its lease configures the interface as Debian's `dhclient-script` does (address, broadcast, lifetimes, default route). Known difference: unplugging removes the address at once (decision of lot 1b-2), where a real `dhclient` may keep it (to check at lot 1c-2).
+
+Done at step 2 (issue #13): ARP (RFC 826) on every stack, computers and box's computer, with the ARP cache of Linux (`ip neigh`): states `INCOMPLETE`, `REACHABLE`, `STALE`, `DELAY`, `PROBE`, `FAILED`; three broadcast requests one second apart, then `FAILED` after 3 s, the waiting packets reported lost; `REACHABLE` for 30 s after a confirmation (Linux draws between 15 and 45 s; fixed here for deterministic results); 5 s of `DELAY` then three unicast probes; the first answer kept for one second (`locktime`); entries forgotten when the cable is removed. Read in `net/core/neighbour.c` and `net/ipv4/arp.c`. Consequence in the `chain` scene: both boxes are 192.168.1.1, so a computer behind the second box (server off) resolves 192.168.1.1 to that nearer box and its renewal at T1 gets no answer; the broadcast at T2 reaches the first box and the lease is extended, as with two real routers sharing one address.
 
 **Throwaway prototype**: done on 2026-11-19 (issue #30, closed, findings in the issue; branch `proto/terminal-screen`, never merged): keyboard input (SDL3) with the AZERTY and QWERTY layouts, dead keys, shortcuts and arrows reaching the screen, Monocraft against the game font, character grid at 854 x 480 and 1920 x 1080, frame and colours, a screen that does not pause the game in single player. Its automatic capture run (`runClientCapture`) becomes permanent in this lot (issue #52, `docs/automated-checks.md`).
 

@@ -10,7 +10,7 @@ import java.util.Optional;
 public enum EtherType {
     /** IPv4 (IANA registry, RFC 9542), see {@link Ipv4Packet}. Used from lot 1b-2 (DHCP). */
     IPV4(0x0800),
-    /** ARP, address resolution (IANA registry, RFC 9542). Used in lot 1c. */
+    /** ARP, address resolution (IANA registry, RFC 9542), see {@link ArpPacket}. Used from lot 1c-1. */
     ARP(0x0806),
     /**
      * "IEEE Std 802 Local Experimental", reserved for experiments. It is only used by the presence frame,

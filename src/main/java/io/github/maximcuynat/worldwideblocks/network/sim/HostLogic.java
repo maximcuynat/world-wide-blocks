@@ -8,8 +8,10 @@ import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpClient;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpClientScript;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpFrames;
 import io.github.maximcuynat.worldwideblocks.network.ip.Ipv4Stack;
+import io.github.maximcuynat.worldwideblocks.network.ip.NeighbourTable;
 import io.github.maximcuynat.worldwideblocks.network.ip.NetInterface;
 import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
+import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Packet;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 import io.github.maximcuynat.worldwideblocks.network.protocol.PresencePayload;
 import io.github.maximcuynat.worldwideblocks.os.MachineContext;
@@ -41,7 +43,7 @@ public final class HostLogic implements DeviceLogic {
     private record DhcpTimer(int port, DhcpClient.Timer timer) {
     }
 
-    /** Timer of the operating system. */
+    /** Timer of the operating system or of its IP stack. */
     private record SystemTimer(Object key) {
     }
 
@@ -78,7 +80,7 @@ public final class HostLogic implements DeviceLogic {
         this.stack.setCarrier(this.interfaces(context)[port], true);
         this.generation[port]++;
         this.announce(context, port);
-        this.dhcp[port].linkUp(new Port(context, port));
+        this.dhcp[port].linkUp(this.port(context, port));
     }
 
     @Override
@@ -94,7 +96,7 @@ public final class HostLogic implements DeviceLogic {
                 && context.isLinked(timer.port())) {
             this.announce(context, timer.port());
         } else if (key instanceof DhcpTimer timer && context.isLinked(timer.port())) {
-            this.dhcp[timer.port()].onTimer(new Port(context, timer.port()), timer.timer());
+            this.dhcp[timer.port()].onTimer(this.port(context, timer.port()), timer.timer());
         } else if (key instanceof SystemTimer timer) {
             this.interfaces(context);
             this.system.onTimer(new Machine(context), timer.key());
@@ -107,7 +109,7 @@ public final class HostLogic implements DeviceLogic {
         if (!this.stack.keeps(in, frame)) {
             return; // not for this network card
         }
-        DhcpFrames.toClient(frame).ifPresent(message -> this.dhcp[port].receive(new Port(context, port), frame.source(), message));
+        DhcpFrames.toClient(frame).ifPresent(message -> this.dhcp[port].receive(this.port(context, port), frame.source(), message));
         this.stack.receive(new Machine(context), in, frame);
     }
 
@@ -171,7 +173,11 @@ public final class HostLogic implements DeviceLogic {
     }
 
     /** A port of the computer, as its DHCP client sees it during the current call. */
-    private record Port(DeviceContext context, int index) implements DhcpClient.Port {
+    private Port port(DeviceContext context, int index) {
+        return new Port(context, index, this.stack);
+    }
+
+    private record Port(DeviceContext context, int index, Ipv4Stack stack) implements DhcpClient.Port {
         @Override
         public long now() {
             return this.context.now();
@@ -195,6 +201,12 @@ public final class HostLogic implements DeviceLogic {
         @Override
         public void conflict(List<MacAddress> servers) {
             this.context.report(new SimulationEvent.DhcpConflict(this.context.device(), servers));
+        }
+
+        /** Through the IP stack: routed, and the server found by ARP. */
+        @Override
+        public void sendUnicast(Ipv4Packet packet, MacAddress serverMac) {
+            this.stack.send(new Machine(this.context), packet, NeighbourTable.Failure.NONE);
         }
     }
 }

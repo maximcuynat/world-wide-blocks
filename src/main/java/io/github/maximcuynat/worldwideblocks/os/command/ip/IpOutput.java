@@ -5,6 +5,7 @@ import java.util.List;
 
 import io.github.maximcuynat.worldwideblocks.network.ip.InterfaceAddress;
 import io.github.maximcuynat.worldwideblocks.network.ip.Ipv4Prefix;
+import io.github.maximcuynat.worldwideblocks.network.ip.NeighbourTable;
 import io.github.maximcuynat.worldwideblocks.network.ip.NetInterface;
 import io.github.maximcuynat.worldwideblocks.network.ip.Route;
 import io.github.maximcuynat.worldwideblocks.network.ip.RouteProtocol;
@@ -23,6 +24,8 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
  * address that is not permanent, then the label; then {@code valid_lft} and {@code preferred_lft}, in seconds or
  * {@code forever}. The kernel gives the time left as the lifetime minus the whole seconds elapsed
  * ({@code net/ipv4/devinet.c}): the seconds left, rounded up.</li>
+ * <li>{@code print_neigh} ({@code ip/ipneigh.c}): address, {@code dev} unless the listing is filtered on a device,
+ * {@code lladdr} when the hardware address is known, then the state; each field followed by a space.</li>
  * <li>{@code print_route} ({@code ip/iproute.c}): destination ({@code default} for 0.0.0.0/0), {@code via},
  * {@code dev}, {@code proto} unless {@code boot}, {@code scope} unless global, {@code src}; each field followed by a
  * space.</li>
@@ -73,6 +76,16 @@ public final class IpOutput {
     /** {@code ip route}: one line per route, in the order given. */
     public static List<String> routes(List<Route> routes) {
         return routes.stream().map(IpOutput::route).toList();
+    }
+
+    /** {@code ip neigh}: one entry of the ARP cache. */
+    public static String neighbour(NeighbourTable.Neighbour neighbour, boolean withDevice) {
+        StringBuilder line = new StringBuilder().append(neighbour.address()).append(' ');
+        if (withDevice) {
+            line.append("dev ").append(neighbour.device()).append(' ');
+        }
+        neighbour.mac().ifPresent(mac -> line.append("lladdr ").append(mac).append(' '));
+        return line.append(neighbour.state().name()).append(' ').toString();
     }
 
     static String route(Route route) {

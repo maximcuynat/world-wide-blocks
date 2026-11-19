@@ -17,7 +17,13 @@ import org.junit.jupiter.api.Test;
 
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpClientScript;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpLease;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpFrames;
+import io.github.maximcuynat.worldwideblocks.network.ip.FakeMachine;
 import io.github.maximcuynat.worldwideblocks.network.ip.Ipv4Stack;
+import io.github.maximcuynat.worldwideblocks.network.ip.NeighbourTable;
+import io.github.maximcuynat.worldwideblocks.network.protocol.ArpPacket;
+import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpMessage;
+import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 import io.github.maximcuynat.worldwideblocks.network.ip.NetInterface;
 import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Address;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
@@ -33,6 +39,7 @@ class IpCommandTest {
     private static final Ipv4Address BOX = Ipv4Address.of(192, 168, 1, 1);
     private static final Ipv4Address ADDRESS = Ipv4Address.of(192, 168, 1, 10);
     private static final long LEASE_TICKS = 24_000L;
+    private static final MacAddress BOX_MAC = new MacAddress(0x02_00_00_00_00_FFL);
 
     private Ipv4Stack stack;
     private NetInterface eth0;
@@ -88,6 +95,8 @@ class IpCommandTest {
                 .replace(" link-netnsid 0", "")
                 .replace("172.17.0.0/16", "192.168.1.0/24")
                 .replace("172.17.255.255", "192.168.1.255")
+                .replace("172.17.0.250", "192.168.1.250")
+                .replace("6a:ce:13:33:39:ce", BOX_MAC.toString())
                 .replace("172.17.0.2/16", "192.168.1.10/24")
                 .replace("172.17.0.2", "192.168.1.10")
                 .replace("172.17.0.1", "192.168.1.1");
@@ -141,6 +150,51 @@ class IpCommandTest {
 
         assertEquals(adapt(reference("ip route")), this.ip(0, "ip route").lines());
         assertEquals(adapt(reference("ip route")), this.ip(0, "ip r s dev eth0").lines());
+    }
+
+    /** The box answers ARP at once; 192.168.1.250 never does: FAILED three seconds later. */
+    private void pingedTheBoxAndAnAbsentAddress() {
+        FakeMachine machine = new FakeMachine(this.stack);
+        for (Ipv4Address target : List.of(BOX, Ipv4Address.of(192, 168, 1, 250))) {
+            this.stack.send(machine, DhcpFrames.packetFromClient(ADDRESS, target, DhcpMessage.discover(1, MAC)),
+                    NeighbourTable.Failure.NONE);
+        }
+        this.stack.receive(machine, this.eth0, new EthernetFrame(BOX_MAC, MAC,
+                new ArpPacket(ArpPacket.Operation.REPLY, BOX_MAC, BOX, MAC, ADDRESS)));
+        machine.runUntil(60);
+    }
+
+    @Test
+    void ipNeighShowsTheCacheInTheRealFormat() {
+        this.bound(0);
+        this.pingedTheBoxAndAnAbsentAddress();
+
+        assertEquals(adapt(reference("ip neigh after")), this.ip(60, "ip neigh").lines());
+        assertEquals(adapt(reference("ip neigh after")), this.ip(60, "ip n show").lines());
+        assertEquals(adapt(reference("ip neigh")), this.ip(60, "ip neigh").lines().subList(0, 1));
+    }
+
+    @Test
+    void ipNeighFilteredOnADeviceDoesNotWriteIt() {
+        this.bound(0);
+        this.pingedTheBoxAndAnAbsentAddress();
+
+        assertEquals(List.of("192.168.1.1 lladdr 02:00:00:00:00:ff REACHABLE ", "192.168.1.250 FAILED "),
+                this.ip(60, "ip neigh show dev eth0").lines());
+        assertEquals(new Run(1, List.of("Cannot find device \"eth5\"")), this.ip(60, "ip neigh show dev eth5"));
+        assertEquals(new Run(255, List.of("Command \"foo\" is unknown, try \"ip neigh help\".")), this.ip(60, "ip neigh foo"));
+        assertEquals(new Run(2, List.of("RTNETLINK answers: Operation not permitted")),
+                this.ip(60, "ip neigh add 192.168.1.7 lladdr 02:00:00:00:00:07 dev eth0"));
+        assertEquals(new Run(255, IpCommand.NEIGHBOUR_USAGE), this.ip(60, "ip neigh help"));
+    }
+
+    @Test
+    void anEntryBeingResolvedIsIncompleteWithoutAddress() {
+        this.bound(0);
+        this.stack.send(new FakeMachine(this.stack), DhcpFrames.packetFromClient(ADDRESS, Ipv4Address.of(192, 168, 1, 250),
+                DhcpMessage.discover(1, MAC)), NeighbourTable.Failure.NONE);
+
+        assertEquals(List.of("192.168.1.250 dev eth0 INCOMPLETE "), this.ip(0, "ip neigh").lines());
     }
 
     // ---- What the reference does not show ----

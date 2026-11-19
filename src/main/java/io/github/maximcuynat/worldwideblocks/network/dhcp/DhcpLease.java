@@ -11,8 +11,8 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
  * defaults to (0.875 * duration_of_lease)".
  *
  * @param serverId   identifier of the server that lent the address (option 54)
- * @param serverMac  hardware address of that server, taken from its acknowledgement: the renewal is sent to it
- *                   without ARP, which only comes in lot 1c
+ * @param serverMac  hardware address of that server, taken from its acknowledgement; saved with the lease. A
+ *                   computer sends its renewal through its IP stack and ARP ({@link DhcpClient.Port#sendUnicast})
  * @param obtainedAt game time of the acknowledgement
  * @param expiresAt  game time when the lease ends
  */

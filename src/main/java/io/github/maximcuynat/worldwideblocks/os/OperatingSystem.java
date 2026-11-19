@@ -40,10 +40,12 @@ public final class OperatingSystem {
         return this.localConsole;
     }
 
-    /** A timer asked through {@link MachineContext#schedule} is due. */
+    /** A timer asked through {@link MachineContext#schedule}, by a process or by the IP stack, is due. */
     public void onTimer(MachineContext machine, Object key) {
         if (key instanceof ProcessTable.Timer timer) {
             this.processes.onTimer(machine, timer);
+        } else {
+            this.stack.onTimer(machine.network(), key);
         }
     }
 }

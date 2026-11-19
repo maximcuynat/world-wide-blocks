@@ -10,20 +10,20 @@ import io.github.maximcuynat.worldwideblocks.os.process.ProcessContext;
 
 /**
  * The {@code ip} command of iproute2, as Debian 13 ships it (iproute2 6.15.0), on the real state of the machine:
- * {@code ip address}, {@code ip link} and {@code ip route}, with their abbreviations ({@code ip a}, {@code ip l},
- * {@code ip r}). Names, order of matching and error messages read in the sources of iproute2 v6.15.0
+ * {@code ip address}, {@code ip link}, {@code ip route} and {@code ip neighbour}, with their abbreviations
+ * ({@code ip a}, {@code ip l}, {@code ip r}, {@code ip n}). Names, order of matching and error messages read in the sources of iproute2 v6.15.0
  * ({@code ip/ip.c}, {@code ip/ipaddress.c}, {@code ip/iplink.c}, {@code ip/iproute.c}, {@code lib/utils.c}) on
  * 2026-11-19; the lines themselves in {@link IpOutput}.
  *
  * <p>Known differences with the real tool, in lot 1c-1:
  * <ul>
  * <li>Options: only {@code -4} and {@code -help}. The other options of the real tool are answered as unknown.</li>
- * <li>Objects: only {@code address}, {@code link} and {@code route} ({@code neighbour} comes with ARP). The other
- * objects of the real tool are answered as unknown.</li>
+ * <li>Objects: only {@code address}, {@code link}, {@code route} and {@code neighbour}. The other objects of the real
+ * tool are answered as unknown.</li>
  * <li>Listing of {@code ip address} and {@code ip link}: only a device name ({@code dev eth0} or {@code eth0}). Like
  * iproute2, any other word is taken as a device name, here also the filter keywords of the real tool ({@code up},
- * {@code scope}...). Listing of {@code ip route}: only {@code dev eth0}; any other word gets the error of an
- * unreadable prefix.</li>
+ * {@code scope}...). Listing of {@code ip route} and {@code ip neigh}: only {@code dev eth0}; any other word gets
+ * the error of an unreadable prefix.</li>
  * <li>{@code ip address flush}, {@code save}, {@code showdump}, {@code restore}, and the other commands of
  * {@code ip link} and {@code ip route}: answered as unknown commands.</li>
  * <li>Changes ({@code add}, {@code delete}, {@code set}...): the account {@code user} is not root, and the kernel
@@ -65,7 +65,7 @@ public final class IpCommand implements Process {
      */
     static final List<String> IP_USAGE = List.of(
             "Usage: ip [ OPTIONS ] OBJECT { COMMAND | help }",
-            "where  OBJECT := { address | help | link | route }",
+            "where  OBJECT := { address | help | link | neighbour | route }",
             "       OPTIONS := { -4 | -help }");
     static final List<String> ADDRESS_USAGE = List.of(
             "Usage: ip address [ show [ dev IFNAME ] ]",
@@ -73,6 +73,9 @@ public final class IpCommand implements Process {
     static final List<String> LINK_USAGE = List.of(
             "Usage: ip link [ show [ dev IFNAME ] ]",
             "       ip link help");
+    static final List<String> NEIGHBOUR_USAGE = List.of(
+            "Usage: ip neigh [ show [ dev DEV ] ]",
+            "       ip neigh help");
     static final List<String> ROUTE_USAGE = List.of(
             "Usage: ip route [ show [ dev IFNAME ] ]",
             "       ip route help");
@@ -123,6 +126,7 @@ public final class IpCommand implements Process {
             case "address" -> address(stack, rest, now, inetOnly, out);
             case "link" -> link(stack, rest, out);
             case "route" -> route(stack, rest, out);
+            case "neighbor", "neighbour" -> neighbour(stack, rest, out);
             case "help" -> usage(out, IP_USAGE);
             default -> {
                 out.line("Object \"" + object + "\" is unknown, try \"ip help\".");
@@ -245,6 +249,56 @@ public final class IpCommand implements Process {
         String kept = device;
         IpOutput.routes(stack.routes().routes().stream().filter(route -> kept == null || route.device().equals(kept))
                 .toList()).forEach(out::line);
+        return 0;
+    }
+
+    // ---- ip neighbour (do_ipneigh, ip/ipneigh.c) ----
+
+    private static int neighbour(Ipv4Stack stack, List<String> args, TerminalOutput out) {
+        if (args.isEmpty()) {
+            return listNeighbours(stack, List.of(), out);
+        }
+        String command = args.getFirst();
+        if (matches(command, "add") || matches(command, "change") || command.equals("chg") || matches(command, "replace")
+                || matches(command, "delete")) {
+            return notPermitted(out); // ipneigh_modify: exit(2) when the kernel refuses
+        }
+        if (matches(command, "show") || matches(command, "lst") || matches(command, "list")) {
+            return listNeighbours(stack, args.subList(1, args.size()), out);
+        }
+        if (matches(command, "help")) {
+            return usage(out, NEIGHBOUR_USAGE);
+        }
+        // get and flush are not part of lot 1c-1.
+        out.line("Command \"" + command + "\" is unknown, try \"ip neigh help\".");
+        return EXIT_USAGE;
+    }
+
+    /** {@code do_show_or_flush}: like {@code ip route}, {@code dev NAME} only; with it, the device is not written. */
+    private static int listNeighbours(Ipv4Stack stack, List<String> args, TerminalOutput out) {
+        String device = null;
+        for (int i = 0; i < args.size(); i++) {
+            String word = args.get(i);
+            if (word.equals("dev")) {
+                if (i + 1 >= args.size()) {
+                    out.line("Command line is not complete. Try option \"help\"");
+                    return EXIT_USAGE;
+                }
+                device = args.get(++i);
+            } else if (matches(word, "help")) {
+                return usage(out, NEIGHBOUR_USAGE);
+            } else {
+                out.line("Error: any valid prefix is expected rather than \"" + word + "\".");
+                return EXIT_FAILURE;
+            }
+        }
+        if (device != null && stack.interfaceNamed(device).isEmpty()) {
+            out.line("Cannot find device \"" + device + "\"");
+            return EXIT_FAILURE;
+        }
+        String kept = device;
+        stack.neighbours().neighbours().stream().filter(neighbour -> kept == null || neighbour.device().equals(kept))
+                .map(neighbour -> IpOutput.neighbour(neighbour, kept == null)).forEach(out::line);
         return 0;
     }
 

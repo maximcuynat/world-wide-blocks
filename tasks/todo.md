@@ -35,7 +35,13 @@ Review of step 1 (2026-11-19):
 - Outputs compared with the real reference, each adaptation named in `IpCommandTest`; lines the reference cannot show (`dynamic`, lifetimes, `NO-CARRIER`) taken from the sources of iproute2 6.15.0 and of the kernel, not from a real machine.
 - Choices reported to Max: usage texts written for the mod (iproute2 is GPL-2.0-or-later), changes answered with EPERM without checking arguments, unsupported real objects and options answered as unknown, `fq_codel` to check on a real machine, address removed at unplugging (to check at lot 1c-2), bash fork message from memory.
 
-- [ ] 2. ARP (#13): RFC 826 packet, neighbour table with the Linux states and fixed delays, pending packets, box answers for 192.168.1.1, DHCP renewal through ARP, `ip neigh`
+- [x] 2. ARP (#13): RFC 826 packet, neighbour table with the Linux states and fixed delays, pending packets, box answers for 192.168.1.1, DHCP renewal through ARP, `ip neigh`: green build reported by Max on 2026-11-19 (286 unit tests, 30 game tests)
+Review of step 2 (2026-11-19):
+
+- Checked for real: Max's `./gradlew build test` (286 unit tests, 0 failure) and `./gradlew runGameTestServer` (30 game tests). Existing tests only got the new `schedule` method of the stack context (`Ipv4StackTest`, `ConsoleSessionTest`); no assertion changed.
+- Neighbour table read in `net/core/neighbour.c` and `net/ipv4/arp.c`; 17 unit tests to the tick. A bug found by them: the third unicast probe left as a broadcast (Linux sends the probe before counting it, `neigh_probe`).
+- `ip neigh` compared with the real reference (sections "ip neigh" and "ip neigh after").
+- Choices reported to Max: `REACHABLE` fixed at 30 s (Linux: 15 to 45 s); entries listed in creation order; `get` and `flush` unknown; in the `chain` scene the renewal at T1 goes to the nearer box (same 192.168.1.1) and gets no answer, the broadcast at T2 extends the lease (simulation test, no game test reaches T1).
 - [ ] 3. ICMP, `ping` and latency (#14): echo and destination unreachable (original packet quoted), box with routing table and code 0, latency carried by each delivery and inherited by replies, `ping` and `ping -c n` in the iputils formats, advice line after a failure
 - [ ] 4. Permanent capture runs (#52): `capture` source set absent from the jar (checked by a task), `runClientCapture -Pscenario=`, throwaway `run-capture/`, world created by the run, values file, exit code; scenarios of lots 1b-1, 1b-2 and the message module
 - [ ] 5. Terminal screen (#11): gestures, keyboard owner, checked packets, screen with Monocraft, own text size, shell commands, language keys; capture scenario `terminal`

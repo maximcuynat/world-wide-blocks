@@ -3,6 +3,7 @@ package io.github.maximcuynat.worldwideblocks.network.sim;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.SplittableRandom;
 
@@ -17,9 +18,17 @@ import io.github.maximcuynat.worldwideblocks.network.NetworkGraph;
 import io.github.maximcuynat.worldwideblocks.network.NetworkNode;
 import io.github.maximcuynat.worldwideblocks.network.PortKind;
 import io.github.maximcuynat.worldwideblocks.network.PortRef;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpFrames;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpStore;
 import io.github.maximcuynat.worldwideblocks.network.ip.InterfaceAddress;
 import io.github.maximcuynat.worldwideblocks.network.ip.Ipv4Stack;
+import io.github.maximcuynat.worldwideblocks.network.ip.NeighbourTable;
+import io.github.maximcuynat.worldwideblocks.network.protocol.ArpPacket;
+import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpMessageType;
+import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Address;
+import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
+import io.github.maximcuynat.worldwideblocks.network.protocol.PresencePayload;
 import io.github.maximcuynat.worldwideblocks.os.ConsoleSession;
 
 /** The IPv4 stack of the computers and of the box, configured by real DHCP exchanges, read with ip in the console. */
@@ -28,8 +37,16 @@ class HostStackSimulationTest {
     private static final List<PortKind> BOX_PORTS =
             List.of(PortKind.ETHERNET, PortKind.ETHERNET, PortKind.ETHERNET, PortKind.ETHERNET, PortKind.LINE);
 
+    /** Half of the lease of the box: the renewal (T1). */
+    private static final long T1 = 12_000L;
+
+    private record Sent(long at, PortRef port, EthernetFrame frame) {
+    }
+
     private NetworkGraph graph;
+    private DhcpStore store;
     private NetworkSimulation sim;
+    private final List<Sent> sent = new ArrayList<>();
     private DeviceId box;
     private DeviceId tower;
     private long now;
@@ -37,7 +54,13 @@ class HostStackSimulationTest {
     @BeforeEach
     void setUp() {
         this.graph = new NetworkGraph(new SplittableRandom(11));
-        this.sim = new NetworkSimulation(this.graph, SimulationLimits.DEFAULT);
+        this.store = new DhcpStore();
+        this.sim = new NetworkSimulation(this.graph, this.store, SimulationLimits.DEFAULT);
+        this.sim.setTap((now, port, direction, frame) -> {
+            if (direction == FrameDirection.SENT) {
+                this.sent.add(new Sent(now, port, frame));
+            }
+        });
         NetworkNode boxNode = new NetworkNode(new DeviceId(OVERWORLD, 0, 64, 0), "worldwideblocks:internet_box", DeviceRole.BOX, BOX_PORTS);
         NetworkNode towerNode = new NetworkNode(new DeviceId(OVERWORLD, 2, 64, 0), "worldwideblocks:pc_tower", 1);
         this.graph.putNode(boxNode);
@@ -64,6 +87,71 @@ class HostStackSimulationTest {
         this.tickUntil(this.now + 1);
         List<String> lines = this.console().lines();
         return lines.subList(before, lines.size());
+    }
+
+    private List<Sent> sentBy(DeviceId device, long at) {
+        return this.sent.stream().filter(s -> s.port().device().equals(device) && s.at() == at).toList();
+    }
+
+    private MacAddress serviceMac(DeviceId box) {
+        return this.graph.serviceMacOf(box).orElseThrow();
+    }
+
+    @Test
+    void theRenewalAsksTheBoxsMacByArpThenGoesUnicastToIt() {
+        this.tickUntil(T1);
+
+        List<Sent> fromTower = this.sentBy(this.tower, T1).stream()
+                .filter(s -> !(s.frame().payload() instanceof PresencePayload))
+                .toList();
+        assertEquals(2, fromTower.size(), fromTower.toString());
+        assertEquals(MacAddress.BROADCAST, fromTower.get(0).frame().destination());
+        assertEquals(Ipv4Address.of(192, 168, 1, 1), ((ArpPacket) fromTower.get(0).frame().payload()).targetIp());
+        assertEquals(this.serviceMac(this.box), fromTower.get(1).frame().destination());
+        assertEquals(DhcpMessageType.REQUEST, DhcpFrames.toServer(fromTower.get(1).frame()).orElseThrow().type());
+        assertEquals(List.of("192.168.1.1 dev eth0 lladdr " + this.serviceMac(this.box) + " REACHABLE "), this.type("ip neigh"));
+    }
+
+    @Test
+    void theBoxKnowsTheComputerThatAskedForItsAddress() {
+        this.tickUntil(T1);
+        Ipv4Stack stack = ((BoxLogic) this.sim.logic(this.box).orElseThrow()).stack();
+
+        NeighbourTable.Neighbour tower = stack.neighbours().neighbours().getFirst();
+        assertEquals(Ipv4Address.of(192, 168, 1, 10), tower.address());
+        assertEquals(NeighbourTable.State.STALE, tower.state());
+        assertEquals(this.graph.macOf(new PortRef(this.tower, 0)), tower.mac());
+    }
+
+    /**
+     * Two boxes on one network, the second with its DHCP server off: both are 192.168.1.1, as two real routers with the
+     * same address. The computer behind the second box resolves 192.168.1.1 to it, so its renewal at T1 gets no
+     * answer; at T2 (87.5% of the lease) the broadcast REQUEST reaches the first box, and the lease is extended.
+     */
+    @Test
+    void behindASecondBoxWithItsServerOffTheRenewalWaitsForT2() {
+        NetworkNode secondNode = new NetworkNode(new DeviceId(OVERWORLD, 4, 64, 0), "worldwideblocks:internet_box", DeviceRole.BOX, BOX_PORTS);
+        NetworkNode laptopNode = new NetworkNode(new DeviceId(OVERWORLD, 6, 64, 0), "worldwideblocks:laptop", 1);
+        this.store.server(secondNode.id()).setEnabled(false);
+        this.graph.putNode(secondNode);
+        this.graph.putNode(laptopNode);
+        this.sim.deviceAdded(secondNode);
+        this.sim.deviceAdded(laptopNode);
+        this.sim.linkUp(this.graph.connect(new PortRef(this.box, 1), new PortRef(secondNode.id(), 0), LinkMedium.COPPER_ETHERNET, true)
+                .link().orElseThrow());
+        this.sim.linkUp(this.graph.connect(new PortRef(secondNode.id(), 1), new PortRef(laptopNode.id(), 0), LinkMedium.COPPER_ETHERNET, true)
+                .link().orElseThrow());
+        this.tickUntil(1);
+        HostLogic laptop = (HostLogic) this.sim.logic(laptopNode.id()).orElseThrow();
+        long obtained = laptop.dhcpClient(0).lease().orElseThrow().obtainedAt();
+
+        this.tickUntil(1 + T1);
+        assertEquals(this.serviceMac(secondNode.id()), laptop.system().stack().neighbours().neighbours().getFirst().mac().orElseThrow(),
+                "the second box answered first: it is nearer");
+        this.tickUntil(1 + 21_000L - 1);
+        assertEquals(obtained, laptop.dhcpClient(0).lease().orElseThrow().obtainedAt(), "not renewed before T2");
+        this.tickUntil(1 + 21_000L);
+        assertEquals(1 + 21_000L, laptop.dhcpClient(0).lease().orElseThrow().obtainedAt(), "renewed by the first box at T2");
     }
 
     @Test

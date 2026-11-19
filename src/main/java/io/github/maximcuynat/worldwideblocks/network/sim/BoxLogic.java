@@ -33,6 +33,10 @@ public final class BoxLogic implements DeviceLogic {
     private record PurgeTimer() {
     }
 
+    /** Timer of the IP stack of the box's computer. */
+    private record StackTimer(Object key) {
+    }
+
     private final EthernetSwitch lan;
     private final DhcpServer dhcp;
     private final Ipv4Stack stack = new Ipv4Stack();
@@ -115,6 +119,11 @@ public final class BoxLogic implements DeviceLogic {
                 this.context.send(egress, frame);
             }
         }
+
+        @Override
+        public void schedule(long delayTicks, Object key) {
+            this.context.schedule(delayTicks, new StackTimer(key));
+        }
     }
 
     @Override
@@ -122,6 +131,9 @@ public final class BoxLogic implements DeviceLogic {
         if (key instanceof PurgeTimer) {
             this.lan.purgeExpired(context.now());
             context.schedule(PURGE_INTERVAL_TICKS, key);
+        } else if (key instanceof StackTimer timer) {
+            this.local(context);
+            this.stack.onTimer(new Local(context, this.lan), timer.key());
         }
     }
 

@@ -32,6 +32,10 @@ class Ipv4StackTest {
         @Override
         public void send(NetInterface out, EthernetFrame frame) {
         }
+
+        @Override
+        public void schedule(long delayTicks, Object key) {
+        }
     };
     private Ipv4Stack stack;
     private NetInterface eth0;

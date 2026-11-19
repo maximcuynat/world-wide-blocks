@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import io.github.maximcuynat.worldwideblocks.network.protocol.ArpPacket;
 import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Address;
 import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Packet;
@@ -25,6 +26,10 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.UdpDatagram;
  * <p>The network card keeps the frames addressed to its MAC or to all. Packets for another machine are dropped:
  * forwarding comes with the router of the box (ICMP, issue #14).
  *
+ * <p>A packet sent ({@link #send}) follows the route of the longest prefix to its next hop, whose hardware address
+ * comes from the ARP cache ({@link NeighbourTable}).
+
+ *
  * <p>Runtime state, not saved: rebuilt at server start, the addresses coming back with DHCP. Plain Java.
  */
 public final class Ipv4Stack {
@@ -42,6 +47,17 @@ public final class Ipv4Stack {
 
         /** Puts a frame on the wire of this interface. */
         void send(NetInterface out, EthernetFrame frame);
+
+        /** Calls {@link Ipv4Stack#onTimer} with this key in {@code delayTicks} ticks. */
+        void schedule(long delayTicks, Object key);
+    }
+
+    /** What became of a packet given to {@link #send}. */
+    public enum Output {
+        /** Sent, or waiting for the hardware address of its next hop. */
+        SENT,
+        /** No route to its destination ({@code ENETUNREACH}). */
+        NO_ROUTE
     }
 
     /** A service bound to a UDP port. */
@@ -52,6 +68,7 @@ public final class Ipv4Stack {
 
     private final List<NetInterface> interfaces = new ArrayList<>();
     private final RoutingTable routes = new RoutingTable();
+    private final NeighbourTable neighbours = new NeighbourTable(this);
     private final Map<Integer, UdpHandler> udp = new HashMap<>();
 
     /** A stack with its loopback {@code lo}, 127.0.0.1/8. */
@@ -84,9 +101,12 @@ public final class Ipv4Stack {
         return this.interfaces.stream().filter(candidate -> candidate.name().equals(name)).findFirst();
     }
 
-    /** The cable of the port is plugged in or removed. */
+    /** The cable of the port is plugged in or removed; without carrier, the ARP entries of the interface go. */
     public void setCarrier(NetInterface link, boolean carrier) {
         link.setCarrier(carrier);
+        if (!carrier) {
+            this.neighbours.flush(link);
+        }
     }
 
     // ---- Addresses and routes ----
@@ -125,6 +145,15 @@ public final class Ipv4Stack {
         return this.routes;
     }
 
+    public NeighbourTable neighbours() {
+        return this.neighbours;
+    }
+
+    /** First address of an interface: the source of what it sends when nothing else chooses one. */
+    public Optional<Ipv4Address> primaryAddress(NetInterface link) {
+        return link.mutableAddresses().stream().findFirst().map(InterfaceAddress::address);
+    }
+
     /** True if the address belongs to one of the interfaces of this machine. */
     public boolean isLocal(Ipv4Address address) {
         return this.interfaces.stream().flatMap(link -> link.mutableAddresses().stream())
@@ -136,6 +165,32 @@ public final class Ipv4Stack {
     public void bindUdp(int port, UdpHandler handler) {
         if (this.udp.putIfAbsent(port, Objects.requireNonNull(handler, "handler")) != null) {
             throw new IllegalStateException("UDP port " + port + " already bound");
+        }
+    }
+
+    // ---- Packets ----
+
+    /**
+     * Sends a packet built by this machine: route of the longest prefix, then the next hop (the gateway, or the
+     * destination itself on a connected network), resolved by ARP.
+     *
+     * @param failure told of the packet if its next hop cannot be resolved
+     */
+    public Output send(Context context, Ipv4Packet packet, NeighbourTable.Failure failure) {
+        Optional<Route> route = this.routes.lookup(packet.destination());
+        if (route.isEmpty()) {
+            return Output.NO_ROUTE;
+        }
+        NetInterface out = this.interfaceNamed(route.get().device()).orElseThrow();
+        Ipv4Address nextHop = route.get().gateway().orElse(packet.destination());
+        this.neighbours.output(context, out, nextHop, packet, failure);
+        return Output.SENT;
+    }
+
+    /** A timer asked through {@link Context#schedule} is due. */
+    public void onTimer(Context context, Object key) {
+        if (key instanceof NeighbourTable.Timer timer) {
+            this.neighbours.onTimer(context, timer);
         }
     }
 
@@ -151,6 +206,10 @@ public final class Ipv4Stack {
     public void receive(Context context, NetInterface in, EthernetFrame frame) {
         if (!this.keeps(in, frame)) {
             return; // not for this network card
+        }
+        if (frame.payload() instanceof ArpPacket arp) {
+            this.neighbours.receive(context, in, frame, arp);
+            return;
         }
         if (frame.payload() instanceof Ipv4Packet packet && this.isForThisMachine(in, packet.destination())
                 && packet.payload() instanceof UdpDatagram datagram) {
