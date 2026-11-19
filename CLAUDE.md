@@ -92,4 +92,4 @@ Hand-written files under the same `<id>` (no datagen):
 - `assets/<mod_id>/`: `blockstates/<id>.json`, `models/block/<id>.json`, `textures/block/<id>.png`, `items/<id>.json`, keys `block.<mod_id>.<id>` in both language files.
 - `data/`: `<mod_id>/loot_table/blocks/<id>.json` and the id in `minecraft/tags/block/mineable/pickaxe.json`.
 
-`.bbmodel` files may stay next to the resources: they are excluded from the jar.
+Blockbench projects go in `design/blockbench/`, outside the jar; style rules in `docs/design-guide.md`.

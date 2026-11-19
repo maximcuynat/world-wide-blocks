@@ -113,6 +113,7 @@ Limits read in the sources: scale at most 4, translation at most 80 px.
 ## 9. Files and workflow
 
 - Blockbench projects: `design/blockbench/<id>.bbmodel`, format "Java Block/Item", texture embedded in the project.
+- Generator and export scripts: `design/tools/` (see its README).
 - Device sheet: `design/blockbench/<id>.md`, next to the project. It records the real and in-game dimensions, the elements, the position of each port and LED (face, texel column and row, model coordinates) and the display values. The `design/` folder is outside `src/main/resources`: it is never in the jar (the jar only contains `sourceSets.main`).
 - For each device:
   1. The `.bbmodel` is written, with its texture.
