@@ -44,7 +44,7 @@
 
 - zsh does not split an unquoted variable into words: `perl -i script $files` received the whole list as one file name, and `git grep … -- $paths` searched one path that does not exist and printed nothing. Pass lists through `xargs -0` or write the paths out, and never take an empty search result as proof before checking that the search can find something. (2026-11-18)
 - `perl -CSD` decodes the file but not a non-ASCII letter written in the expression (without `use utf8`): the substitution silently did nothing. After any bulk replacement, search again for what was replaced. (2026-11-18)
-- In this shell `cp` asks before overwriting and answers no without a terminal: use `/bin/cp -f` in scripts. (2026-11-18)
+- In this shell `cp` asks before overwriting and answers no without a terminal: use `/bin/cp -f` in scripts. (2026-11-18) `rm` does the same (it asks, answers no, and the file stays). `/bin/rm -f` only on files I created myself in the session, then check with `ls` that the file is gone; for any other file, ask Max first. (2026-11-20)
 
 ## Translation and delegated rewrites
 

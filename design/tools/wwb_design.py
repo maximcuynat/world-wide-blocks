@@ -55,6 +55,27 @@ class Sheet:
             raise ValueError('face %s/%s does not fit on the sheet' % (element, face))
         self.faces[(element, face)] = (x, y, w, h)
 
+    def add_slice(self, element, face, area, envelope, box):
+        """Maps the face of an element that lies on a face of an envelope (a virtual box drawn as a
+        whole, for example the full front of a case split into several elements) to its own part of
+        the envelope's area, in the orientation of FaceBakery.defaultFaceUV. The texture then runs
+        on across the elements. area: key of the envelope face on the sheet; envelope and box:
+        (from, to) of the envelope and of the element."""
+        (ex1, ey1, ez1), (ex2, ey2, ez2) = envelope
+        (x1, y1, z1), (x2, y2, z2) = box
+        u = {'north': (ex2 - x2, ex2 - x1), 'south': (x1 - ex1, x2 - ex1), 'east': (ez2 - z2, ez2 - z1),
+             'west': (z1 - ez1, z2 - ez1), 'up': (x1 - ex1, x2 - ex1), 'down': (x1 - ex1, x2 - ex1)}[face]
+        if face in ('up', 'down'):
+            v = (z1 - ez1, z2 - ez1) if face == 'up' else (ez2 - z2, ez2 - z1)
+        else:
+            v = (ey2 - y2, ey2 - y1)
+        ax, ay, aw, ah = self.faces[area]
+        t = TEXELS_PER_PX
+        c1, c2, r1, r2 = (int(round(k * t)) for k in (u[0], u[1], v[0], v[1]))
+        if c1 < 0 or r1 < 0 or c2 > aw or r2 > ah:
+            raise ValueError('%s/%s is not inside its envelope area' % (element, face))
+        self.faces[(element, face)] = (ax + c1, ay + r1, c2 - c1, r2 - r1)
+
     def rect(self, element, face, col, row, w, h, role, tone='base'):
         fx, fy, fw, fh = self.faces[(element, face)]
         if col < 0 or row < 0 or col + w > fw or row + h > fh:
@@ -75,12 +96,15 @@ class Sheet:
         self.rect(element, face, 0, 0, w, 1, role, 'hi')
         self.rect(element, face, 0, h - 1, w, 1, role, 'sh')
 
-    def rj45(self, label, element, face, col, row, large=True):
-        """RJ45 port: 3 x 3 with a contacts row on top (large) or 2 x 2 in socket colour."""
+    def rj45(self, label, element, face, col, row, large=True, depth_tone='base', contacts='top'):
+        """RJ45 port: 3 x 3 with a contacts row (large) or 2 x 2 in socket colour.
+        depth_tone 'sh' draws the bottom of a port that is modelled as a real hole; contacts 'bottom'
+        puts the contacts row where it stays visible through a hole seen from above."""
         if large:
-            self.rect(element, face, col, row, 3, 1, 'contacts')
-            self.rect(element, face, col, row + 1, 3, 2, 'socket')
-            self.items.append((label, element, face, col, row, 3, 3, 'contacts row on top, socket below'))
+            top = contacts == 'top'
+            self.rect(element, face, col, row if top else row + 2, 3, 1, 'contacts')
+            self.rect(element, face, col, row + 1 if top else row, 3, 2, 'socket', depth_tone)
+            self.items.append((label, element, face, col, row, 3, 3, 'contacts row at the %s, socket' % contacts))
         else:
             self.rect(element, face, col, row, 2, 2, 'socket')
             self.items.append((label, element, face, col, row, 2, 2, 'socket'))
@@ -176,6 +200,9 @@ def bbmodel(device_id, elements, sheet, display_settings, parent='block/block'):
     for e in elements:
         faces = {}
         for face in ('north', 'east', 'south', 'west', 'up', 'down'):
+            if (e['name'], face) not in sheet.faces:
+                faces[face] = {'uv': [0, 0, 0, 0], 'texture': None}  # hidden face, left out of the model
+                continue
             x, y, w, h = sheet.faces[(e['name'], face)]
             faces[face] = {'uv': [x, y, x + w, y + h], 'texture': 0}
             if face in e.get('cullfaces', ()):
