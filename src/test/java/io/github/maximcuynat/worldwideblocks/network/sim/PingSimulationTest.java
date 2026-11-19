@@ -293,6 +293,7 @@ class PingSimulationTest {
     @Test
     void requestsWithoutReplyPrintNothingAndTheLastWaitIsOneSecond() {
         String target = this.address(this.other).toString();
+        int before = this.console().lines().size();
         this.type("ping -c 4 " + target, SECOND);
         this.sim.linkDown(this.graph.disconnect(new PortRef(this.other, 0)).orElseThrow());
 
@@ -301,15 +302,36 @@ class PingSimulationTest {
         this.tickUntil(this.now + 1);
 
         List<String> lines = this.console().lines();
-        assertEquals(List.of(
-                "64 bytes from " + target + ": icmp_seq=2 ttl=64 time=0.104 ms",
-                "",
-                "--- " + target + " ping statistics ---",
-                "4 packets transmitted, 2 received, 50% packet loss, time 3000ms",
-                "rtt min/avg/max/mdev = 0.104/0.156/0.208/0.052 ms"), lines.subList(lines.size() - 5, lines.size()),
-                "requests 3 and 4 leave and get nothing: no line for them");
+        List<String> expected = adapted(reference("ping timeout after replies"), "192.168.1.1", target, "0.208", "0.104");
+        expected.replaceAll(line -> line.replace("time 3069ms", "time 3000ms")
+                .replace("0.182/0.396/0.610/0.214", "0.104/0.156/0.208/0.052"));
+        assertEquals(expected, lines.subList(before, lines.size()),
+                "requests 3 and 4 leave and get nothing: no line for them, as on Debian");
         assertEquals(0, this.console().lastStatus());
     }
+
+    @Test
+    void aTimeoutPrintsNothing() {
+        String target = this.address(this.other).toString();
+        this.type("ping -c 1 " + target, 0); // the other computer is now known by ARP
+        this.sim.linkDown(this.graph.disconnect(new PortRef(this.other, 0)).orElseThrow());
+        this.tickUntil(this.now + 1);
+        int before = this.console().lines().size();
+
+        List<String> lines = this.type("ping -c 3 " + target, 2 * SECOND + LINGER_WITHOUT_REPLY);
+
+        List<String> expected = adapted(reference("ping timeout"), "192.168.1.77", target);
+        expected.replaceAll(line -> line.replace("time 2052ms", "time 2000ms"));
+        assertEquals(expected, lines, "the requests leave unicast and are lost: nothing before the statistics");
+        assertFalse(this.console().commandRunning(), "10 s of waiting after the last request, no reply having come");
+        assertEquals(1, this.console().lastStatus());
+        assertEquals(List.of(new ConsoleLine.Advice("terminal.worldwideblocks.advice.ping.no_reply", List.of(target))),
+                this.advice().subList(this.advice().size() - 1, this.advice().size()));
+        assertEquals(before + expected.size(), this.console().lines().size());
+    }
+
+    /** {@code MAXWAIT}: 10 s after the last request when no reply came. */
+    private static final long LINGER_WITHOUT_REPLY = 10 * SECOND;
 
     /** After the last request, a run with replies waits twice the longest round trip, at least one second. */
     private static final long LINGER_MARGIN = SECOND;

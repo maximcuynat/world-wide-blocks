@@ -203,3 +203,17 @@ ping: invalid argument: '99999999999999999999': Numerical result out of range
 ping: Do you want to ping broadcast? Then -b. If not, check your local firewall rules
 === ping limited broadcast without default route
 ping: connect: Network is unreachable
+=== ping timeout
+PING 192.168.1.77 (192.168.1.77) 56(84) bytes of data.
+
+--- 192.168.1.77 ping statistics ---
+3 packets transmitted, 0 received, 100% packet loss, time 2052ms
+
+=== ping timeout after replies
+PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
+64 bytes from 192.168.1.1: icmp_seq=1 ttl=64 time=0.610 ms
+64 bytes from 192.168.1.1: icmp_seq=2 ttl=64 time=0.182 ms
+
+--- 192.168.1.1 ping statistics ---
+4 packets transmitted, 2 received, 50% packet loss, time 3069ms
+rtt min/avg/max/mdev = 0.182/0.396/0.610/0.214 ms
