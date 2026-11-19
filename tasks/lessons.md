@@ -35,6 +35,10 @@
 - For each gesture that consumes an item in survival, check that the reverse gesture stays possible when the player no longer has the item: unplugging required a cord in hand, impossible after using the last one. Walk through the "survival, a single copy" path in your head before proposing an interaction. (2026-11-17)
 - Before assigning a gesture (sneak + right-click, etc.), reread the plan for the gestures already promised to later lots (here the laptop screen in lot 1c). (2026-11-17)
 
+## Issue boxes
+
+- A box is ticked only if what it says is proven, word for word: split the line into its claims and name the proof of each (real capture, test, green build) before ticking. The box "output checked on a real machine ... ; a timeout prints nothing, as on Linux" of #14 was ticked while the timeout had only been read in the sources: no real run had a request leave and get no answer (captured afterwards, 2026-11-19). When the maintainer reports a box as unproven, check the evidence claim by claim before changing it, and say which claims hold. (2026-11-19)
+
 ## GitHub CLI and assisted commands
 
 - Never give a `gh` command as working without checking its `--help` or its documentation: `gh project link --owner @me` was refused, the login is needed (`--owner <login>`). Mark an unchecked command as such. (2026-11-18)

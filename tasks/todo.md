@@ -62,6 +62,17 @@ Review of step 3 (2026-11-19):
 - Real captures ran in throwaway `debian:stable-slim` containers (`--rm`, `NET_ADMIN` and `SYS_ADMIN`, seccomp and AppArmor unconfined for the namespaces), packages downloaded from Debian inside them; scripts kept outside the repository.
 - Choices to report: latency values (`Latency`), loopback 7 µs, advice limit 160 characters, only `-c`, names answered `Temporary failure in name resolution`, usage written for the mod (iputils text under BSD licence), several destinations answered with the usage, `inet_aton` short forms (`10.1`) taken as names.
 - [ ] 4. Permanent capture runs (#52): `capture` source set absent from the jar (checked by a task), `runClientCapture -Pscenario=`, throwaway `run-capture/`, world created by the run, values file, exit code; scenarios of lots 1b-1, 1b-2 and the message module
+  Proposed plan (2026-11-19, waiting for Max's approval), three commits, each after Max's build and a capture run read by the assistant:
+  - [ ] 4a. Infrastructure and one scenario (`box`):
+    - source set `capture`, a small client-only mod of its own (`worldwideblocks_capture`, its `neoforge.mods.toml`, `@Mod(dist = CLIENT)`), compiled against `main` and `gametest` to reuse the trial scenes; loaded only by the new run through `loadedMods` (ModDevGradle 2.0.148 has it), the `client`, `server` and `gameTestServer` runs loading the main mod only
+    - run `clientCapture` (`./gradlew runClientCapture -Pscenario=<name>`), game directory `run-capture/` (ignored by git): Max's `run/` and its worlds are never opened
+    - the run creates a flat creative world "Trials capture <scenario>" with `WorldOpenFlows.createFreshLevel` (Quick Play only opens an existing world, `QuickPlay.joinSingleplayerWorld`), replacing the one of the previous run
+    - steps of a scenario: scene built on the integrated server (`TrialScenes`), player placed and aimed, standing or sneaking, ticks waited, then a screenshot for each window size, GUI scale and language declared (854 x 480 and 1920 x 1080, English and French), named `<step>-<size>-<scale>-<language>.png` in `run-capture/screenshots/<scenario>/`, and the values of that step (panel lines, chat, action bar, window and GUI sizes) in `values.txt`
+    - window size, GUI scale, language and the client options of the mod put back in a `finally`, also when a step fails
+    - end: a log line `Capture <scenario>: passed` or `failed: <reason>`, a result file read by a Gradle task chained to the run, which fails the command on a failure or a missing result (exit code)
+    - jar check: a task chained to `build` that fails if the jar holds a class or resource of `gametest` or `capture`
+  - [ ] 4b. Scenarios of lot 1b-1 (`box`, `box_hosts`, `chain`, `loop`, `full_ports`, `distance`) and of the message module (tooltip, action bar, panels, loop message, French texts, `messageSymbols`)
+  - [ ] 4c. Scenarios of the ten points of lot 1b-2 (restart through a quit to the title screen and reopening, scripted; `/tick sprint`); the manual procedures and "Test method" of `docs/lot-plan.md` replaced by the scenario names and the command; `docs/automated-checks.md` "Current state" updated
 - [ ] 5. Terminal screen (#11): gestures, keyboard owner, checked packets, screen with Monocraft, own text size, shell commands, language keys; capture scenario `terminal`
 - [ ] 6. Presence frame removed (#15)
 - [ ] 7. Ping game tests (#16)
