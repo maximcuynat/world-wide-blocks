@@ -2,8 +2,11 @@ package io.github.maximcuynat.worldwideblocks.capture;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import io.github.maximcuynat.worldwideblocks.gametest.scene.TrialScenario;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.ItemLike;
 
 /**
  * A capture scenario: what the run does in its trial world, step by step, and the combinations of window size, GUI
@@ -44,16 +47,68 @@ public record CaptureScenario(String name, String description, List<Size> sizes,
     /** A step of a scenario. */
     public sealed interface Step {
 
-        /** Builds a trial scene 3 blocks in front of the player, who faces north, as {@code /worldwideblocks test} does. */
+        /**
+         * Builds a trial scene 3 blocks north of the place where the run put the player, as {@code /worldwideblocks
+         * test} does in front of a player who faces north. One scene at a time: {@link ClearScene} removes it.
+         */
         record BuildScene(TrialScenario scene) implements Step {
         }
 
+        /** Removes the devices of the last scene (their cables go with them). */
+        record ClearScene() implements Step {
+        }
+
         /**
-         * The player, still at the place where the run put them, aims at the centre of a device of the last scene
-         * (its index in the scene), standing or sneaking. The step waits until the crosshair is on that device and
-         * its panel is drawn.
+         * The player stands 2 blocks south of a device of the last scene (its index in the scene), faces it and aims at
+         * the centre of its shape, standing or sneaking. The step ends when the client shows the crosshair on that
+         * device and its panel; the shots that follow check that this still holds.
          */
         record Aim(int device, boolean sneaking) implements Step {
+        }
+
+        /**
+         * The player flies at a place given from a device of the last scene ({@code east}, {@code up} and {@code south}
+         * blocks from it) and looks at the centre of another device, without needing its panel: a view of the scene.
+         */
+        record View(int from, int east, int up, int south, int target) implements Step {
+        }
+
+        /** Puts this item in the main hand (the selected slot of the hotbar), or empties it when the item is null. */
+        record Hold(Supplier<? extends ItemLike> item) implements Step {
+        }
+
+        /** A click of the use key (right button), as the player does it: the game sends what follows to the server. */
+        record Use() implements Step {
+        }
+
+        /** Opens the inventory with the mouse over the selected slot of the hotbar: the game draws the tooltip of its item. */
+        record HoverHeldItem() implements Step {
+        }
+
+        /** Opens the chat (key T): the recent messages are shown without fading. */
+        record OpenChat() implements Step {
+        }
+
+        /** Closes the screen open. */
+        record CloseScreen() implements Step {
+        }
+
+        /**
+         * The game mode of the player, set by the server as the command {@code /gamemode} does, without its message in
+         * the chat (it would show in the captures).
+         */
+        record GameMode(GameType mode) implements Step {
+        }
+
+        /** A command typed by the player, without its slash. */
+        record Command(String command) implements Step {
+        }
+
+        /**
+         * Sets the client option {@code messageSymbols} of the mod, by editing {@code config/worldwideblocks-client.toml}
+         * as a player would; the game reads the file again. Put back at the end of the run.
+         */
+        record MessageSymbols(boolean enabled) implements Step {
         }
 
         /** Lets the game run for some ticks. */
@@ -62,9 +117,13 @@ public record CaptureScenario(String name, String description, List<Size> sizes,
 
         /**
          * A screenshot in each combination of the scenario, named {@code <name>-<size>-<scale>-<language>.png}, with
-         * the values read at that moment written to {@code values.txt}.
+         * the values read at that moment written to {@code values.txt}. With {@code useFirst}, a click of the use key
+         * just before each screenshot, for a message of the action bar, which fades after 3 s.
          */
-        record Shot(String name) implements Step {
+        record Shot(String name, boolean useFirst) implements Step {
+            public Shot(String name) {
+                this(name, false);
+            }
         }
     }
 }

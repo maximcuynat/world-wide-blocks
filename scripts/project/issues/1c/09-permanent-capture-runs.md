@@ -10,8 +10,8 @@ A capture run is a development client that works on its own: it opens a trial wo
 - [x] Client capture code never loaded by the dedicated server of `runGameTestServer`
 - [x] A Gradle run (`runClientCapture`) that takes a scenario name and quits on its own when the scenario ends, with an exit code and a log line that say whether it went through
 - [x] The world is a trial world created by the run, never one of the maintainer's worlds (`run/saves` untouched)
-- [ ] Settings changed by the run (window size, GUI scale, language, client options of the mod) restored before quitting, also when the scenario fails
-- [ ] Reusable scenarios, one per lot or check: trial world, scene (`/worldwideblocks test` scenes reused), player position and aim, sneaking or standing
+- [x] Settings changed by the run (window size, GUI scale, language, client options of the mod) restored before quitting, also when the scenario fails
+- [x] Reusable scenarios, one per lot or check: trial world, scene (`/worldwideblocks test` scenes reused), player position and aim, sneaking or standing
 - [x] Combinations of window sizes and GUI scales (at least 854 x 480 and 1920 x 1080) and of languages (English and French) declared by the scenario
 - [x] Named screenshots (scenario, step, size, scale, language) in a folder of their own, ignored by git
 - [x] A values file next to the screenshots (text shown, states, sizes read at each step), so that the report rests on values as well as on images

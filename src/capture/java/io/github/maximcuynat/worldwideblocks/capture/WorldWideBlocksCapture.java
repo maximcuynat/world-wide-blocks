@@ -3,6 +3,7 @@ package io.github.maximcuynat.worldwideblocks.capture;
 import io.github.maximcuynat.worldwideblocks.client.StatusPanelShownEvent;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.ClientChatReceivedEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.common.NeoForge;
 
@@ -25,5 +26,6 @@ public final class WorldWideBlocksCapture {
         CaptureRun run = new CaptureRun(scenario.strip());
         NeoForge.EVENT_BUS.addListener(ClientTickEvent.Post.class, run::onClientTick);
         NeoForge.EVENT_BUS.addListener(StatusPanelShownEvent.class, run::onPanel);
+        NeoForge.EVENT_BUS.addListener(ClientChatReceivedEvent.System.class, run::onChat);
     }
 }
