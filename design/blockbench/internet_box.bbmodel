@@ -1,0 +1,232 @@
+{
+  "meta": {
+    "format_version": "4.10",
+    "model_format": "java_block",
+    "box_uv": false
+  },
+  "name": "internet_box",
+  "parent": "block/block",
+  "ambientocclusion": true,
+  "front_gui_light": false,
+  "visible_box": [
+    1,
+    1,
+    0
+  ],
+  "resolution": {
+    "width": 64,
+    "height": 64
+  },
+  "elements": [
+    {
+      "name": "case",
+      "box_uv": false,
+      "rescale": false,
+      "locked": false,
+      "from": [
+        4.5,
+        0,
+        4.5
+      ],
+      "to": [
+        11.5,
+        3,
+        11.5
+      ],
+      "autouv": 0,
+      "color": 0,
+      "origin": [
+        8,
+        0,
+        8
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            32,
+            28,
+            44
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            0,
+            48,
+            28,
+            60
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            32,
+            32,
+            60,
+            44
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            32,
+            48,
+            60,
+            60
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            28,
+            28
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            32,
+            0,
+            60,
+            28
+          ],
+          "texture": 0,
+          "cullface": "down"
+        }
+      },
+      "type": "cube",
+      "uuid": "b288d1f9-2cdc-4dc8-9a99-75828c8220fb"
+    }
+  ],
+  "outliner": [
+    "b288d1f9-2cdc-4dc8-9a99-75828c8220fb"
+  ],
+  "textures": [
+    {
+      "path": "",
+      "name": "internet_box.png",
+      "folder": "block",
+      "namespace": "worldwideblocks",
+      "id": "0",
+      "particle": true,
+      "render_mode": "default",
+      "render_sides": "auto",
+      "width": 64,
+      "height": 64,
+      "uv_width": 64,
+      "uv_height": 64,
+      "visible": true,
+      "internal": true,
+      "saved": false,
+      "uuid": "32cfdc6b-d825-4ed6-913d-45f946fd6002",
+      "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAA60lEQVR42u3YPQrCQBAG0PTBG4iFxxBsLCy8kyBY2qew9AQewsLKGygW3iOihWLwNyabhbwPBlwirnlMjJlks93lISsppOn9EwCRAAyGo2tVvV/xcwG4BAAAAAAAAAAAAAAAAPDuC3R7/b9KB+gAHaADdIAO0AE6wFAUgN+AuAFEpN3ZH095yIptf3cBAADuByeH2dPXr95TZl03wHS+eKjWdcDlpNO0c63KAdbZ+FZl1t8CfHqibAyg+Lj76zoUQG2XQCgAdwEAAQGy5SoPWbHtLyLmAeYB/gcAAAAAAAAAAACYB5gHiEi7cgYwQuhx21KP2wAAAABJRU5ErkJggg=="
+    }
+  ],
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        6.81,
+        3.93
+      ],
+      "scale": [
+        1.21,
+        1.21,
+        1.21
+      ]
+    },
+    "ground": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        6.12,
+        0.0
+      ],
+      "scale": [
+        0.48,
+        0.48,
+        0.48
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        6.3,
+        0.0
+      ],
+      "scale": [
+        0.97,
+        0.97,
+        0.97
+      ]
+    },
+    "thirdperson_righthand": {
+      "rotation": [
+        75,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        3.73,
+        4.58
+      ],
+      "scale": [
+        0.73,
+        0.73,
+        0.73
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        5.0,
+        0.0
+      ],
+      "scale": [
+        0.77,
+        0.77,
+        0.77
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        5.0,
+        0.0
+      ],
+      "scale": [
+        0.77,
+        0.77,
+        0.77
+      ]
+    }
+  }
+}

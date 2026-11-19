@@ -249,6 +249,7 @@ Branch `design/equipment`. Each device is drawn in Blockbench (`design/blockbenc
 Facts read from the code: no `.bbmodel` in the repository; current texture density differs per device (tower 2 texels per px, box 4, laptop 2 with stretched edges); front of every model faces north; Java shapes hard-coded in each block class; `laptop_open.json` used by no blockstate (noted in lot F, not deleted).
 
 - [x] 1. `docs/design-guide.md` (k = 2.4 with a 15 px cap, 4 texels per px, 8-colour palette, fixed LED positions, item display rule, port areas): approved by Max on 2026-11-19
-- [ ] 2. Internet box
-- [ ] 3. 5-port desktop switch (dimensions [TO COMPLETE], plausible 100 x 100 x 25 mm to decide)
+- [x] 2. Internet box: `design/blockbench/internet_box.bbmodel` and its sheet drawn; ports placement (LAN front, line and power at the back) decided by Max as a playability choice; approved in Blockbench (three checks OK, no design remark), exported to the assets; build green and checked in game by Max on 2026-11-20 (a more polished version requested next)
+- [ ] 3. 5-port desktop switch (provisional 100 x 100 x 25 mm, not verified, so 4 x 4 x 1 px; size to judge in game)
 - [ ] 4. PC tower and laptop, aligned on the guide (later)
+- [ ] 5. `design/tools/` (shared helpers `wwb_design.py`, `internet_box.py`, `export.py`, README with the "saved from Blockbench = reference" rule) and the `CLAUDE.md` line: written, commit separate from the box, after Max's check in game
