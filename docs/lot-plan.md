@@ -21,8 +21,6 @@ Written on 2026-11-17, revised the same day after review; revised again on 2026-
 | Decision | Before lot | Proposal | Status |
 |---|---|---|---|
 | Choice of the exact port | 1d | No proposal for now. Today the Ethernet cord takes the first free local network port; with a desktop switch, the player will want to choose the port | To decide |
-| Reply of the box to a `ping` outside the local network | 1c-1 | No proposal for now: `Destination Net Unreachable` or silence, from the behaviour of a real box without an internet link | To decide |
-| Laptop with its lid closed | 1c-1 | It stays on the network (keeps its address, answers `ping`) until lot 1e; at lot 1e, closing the lid could put it to sleep, as most real laptops do by default (from memory, to verify) | To confirm |
 | Laptop battery | 1e | The laptop runs on battery when it is not plugged in and recharges on a socket | To approve |
 | Electricity mandatory or not | 1e | "Power required" configuration option, enabled by default; when disabled, all devices work without power | To approve |
 | Making cables by hand | 2b | The tools of lot 9a (spool, connector, crimping tool, tester) are brought forward just before 2b, so that the fixed home cabling uses cables cut to the wanted length. Alternative: keep them at 9a and use only finished cords until then | To decide |
@@ -31,7 +29,7 @@ Written on 2026-11-17, revised the same day after review; revised again on 2026-
 
 ## Decisions taken
 
-Decisions of lot 1c, taken with Max on 2026-11-19 in a dedicated session (details in the sections of lots 1c-1 and 1c-2).
+Decisions of lot 1c, taken with Max on 2026-11-19 in a dedicated session (details in the sections of lots 1c-1 and 1c-2); the last five rows were taken at the start of lot 1c-1, the same day.
 
 | Decision | Lot | Decided | Why |
 |---|---|---|---|
@@ -46,6 +44,11 @@ Decisions of lot 1c, taken with Max on 2026-11-19 in a dedicated session (detail
 | Time shown by `ping` | 1c-1 | A latency computed from the path actually taken: cable lengths, devices crossed, processing time of each type of device. Delivery stays instant in the engine; the values are documented with their sources and easy to change; results are deterministic (jitter maybe later). Game time stays for intervals, timeouts, elapsed time and leases | Replies are delivered in the same tick, so converted ticks would show 0 ms; a computed latency makes the built network measurable (replaces the proposal "1 tick = 50 ms") |
 | Frame capture (`tcpdump`) | 1c-2 | In lot 1c-2, between 1c-1 and 1d | Lot 1c-1 keeps its success criterion, and capture arrives before switches, to show unicast and broadcast |
 | Scope of lots 1c-1 and 1c-2 | 1c-1, 1c-2 | See the two lots. A working subset of the real tools: what exists really works, everything else returns a consistent error | No command shows a prepared result |
+| Format of `ip addr` and `ip route` under DHCP | 1c-1 | The machine behaves like Debian with ifupdown and `dhclient`: `default via 192.168.1.1 dev eth0 ` and `192.168.1.0/24 dev eth0 proto kernel scope link src 192.168.1.10 `, without `proto dhcp` nor metric; the address is `dynamic`, with `valid_lft` and `preferred_lft` equal to the time left on the lease. Read in the sources, not run: Debian's `dhclient-script.linux` adds the default route without `proto` (so `boot`), and iproute2 hides `proto boot` without `-d` (`ip/iproute.c`); it prints `dynamic` for an address that is not permanent (`ip/ipaddress.c`) | The format is that of the real reference output, and lot 1c-2 brings `dhclient` itself. A Docker run (dnsmasq and `dhclient`) will confirm it at lot 1c-2 |
+| Reply of the box to a `ping` outside the local network | 1c-1 | `Destination Net Unreachable` (ICMP type 3, code 0) sent by the box, whose routing table only holds its local network until lot 6c; no rate limit on ICMP errors. RFC 1812, 4.3.3.1: a router with "no routes at all (including no default route)" to the destination "MUST generate a Destination Unreachable, Code 0 (Network Unreachable) ICMP message"; Linux does the same when it forwards (`net/ipv4/route.c`, `ip_error`). What a real consumer box does with its line down was not found | The answer comes from the real state of the box, and changes by itself when the box gets a route (lot 6c) |
+| Laptop with its lid closed | 1c-1 | It stays on the network (keeps its address, answers `ping`) until lot 1e; at lot 1e, closing the lid could put it to sleep, as most real laptops do by default (from memory, to verify) | Lot 1e brings power states |
+| "Computer busy" | 1c-1 | Answer to a gesture, through `MessageCenter.gesture`, as an error (`docs/messages.md`, "Terminal") | Same channel as the other gestures |
+| Presence frame removed | 1c-1 | Accepted: without it, a computer that sends nothing leaves the box's table after 300 s and comes back at its next frame (at the latest its DHCP renewal, at 600 s); the panel of the box stops showing its MAC for that time, while the addresses lent stay shown | This is what a real switch does |
 | Working name of the operating system | (announcement) | "Blocknix" is a working name, in the documentation only: generic names in the code, nothing in the game or its resources. Before any announcement: trademark databases (classes 9 and 42: INPI, EUIPO, WIPO, USPTO), mod platforms (CurseForge, Modrinth), GitHub and the web, checked the same day, and availability of the useful names | The name can change without touching the architecture |
 
 History of the decision on issue #10: during the interview, Max first answered that the tower would have no terminal for now, that its terminal would need a screen, keyboard and mouse plugged in, and that the tower would later be crafted from components. On review of the summary, he confirmed the principle written above (terminal on the tower from lot 1c-1, peripherals optional by default). The tower crafted from components stays an idea of its own (idea issue "PC tower built from components"), independent of this decision.
@@ -261,6 +264,8 @@ Test method (since lot 1b-1): the logic is proved by automatic tests; manual tri
 
 Screenshots go in `run/screenshots`, messages in `run/logs/latest.log`, diagnostic log lines in `run/logs/debug.log` (in English).
 
+From issue #15 (lot 1c-1), without the presence frame: the MACs learned by a box (`box_hosts`, `chain`) are shown during the first 300 game seconds after the scene is built, then again for 300 s after each DHCP renewal of the computer (every 600 s); look at them within 5 minutes of building the scene. The addresses lent by the box stay shown.
+
 #### Check by eye of the message module (game in French)
 
 Preparation: `./gradlew runClient`, then Options, Language: French. Open (or create) a creative world whose name starts with "Trials", stand facing a clear area. Take a screenshot (F2) at each point marked 📷.
@@ -298,7 +303,7 @@ Deviations from RFC 2131, approved by Max on 2026-11-18:
 - No DECLINE, RELEASE or ARP probe of the offered address (4.4.1).
 - Lease time in seconds in the message (1,200 s), 24,000 ticks in the engine; an offered address is held 60 s.
 
-Presence frame: still needed until lot 1c (issue #15): a computer with an address is silent until T1 (600 s), while a switch forgets a MAC after 300 s.
+Presence frame: still needed until lot 1c (issue #15): a computer with an address is silent until T1 (600 s), while a switch forgets a MAC after 300 s. Removing it was accepted by Max at the start of lot 1c-1: once it is gone, the MACs learned by a box are shown during 300 s after each frame of the computer.
 
 Automatic tests: unit tests of the layers, of the server, of the client at the exact tick (renewal, rebinding, expiry, retransmissions, INIT-REBOOT, conflict), of the simulation with boxes and computers, of the panel and of the language files. Game tests `dhcp_*`: address obtained, lost when unplugged, same address when plugged again, renewal at T1, expiry at the exact tick (server turned off), computers without a box, conflict of two boxes, restart through `network.dat` read back (INIT-REBOOT), full pool; plus the build of each new scene.
 
@@ -353,7 +358,7 @@ Decisions of 2026-11-19: see "Decisions taken". The terminal is an interface to 
 
 - Laptop: a right-click on the screen part of the model opens or closes the lid; a right-click on the keyboard part of the open laptop opens the terminal. The item keeps its open or closed state in the inventory and is placed in that state. Sneak + right-click with an empty hand stays the unplugging of a cable end (decided at lot 1a, on 2026-11-17), and a right-click with a cord in hand stays the connection of a cable.
 - Tower: a right-click with an empty hand opens the terminal. No screen, keyboard or mouse is needed (issue #10).
-- The behaviour of a laptop with its lid closed is still to confirm (see "Open decisions").
+- A laptop with its lid closed stays on the network (keeps its address, answers `ping`) until lot 1e (see "Decisions taken").
 
 **Machine, console and session.**
 
@@ -386,13 +391,13 @@ Chosen by Max on 2026-11-19 from the captures of the prototype (issue #30, findi
 | `ping [-c n] <address>` | One request per second until Ctrl+C, or `n` requests; one line per reply (`icmp_seq`, `ttl`, `time`), then the statistics block. The terminal belongs to the command while it runs (no background jobs in 1c-1); a `ping` goes on when the screen is hidden |
 | `ip addr` (`ip a`, `ip addr show eth0`) | Interfaces, MAC, IPv4 address and mask, state of the link, lease time left: an address from DHCP is `dynamic`, its `valid_lft` counts down in real seconds, consistent with the status panel. No `inet6` line: the mod has no IPv6 (idea for later) |
 | `ip link` | Physical state of the interfaces (`LOWER_UP` or `NO-CARRIER`): "no cable" is not "no address" |
-| `ip route` | The default route through 192.168.1.1 and the route of the local network, from the DHCP lease. Whether the lines carry `proto dhcp` (it depends on the DHCP client of the real system) is decided at the start of the lot |
+| `ip route` | From the DHCP lease, in the format of `dhclient` on Debian: `default via 192.168.1.1 dev eth0 ` and `192.168.1.0/24 dev eth0 proto kernel scope link src 192.168.1.10 ` (trailing space included) |
 | `ip neigh` | The ARP cache and its states |
 | `hostname` | The name of the machine |
 | `help`, `help <command>` | Translated: the commands of this machine, their syntax, the differences with the real tool |
 | `clear` (Ctrl+L), `history`, `exit` (Ctrl+D) | Base gestures of a terminal |
 
-`ping` shows the situation really met. Cases to cover, with their exact output to check on a real machine before writing the tests: no address or no route (from memory: `ping: connect: Network is unreachable`); absent machine on the local network, ARP fails (`From <own address> icmp_seq=1 Destination Host Unreachable`); destination outside the local network, through the box, which has no internet link before lot 6c (to decide at the start of the lot from the behaviour of a real box: `Destination Net Unreachable` or silence). A timeout prints nothing, as on Linux; the statistics say `100% packet loss`.
+`ping` shows the situation really met. Cases to cover, with their exact output to check on a real machine before writing the tests: no address or no route (from memory: `ping: connect: Network is unreachable`); absent machine on the local network, ARP fails (`From <own address> icmp_seq=1 Destination Host Unreachable`); destination outside the local network, through the box, which has no route beyond its local network before lot 6c: the box answers `Destination Net Unreachable` (`From 192.168.1.1 icmp_seq=1 Destination Net Unreachable`, form of the line to check against the iputils sources: it has two code paths, `From %s icmp_seq=` and `From %s: icmp_seq=`), and the statistics count it in `+N errors`. A timeout prints nothing, as on Linux; the statistics say `100% packet loss`.
 
 Reference of the output tests: real outputs of `ip addr`, `ip link`, `ip route`, `ip neigh` and `ping` (to the gateway, to an absent address) on Debian, iproute2 and iputils in Docker, in `src/test/resources/linux-real-outputs.txt`. The mod keeps their format, trailing spaces included, and adapts what differs on the simulated machine: only `lo` and `eth0`, `eth0` without `@if…` nor `link-netnsid`, MTU 1500, addresses 192.168.1.x, MACs `02:…`.
 

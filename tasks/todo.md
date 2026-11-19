@@ -2,6 +2,40 @@
 
 Session notes only. Tasks are GitHub issues, grouped by milestone (one lot, one version): `scripts/dev status` and `docs/project-management.md`. The open tasks and the ideas that used to be here became issues on 2026-11-18 (`scripts/project/issues/`, created by `scripts/dev project sync`).
 
+## Lot 1c-1: terminal and ping (session of 2026-11-19)
+
+Branch `lot/1c-1`. Issues #10 to #16, #30 (closed) and #52.
+
+Step 0 (done, commit a25b047): findings of the prototype (#30) applied to `docs/lot-plan.md` and to the issue files 1c/02 and 1c/08; real Linux outputs copied to `src/test/resources/linux-real-outputs.txt` without the `docker pull` lines.
+
+Facts checked for the two decisions (sources fetched on 2026-11-19):
+
+- iproute2 `ip/iproute.c:878`: `proto` is printed unless it is `boot` (hidden without `-d`); `lib/rt_names.c` and `etc/iproute2/rt_protos`: 16 = `dhcp`. `ip/ipaddress.c`: `dynamic` printed for an address without `IFA_F_PERMANENT`, lifetimes as `valid_lft %usec`. systemd-networkd `src/network/networkd-dhcp4.c:390`: DHCP routes get `RTPROT_DHCP`, metric from `dhcp_route_metric`. Netplan (Ubuntu): default renderer networkd. Debian 13 release notes: `dhcpcd-base` replaces `isc-dhcp-client` for ifupdown. Debian `isc-dhcp` `debian/dhclient-script.linux:250-253, 277`: `ip -4 addr add <address>/<mask> ... valid_lft <lease> preferred_lft <lease>` and `ip -4 route add default via <router> dev <interface>` without `proto` (so `boot`, hidden) and without metric for a single router. All of the above read in the fetched files, not run. Not found: a real output line with `proto dhcp` or with `dynamic`.
+- RFC 1812, 4.3.3.1: no route at all, default included: the router MUST send Destination Unreachable code 0 (Network Unreachable). Linux `net/ipv4/route.c:976` `ip_error`: silent when forwarding is off, `ICMP_NET_UNREACH` for `ENETUNREACH` (no route). iputils `ping/ping.c:1297` "Destination Net Unreachable", `ping/ping_output.c:50` `From %s icmp_seq=%u `. Not found: what a consumer box does with its line down.
+
+Decisions of Max (2026-11-19), recorded in `docs/lot-plan.md` ("Decisions taken"):
+
+- `ip addr` and `ip route` in the format of `dhclient` on Debian (the real reference output): no `proto dhcp`, no metric; the Docker check (dnsmasq and `dhclient`) moves to lot 1c-2 (issue file 1c-2/02).
+- The box answers `Destination Net Unreachable` (code 0) to a destination outside its local network, RFC 1812 4.3.3.1; no rate limit on ICMP errors.
+- #52 before #11. The closed laptop stays on the network until lot 1e. "Computer busy" through `MessageCenter.gesture`, as an error. Without the presence frame, MACs leave the box panel between 300 and 600 s (accepted; lot 1b procedures and #52 scenarios updated). Issue file 1c/07: capture scenario `terminal` instead of a `runClient` procedure.
+
+Plan approved by Max. One commit per step after Max's green build (`./gradlew build test`, `./gradlew runGameTestServer`); every existing test that changes is shown to Max before and after. Every Minecraft or NeoForge name checked in the 26.3 sources (file and line) at its step.
+
+- [x] 0. Findings of #30 applied to the docs (a25b047); decisions recorded (docs commit after the approval)
+- [ ] 1. IPv4 stack per interface and `ip addr`, `ip link`, `ip route` (#12)
+  - [ ] `Ipv4Packet` gets a `ttl` (64 by default)
+  - [ ] `network/ip/`: interfaces `lo` and `eth0` (MAC, MTU, carrier, address with lease lifetime), routing table (`proto kernel` route of the local network, default route), UDP demultiplexing by port
+  - [ ] DHCP client bound to UDP 68: a lease sets the address and the routes, losing it removes them; the box gets its own stack (192.168.1.1 on its service MAC), DHCP server bound to UDP 67
+  - [ ] Plain-Java console core: session, shell, command registry, processes advanced by the tick, cap per machine
+  - [ ] `ip addr` (`a`, `show eth0`), `ip link`, `ip route`, errors of iproute2 read in its sources
+  - [ ] Output tests against the format of `src/test/resources/linux-real-outputs.txt`; DHCP tests still green
+- [ ] 2. ARP (#13): RFC 826 packet, neighbour table with the Linux states and fixed delays, pending packets, box answers for 192.168.1.1, DHCP renewal through ARP, `ip neigh`
+- [ ] 3. ICMP, `ping` and latency (#14): echo and destination unreachable (original packet quoted), box with routing table and code 0, latency carried by each delivery and inherited by replies, `ping` and `ping -c n` in the iputils formats, advice line after a failure
+- [ ] 4. Permanent capture runs (#52): `capture` source set absent from the jar (checked by a task), `runClientCapture -Pscenario=`, throwaway `run-capture/`, world created by the run, values file, exit code; scenarios of lots 1b-1, 1b-2 and the message module
+- [ ] 5. Terminal screen (#11): gestures, keyboard owner, checked packets, screen with Monocraft, own text size, shell commands, language keys; capture scenario `terminal`
+- [ ] 6. Presence frame removed (#15)
+- [ ] 7. Ping game tests (#16)
+
 ## Tooling: Projects board automation (session of 2026-11-19)
 
 Branch `chore/project-board`. Design approved by Max on 2026-11-19.
