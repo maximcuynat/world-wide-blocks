@@ -188,7 +188,7 @@
       "locked": false,
       "from": [
         4.5,
-        2.25,
+        2.0,
         6.75
       ],
       "to": [
@@ -209,7 +209,7 @@
             0,
             0,
             28,
-            18
+            19
           ],
           "texture": 0
         },
@@ -218,7 +218,7 @@
             73,
             0,
             75,
-            18
+            19
           ],
           "texture": 0
         },
@@ -236,7 +236,7 @@
             80,
             0,
             82,
-            18
+            19
           ],
           "texture": 0
         },
@@ -355,7 +355,7 @@
       ],
       "to": [
         6.25,
-        2.25,
+        2.0,
         7.25
       ],
       "autouv": 0,
@@ -369,7 +369,7 @@
         "north": {
           "uv": [
             21,
-            18,
+            19,
             28,
             21
           ],
@@ -380,7 +380,7 @@
             32,
             52,
             34,
-            55
+            54
           ],
           "texture": 0
         },
@@ -396,7 +396,7 @@
         "west": {
           "uv": [
             80,
-            18,
+            19,
             82,
             21
           ],
@@ -430,13 +430,13 @@
       "rescale": false,
       "locked": false,
       "from": [
-        7.0,
+        6.75,
         1.5,
         6.75
       ],
       "to": [
         7.25,
-        2.25,
+        2.0,
         7.25
       ],
       "autouv": 0,
@@ -450,8 +450,8 @@
         "north": {
           "uv": [
             17,
-            18,
-            18,
+            19,
+            19,
             21
           ],
           "texture": 0
@@ -461,7 +461,7 @@
             32,
             52,
             34,
-            55
+            54
           ],
           "texture": 0
         },
@@ -479,7 +479,7 @@
             32,
             52,
             34,
-            55
+            54
           ],
           "texture": 0
         },
@@ -511,13 +511,13 @@
       "rescale": false,
       "locked": false,
       "from": [
-        8.0,
+        7.75,
         1.5,
         6.75
       ],
       "to": [
         8.25,
-        2.25,
+        2.0,
         7.25
       ],
       "autouv": 0,
@@ -531,8 +531,8 @@
         "north": {
           "uv": [
             13,
-            18,
-            14,
+            19,
+            15,
             21
           ],
           "texture": 0
@@ -542,7 +542,7 @@
             32,
             52,
             34,
-            55
+            54
           ],
           "texture": 0
         },
@@ -560,7 +560,7 @@
             32,
             52,
             34,
-            55
+            54
           ],
           "texture": 0
         },
@@ -592,13 +592,13 @@
       "rescale": false,
       "locked": false,
       "from": [
-        9.0,
+        8.75,
         1.5,
         6.75
       ],
       "to": [
         9.25,
-        2.25,
+        2.0,
         7.25
       ],
       "autouv": 0,
@@ -612,8 +612,8 @@
         "north": {
           "uv": [
             9,
-            18,
-            10,
+            19,
+            11,
             21
           ],
           "texture": 0
@@ -623,7 +623,7 @@
             32,
             52,
             34,
-            55
+            54
           ],
           "texture": 0
         },
@@ -641,7 +641,7 @@
             32,
             52,
             34,
-            55
+            54
           ],
           "texture": 0
         },
@@ -673,13 +673,13 @@
       "rescale": false,
       "locked": false,
       "from": [
-        10.0,
+        9.75,
         1.5,
         6.75
       ],
       "to": [
         11.5,
-        2.25,
+        2.0,
         7.25
       ],
       "autouv": 0,
@@ -693,8 +693,8 @@
         "north": {
           "uv": [
             0,
-            18,
-            6,
+            19,
+            7,
             21
           ],
           "texture": 0
@@ -702,7 +702,7 @@
         "east": {
           "uv": [
             73,
-            18,
+            19,
             75,
             21
           ],
@@ -722,7 +722,7 @@
             32,
             52,
             34,
-            55
+            54
           ],
           "texture": 0
         },
@@ -942,7 +942,7 @@
       "internal": true,
       "saved": false,
       "uuid": "0e3cb197-1e27-5394-b894-d10d3e26d9fa",
-      "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAABkklEQVR42u3dP0rDUBzA8eylJ1AcHIuDp3DwToLg6N6hY0/gIRycvIHi4D0ilbbEEiEkff/yPh94hAzhYfPl17SINq9v723M1Zwoaf+mx9TrP76+25irKfkGCEAAAhCAAAQQaP/1Ztt7HBrAmOsFYAIIwAQQgAkgABNAACaAAEwAAVQ1AZITQNoJIAATQAAmgABMgBwDuP98nHRuAmzPGlCIn382E+Dh6fnPKmUCZBvAYrE8rjHn57gBl1fXv2toAIf9xwZgAlQegAnQWS/ru+Mac17iW4AJ4FOACSAAAQigpgB271MxV8n7993AqdcnD4C6v4lFAAAAeAqN/PSZ7Ldh91Y3t23IJYDMP34IwAQQgAkggKwngABMAAGYAAIwARAAADCPp+Cc95/6+glAAAAAALk5/BGGWOu//d0JAVBzgF4JSCH0V7G+HhWAAAAAAPKxvFi1IdeQ/btHBEDsAHb/6aN7FIAJIAABCAAAPAOEewYATAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJixH08uoonS7Ci5AAAAAElFTkSuQmCC"
+      "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAABmUlEQVR42u3dPUrDYBzA4eylJ1AcHIuDp3DwToLg6N7BsSfwEA5O3kBx8B6RhgZqiTXm5f1qngdeQoYQbX78mwapzcvrW5tyNQdqOn8zIPT498+vNuVqar4AAhCAAAQgAAFEOv/6aTO4HRvAlOMFYAIIwAQQgAkgABNAACaAAEwAAcxqAmQngLwTQAAmgABMAAGYAAKY5wTI/fsf/QFuP+6D9lMGcPfw+GPVMgGKDiD3BDi/uOzW2AAWi2W3pgZgAhys/gWduh8awPP6plupAjAB/rgA/92v7S3ABPApwAQQgAAEMKcAtu9TKVfN5x+6gKHHZw+AeT+IQwAAALgLTXz3me2vYXdWV9dtzCWAwj9+CMAEEIAJIICiJ4AATAABmAACMAEQAABwGnfBJZ8/9PUTgAAAAABK038LR6r12/ldCQEAkFbsR7Eej1YcQP+lT1P3BQAAAFCc5dmqjbnGnH9/iwBIHcD2Hz3sbwVgAghAAAIAAPcA8e4BABMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABO2DdJNNELgwHfegAAAABJRU5ErkJggg=="
     }
   ],
   "display": {
@@ -953,7 +953,7 @@
         0
       ],
       "translation": [
-        0,
+        0.0,
         4.87,
         2.81
       ],
@@ -970,7 +970,7 @@
         0
       ],
       "translation": [
-        0,
+        0.0,
         5.25,
         0.0
       ],
@@ -987,7 +987,7 @@
         0
       ],
       "translation": [
-        0,
+        0.0,
         4.5,
         0.0
       ],
@@ -1004,7 +1004,7 @@
         0
       ],
       "translation": [
-        0,
+        0.0,
         3.37,
         3.26
       ],
@@ -1021,7 +1021,7 @@
         0
       ],
       "translation": [
-        0,
+        0.0,
         3.6,
         0.0
       ],
@@ -1038,7 +1038,7 @@
         0
       ],
       "translation": [
-        0,
+        0.0,
         3.6,
         0.0
       ],

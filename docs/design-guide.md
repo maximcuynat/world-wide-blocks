@@ -79,7 +79,8 @@ Out of the palette: the Ethernet cable item keeps its own blues (cables are a fa
 
 - Flat colours. No gradient, no noise, no dithering. The game already shades each face by its direction: no light is drawn into the texture.
 - Edges: a 1-texel highlight line along the top edge of the side faces, a 1-texel shadow line along their bottom edge.
-- RJ45 port: 2 x 2 texels in socket colour, pitch of at least 3 texels. On a face with room (pitch of 4 texels or more), 3 x 3 texels with the top row in contacts colour.
+- **RJ45 port: one size on every device, 2 x 2 texels (0.5 px)**, as a real RJ45 has the same size everywhere; at the scale of section 2 this is the real size, and the grid of texels allows nothing smaller (Max, 2026-11-20). Pitch of at least 3 texels. **The contacts are always on the bottom row** (Max, 2026-11-20), painted or recessed: painted, the top row in socket colour and the bottom row in contacts colour; recessed (a hole 0.5 px deep), the bottom of the hole in socket shadow tone with its bottom row in contacts colour (seen from the front), and the back row of the floor of the hole in contacts colour as well (seen from above or from the side: the side walls of a 2 x 2 hole hide its bottom in a three-quarter view).
+- Other connectors (RJ11, fibre, power, console): told apart by the shape of their plug and the thickness of their cable, never by a smaller hole (`docs/cable-design.md`, section 4).
 - Ports are texture areas aligned on the 0.25 px grid (whole texels), at positions written in the device sheet (section 9). This keeps the models compatible with choosing a port by aiming at it, if that option is kept (open decision "Choice of the exact port" of `docs/lot-plan.md`, before lot 1d-1); this guide does not decide it.
 - LED: 1 x 1 texel. Button: at least 2 x 2 texels.
 - Vents: discreet, in the shadow tone of the body (dots or lines of 1 texel, 1 texel apart). The socket colour stays for real openings (ports, slots, holes).

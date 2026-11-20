@@ -96,18 +96,17 @@ class Sheet:
         self.rect(element, face, 0, 0, w, 1, role, 'hi')
         self.rect(element, face, 0, h - 1, w, 1, role, 'sh')
 
-    def rj45(self, label, element, face, col, row, large=True, depth_tone='base', contacts='top'):
-        """RJ45 port: 3 x 3 with a contacts row (large) or 2 x 2 in socket colour.
-        depth_tone 'sh' draws the bottom of a port that is modelled as a real hole; contacts 'bottom'
-        puts the contacts row where it stays visible through a hole seen from above."""
-        if large:
-            top = contacts == 'top'
-            self.rect(element, face, col, row if top else row + 2, 3, 1, 'contacts')
-            self.rect(element, face, col, row + 1 if top else row, 3, 2, 'socket', depth_tone)
-            self.items.append((label, element, face, col, row, 3, 3, 'contacts row at the %s, socket' % contacts))
-        else:
-            self.rect(element, face, col, row, 2, 2, 'socket')
-            self.items.append((label, element, face, col, row, 2, 2, 'socket'))
+    def rj45(self, label, element, face, col, row, depth_tone='base', contacts='bottom'):
+        """RJ45 port, the single size of the design guide (section 5): 2 x 2 texels, a row in socket colour above a row
+        of contacts, painted or at the bottom of a hole (the lower part of the bottom of a hole is the part that stays
+        visible from the front). contacts 'bottom', 'top', or None (contacts drawn elsewhere). depth_tone 'sh' draws
+        the bottom of a port that is modelled as a real hole."""
+        tone = ' shadow tone' if depth_tone == 'sh' else ''
+        self.rect(element, face, col, row, 2, 2, 'socket', depth_tone)
+        if contacts:
+            self.rect(element, face, col, row if contacts == 'top' else row + 1, 2, 1, 'contacts')
+        self.items.append((label, element, face, col, row, 2, 2,
+                           'socket%s, contacts row at the %s' % (tone, contacts) if contacts else 'socket' + tone))
 
     def socket(self, label, element, face, col, row, w, h):
         self.rect(element, face, col, row, w, h, 'socket')

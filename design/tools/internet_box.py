@@ -1,7 +1,7 @@
 """Internet box, version 3: standing box, 7 x 3 x 7 px (design/blockbench/internet_box.md).
 
 Family signature (design guide, section 5): a standing case, with a black glass band that stands out
-of the top of the front, and 4 large recessed LAN ports low on the front.
+of the top of the front, and 4 recessed LAN ports low on the front (RJ45, the single size: 2 x 2 texels).
 
 Elements (front facing north):
 - base: dark plinth, set back 0.5 px;
@@ -17,11 +17,11 @@ import wwb_design as d
 ID = 'internet_box'
 T = d.TEXELS_PER_PX
 ENVELOPE = ([4.5, 0.5, 6.75], [11.5, 6.75, 9.5])   # the band takes the first 0.25 px of the depth
-LAN_COLS = (6, 10, 14, 18)                         # LAN 1 to 4, from the viewer's left
-PORT_ROWS = (18, 3)
+LAN_COLS = (7, 11, 15, 19)                         # LAN 1 to 4, from the viewer's left; 7 texels on each side
+PORT_ROWS = (19, 2)                                # the bottom of the ports stays on row 20
 BAND_ROWS = (2, 5)                                 # band height on the front, from the top
 
-FRONT = d.RecessedFront(ENVELOPE, 0.5, [(c, 3) for c in LAN_COLS], PORT_ROWS)
+FRONT = d.RecessedFront(ENVELOPE, 0.5, [(c, 2) for c in LAN_COLS], PORT_ROWS)
 BASE = {'name': 'base', 'from': [5.0, 0, 7.25], 'to': [11.0, 0.5, 9.0], 'cullfaces': ('down',)}
 COVER = {'name': 'cover', 'from': [4.75, 6.75, 7.0], 'to': [11.25, 7.0, 9.25]}
 _top = ENVELOPE[1][1]
@@ -65,10 +65,16 @@ def build():
     sheet.fill('env', 'up', 'light', 'hi')
     sheet.fill('env', 'down', 'light')
 
-    # Front: 4 LAN ports low (their bottom, seen through the holes), an LED above each.
+    # Front: 4 LAN ports low (their bottom, seen through the holes), an LED above the left texel of each. The contacts
+    # are drawn where they stay visible through a 2 x 2 hole: the bottom row of its back (seen from the front) and the
+    # back row of its floor (seen from above or from the side).
     for n, col in enumerate(LAN_COLS, start=1):
-        sheet.rj45('LAN %d port, hole 0.5 px deep' % n, 'env', 'north', col, PORT_ROWS[0], depth_tone='sh', contacts='bottom')
-        sheet.led('LAN %d LED' % n, 'env', 'north', col + 1, PORT_ROWS[0] - 2)
+        sheet.rj45('LAN %d port, hole 0.5 px deep' % n, 'env', 'north', col, PORT_ROWS[0], depth_tone='sh')
+        _, _, floor_w, _ = sheet.faces[('wall', 'floor')]   # floor of the hole: columns from the west, row 1 at the back
+        sheet.rect('wall', 'floor', floor_w - col - 2, 1, 2, 1, 'contacts')
+        label, el, face, c, r, w, h, desc = sheet.items[-1]
+        sheet.items[-1] = (label, el, face, c, r, w, h, desc + ', contacts on the back row of the hole floor')
+        sheet.led('LAN %d LED' % n, 'env', 'north', col, PORT_ROWS[0] - 2)
 
     # Glass band: all its faces in the screen colour, power and line LEDs on the left.
     for face in ('north', 'up', 'down', 'east', 'west'):
@@ -77,7 +83,7 @@ def build():
     sheet.led('Line LED', 'band', 'north', 3, 2)
 
     # Back (painted, it faces the wall): line input on the left, power socket on the right.
-    sheet.rj45('Line input', 'env', 'south', 7, 18, large=False)
+    sheet.rj45('Line input', 'env', 'south', 7, 18)
     sheet.rect('env', 'south', 18, 17, 4, 4, 'metal')
     sheet.rect('env', 'south', 19, 18, 2, 2, 'socket', 'sh')
     sheet.items.append(('Power socket', 'env', 'south', 18, 17, 4, 4, 'metal ring, socket shadow hole (19 to 20, 18 to 19)'))

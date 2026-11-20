@@ -83,8 +83,8 @@ def build(front, port):
         sheet.rect('case', 'south', 13, row, 12, 1, 'metal', 'sh')
     if port == 'low':
         sheet.rect('case', 'south', 13, 38, 12, 7, 'metal', 'hi')                 # network card bracket
-        sheet.rj45('RJ45 port (network card, lowest slot)', 'case', 'south', 16, 40)
-        sheet.led('Link LED', 'case', 'south', 20, 41)
+        sheet.rj45('RJ45 port (network card, lowest slot)', 'case', 'south', 16, 41)
+        sheet.led('Link LED', 'case', 'south', 19, 41)
     else:
         sheet.rect('case', 'south', 13, 40, 12, 1, 'metal', 'sh')
         sheet.rj45('RJ45 port (I/O panel)', 'case', 'south', 4, 12)
