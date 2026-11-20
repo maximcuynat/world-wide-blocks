@@ -16,6 +16,8 @@
 
 - Reading a screenshot at its full size misses what is a few pixels wide: the title of the terminal touched the border of its frame and the accent of "É" crossed it in every French capture, reported as fine (2026-11-20). Zoom on the edges of every frame and panel, and measure (a small pixel scan in the scratchpad) rather than look. Any geometric rule of a screen (inside the window, text inside its border, room for accents) is written as a check of the capture run, which fails the run.
 
+- A capture run that passes is not proof that it ran alone: `dhcp_restart` passed at 10:51 on 2026-11-20 while the game showed its "experimental settings" screen at the reopening, most likely confirmed by Max without noticing (33 s gap in the log between "opening again" and the start of the server); without anyone at the keyboard it failed. When reading a capture log, look at the gaps between steps: a wait of several seconds where the run should go on at once may hide a hand on the mouse. A scenario must also check what it shows: a value written into it (the address of a computer) or a result read only by eye can drift unseen; read the value from the game and let the run fail on a wrong result (`Expect`). (2026-11-20)
+
 ## Network engine
 
 - Deferring a task (an event held until the next tick) opens a window where the state has changed: revalidate each pending change against the current state (device or cable still present) when applying it. A computer placed, cabled and removed in the same tick crashed the test server (2026-11-18). Write the test "added then removed before the tick" with every kind of pending queue.
