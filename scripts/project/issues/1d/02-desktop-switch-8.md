@@ -1,6 +1,6 @@
 Title: Desktop switch, 8 ports
 Labels: type: feature, area: blocks, priority: medium
-Milestone: lot 1d
+Milestone: lot 1d-1
 
 Same as the 5-port switch, with 8 ports.
 

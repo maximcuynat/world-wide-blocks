@@ -23,8 +23,8 @@ Minor versions follow the order of [`docs/lot-plan.md`](lot-plan.md). Each lot e
 
 | Version | Lots | Content |
 |---|---|---|
-| 0.1.0 Wired home network | 0, 1a to 1d | PCs, Ethernet cable, internet box, DHCP, terminal and ping, desktop switches. 0.1.0-alpha.1 = lots 1a and 1b-1. |
-| 0.2.0 Power and home network | 1e, 1f, 2a to 2d | Electricity, TCP, Wi-Fi, fixed cabling, peripherals and local services, other home devices |
+| 0.1.0 Wired home network | 0, 1a to 1d-1 | PCs, Ethernet cable, internet box, DHCP, terminal and ping, desktop switches. 0.1.0-alpha.1 = lots 1a and 1b-1. |
+| 0.2.0 Power and home network | 1d-2, 1e, 1f, 2a to 2d | Cable on the ground, electricity, TCP, Wi-Fi, fixed cabling, peripherals and local services, other home devices |
 | 0.3.0 Subscriber line | 3a, 3b | Fibre and copper line inputs of the box |
 | 0.4.0 Street and neighbourhood | 4a, 4b, 5a, 5b | Aerial and underground lines, street cabinets |
 | 0.5.0 ISP | 6a, 6b, 6c-1, 6c-2 | Rack, ISP premises, public address, address translation |
