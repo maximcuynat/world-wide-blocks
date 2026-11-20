@@ -1,6 +1,6 @@
 Title: Desktop switch, 5 ports
 Labels: type: feature, area: blocks, priority: high
-Milestone: lot 1d
+Milestone: lot 1d-1
 
 Multiplies the network sockets, without configuration. It reuses the switching of the box (`network/switching/`), without the box's local point.
 
