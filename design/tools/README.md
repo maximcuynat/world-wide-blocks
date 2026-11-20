@@ -9,7 +9,7 @@ Scripts that draw the equipment for Blockbench, following [`docs/design-guide.md
 ## Files
 
 - `wwb_design.py`: shared helpers. Palette (only its colours are accepted), texture sheet with face areas at 4 texels per px, side faces with highlight and shadow edges, RJ45 ports (painted, or the bottom of a recessed port), LEDs, `add_slice` (one drawing shared out between the elements that make up a face, such as a front panel split around recessed ports), display settings (guide, section 7), table of the ports and LEDs for the device sheet, Blockbench project with the texture embedded (hidden faces left out).
-- `<id>.py`: one script per device: `internet_box.py`, `pc_tower.py`, `laptop.py` (two models sharing one texture), `desktop_switch_5.py` (approved draft, starting point of lot 1d-1).
+- `<id>.py`: one script per device: `internet_box.py`, `pc_tower.py`, `laptop.py` (two models sharing one texture), `desktop_switches.py` (the family of desktop switches: 5 and 8 ports, blocks of lot 1d-1).
 - `cables.py`: design drafts of the cables (`docs/cable-design.md`): the RJ45 plug, cables on the ground with their crossings and lanes, the two-tone outline of the aimed port, the cord colours, the cord icon; drafts only, under `design/blockbench/drafts/`.
 - `export.py`: exports an approved project to the assets.
 - `preview.py`: isometric preview of one or more projects, front and back, with the face shading of the game, to look at a drawing without Blockbench or to compare variants side by side; `--scene` with offsets for several projects together, `--centre` and `--views` for a close-up.

@@ -295,6 +295,7 @@ class RecessedFront:
 
     def __init__(self, envelope, depth, holes, rows):
         self.envelope, self.depth = envelope, depth
+        self.holes = holes
         (x1, y1, z1), (x2, y2, z2) = envelope
         t = TEXELS_PER_PX
         self.holes_x = sorted((x2 - (c + w) / t, x2 - c / t) for c, w in holes)   # west to east
@@ -321,6 +322,14 @@ class RecessedFront:
         sheet.fill('wall', 'floor', 'dark', 'sh')
         sheet.fill('wall', 'ceiling', 'socket')
         sheet.fill('wall', 'vertical', 'socket')
+
+    def add_floor_contacts(self, sheet):
+        """Back row of the floor of each hole in contacts colour (design guide, section 5: the only part of the
+        contacts that shows from above and from the side). The floor area runs from the west, the holes from the
+        viewer's left (east)."""
+        _, _, floor_w, floor_h = sheet.faces[('wall', 'floor')]
+        for col, width in self.holes:
+            sheet.rect('wall', 'floor', floor_w - col - width, floor_h - 1, width, 1, 'contacts')
 
     def map_faces(self, sheet):
         """Gives each face of the body elements its part of the envelope ('env' areas of the sheet),

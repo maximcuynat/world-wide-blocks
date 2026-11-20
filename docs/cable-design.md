@@ -60,7 +60,7 @@ Box front on the left (zones over the lower band of the front). Switch on the ri
 | Device | Hole | Aim zone | Gain |
 |---|---|---|---|
 | Internet box (4 LAN) | 0.5 x 0.5 px | about 1 px wide (2.5 px at the ends) x 2.5 px high (y 0.75 to 3.25) | x 10 or more |
-| 5-port switch | 0.5 x 0.5 px | 0.75 px wide (1 px at the ends) x the whole front (1 px) and the whole depth of the top (3 px) | x 12 |
+| 5-port switch | 0.5 x 0.5 px | 0.75 px wide (0.875 px at the ends) x the whole front (1 px) and the whole depth of the top (3 px) | x 12 |
 
 The click point is turned into the north frame of the device, then looked up in the zones of the clicked face. It lies on the Java shape of the block, not on the model: on the box, the shape's front is the glass band plane, 0.25 px in front of the port panel. The zones are wide enough for this gap not to matter. A click on another face, or outside the zones: no port is aimed, fallback to the first free port. A device with a single port (tower, laptop) needs no zone, but gets the outline so that the player sees where the cable goes.
 

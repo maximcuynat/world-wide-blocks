@@ -70,11 +70,10 @@ def build():
     # back row of its floor (seen from above or from the side).
     for n, col in enumerate(LAN_COLS, start=1):
         sheet.rj45('LAN %d port, hole 0.5 px deep' % n, 'env', 'north', col, PORT_ROWS[0], depth_tone='sh')
-        _, _, floor_w, _ = sheet.faces[('wall', 'floor')]   # floor of the hole: columns from the west, row 1 at the back
-        sheet.rect('wall', 'floor', floor_w - col - 2, 1, 2, 1, 'contacts')
         label, el, face, c, r, w, h, desc = sheet.items[-1]
         sheet.items[-1] = (label, el, face, c, r, w, h, desc + ', contacts on the back row of the hole floor')
         sheet.led('LAN %d LED' % n, 'env', 'north', col, PORT_ROWS[0] - 2)
+    FRONT.add_floor_contacts(sheet)
 
     # Glass band: all its faces in the screen colour, power and line LEDs on the left.
     for face in ('north', 'up', 'down', 'east', 'west'):

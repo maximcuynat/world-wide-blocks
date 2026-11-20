@@ -25,7 +25,7 @@
       "locked": false,
       "from": [
         6.0,
-        0,
+        0.0,
         7.0
       ],
       "to": [
@@ -44,36 +44,36 @@
         "north": {
           "uv": [
             0,
+            20,
             16,
-            16,
-            20
+            24
           ],
           "texture": 0
         },
         "east": {
           "uv": [
             0,
-            22,
+            28,
             10,
-            26
+            32
           ],
           "texture": 0
         },
         "south": {
           "uv": [
+            32,
             20,
-            16,
-            36,
-            20
+            48,
+            24
           ],
           "texture": 0
         },
         "west": {
           "uv": [
             22,
-            22,
+            28,
             32,
-            26
+            32
           ],
           "texture": 0
         },
@@ -88,9 +88,9 @@
         },
         "down": {
           "uv": [
-            20,
+            32,
             0,
-            36,
+            48,
             10
           ],
           "texture": 0
@@ -125,18 +125,18 @@
         "north": {
           "uv": [
             0,
+            20,
             16,
-            16,
-            17
+            21
           ],
           "texture": 0
         },
         "east": {
           "uv": [
             10,
-            22,
+            28,
             12,
-            23
+            29
           ],
           "texture": 0
         },
@@ -152,9 +152,9 @@
         "west": {
           "uv": [
             20,
+            28,
             22,
-            22,
-            23
+            29
           ],
           "texture": 0
         },
@@ -170,9 +170,9 @@
         "down": {
           "uv": [
             0,
-            32,
+            36,
             16,
-            34
+            38
           ],
           "texture": 0
         }
@@ -187,7 +187,7 @@
       "locked": false,
       "from": [
         6.0,
-        0,
+        0.0,
         6.5
       ],
       "to": [
@@ -206,18 +206,18 @@
         "north": {
           "uv": [
             0,
-            19,
+            23,
             16,
-            20
+            24
           ],
           "texture": 0
         },
         "east": {
           "uv": [
             10,
-            25,
+            31,
             12,
-            26
+            32
           ],
           "texture": 0
         },
@@ -233,26 +233,26 @@
         "west": {
           "uv": [
             20,
-            25,
+            31,
             22,
-            26
+            32
           ],
           "texture": 0
         },
         "up": {
           "uv": [
             0,
-            36,
+            40,
             16,
-            38
+            42
           ],
           "texture": 0
         },
         "down": {
           "uv": [
-            20,
+            32,
             10,
-            36,
+            48,
             12
           ],
           "texture": 0
@@ -287,18 +287,18 @@
         "north": {
           "uv": [
             15,
-            17,
+            21,
             16,
-            19
+            23
           ],
           "texture": 0
         },
         "east": {
           "uv": [
-            20,
             32,
-            22,
-            34
+            36,
+            34,
+            38
           ],
           "texture": 0
         },
@@ -314,9 +314,9 @@
         "west": {
           "uv": [
             20,
-            23,
+            29,
             22,
-            25
+            31
           ],
           "texture": 0
         },
@@ -368,18 +368,18 @@
         "north": {
           "uv": [
             12,
-            17,
+            21,
             13,
-            19
+            23
           ],
           "texture": 0
         },
         "east": {
           "uv": [
-            20,
             32,
-            22,
-            34
+            36,
+            34,
+            38
           ],
           "texture": 0
         },
@@ -394,10 +394,10 @@
         },
         "west": {
           "uv": [
-            20,
             32,
-            22,
-            34
+            36,
+            34,
+            38
           ],
           "texture": 0
         },
@@ -449,18 +449,18 @@
         "north": {
           "uv": [
             9,
-            17,
+            21,
             10,
-            19
+            23
           ],
           "texture": 0
         },
         "east": {
           "uv": [
-            20,
             32,
-            22,
-            34
+            36,
+            34,
+            38
           ],
           "texture": 0
         },
@@ -475,10 +475,10 @@
         },
         "west": {
           "uv": [
-            20,
             32,
-            22,
-            34
+            36,
+            34,
+            38
           ],
           "texture": 0
         },
@@ -530,18 +530,18 @@
         "north": {
           "uv": [
             6,
-            17,
+            21,
             7,
-            19
+            23
           ],
           "texture": 0
         },
         "east": {
           "uv": [
-            20,
             32,
-            22,
-            34
+            36,
+            34,
+            38
           ],
           "texture": 0
         },
@@ -556,10 +556,10 @@
         },
         "west": {
           "uv": [
-            20,
             32,
-            22,
-            34
+            36,
+            34,
+            38
           ],
           "texture": 0
         },
@@ -611,18 +611,18 @@
         "north": {
           "uv": [
             3,
-            17,
+            21,
             4,
-            19
+            23
           ],
           "texture": 0
         },
         "east": {
           "uv": [
-            20,
             32,
-            22,
-            34
+            36,
+            34,
+            38
           ],
           "texture": 0
         },
@@ -637,10 +637,10 @@
         },
         "west": {
           "uv": [
-            20,
             32,
-            22,
-            34
+            36,
+            34,
+            38
           ],
           "texture": 0
         },
@@ -692,18 +692,18 @@
         "north": {
           "uv": [
             0,
-            17,
+            21,
             1,
-            19
+            23
           ],
           "texture": 0
         },
         "east": {
           "uv": [
             10,
-            23,
+            29,
             12,
-            25
+            31
           ],
           "texture": 0
         },
@@ -718,10 +718,10 @@
         },
         "west": {
           "uv": [
-            20,
             32,
-            22,
-            34
+            36,
+            34,
+            38
           ],
           "texture": 0
         },
@@ -777,7 +777,7 @@
       "internal": true,
       "saved": false,
       "uuid": "e6b063e6-b864-5cae-85d0-989cedd30f22",
-      "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAA10lEQVR42u3XPQ4BURQGUP3EDkShFIVaolEorMoqplBagUUoVHZAFPYxMhNEhIR55ufFOcmXeYVc3NzJnelsd/ssJJ0nv65XufxLF8fl/Qd8c86vr+pNprMin/7px8830oBfT8DfNyC6W0ADrklX66+uJsAEmAATYA1qQOS3APDfDqdzFpKq69WyBZKkW6TMOWQL9PqDIo0/CG3SeZEy5+gbkD/VhaTqetCyLVB3vda9C9RdTwPatgXqrgcAFbq9kZXNu3oaAHEYjsZZSDQAAAAAAAAAonAB1Af5CMbueI8AAAAASUVORK5CYII="
+      "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAA3klEQVR42u3YsQ3CQAxA0esjNkAUlCgFNVIaCgqmYooUKZmAISio2CCIgj0OxSKIkpzNBcN/kpUrUAzGke8Sjqdz1ERQGju/fIHtZfe84ZB1d7XIv6rWEu/+6NfPB+//AAX4hkeAAjyibvaDrnQAHUAH0AGMQQrg/BEAAAD/q73eoia855edWFFMJFLWOXeC09lcwvwwdKg3Eilr9wXoTnaa8J4fAPsA07mbfY7nfiOT+34U4NOs5y5zHIAr/QkrNazyUwBgHItyGTXxEwXoX3GlrGkhAAAAAAAAAIAfd1rkA1MRAyBXAAAAAElFTkSuQmCC"
     }
   ],
   "display": {
@@ -788,7 +788,7 @@
         0
       ],
       "translation": [
-        0,
+        0.0,
         15.72,
         9.07
       ],
@@ -805,7 +805,7 @@
         0
       ],
       "translation": [
-        0,
+        0.0,
         10.27,
         0.0
       ],
@@ -822,7 +822,7 @@
         0
       ],
       "translation": [
-        0,
+        0.0,
         14.55,
         0.0
       ],
@@ -839,7 +839,7 @@
         0
       ],
       "translation": [
-        0,
+        0.0,
         5.31,
         10.5
       ],
@@ -856,7 +856,7 @@
         0
       ],
       "translation": [
-        0,
+        0.0,
         11.62,
         0.0
       ],
@@ -873,7 +873,7 @@
         0
       ],
       "translation": [
-        0,
+        0.0,
         11.62,
         0.0
       ],
