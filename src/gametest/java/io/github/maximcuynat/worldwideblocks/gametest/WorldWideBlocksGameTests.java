@@ -58,7 +58,7 @@ public final class WorldWideBlocksGameTests {
     record Case(String name, Batch batch, int maxTicks, Consumer<GameTestHelper> function) {
     }
 
-    private static final List<Case> CASES = Stream.concat(Stream.of(
+    private static final List<Case> CASES = Stream.concat(Stream.concat(Stream.of(
             new Case("cable_no_free_port", Batch.SHARED, 20, CableTests::noFreePort),
             new Case("cable_start_broken_creative", Batch.SHARED, 100, CableTests::startBrokenCreative),
             new Case("cable_start_broken_survival", Batch.SHARED, 100, CableTests::startBrokenSurvival),
@@ -87,7 +87,9 @@ public final class WorldWideBlocksGameTests {
                     .filter(scenario -> scenario != TrialScenario.DISTANCE)
                     .map(scenario -> new Case("trial_scene_" + scenario.id(),
                             scenario == TrialScenario.LOOP ? Batch.ENGINE_LIMITS : Batch.SHARED, 20,
-                            helper -> SceneTests.buildsScenario(helper, scenario))))
+                            helper -> SceneTests.buildsScenario(helper, scenario)))),
+            // Shapes and placement of the devices, in the four orientations (DeviceShapeTests).
+            DeviceShapeTests.cases())
             .toList();
 
     private WorldWideBlocksGameTests() {
