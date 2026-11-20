@@ -14,12 +14,12 @@ import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpFrames;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpServer;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpServerConfig;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpStore;
+import io.github.maximcuynat.worldwideblocks.network.protocol.ArpPacket;
 import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpMessage;
 import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpMessageType;
 import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Address;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
-import io.github.maximcuynat.worldwideblocks.network.protocol.PresencePayload;
 import io.github.maximcuynat.worldwideblocks.network.switching.MacTable;
 
 /** The DHCP server of the box, plugged into the local point of its switch. */
@@ -93,6 +93,12 @@ class BoxLogicTest {
         this.box = new BoxLogic(List.of(0, 1, 2, 3), new DhcpServer(DhcpServerConfig.INTERNET_BOX, this.store.server(BOX)));
     }
 
+    /** A broadcast that is not DHCP: an ARP request of this computer for an address that is not the box's. */
+    private static EthernetFrame arpRequest(MacAddress computer) {
+        return new EthernetFrame(computer, MacAddress.BROADCAST,
+                ArpPacket.request(computer, Ipv4Address.of(192, 168, 1, 20), Ipv4Address.of(192, 168, 1, 50)));
+    }
+
     private static EthernetFrame discover(MacAddress client) {
         return DhcpFrames.fromClient(client, Ipv4Address.ANY, MacAddress.BROADCAST, Ipv4Address.BROADCAST,
                 DhcpMessage.discover(9, client));
@@ -123,7 +129,7 @@ class BoxLogicTest {
 
     @Test
     void aUnicastFrameForAnotherDeviceDoesNotReachTheServer() {
-        this.box.onFrame(this.context, 2, new EthernetFrame(OTHER_PC, MacAddress.BROADCAST, PresencePayload.INSTANCE));
+        this.box.onFrame(this.context, 2, arpRequest(OTHER_PC));
         this.relayed.clear();
         EthernetFrame toOther = DhcpFrames.fromClient(PC, Ipv4Address.ANY, OTHER_PC, Ipv4Address.BROADCAST,
                 DhcpMessage.discover(9, PC));
@@ -135,8 +141,8 @@ class BoxLogicTest {
     }
 
     @Test
-    void aPresenceFrameReachesTheServerWhichIgnoresIt() {
-        this.box.onFrame(this.context, 1, new EthernetFrame(PC, MacAddress.BROADCAST, PresencePayload.INSTANCE));
+    void aBroadcastThatIsNotDhcpReachesTheServerWhichIgnoresIt() {
+        this.box.onFrame(this.context, 1, arpRequest(PC));
 
         assertTrue(this.sent.isEmpty());
         assertEquals(3, this.relayed.size());

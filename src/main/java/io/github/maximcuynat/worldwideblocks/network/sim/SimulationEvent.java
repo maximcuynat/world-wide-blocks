@@ -42,6 +42,13 @@ public sealed interface SimulationEvent {
         }
     }
 
+    /**
+     * A command running on a computer threw an exception: its process was ended, the tick went on. A bug of the
+     * mod, for the log.
+     */
+    record CommandFailed(DeviceId device, String command, RuntimeException error) implements SimulationEvent {
+    }
+
     /** The queue was full: frames were lost. At most one per tick. */
     record QueueSaturated() implements SimulationEvent {
     }

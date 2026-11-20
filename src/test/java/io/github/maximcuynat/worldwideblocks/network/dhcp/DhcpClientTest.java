@@ -480,4 +480,15 @@ class DhcpClientTest {
 
         assertEquals(DhcpClientState.REQUESTING, this.client.state());
     }
+
+    @Test
+    void anAcknowledgementWhoseMaskIsNotAMaskIsIgnored() {
+        this.client.linkUp(this.port);
+        this.reply(SERVICE, DhcpMessage.offer(this.port.last(), ADDRESS, LEASE));
+
+        this.reply(SERVICE, DhcpMessage.ack(this.port.last(), ADDRESS,
+                DhcpOptions.lease(SERVER, Ipv4Address.of(255, 0, 255, 0), SERVER, SERVER, 1_200L)));
+
+        assertEquals(DhcpClientState.REQUESTING, this.client.state());
+    }
 }

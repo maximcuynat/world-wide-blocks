@@ -12,6 +12,7 @@ import io.github.maximcuynat.worldwideblocks.registry.ModBlocks;
 import io.github.maximcuynat.worldwideblocks.registry.ModCreativeTabs;
 import io.github.maximcuynat.worldwideblocks.registry.ModDataComponents;
 import io.github.maximcuynat.worldwideblocks.registry.ModItems;
+import io.github.maximcuynat.worldwideblocks.terminal.TerminalServer;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -37,6 +38,9 @@ public class WorldWideBlocks {
         NeoForge.EVENT_BUS.addListener(NetworkSync::onChunkUnWatch);
         NeoForge.EVENT_BUS.addListener(NetworkManager::onServerTick);
         NeoForge.EVENT_BUS.addListener(NetworkSync::onServerTick);
+        // After the simulation: the changes of the consoles of this tick are sent.
+        NeoForge.EVENT_BUS.addListener(TerminalServer::onServerTick);
+        NeoForge.EVENT_BUS.addListener(TerminalServer::onLoggedOut);
         LOGGER.info("World Wide Blocks loaded");
     }
 }

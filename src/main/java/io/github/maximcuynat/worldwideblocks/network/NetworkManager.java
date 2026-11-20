@@ -21,6 +21,7 @@ import io.github.maximcuynat.worldwideblocks.network.sim.DeviceLogic;
 import io.github.maximcuynat.worldwideblocks.network.sim.NetworkSimulation;
 import io.github.maximcuynat.worldwideblocks.network.sim.SimulationEvent;
 import io.github.maximcuynat.worldwideblocks.network.sync.NetworkSync;
+import io.github.maximcuynat.worldwideblocks.terminal.TerminalHub;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -185,6 +186,33 @@ public final class NetworkManager {
         return removed;
     }
 
+    // ---- Consoles ----
+
+    /** Keyboards of the terminals of this server. */
+    public TerminalHub terminals() {
+        return this.data.terminals();
+    }
+
+    /** A line typed in the local console of a computer: run at the start of the next tick. */
+    public void consoleLine(DeviceId device, String line) {
+        this.simulation().consoleLine(device, line);
+    }
+
+    /** Ctrl+C in the local console of a computer, with the text typed at the prompt and not sent. */
+    public void consoleInterrupt(DeviceId device, String typed) {
+        this.simulation().consoleInterrupt(device, typed);
+    }
+
+    /** Ctrl+D on an empty line in the local console of a computer. */
+    public void consoleEndOfInput(DeviceId device) {
+        this.simulation().consoleEndOfInput(device);
+    }
+
+    /** Ctrl+L in the local console of a computer. */
+    public void consoleClear(DeviceId device) {
+        this.simulation().consoleClear(device);
+    }
+
     // ---- Simulation ----
 
     /** One server tick: the simulation advances to the game time, then its reports become messages. */
@@ -200,6 +228,8 @@ public final class NetworkManager {
                 case SimulationEvent.LoopDetected loop -> this.reportLoop(loop);
                 case SimulationEvent.QueueSaturated saturated -> this.reportSaturation();
                 case SimulationEvent.DhcpConflict conflict -> this.reportDhcpConflict(conflict);
+                case SimulationEvent.CommandFailed failed -> Diagnostics.bug("Command {} failed on {}",
+                        failed.command(), failed.device(), failed.error());
             }
         }
     }

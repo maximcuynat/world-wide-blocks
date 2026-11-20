@@ -6,11 +6,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.random.RandomGenerator;
 
+import io.github.maximcuynat.worldwideblocks.network.ip.Ipv4Prefix;
 import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpMessage;
 import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpMessageType;
 import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpOptions;
 import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Address;
+import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Packet;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 
 /**
@@ -71,6 +73,16 @@ public final class DhcpClient {
 
         /** Two DHCP servers answered the same transaction: their MAC addresses, in the order they answered. */
         void conflict(List<MacAddress> servers);
+
+        /**
+         * Sends the unicast REQUEST of a renewal to the server that lent the address. By default, straight to the
+         * server's MAC taken from its acknowledgement. A computer with an IP stack routes it and finds the server's MAC
+         * by ARP instead, as ISC {@code dhclient} sends a unicast through its fallback UDP socket, that is through the
+         * kernel ({@code send_request}, {@code client/dhclient.c}).
+         */
+        default void sendUnicast(Ipv4Packet packet, MacAddress serverMac) {
+            this.send(new EthernetFrame(this.mac(), serverMac, packet));
+        }
     }
 
     /**
@@ -95,6 +107,19 @@ public final class DhcpClient {
         void remember(Optional<DhcpLease> lease);
     }
 
+    /**
+     * Told of each change of the lease in use, to configure the interface: the computer applies it to its IP stack
+     * ({@link DhcpClientScript}), as {@code dhclient} runs its script.
+     */
+    @FunctionalInterface
+    public interface LeaseListener {
+        /** A listener that does nothing. */
+        LeaseListener NONE = lease -> {
+        };
+
+        void leaseChanged(Optional<DhcpLease> lease);
+    }
+
     /** Timer of the client; only the latest one is valid. */
     public record Timer(long epoch) {
     }
@@ -104,6 +129,7 @@ public final class DhcpClient {
     }
 
     private final Memory memory;
+    private final LeaseListener listener;
     private DhcpClientState state = DhcpClientState.UNPLUGGED;
     private int xid;
     /** Sends already made in the current transaction. */
@@ -122,8 +148,13 @@ public final class DhcpClient {
     }
 
     public DhcpClient(RandomGenerator random, Memory memory) {
+        this(random, memory, LeaseListener.NONE);
+    }
+
+    public DhcpClient(RandomGenerator random, Memory memory, LeaseListener listener) {
         this.xid = random.nextInt();
         this.memory = memory;
+        this.listener = listener;
     }
 
     // ---- Reading ----
@@ -257,8 +288,8 @@ public final class DhcpClient {
         DhcpOptions options = ack.options();
         if (ack.yourAddress().isAny() || options.serverId().isEmpty() || options.subnetMask().isEmpty()
                 || options.router().isEmpty() || options.dnsServer().isEmpty() || options.leaseSeconds().isEmpty()
-                || options.leaseSeconds().getAsLong() <= 0) {
-            return; // incomplete acknowledgement: ignored
+                || options.leaseSeconds().getAsLong() <= 0 || !Ipv4Prefix.isMask(options.subnetMask().get())) {
+            return; // incomplete acknowledgement, or a mask whose ones are not contiguous: ignored
         }
         long now = port.now();
         this.setLease(new DhcpLease(ack.yourAddress(), options.subnetMask().get(), options.router().get(),
@@ -285,10 +316,11 @@ public final class DhcpClient {
         this.sendExtension(port, true);
     }
 
-    /** The lease in use changes: the memory follows it. */
+    /** The lease in use changes: the memory and the interface follow it. */
     private void setLease(DhcpLease lease) {
         this.lease = lease;
         this.memory.remember(Optional.ofNullable(lease));
+        this.listener.leaseChanged(Optional.ofNullable(lease));
     }
 
     private void newTransaction() {
@@ -330,10 +362,14 @@ public final class DhcpClient {
      * waits half the time left before T2 (or before the end of the lease), 60 s at least, and never beyond it.
      */
     private void sendExtension(Port port, boolean broadcast) {
-        MacAddress destinationMac = broadcast ? MacAddress.BROADCAST : this.lease.serverMac();
-        Ipv4Address destination = broadcast ? Ipv4Address.BROADCAST : this.lease.serverId();
-        port.send(DhcpFrames.fromClient(port.mac(), this.lease.address(), destinationMac, destination,
-                DhcpMessage.requestExtension(this.xid, port.mac(), this.lease.address())));
+        DhcpMessage request = DhcpMessage.requestExtension(this.xid, port.mac(), this.lease.address());
+        if (broadcast) {
+            port.send(DhcpFrames.fromClient(port.mac(), this.lease.address(), MacAddress.BROADCAST, Ipv4Address.BROADCAST,
+                    request));
+        } else {
+            port.sendUnicast(DhcpFrames.packetFromClient(this.lease.address(), this.lease.serverId(), request),
+                    this.lease.serverMac());
+        }
         this.sends++;
         long now = port.now();
         long deadline = broadcast ? this.lease.expiresAt() : this.lease.rebindAt();

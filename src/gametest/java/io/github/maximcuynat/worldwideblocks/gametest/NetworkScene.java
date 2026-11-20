@@ -124,6 +124,18 @@ public final class NetworkScene implements GameTestListener {
                 player.getItemInHand(InteractionHand.MAIN_HAND), InteractionHand.MAIN_HAND, hit);
     }
 
+    /**
+     * Right-click on a device at a given height above the bottom of its block (the centre of the block otherwise), as
+     * when the player aims at a part of it: the keyboard or the screen of the laptop.
+     */
+    public InteractionResult rightClickAt(TestPlayer player, BlockPos relative, double height) {
+        BlockPos absolute = this.helper.absolutePos(relative);
+        BlockHitResult hit = new BlockHitResult(new Vec3(absolute.getX() + 0.5, absolute.getY() + height, absolute.getZ() + 0.5),
+                Direction.UP, absolute, false);
+        return player.gameMode.useItemOn(player, this.helper.getLevel(),
+                player.getItemInHand(InteractionHand.MAIN_HAND), InteractionHand.MAIN_HAND, hit);
+    }
+
     /** Sneaking + right-click on a device. */
     public InteractionResult sneakRightClick(TestPlayer player, BlockPos relative) {
         player.setShiftKeyDown(true);

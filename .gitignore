@@ -46,6 +46,8 @@ bin/
 run/
 # Throwaway world of the game test server (./gradlew runGameTestServer)
 run-gametest/
+# Throwaway game directory of the capture runs (./gradlew runClientCapture), screenshots and values included
+run-capture/
 !**/src/**/run/
 **/src/generated/**/.cache/
 repo/

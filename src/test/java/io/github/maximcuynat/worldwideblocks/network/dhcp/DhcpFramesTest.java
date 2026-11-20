@@ -7,13 +7,13 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import io.github.maximcuynat.worldwideblocks.network.protocol.ArpPacket;
 import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpMessage;
 import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpOptions;
 import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Address;
 import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Packet;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
-import io.github.maximcuynat.worldwideblocks.network.protocol.PresencePayload;
 import io.github.maximcuynat.worldwideblocks.network.protocol.UdpDatagram;
 
 /** Addresses of the frames that carry DHCP (RFC 2131, 4.1). */
@@ -68,7 +68,8 @@ class DhcpFramesTest {
         assertTrue(DhcpFrames.toClient(fromClient).isEmpty());
         assertTrue(DhcpFrames.toServer(fromServer).isEmpty());
         assertEquals(DhcpMessage.offer(discover, ADDRESS, LEASE), DhcpFrames.toClient(fromServer).orElseThrow());
-        assertTrue(DhcpFrames.toServer(new EthernetFrame(PC, MacAddress.BROADCAST, PresencePayload.INSTANCE)).isEmpty());
+        assertTrue(DhcpFrames.toServer(new EthernetFrame(PC, MacAddress.BROADCAST,
+                ArpPacket.request(PC, ADDRESS, SERVER))).isEmpty(), "an ARP request");
         assertTrue(DhcpFrames.toServer(new EthernetFrame(PC, MacAddress.BROADCAST, new Ipv4Packet(Ipv4Address.ANY,
                 Ipv4Address.BROADCAST, new UdpDatagram(68, 1234, discover)))).isEmpty(), "other UDP port");
     }

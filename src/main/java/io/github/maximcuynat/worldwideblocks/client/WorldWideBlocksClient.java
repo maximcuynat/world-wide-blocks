@@ -6,6 +6,8 @@ import io.github.maximcuynat.worldwideblocks.network.sync.LinkAddedPayload;
 import io.github.maximcuynat.worldwideblocks.network.sync.LinkRemovedPayload;
 import io.github.maximcuynat.worldwideblocks.network.sync.LinksResetPayload;
 import io.github.maximcuynat.worldwideblocks.network.sync.MessagePayload;
+import io.github.maximcuynat.worldwideblocks.network.sync.TerminalClosePayload;
+import io.github.maximcuynat.worldwideblocks.network.sync.TerminalUpdatesPayload;
 import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -31,6 +33,7 @@ public final class WorldWideBlocksClient {
     private final CableRenderer cableRenderer = new CableRenderer(this.links);
     private final WorldWideBlocksClientConfig config = new WorldWideBlocksClientConfig();
     private final ClientMessages messages = new ClientMessages(this.config);
+    private final ClientTerminal terminal = new ClientTerminal(this.config);
 
     public WorldWideBlocksClient(IEventBus modEventBus, ModContainer modContainer) {
         modContainer.registerConfig(ModConfig.Type.CLIENT, this.config.spec());
@@ -50,6 +53,8 @@ public final class WorldWideBlocksClient {
         event.register(LinkRemovedPayload.TYPE, (payload, context) -> this.links.remove(payload.id()));
         event.register(DeviceStatusPayload.TYPE, (payload, context) -> this.deviceStatus.set(payload));
         event.register(MessagePayload.TYPE, (payload, context) -> this.messages.show(payload));
+        event.register(TerminalUpdatesPayload.TYPE, (payload, context) -> this.terminal.receive(payload));
+        event.register(TerminalClosePayload.TYPE, (payload, context) -> this.terminal.close(payload));
     }
 
     private void registerGuiLayers(RegisterGuiLayersEvent event) {
@@ -67,6 +72,7 @@ public final class WorldWideBlocksClient {
     /** In singleplayer, two worlds must not get mixed up: everything is forgotten on leaving. */
     private void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         this.links.clear();
+        this.terminal.clear();
         this.deviceStatus.clear();
     }
 }

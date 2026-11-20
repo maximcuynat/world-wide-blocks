@@ -26,12 +26,40 @@ public interface DeviceLogic {
     default void onTimer(DeviceContext context, Object key) {
     }
 
+    /** A line was typed in the local console of the device and Enter pressed; ignored by a device without one. */
+    default void onConsoleLine(DeviceContext context, String line) {
+    }
+
     /**
      * True for a device that relays frames between its ports (switch, box): the simulation
      * checks that the same frame does not come back to it twice.
      */
     default boolean bridges() {
         return false;
+    }
+
+    /**
+     * Time the device takes to handle a frame it receives, in nanoseconds, added to the latency the frame carries
+     * ({@code Latency}).
+     */
+    default long processingNanos() {
+        return 0L;
+    }
+
+    /**
+     * Ctrl+C typed in the local console of the device; ignored by a device without one.
+     *
+     * @param typed the text typed at the prompt and not sent yet, shown before {@code ^C} when no command runs
+     */
+    default void onConsoleInterrupt(DeviceContext context, String typed) {
+    }
+
+    /** Ctrl+D on an empty line in the local console of the device; ignored by a device without one. */
+    default void onConsoleEndOfInput(DeviceContext context) {
+    }
+
+    /** Ctrl+L in the local console of the device; ignored by a device without one. */
+    default void onConsoleClear(DeviceContext context) {
     }
 
     /** MACs learned behind each port, for a device that switches (status panel); empty otherwise. */

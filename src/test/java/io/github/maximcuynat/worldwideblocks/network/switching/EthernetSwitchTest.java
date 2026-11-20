@@ -7,9 +7,10 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import io.github.maximcuynat.worldwideblocks.network.protocol.ArpPacket;
 import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
+import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Address;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
-import io.github.maximcuynat.worldwideblocks.network.protocol.PresencePayload;
 
 class EthernetSwitchTest {
     private static final long DELAY = 100;
@@ -20,8 +21,10 @@ class EthernetSwitchTest {
     /** The 4 local network ports of the box, without a local port. */
     private final EthernetSwitch box = new EthernetSwitch(List.of(0, 1, 2, 3), false, DELAY);
 
+    /** A frame of this source: an ARP request, whatever its content (the switch reads only the addresses). */
     private static EthernetFrame frame(MacAddress source, MacAddress destination) {
-        return new EthernetFrame(source, destination, PresencePayload.INSTANCE);
+        return new EthernetFrame(source, destination,
+                ArpPacket.request(source, Ipv4Address.of(192, 168, 1, 10), Ipv4Address.of(192, 168, 1, 20)));
     }
 
     @Test

@@ -13,8 +13,10 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 
 import io.github.maximcuynat.worldwideblocks.network.DeviceId;
+import io.github.maximcuynat.worldwideblocks.network.Latency;
 import io.github.maximcuynat.worldwideblocks.network.Link;
 import io.github.maximcuynat.worldwideblocks.network.NetworkGraph;
 import io.github.maximcuynat.worldwideblocks.network.NetworkNode;
@@ -31,6 +33,11 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
  * travel time along the cable. Frames produced during this processing (switch relays,
  * replies) are delivered in the same tick, within the limit of {@link SimulationLimits#maxDeliveriesPerTick()}.
  *
+ * <p>Latency ({@link Latency}): each delivery carries the time spent since the start of the tick, the time of
+ * the frame it answers or relays plus its cable; the receiving device adds its processing time. A frame sent from a
+ * timer or the console starts at 0. The frames delivered in a tick are thus dated within it, whatever their order in
+ * the queue.
+ *
  * <p>Loop protection, until the STP of lot 8b: each sent frame gets a
  * trace, shared by all its relayed copies. A trace exists only in the engine, not in the
  * frame. If a copy comes back to a switch the trace already crossed, there are two paths between
@@ -41,8 +48,8 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
  * a player click is handled after the simulation tick. It is therefore queued and applied
  * at the start of the next tick, with the time of that tick. Thus its frames, its timers and its
  * reports start from the very tick where its frames are delivered. (Applied immediately with the time
- * of the previous tick, a presence sent on connection was delivered one tick after its date: the
- * following presences fell 1,199 ticks after the loop report instead of 1,200.)
+ * of the previous tick, a frame sent on connection was delivered one tick after its date: the
+ * presence frames of lot 1b-1, every 30 s, fell 1,199 ticks after the loop report instead of 1,200.)
  *
  * <p>The runtime state (device behavior, queue, timers) is not saved: at
  * server start, each device starts from zero and each existing cable is announced as
@@ -71,7 +78,7 @@ public final class NetworkSimulation {
     private boolean started;
 
     /** A frame on its way to the other end of a cable. */
-    private record Delivery(PortRef ingress, UUID linkId, EthernetFrame frame, Trace trace) {
+    private record Delivery(PortRef ingress, UUID linkId, EthernetFrame frame, Trace trace, long latency) {
     }
 
     /** One emission and all its relayed copies: the switches they have already crossed. */
@@ -153,6 +160,52 @@ public final class NetworkSimulation {
     /** To call after the cable was removed from the graph. */
     public void linkDown(Link link) {
         this.later(() -> this.notifyLink(link, false));
+    }
+
+    /**
+     * A line typed in the local console of a device. Like a graph change, it is applied at the start of the next
+     * tick, with the time of that tick; ignored if the device is gone by then.
+     */
+    public void consoleLine(DeviceId device, String line) {
+        this.later(() -> {
+            DeviceLogic logic = this.logics.get(device);
+            if (logic != null && this.graph.node(device).isPresent()) {
+                logic.onConsoleLine(new Context(device, logic, null), line);
+            }
+        });
+    }
+
+    /** Ctrl+C in the local console of a device, with nothing typed at the prompt. */
+    public void consoleInterrupt(DeviceId device) {
+        this.consoleInterrupt(device, "");
+    }
+
+    /**
+     * Ctrl+C in the local console of a device: applied at the start of the next tick, like a typed line.
+     *
+     * @param typed the text typed at the prompt and not sent
+     */
+    public void consoleInterrupt(DeviceId device, String typed) {
+        this.consoleKey(device, (logic, context) -> logic.onConsoleInterrupt(context, typed));
+    }
+
+    /** Ctrl+D on an empty line in the local console of a device: applied at the start of the next tick. */
+    public void consoleEndOfInput(DeviceId device) {
+        this.consoleKey(device, DeviceLogic::onConsoleEndOfInput);
+    }
+
+    /** Ctrl+L in the local console of a device: applied at the start of the next tick. */
+    public void consoleClear(DeviceId device) {
+        this.consoleKey(device, DeviceLogic::onConsoleClear);
+    }
+
+    private void consoleKey(DeviceId device, BiConsumer<DeviceLogic, DeviceContext> key) {
+        this.later(() -> {
+            DeviceLogic logic = this.logics.get(device);
+            if (logic != null && this.graph.node(device).isPresent()) {
+                key.accept(logic, new Context(device, logic, null));
+            }
+        });
     }
 
     private void later(Runnable change) {
@@ -246,7 +299,7 @@ public final class NetworkSimulation {
         return this.graph.linkAt(link.a()).filter(current -> current.id().equals(link.id())).isPresent();
     }
 
-    private void emit(PortRef egress, EthernetFrame frame, Trace trace) {
+    private void emit(PortRef egress, EthernetFrame frame, Trace trace, long latency) {
         this.tap.onFrame(this.now, egress, FrameDirection.SENT, frame);
         Optional<Link> link = this.graph.linkAt(egress);
         if (link.isEmpty()) {
@@ -256,7 +309,8 @@ public final class NetworkSimulation {
             this.saturatedThisTick = true;
             return;
         }
-        this.queue.add(new Delivery(link.get().otherEnd(egress), link.get().id(), frame, trace));
+        this.queue.add(new Delivery(link.get().otherEnd(egress), link.get().id(), frame, trace,
+                latency + Latency.cable(link.get().length())));
     }
 
     private void deliver(Delivery delivery) {
@@ -274,7 +328,8 @@ public final class NetworkSimulation {
             this.loopPoints.add(new SimulationEvent.LoopPoint(ingress.device(), ingress.index()));
             return;
         }
-        logic.onFrame(new Context(ingress.device(), logic, delivery.trace()), ingress.index(), delivery.frame());
+        logic.onFrame(new Context(ingress.device(), logic, delivery.trace(), delivery.latency() + logic.processingNanos()),
+                ingress.index(), delivery.frame());
     }
 
 
@@ -283,11 +338,30 @@ public final class NetworkSimulation {
         private final DeviceId device;
         private final DeviceLogic logic;
         private final Trace trace;
+        private long latency;
 
         private Context(DeviceId device, DeviceLogic logic, Trace trace) {
+            this(device, logic, trace, 0L);
+        }
+
+        private Context(DeviceId device, DeviceLogic logic, Trace trace, long latency) {
             this.device = device;
             this.logic = logic;
             this.trace = trace;
+            this.latency = latency;
+        }
+
+        @Override
+        public long latency() {
+            return this.latency;
+        }
+
+        @Override
+        public void elapse(long nanos) {
+            if (nanos < 0) {
+                throw new IllegalArgumentException("Negative time: " + nanos);
+            }
+            this.latency += nanos;
         }
 
         @Override
@@ -323,7 +397,7 @@ public final class NetworkSimulation {
             if (this.logic.bridges()) {
                 fresh.visited.add(this.device);
             }
-            emit(new PortRef(this.device, port), frame, fresh);
+            emit(new PortRef(this.device, port), frame, fresh, this.latency);
         }
 
         @Override
@@ -331,7 +405,7 @@ public final class NetworkSimulation {
             if (this.trace == null) {
                 throw new IllegalStateException("No frame being relayed");
             }
-            emit(new PortRef(this.device, port), frame, this.trace);
+            emit(new PortRef(this.device, port), frame, this.trace, this.latency);
         }
 
         @Override

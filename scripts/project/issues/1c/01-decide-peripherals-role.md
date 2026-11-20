@@ -12,4 +12,4 @@ Decision taken with Max on 2026-11-19 ("Decisions taken" in `docs/lot-plan.md`):
 
 `docs/lot-plan.md` keeps the history of the decision: during the interview, a first answer made the peripherals required for the tower; the review of the summary settled on the principle above.
 
-- [ ] Decision recorded in `docs/lot-plan.md`
+- [x] Decision recorded in `docs/lot-plan.md`

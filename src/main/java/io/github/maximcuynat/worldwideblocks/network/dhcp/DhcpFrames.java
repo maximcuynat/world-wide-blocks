@@ -34,8 +34,12 @@ public final class DhcpFrames {
      */
     public static EthernetFrame fromClient(MacAddress clientMac, Ipv4Address source, MacAddress destinationMac,
             Ipv4Address destination, DhcpMessage message) {
-        return new EthernetFrame(clientMac, destinationMac, new Ipv4Packet(source, destination,
-                new UdpDatagram(DhcpMessage.CLIENT_PORT, DhcpMessage.SERVER_PORT, message)));
+        return new EthernetFrame(clientMac, destinationMac, packetFromClient(source, destination, message));
+    }
+
+    /** The IPv4 packet of a client message, from port 68 to port 67. */
+    public static Ipv4Packet packetFromClient(Ipv4Address source, Ipv4Address destination, DhcpMessage message) {
+        return new Ipv4Packet(source, destination, new UdpDatagram(DhcpMessage.CLIENT_PORT, DhcpMessage.SERVER_PORT, message));
     }
 
     /**

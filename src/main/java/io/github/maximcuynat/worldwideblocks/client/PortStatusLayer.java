@@ -19,11 +19,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.neoforged.neoforge.client.gui.GuiLayer;
+import net.neoforged.neoforge.common.NeoForge;
 
 /**
  * Status indicator: when aiming at a network device, a small panel at the top center of the screen
@@ -35,6 +37,8 @@ import net.neoforged.neoforge.client.gui.GuiLayer;
  * {@link ClientDeviceStatus}, sent by the server for the targeted device.
  *
  * <p>Known limitation: the panel takes the same place as the boss bars.
+ *
+ * <p>Each change of what it draws is posted as a {@link StatusPanelShownEvent} (capture runs).
  */
 final class PortStatusLayer implements GuiLayer {
     private static final int TOP = 4;
@@ -55,6 +59,11 @@ final class PortStatusLayer implements GuiLayer {
 
     private final ClientLinkCache cache;
     private final ClientDeviceStatus deviceStatus;
+    /**
+     * What was drawn last (device, block, lines, language), to post a {@link StatusPanelShownEvent} only when it changes:
+     * nothing is built for the event on the other frames. Null before the first frame.
+     */
+    private List<Object> lastShown;
 
     PortStatusLayer(ClientLinkCache cache, ClientDeviceStatus deviceStatus) {
         this.cache = cache;
@@ -66,11 +75,13 @@ final class PortStatusLayer implements GuiLayer {
         Minecraft minecraft = Minecraft.getInstance();
         HitResult hit = minecraft.hitResult;
         if (minecraft.level == null || minecraft.gui.screen() != null || !(hit instanceof BlockHitResult blockHit) || hit.getType() != HitResult.Type.BLOCK) {
+            this.hidden();
             return;
         }
         BlockPos pos = blockHit.getBlockPos();
         BlockState state = minecraft.level.getBlockState(pos);
         if (!(state.getBlock() instanceof NetworkDevice device)) {
+            this.hidden();
             return;
         }
 
@@ -80,6 +91,18 @@ final class PortStatusLayer implements GuiLayer {
         List<StatusPanel.Line> panel = StatusPanel.lines(device.ports(), port -> this.cache.isConnected(pos, port),
                 toStatus(this.deviceStatus.at(pos)), detailed, minecraft.level.getGameTime());
         List<Component> texts = panel.stream().map(line -> (Component) ClientText.of(line.key(), line.args())).toList();
+        // The loaded language, not the code chosen: the code changes before the texts are reloaded.
+        List<Object> drawn = List.of(pos, state.getBlock(), panel, Language.getInstance());
+        if (!drawn.equals(this.lastShown)) {
+            this.lastShown = drawn;
+            List<String> shownLines = new ArrayList<>(texts.size());
+            for (int i = 0; i < texts.size(); i++) {
+                StatusPanel.Light light = panel.get(i).light();
+                shownLines.add((light == StatusPanel.Light.NONE ? "" : "[" + light.name().toLowerCase(java.util.Locale.ROOT) + "] ")
+                        + texts.get(i).getString());
+            }
+            NeoForge.EVENT_BUS.post(new StatusPanelShownEvent(Optional.of(pos), name.getString(), shownLines));
+        }
 
         Font font = minecraft.font;
         int contentWidth = font.width(name);
@@ -105,6 +128,14 @@ final class PortStatusLayer implements GuiLayer {
             }
             graphics.text(font, texts.get(i), x + LIGHT_SIZE + LIGHT_GAP, y, light != null ? COLOR_TEXT : COLOR_DETAIL);
             y += lineHeight;
+        }
+    }
+
+    /** No panel this frame: posted once when a panel was drawn before. */
+    private void hidden() {
+        if (this.lastShown == null || !this.lastShown.isEmpty()) {
+            this.lastShown = List.of();
+            NeoForge.EVENT_BUS.post(new StatusPanelShownEvent(Optional.empty(), "", List.of()));
         }
     }
 

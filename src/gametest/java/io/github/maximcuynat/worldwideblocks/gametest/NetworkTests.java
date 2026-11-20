@@ -13,11 +13,14 @@ import io.github.maximcuynat.worldwideblocks.network.Link;
 import io.github.maximcuynat.worldwideblocks.network.NetworkManager;
 import io.github.maximcuynat.worldwideblocks.network.NetworkSavedData;
 import io.github.maximcuynat.worldwideblocks.network.PortRef;
+import io.github.maximcuynat.worldwideblocks.network.ip.Ipv4Stack;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 import io.github.maximcuynat.worldwideblocks.network.sim.BoxLogic;
 import io.github.maximcuynat.worldwideblocks.network.sim.DeviceLogic;
+import io.github.maximcuynat.worldwideblocks.network.sim.HostLogic;
 import io.github.maximcuynat.worldwideblocks.network.sim.SimulationLimits;
 import io.github.maximcuynat.worldwideblocks.network.switching.MacTable;
+import io.github.maximcuynat.worldwideblocks.os.ConsoleSession;
 import io.github.maximcuynat.worldwideblocks.registry.ModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -59,7 +62,7 @@ final class NetworkTests {
             if (unplugged[0] < 0) {
                 Optional<MacTable.Entry> learned = learned(scene, boxA, hostMac);
                 if (learned.isEmpty()) {
-                    return; // the presence of H has not been delivered yet
+                    return; // the DHCP exchange of H has not been delivered yet
                 }
                 helper.assertValueEqual(learned.get().port(), endOn(ab, boxA).index(), "port of A behind which H is");
                 scene.network().disconnect(endOn(bh, host));
@@ -113,9 +116,13 @@ final class NetworkTests {
     /**
      * Two boxes linked by two cables, a computer on A: each broadcast frame loops, and both boxes see
      * it. The nearby player receives **one** message per game minute (not one per box), naming one
-     * of the two boxes, and the log has only one line per message. The presence of the computer comes
-     * back every 30 s: the one-minute limit is therefore really put to the test. The messages stop
-     * when one of the two cables is removed.
+     * of the two boxes, and the log has only one line per message. The traffic is a continuous
+     * {@code ping} of the computer to an absent address, which broadcasts an ARP request every second:
+     * the one-minute limit is therefore really put to the test. The messages stop when one of the two
+     * cables is removed, while the {@code ping} goes on.
+     *
+     * <p>The computer gets its address before the second cable closes the loop, so that the first
+     * message comes from the first request of the {@code ping}, and the next ones a minute apart.
      *
      * <p>Separate batch: the frame limit is global to the engine.
      */
@@ -125,11 +132,11 @@ final class NetworkTests {
         DeviceId boxB = scene.place(new BlockPos(12, 0, 8), ModBlocks.INTERNET_BOX.get());
         DeviceId host = scene.place(new BlockPos(4, 0, 12), ModBlocks.PC_TOWER.get());
         Link firstCable = scene.cable(boxA, boxB);
-        scene.cable(boxA, boxB);
-        TestPlayer player = scene.player(GameType.CREATIVE);
-        // Plugged in last: its presence, broadcast at connection then every 30 s, finds the loop.
         scene.cable(host, boxA);
+        TestPlayer player = scene.player(GameType.CREATIVE);
         Set<DeviceId> boxes = Set.of(boxA, boxB);
+        helper.runAfterDelay(LEASED, () -> scene.cable(boxA, boxB));
+        startPing(helper, scene, host);
 
         long interval = SimulationLimits.DEFAULT.reportIntervalTicks();
         long observation = 2 * interval + 200;
@@ -145,6 +152,7 @@ final class NetworkTests {
                     "times of the loop messages (only one per minute for both boxes)");
             long logLines = scene.messages().logs(LOOP).stream().filter(message -> names(message, boxes)).count();
             helper.assertValueEqual(logLines, 3L, "log lines for this loop");
+            assertPingRuns(helper, scene, host);
 
             int before = chat.size();
             scene.network().disconnect(firstCable.a());
@@ -160,12 +168,15 @@ final class NetworkTests {
      * a change in another network does not touch it.
      *
      * <ul>
-     * <li>S+1: presence of the first computer, first message;</li>
+     * <li>S+1: DHCP of the first computer, first message;</li>
+     * <li>S+20: the first computer starts a continuous {@code ping} to an absent address: an ARP request
+     * broadcast every second, within the minute of the first message: nothing;</li>
      * <li>S+100: a second computer plugged into box B (this network changes): second message at the next tick;</li>
      * <li>S+200: two PC towers linked elsewhere (another network changes);</li>
-     * <li>S+601 and S+701: presences of the two computers, within the minute of the second message: nothing.</li>
+     * <li>until S+800, the requests of the {@code ping}, within the minute of the second message: nothing.</li>
      * </ul>
-     * A global reset would give a third message at S+601; no reset at all, a single message in total.
+     * A global reset would give a third message within a second of S+200; no reset at all, a single message in
+     * total.
      *
      * <p>Separate batch, like the previous test.
      */
@@ -180,6 +191,7 @@ final class NetworkTests {
         TestPlayer player = scene.player(GameType.CREATIVE);
         scene.cable(host, boxA);
         Set<DeviceId> boxes = Set.of(boxA, boxB);
+        startPing(helper, scene, host);
 
         helper.runAfterDelay(100, () -> {
             helper.assertValueEqual(loopChat(scene, player, boxes).size(), 1, "loop messages before the second computer");
@@ -192,10 +204,36 @@ final class NetworkTests {
                 helper.runAfterDelay(600, () -> {
                     helper.assertValueEqual(loopChat(scene, player, boxes).size(), 2,
                             "loop messages after a change in another network");
+                    assertPingRuns(helper, scene, host);
                     helper.succeed();
                 });
             });
         });
+    }
+
+    /** Ticks after its cable for a computer to get its address by DHCP. */
+    private static final int LEASED = 10;
+    /** An address of the local network of the boxes that no device has. */
+    private static final String ABSENT = "192.168.1.250";
+
+    /**
+     * Once the computer has its address, a continuous {@code ping} to an absent address, typed in its console: an
+     * ARP request broadcast every second, real traffic for a loop (issue #15).
+     */
+    private static void startPing(GameTestHelper helper, NetworkScene scene, DeviceId computer) {
+        helper.runAfterDelay(2 * LEASED, () -> {
+            Ipv4Stack stack = ((HostLogic) scene.network().logic(computer).orElseThrow()).system().stack();
+            helper.assertTrue(stack.primaryAddress(stack.interfaceNamed("eth0").orElseThrow()).isPresent(),
+                    "the computer has an address before its ping");
+            scene.network().consoleLine(computer, "ping " + ABSENT);
+        });
+    }
+
+    /** The ping still runs and ARP finds nobody: the traffic of the loop was there. */
+    private static void assertPingRuns(GameTestHelper helper, NetworkScene scene, DeviceId computer) {
+        ConsoleSession console = ((HostLogic) scene.network().logic(computer).orElseThrow()).system().localConsole();
+        helper.assertTrue(console.lines().stream().anyMatch(line -> line.endsWith("Destination Host Unreachable")),
+                "the ping of the computer gets Destination Host Unreachable: " + console.lines());
     }
 
     /** Loop messages received by the player that name one of these boxes (the batch is shared with other loops). */

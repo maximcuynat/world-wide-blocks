@@ -20,9 +20,10 @@ Read first:
 
 1. **Tasks are GitHub issues**, grouped by milestone (one per lot, one per version) and shown on the "Roadmap" Projects board. Their definitions are in `scripts/project/issues/` (one folder per lot or version, plus `backlog/` and `ideas/`). `docs/lot-plan.md` stays the design document; `tasks/todo.md` only holds session notes.
 2. **A lot starts with `scripts/dev lot start <id>`, run by the maintainer.** At the start of a session, read the issue definitions of the lot's milestone in `scripts/project/issues/<id>/`; for their state on GitHub, ask the maintainer to run `scripts/dev status` or `gh issue list --milestone "<milestone title>" --state all`. One commit per step, in English, only after the maintainer's green build. The maintainer ends the lot with `scripts/dev lot finish`.
-3. **To propose an issue**, add its definition file in `scripts/project/issues/` (format at the top of `scripts/lib/project.sh`) and ask the maintainer to run `scripts/dev project sync`. Never create anything on GitHub.
+3. **To propose an issue**, add its definition file in `scripts/project/issues/` (format at the top of `scripts/lib/project.sh`); it reaches GitHub as rule 5 says, through `scripts/dev project sync` run by the maintainer. Never create anything on GitHub.
 4. **Never push, merge, tag, release or change GitHub settings.** These actions go through the maintainer and `scripts/dev`. Commands that ask for a confirmation (`scripts/dev`, `gh auth`) must be run by the maintainer in a real terminal: through the assistant's shell, the answer is always no.
-5. **Nothing personal or secret in the repository** (no local paths, no personal data, no credentials). Everything in the repository is in English (commits, changelog, issues, docs, code, comments, `tasks/`), except the French game texts of `fr_fr.json`. Older commit messages and old changelog entries stay as they are.
+5. **A change of plan (issue definitions, milestones) goes through a small pull request to `developement` before any synchronisation; a lot branch merges `developement` before it synchronises.** `scripts/dev project sync` and `update-issues` are then run only from the branch that holds the newest definitions, never from a design branch or an older worktree: they write the definitions of the folder they run in over GitHub, older ones included (2026-11-20: #11, #15, #16 and #45 rewritten from `design/equipment`). The second part is temporary, until issue "update-issues and sync must not write older issue definitions" is done.
+6. **Nothing personal or secret in the repository** (no local paths, no personal data, no credentials). Everything in the repository is in English (commits, changelog, issues, docs, code, comments, `tasks/`), except the French game texts of `fr_fr.json`. Older commit messages and old changelog entries stay as they are.
 
 ## End of every task
 
@@ -50,7 +51,7 @@ Details in [`docs/automated-checks.md`](docs/automated-checks.md).
 
 ## Constraints of the sandbox
 
-- Gradle cannot run in Claude Code's sandbox: the maintainer runs `./gradlew build test`, `./gradlew runGameTestServer` and the capture runs (until they exist, the `runClient` procedures of `docs/lot-plan.md`), and reports the result. Never claim a build or a test passed without that report.
+- Gradle cannot run in Claude Code's sandbox: the maintainer runs `./gradlew build test`, `./gradlew runGameTestServer` and the capture runs (`./gradlew runClientCapture -Pscenario=<name>`), and reports the result. Never claim a build or a test passed without that report.
 - The sandbox reads neither `~/.gitconfig` nor `~/.ssh`. Prefix git commands with `GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=$TMPDIR/xdg` (otherwise gitleaks sees git's warning and blocks the commit), and commit with the identity of the existing commits passed explicitly (`git log -1 --format='%an <%ae>'`, then `git -c user.name=… -c user.email=… commit`), never an identity guessed from the machine. These commits are unsigned (`docs/repository-security.md`, section 3.8).
 - Commit messages: Conventional Commits, checked by the `commit-msg` hook; `!` marks a change that breaks existing worlds.
 

@@ -17,11 +17,13 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.Test;
+import io.github.maximcuynat.worldwideblocks.os.shell.Help;
 
 /**
  * Both language files are kept together, and every text fits its place with the longest values
  * (see {@code docs/messages.md}): 80 characters for the action bar, 45 for a line of the panel or
- * of the tooltip, 90 for the chat.
+ * of the tooltip, 90 for the chat, 160 for an advice line of the terminal (two rows of its 80 columns), 80 for a
+ * line of {@code help} (one row).
  *
  * <p>Every key of these families must have its sample values below: a key added without a
  * sample makes the test fail, so that nobody forgets it.
@@ -32,6 +34,10 @@ class LangFilesTest {
     private static final int ACTION_BAR = 80;
     private static final int PANEL = 45;
     private static final int CHAT = 90;
+    private static final int TERMINAL_ADVICE = 160;
+    private static final int TERMINAL_ROW = 80;
+    /** A hint of the title bar of the terminal, next to the name of the machine at 854 x 480. */
+    private static final int TERMINAL_TITLE = 20;
 
     private static final String PORT = "5";
     private static final String DISTANCE = "100";
@@ -47,8 +53,12 @@ class LangFilesTest {
     private static final Map<String, Integer> LIMITS = Map.of(
             "message.worldwideblocks.cable.", ACTION_BAR,
             "message.worldwideblocks.network.", CHAT,
+            "message.worldwideblocks.terminal.", ACTION_BAR,
             "hud.worldwideblocks.", PANEL,
-            "item.worldwideblocks.ethernet_cable.tooltip.", PANEL);
+            "item.worldwideblocks.ethernet_cable.tooltip.", PANEL,
+            "terminal.worldwideblocks.advice.", TERMINAL_ADVICE,
+            Help.KEYS, TERMINAL_ROW,
+            "terminal.worldwideblocks.title.", TERMINAL_TITLE);
 
     /** Sample values of each key, built from the longest device name and the longest DHCP state of the language. */
     private static Map<String, List<String>> samples(String name, String state) {
@@ -71,6 +81,7 @@ class LangFilesTest {
         samples.put("message.worldwideblocks.network.loop", List.of(name + " [" + X + ", " + Y + ", " + Z + "]"));
         samples.put("message.worldwideblocks.network.saturated", List.of());
         samples.put("message.worldwideblocks.network.dhcp_conflict", List.of(name + " [" + X + ", " + Y + ", " + Z + "]"));
+        samples.put("message.worldwideblocks.terminal.busy", List.of(name));
         samples.put("hud.worldwideblocks.port.connected", List.of(PORT));
         samples.put("hud.worldwideblocks.port.free", List.of(PORT));
         samples.put("hud.worldwideblocks.port.line", List.of(PORT));
@@ -99,6 +110,23 @@ class LangFilesTest {
         samples.put("item.worldwideblocks.ethernet_cable.tooltip.connect", List.of());
         samples.put("item.worldwideblocks.ethernet_cable.tooltip.unplug", List.of());
         samples.put("item.worldwideblocks.ethernet_cable.tooltip.cancel", List.of());
+        for (String advice : List.of("no_route", "host_unreachable", "net_unreachable", "no_reply")) {
+            samples.put("terminal.worldwideblocks.advice.ping." + advice, List.of(IP));
+        }
+        samples.put("terminal.worldwideblocks.advice.ping.no_name_service", List.of());
+        // help: the summary of a command after its name padded to the column of names; the other lines without values.
+        samples.put("terminal.worldwideblocks.title.close", List.of());
+        samples.put("terminal.worldwideblocks.title.stop", List.of());
+        samples.put(Help.KEYS + "intro", List.of());
+        for (int i = 1; i <= Help.KEY_LINES; i++) {
+            samples.put(Help.KEYS + "keys." + i, List.of());
+        }
+        Help.TOPICS.forEach((topic, lines) -> {
+            samples.put(Help.KEYS + "summary." + topic, List.of("hostname  "));
+            for (int i = 1; i <= lines; i++) {
+                samples.put(Help.KEYS + topic + "." + i, List.of());
+            }
+        });
         return samples;
     }
 

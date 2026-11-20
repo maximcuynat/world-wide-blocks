@@ -1,0 +1,18 @@
+# Capture runs of World Wide Blocks (docs/automated-checks.md): a development-only client mod, loaded by the
+# clientCapture run alone (build.gradle), never in the distributed jar.
+license="LGPL-3.0-only"
+
+[[mods]]
+modId="worldwideblocks_capture"
+version="0.0.0"
+displayName="World Wide Blocks capture runs"
+description='''
+Development only: opens a trial world, builds a scene, takes named screenshots and writes the values it reads.
+'''
+
+[[dependencies.worldwideblocks_capture]]
+    modId="worldwideblocks"
+    type="required"
+    versionRange="[0,)"
+    ordering="AFTER"
+    side="CLIENT"
