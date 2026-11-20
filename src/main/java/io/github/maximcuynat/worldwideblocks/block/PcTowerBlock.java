@@ -5,21 +5,28 @@ import java.util.Map;
 
 import io.github.maximcuynat.worldwideblocks.network.DeviceRole;
 import io.github.maximcuynat.worldwideblocks.network.PortKind;
+import io.github.maximcuynat.worldwideblocks.terminal.TerminalServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
  * PC tower: 8 px wide, 14 px deep, 15 px high, centered in the block.
- * FACING is the direction the front face looks toward.
+ * FACING is the direction the front face looks toward. A right-click opens its terminal ({@link TerminalServer}): no
+ * screen, keyboard or mouse is needed (issue #10).
  */
 public class PcTowerBlock extends NetworkDeviceBlock {
     /** One built-in network card. */
@@ -37,6 +44,14 @@ public class PcTowerBlock extends NetworkDeviceBlock {
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         // The front face looks at the player who places the block.
         return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
+    protected InteractionResult useDevice(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
+        if (player instanceof ServerPlayer serverPlayer) {
+            TerminalServer.open(serverPlayer, pos);
+        }
+        return InteractionResult.SUCCESS;
     }
 
     @Override

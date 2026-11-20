@@ -5,8 +5,10 @@ import java.util.Map;
 
 import io.github.maximcuynat.worldwideblocks.network.DeviceRole;
 import io.github.maximcuynat.worldwideblocks.network.PortKind;
+import io.github.maximcuynat.worldwideblocks.terminal.TerminalServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -24,8 +26,11 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * Laptop: 14 px wide, 10 px deep. An empty-hand right-click opens or closes the screen.
- * FACING is the side where the user sits (the front edge of the keyboard).
+ * Laptop: 14 px wide, 10 px deep. FACING is the side where the user sits (the front edge of the keyboard).
+ * A right-click on the screen opens or closes the lid; on the keyboard of the open laptop, it opens the terminal
+ * ({@link LaptopPart}, {@link TerminalServer}). The item keeps the state of the lid: the loot table copies a closed lid into the
+ * block state component of the item ({@code copy_state}; an open laptop drops a plain item, which stacks with new ones
+ * and is placed open by default), and the game places the block in that state.
  */
 public class LaptopBlock extends NetworkDeviceBlock {
     /** One Ethernet port; Wi-Fi comes in lot 2a. */
@@ -54,7 +59,14 @@ public class LaptopBlock extends NetworkDeviceBlock {
 
     @Override
     protected InteractionResult useDevice(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
-        level.setBlock(pos, state.cycle(OPEN), Block.UPDATE_CLIENTS);
+        LaptopPart part = LaptopPart.at(state.getValue(OPEN), hitResult.getLocation().y - pos.getY());
+        if (part == LaptopPart.KEYBOARD) {
+            if (player instanceof ServerPlayer serverPlayer) {
+                TerminalServer.open(serverPlayer, pos);
+            }
+        } else {
+            level.setBlock(pos, state.cycle(OPEN), Block.UPDATE_CLIENTS);
+        }
         return InteractionResult.SUCCESS;
     }
 

@@ -8,7 +8,23 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "worldwideblocks:laptop"
+          "name": "worldwideblocks:laptop",
+          "modifier": [
+            {
+              "type": "minecraft:copy_state",
+              "condition": {
+                "type": "minecraft:match_block",
+                "blocks": "worldwideblocks:laptop",
+                "state": {
+                  "open": "false"
+                }
+              },
+              "block": "worldwideblocks:laptop",
+              "properties": [
+                "open"
+              ]
+            }
+          ]
         }
       ],
       "rolls": 1

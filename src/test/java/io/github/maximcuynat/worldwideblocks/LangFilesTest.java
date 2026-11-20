@@ -51,6 +51,7 @@ class LangFilesTest {
     private static final Map<String, Integer> LIMITS = Map.of(
             "message.worldwideblocks.cable.", ACTION_BAR,
             "message.worldwideblocks.network.", CHAT,
+            "message.worldwideblocks.terminal.", ACTION_BAR,
             "hud.worldwideblocks.", PANEL,
             "item.worldwideblocks.ethernet_cable.tooltip.", PANEL,
             "terminal.worldwideblocks.advice.", TERMINAL_ADVICE,
@@ -77,6 +78,7 @@ class LangFilesTest {
         samples.put("message.worldwideblocks.network.loop", List.of(name + " [" + X + ", " + Y + ", " + Z + "]"));
         samples.put("message.worldwideblocks.network.saturated", List.of());
         samples.put("message.worldwideblocks.network.dhcp_conflict", List.of(name + " [" + X + ", " + Y + ", " + Z + "]"));
+        samples.put("message.worldwideblocks.terminal.busy", List.of(name));
         samples.put("hud.worldwideblocks.port.connected", List.of(PORT));
         samples.put("hud.worldwideblocks.port.free", List.of(PORT));
         samples.put("hud.worldwideblocks.port.line", List.of(PORT));

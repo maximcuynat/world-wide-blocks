@@ -15,6 +15,7 @@ import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpServerState;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpStore;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 import io.github.maximcuynat.worldwideblocks.network.sim.NetworkSimulation;
+import io.github.maximcuynat.worldwideblocks.terminal.TerminalHub;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
@@ -46,6 +47,8 @@ public final class NetworkSavedData extends SavedData {
     private final DhcpStore dhcp = new DhcpStore();
     private final NetworkSimulation simulation = new NetworkSimulation(this.graph, this.dhcp);
     private final MessageHub messageHub = new MessageHub(this.simulation.limits().reportIntervalTicks());
+    /** Keyboards of the terminals: runtime state, never saved. */
+    private final TerminalHub terminals = new TerminalHub();
 
     private NetworkSavedData() {
     }
@@ -137,5 +140,10 @@ public final class NetworkSavedData extends SavedData {
     /** Throttle and listeners of the message module (see {@code MessageCenter}). */
     public MessageHub messageHub() {
         return this.messageHub;
+    }
+
+    /** Keyboards of the terminals (see {@code TerminalServer}). */
+    public TerminalHub terminals() {
+        return this.terminals;
     }
 }

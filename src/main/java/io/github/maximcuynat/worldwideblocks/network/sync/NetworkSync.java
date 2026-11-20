@@ -20,6 +20,7 @@ import io.github.maximcuynat.worldwideblocks.network.sim.DeviceLogic;
 import io.github.maximcuynat.worldwideblocks.network.sim.HostLogic;
 import io.github.maximcuynat.worldwideblocks.network.switching.MacTable;
 import io.github.maximcuynat.worldwideblocks.registry.ModAttachments;
+import io.github.maximcuynat.worldwideblocks.terminal.TerminalServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -35,10 +36,11 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
  * Sends the clients what they display: the cables they can see, and the state of the device
  * the player is aiming at. A player only receives a cable if one of its ends is in a chunk
  * its client has received (see {@link PlayerLinkView}), and the state of a device only if they aim at it within
- * reach. The server stays the only judge: the client receives only a copy and sends nothing back.
+ * reach. The server stays the only judge: the client receives only a copy; the only packet it sends is the keys of
+ * a terminal screen, checked again by the server ({@code TerminalServer}).
  */
 public final class NetworkSync {
-    private static final String PROTOCOL_VERSION = "4"; // 4: DHCP state in the device status (lot 1b-2)
+    private static final String PROTOCOL_VERSION = "5"; // 5: terminal packets (lot 1c-1)
     /** The device each player aims at is sampled every 5 ticks (a quarter of a second). */
     private static final int STATUS_INTERVAL_TICKS = 5;
 
@@ -52,7 +54,10 @@ public final class NetworkSync {
                 .playToClient(LinkAddedPayload.TYPE, LinkAddedPayload.STREAM_CODEC)
                 .playToClient(LinkRemovedPayload.TYPE, LinkRemovedPayload.STREAM_CODEC)
                 .playToClient(DeviceStatusPayload.TYPE, DeviceStatusPayload.STREAM_CODEC)
-                .playToClient(MessagePayload.TYPE, MessagePayload.STREAM_CODEC);
+                .playToClient(MessagePayload.TYPE, MessagePayload.STREAM_CODEC)
+                .playToClient(TerminalUpdatesPayload.TYPE, TerminalUpdatesPayload.STREAM_CODEC)
+                .playToClient(TerminalClosePayload.TYPE, TerminalClosePayload.STREAM_CODEC)
+                .playToServer(TerminalInputPayload.TYPE, TerminalInputPayload.STREAM_CODEC, TerminalServer::onInput);
     }
 
     // ---- Chunk tracking per player ----

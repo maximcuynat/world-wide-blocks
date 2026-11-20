@@ -80,7 +80,18 @@ public final class WorldWideBlocksGameTests {
             new Case("dhcp_no_box", Batch.SHARED, 420, DhcpTests::noBox),
             new Case("dhcp_conflict_of_two_boxes", Batch.SHARED, 220, DhcpTests::conflictOfTwoBoxes),
             new Case("dhcp_restart_asks_for_the_same_address", Batch.SHARED, 40, DhcpTests::restartAsksForTheSameAddress),
-            new Case("dhcp_pool_full", Batch.SHARED, 420, DhcpTests::poolFull)),
+            new Case("dhcp_pool_full", Batch.SHARED, 420, DhcpTests::poolFull),
+            // Terminals (lot 1c-1, issue #11).
+            new Case("terminal_tower_opens_for_one_player", Batch.SHARED, 40, TerminalTests::towerOpensForOnePlayer),
+            new Case("terminal_keyboard_freed", Batch.SHARED, 40, TerminalTests::keyboardFreed),
+            new Case("terminal_computer_removed_while_open", Batch.SHARED, 40, TerminalTests::computerRemovedWhileOpen),
+            new Case("terminal_exit_ends_the_session", Batch.SHARED, 40, TerminalTests::exitEndsTheSession),
+            new Case("terminal_packets_checked", Batch.SHARED, 80, TerminalTests::packetsChecked),
+            new Case("terminal_packet_from_afar", Batch.SHARED, 40, TerminalTests::packetFromAfar),
+            new Case("terminal_keys_reach_the_console", Batch.SHARED, 40, TerminalTests::keysReachTheConsole),
+            new Case("terminal_payloads_round_trip", Batch.SHARED, 20, TerminalTests::payloadsRoundTrip),
+            new Case("terminal_laptop_gestures", Batch.SHARED, 40, TerminalTests::laptopGestures),
+            new Case("terminal_laptop_item_keeps_its_lid", Batch.SHARED, 40, TerminalTests::laptopItemKeepsItsLid)),
             // Scenes of /worldwideblocks test, except "distance" (99 blocks, larger than the test area).
             // The loop scene hits the engine's global limits: separate batch.
             Arrays.stream(TrialScenario.values())
