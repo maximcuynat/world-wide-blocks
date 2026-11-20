@@ -136,18 +136,36 @@ def encode_png(pixels, scale=1):
 
 
 def display(w, d, h):
-    """Display settings of the design guide, section 7, for a device of w x d x h model px."""
+    """Display settings of the design guide, section 7, for a device of w x d x h model px, centred in x and z and
+    standing on y = 0."""
+    return display_bounds([8 - w / 2, 0, 8 - d / 2], [8 + w / 2, h, 8 + d / 2])
+
+
+def _rotate_xyz(vector, rotation):
+    """A vector turned as ItemTransform turns the model: rotationXYZ, so Z first, then Y, then X."""
+    x, y, z = vector
+    rx, ry, rz = (math.radians(a) for a in rotation)
+    x, y = x * math.cos(rz) - y * math.sin(rz), x * math.sin(rz) + y * math.cos(rz)
+    x, z = x * math.cos(ry) + z * math.sin(ry), -x * math.sin(ry) + z * math.cos(ry)
+    y, z = y * math.cos(rx) - z * math.sin(rx), y * math.sin(rx) + z * math.cos(rx)
+    return x, y, z
+
+
+def display_bounds(lo, hi):
+    """Display settings of the design guide, section 7, for a model with these bounds (model px): the gui scale
+    from its size, and translations that bring its centre back to the centre of the block in every context."""
+    w, h, d = hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]
     cos30 = math.cos(math.radians(30))
     s = min(12 / ((w + d) / math.sqrt(2)), 12 / (h * cos30 + (w + d) / math.sqrt(2) * 0.5))
     s = math.floor(s * 100) / 100
     m = s / 0.625
+    offset = [(lo[k] + hi[k]) / 2 - 8 for k in range(3)]
 
     def ctx(rotation, translation, vanilla_scale):
         scale = s if vanilla_scale is None else round(vanilla_scale * m, 2)
-        v = (8 - h / 2) * scale
-        a = math.radians(rotation[0])
+        turned = _rotate_xyz(offset, rotation)
         return {'rotation': rotation,
-                'translation': [0, round(translation[1] + v * math.cos(a), 2), round(translation[2] + v * math.sin(a), 2)],
+                'translation': [round(translation[k] - turned[k] * scale, 2) + 0.0 for k in range(3)],
                 'scale': [scale] * 3}
 
     return {
@@ -207,12 +225,17 @@ def bbmodel(device_id, elements, sheet, display_settings, parent='block/block'):
             faces[face] = {'uv': [x, y, x + w, y + h], 'texture': 0}
             if face in e.get('cullfaces', ()):
                 faces[face]['cullface'] = face
-        out_elements.append({
+        element = {
             'name': e['name'], 'box_uv': False, 'rescale': False, 'locked': False,
             'from': e['from'], 'to': e['to'], 'autouv': 0, 'color': 0,
             'origin': e.get('origin', [8, 0, 8]), 'faces': faces, 'type': 'cube',
             'uuid': str(uuid.uuid5(ns, 'element:' + e['name'])),
-        })
+        }
+        rotation = e.get('rotation')
+        if rotation:   # single axis, as the Java model format allows: {'angle', 'axis', 'origin'}
+            element['rotation'] = [rotation['angle'] if axis == rotation['axis'] else 0 for axis in 'xyz']
+            element['origin'] = rotation['origin']
+        out_elements.append(element)
     return {
         'meta': {'format_version': '4.10', 'model_format': 'java_block', 'box_uv': False},
         'name': device_id,

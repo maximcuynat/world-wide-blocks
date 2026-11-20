@@ -4,7 +4,8 @@ Usage: python3 design/tools/preview.py <out.png> <id> [<id> ...] [--px 24] [--sc
 
 Draws each project of design/blockbench/<id>.bbmodel from the front (north and east faces) and from
 the back (south and west faces), with the face shading of the game (top 1.0, north and south 0.8,
-east and west 0.6, bottom 0.5), side by side. Elements must not be rotated.
+east and west 0.6, bottom 0.5), side by side. An element may turn around one axis, as in the Java
+model format (the face keeps the shading of its direction before the rotation: a close enough view).
 
 --scene draws all the projects together in one view, as if placed next to each other: <id>@<dx>,<dz>
 moves a project by dx, dz model px (for example drafts/box@-9,0). --span sets the width of the view
@@ -90,18 +91,39 @@ def load(device_id):
     scale_v = len(pixels) / tex.get('uv_height', project['resolution']['height'])
     boxes = []
     for e in project['elements']:
-        if any(e.get('rotation', [0, 0, 0])):
-            raise SystemExit('rotated element %s: not supported by the preview' % e['name'])
-        boxes.append((e['from'], e['to'], e['faces'], pixels, scale_u, scale_v))
+        turned = [(axis, angle) for axis, angle in zip(range(3), e.get('rotation', [0, 0, 0])) if angle]
+        if len(turned) > 1:
+            raise SystemExit('element %s turns on more than one axis: not supported by the preview' % e['name'])
+        rotation = (turned[0][0], math.radians(turned[0][1]), e['origin']) if turned else None
+        boxes.append((e['from'], e['to'], e['faces'], pixels, scale_u, scale_v, rotation))
     return boxes
+
+
+def rotate(vector, rotation, inverse, is_direction):
+    """A point (or a direction) turned by the rotation of an element around its axis through its origin
+    (positive axis, as CuboidRotation.SingleAxisRotation), or by the opposite angle (inverse)."""
+    axis, angle, origin = rotation
+    if inverse:
+        angle = -angle
+    a, b = (axis + 1) % 3, (axis + 2) % 3
+    v = list(vector)
+    o = [0.0, 0.0, 0.0] if is_direction else origin
+    u, w = v[a] - o[a], v[b] - o[b]
+    v[a] = o[a] + u * math.cos(angle) - w * math.sin(angle)
+    v[b] = o[b] + u * math.sin(angle) + w * math.cos(angle)
+    return v
 
 
 def load_placed(spec):
     """<id> or <id>@<dx>,<dz>: the elements of a project, moved by dx, dz model px."""
     device_id, _, offset = spec.partition('@')
     dx, dz = (float(v) for v in offset.split(',')) if offset else (0.0, 0.0)
-    return [([f[0] + dx, f[1], f[2] + dz], [t[0] + dx, t[1], t[2] + dz], faces, px, su, sv)
-            for f, t, faces, px, su, sv in load(device_id)]
+    placed = []
+    for f, t, faces, px, su, sv, rotation in load(device_id):
+        if rotation:
+            rotation = (rotation[0], rotation[1], [rotation[2][0] + dx, rotation[2][1], rotation[2][2] + dz])
+        placed.append(([f[0] + dx, f[1], f[2] + dz], [t[0] + dx, t[1], t[2] + dz], faces, px, su, sv, rotation))
+    return placed
 
 
 def render(boxes, azimuth, px, span=None):
@@ -124,28 +146,32 @@ def render(boxes, azimuth, px, span=None):
             a, b = (sx + 0.5) / px - span / 2, span / 2 - (sy + 0.5) / px
             origin = [centre[i] + a * right[i] + b * up[i] - dirn[i] * 50 for i in range(3)]
             best = None
-            for (f, t, faces, pixels, su, sv) in boxes:
+            for (f, t, faces, pixels, su, sv, rotation) in boxes:
+                ray_o, ray_d = origin, dirn
+                if rotation:   # into the frame of the element, where it is an axis-aligned box
+                    ray_o = rotate(origin, rotation, True, False)
+                    ray_d = rotate(dirn, rotation, True, True)
                 tmin, tmax, hit = -1e9, 1e9, None
                 for i, (neg, pos) in enumerate((('west', 'east'), ('down', 'up'), ('north', 'south'))):
-                    if abs(dirn[i]) < 1e-12:
-                        if not f[i] <= origin[i] <= t[i]:
+                    if abs(ray_d[i]) < 1e-12:
+                        if not f[i] <= ray_o[i] <= t[i]:
                             tmin = 1e9
                         continue
-                    t1, t2 = (f[i] - origin[i]) / dirn[i], (t[i] - origin[i]) / dirn[i]
-                    face = neg if dirn[i] > 0 else pos
+                    t1, t2 = (f[i] - ray_o[i]) / ray_d[i], (t[i] - ray_o[i]) / ray_d[i]
+                    face = neg if ray_d[i] > 0 else pos
                     near = min(t1, t2)
                     if near > tmin:
                         tmin, hit = near, face
                     tmax = min(tmax, max(t1, t2))
                 if hit and tmin <= tmax and (best is None or tmin < best[0]):
-                    best = (tmin, hit, f, t, faces, pixels, su, sv)
+                    best = (tmin, hit, f, t, faces, pixels, su, sv, ray_o, ray_d)
             if best is None:
                 continue
-            tm, face, f, t, faces, pixels, su, sv = best
+            tm, face, f, t, faces, pixels, su, sv, ray_o, ray_d = best
             fc = faces.get(face)
             if not fc or fc.get('texture') is None:
                 continue
-            p = [origin[i] + dirn[i] * tm for i in range(3)]
+            p = [ray_o[i] + ray_d[i] * tm for i in range(3)]
             fu, fv = face_uv(face, p, f, t)
             u1, v1, u2, v2 = fc['uv']
             tu = int(min(max((u1 + fu * (u2 - u1)) * su, 0), len(pixels[0]) - 1e-6))

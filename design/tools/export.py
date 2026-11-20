@@ -33,7 +33,8 @@ def java_model(device_id, project):
         sys.exit('expected exactly one texture, found %d' % len(textures))
     tex = textures[0]
     uv_w, uv_h = tex.get('uv_width', project['resolution']['width']), tex.get('uv_height', project['resolution']['height'])
-    ref = 'worldwideblocks:block/' + device_id
+    texture_name = tex.get('name', device_id + '.png').rsplit('.', 1)[0]   # shared by several models (laptop)
+    ref = 'worldwideblocks:block/' + texture_name
     elements = []
     for e in project['elements']:
         if e.get('type', 'cube') != 'cube':
@@ -68,7 +69,7 @@ def java_model(device_id, project):
         'display': {ctx: {k: [num(x) for x in v[k]] for k in DISPLAY_KEYS if k in v} for ctx, v in project.get('display', {}).items()},
     }
     png = base64.b64decode(tex['source'].split(',', 1)[1])
-    return model, png
+    return model, png, texture_name
 
 
 def main():
@@ -78,9 +79,9 @@ def main():
     args = p.parse_args()
     with open(os.path.join(d.BLOCKBENCH_DIR, args.id + '.bbmodel')) as f:
         project = json.load(f)
-    model, png = java_model(args.id, project)
+    model, png, texture_name = java_model(args.id, project)
     base = args.out or os.path.join(d.REPO, 'src', 'main', 'resources', 'assets', 'worldwideblocks')
-    for sub, name, data in (('models/block', args.id + '.json', None), ('textures/block', args.id + '.png', png)):
+    for sub, name, data in (('models/block', args.id + '.json', None), ('textures/block', texture_name + '.png', png)):
         folder = os.path.join(base, sub)
         os.makedirs(folder, exist_ok=True)
         path = os.path.join(folder, name)
