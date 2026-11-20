@@ -1,7 +1,7 @@
 """5-port desktop switch: 4 x 3 x 1 px (design/blockbench/desktop_switch_5.md).
 
-Rough draft approved by Max on 2026-11-20 as the starting point of the switch of lot 1d; not
-exported to the assets (the block itself is the lot 1d issue "Desktop switch, 5 ports").
+Rough draft approved by Max on 2026-11-20 as the starting point of the switch of lot 1d-1; not
+exported to the assets (the block itself is the lot 1d-1 issue "Desktop switch, 5 ports").
 
 Family signature (design guide, section 5): a flat slab, the whole front taken by the ports, the
 LEDs on the top along the front edge, one above each port.

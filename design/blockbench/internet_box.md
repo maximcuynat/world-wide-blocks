@@ -15,7 +15,7 @@ Follows `docs/design-guide.md`. Status: version 3, chosen by Max on 2026-11-20 (
 - Real: the case of 183 x 183 x 80 mm (status E, `docs/network-equipment.md`), standing: 183 wide, 80 deep, 183 high.
 - In game, x 2.4: 7.0 x 3.1 x 7.0 px, rounded to **7 x 3 x 7 px**, glass band included in the depth.
 - Java shape: `InternetBoxBlock.SHAPES`, `Block.box(4.5, 0, 6.5, 11.5, 7, 9.5)` for a front facing north, turned with `Shapes.rotateHorizontal` (90, 180, 270 degrees for east, south, west, as the `y` of the blockstate).
-- Light plastic (guide, section 4: home devices); this also sets the colour of the desktop switches of lot 1d.
+- Light plastic (guide, section 4: home devices); this also sets the colour of the desktop switches of lot 1d-1.
 
 ## Elements (front facing north)
 

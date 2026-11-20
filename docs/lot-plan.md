@@ -20,7 +20,6 @@ Written on 2026-11-17, revised the same day after review; revised again on 2026-
 
 | Decision | Before lot | Proposal | Status |
 |---|---|---|---|
-| Choice of the exact port | 1d | No proposal for now. Today the Ethernet cord takes the first free local network port; with a desktop switch, the player will want to choose the port. If the port is chosen by aiming at it, the models already allow it: ports are texture areas on the 0.25 px grid at documented positions (`docs/design-guide.md`, section 5) | To decide |
 | Final font of the terminal | 1c-1 | Choice between Monocraft and the game font drawn cell by cell (Spleen as a fallback), after the screenshots of the prototype at 854 x 480 and 1920 x 1080 | To decide |
 | Reply of the box to a `ping` outside the local network | 1c-1 | No proposal for now: `Destination Net Unreachable` or silence, from the behaviour of a real box without an internet link | To decide |
 | Laptop with its lid closed | 1c-1 | It stays on the network (keeps its address, answers `ping`) until lot 1e; at lot 1e, closing the lid could put it to sleep, as most real laptops do by default (from memory, to verify) | To confirm |
@@ -28,7 +27,6 @@ Written on 2026-11-17, revised the same day after review; revised again on 2026-
 | Electricity mandatory or not | 1e | "Power required" configuration option, enabled by default; when disabled, all devices work without power | To approve |
 | Making cables by hand | 2b | The tools of lot 9a (spool, connector, crimping tool, tester) are brought forward just before 2b, so that the fixed home cabling uses cables cut to the wanted length. Alternative: keep them at 9a and use only finished cords until then | To decide |
 | Scale of rack equipment | 6a | Scale per family: racks at player scale, small equipment enlarged. With the factor 2.4 of the PC tower, a 42U rack would be about 4.8 blocks high | To approve |
-| Cord laid on the ground, separated by a wall | F | No proposal for now: what to do when a wall separates the two devices of a cord drawn on the ground (see lot F) | To decide |
 
 ## Decisions taken
 
@@ -45,9 +43,15 @@ Decisions of lot 1c, taken with Max on 2026-11-19 in a dedicated session (detail
 | Two players at the same computer | 1c-1 | One player at the keyboard at a time ("computer busy"). One local console per machine, kept in server memory while the machine exists: closing the screen hides it and running commands go on. Read-only viewing later (backlog) | A computer has one screen and one keyboard, and it keeps running when nobody is in front of it |
 | `ping` without a count | 1c-1 | Continuous until Ctrl+C, as on Linux; `-c n` for a fixed count. "Ctrl+C: stop" in the title bar while a command runs; after a failure, a translated advice line, marked as a game message, that a client setting turns off | Learn the real conventions, with help kept out of the output of the tool |
 | Time shown by `ping` | 1c-1 | A latency computed from the path actually taken: cable lengths, devices crossed, processing time of each type of device. Delivery stays instant in the engine; the values are documented with their sources and easy to change; results are deterministic (jitter maybe later). Game time stays for intervals, timeouts, elapsed time and leases | Replies are delivered in the same tick, so converted ticks would show 0 ms; a computed latency makes the built network measurable (replaces the proposal "1 tick = 50 ms") |
-| Frame capture (`tcpdump`) | 1c-2 | In lot 1c-2, between 1c-1 and 1d | Lot 1c-1 keeps its success criterion, and capture arrives before switches, to show unicast and broadcast |
+| Frame capture (`tcpdump`) | 1c-2 | In lot 1c-2, between 1c-1 and 1d-1 | Lot 1c-1 keeps its success criterion, and capture arrives before switches, to show unicast and broadcast |
 | Scope of lots 1c-1 and 1c-2 | 1c-1, 1c-2 | See the two lots. A working subset of the real tools: what exists really works, everything else returns a consistent error | No command shows a prepared result |
 | Working name of the operating system | (announcement) | "Blocknix" is a working name, in the documentation only: generic names in the code, nothing in the game or its resources. Before any announcement: trademark databases (classes 9 and 42: INPI, EUIPO, WIPO, USPTO), mod platforms (CurseForge, Modrinth), GitHub and the web, checked the same day, and availability of the useful names | The name can change without touching the architecture |
+| Choice of the exact port | 1d-1 | Decided by Max on 2026-11-20 (`docs/cable-design.md`, section 3): the player aims at the port. With a cord in hand, the aimed port is outlined and the status panel shows "Port 3: free" before the click. The face that carries the ports is split into one aim zone per port, up to halfway to its neighbours; on a flat device the zone goes on over the top face, where the port LEDs are. Anywhere else on the device, the first free port (first occupied port to unplug or take an end off). All the gestures follow the aimed port | Natural gesture, the same two clicks; the zones keep the 0.5 px ports of a switch easy to hit. Menu and scroll wheel set aside (a menu may come back for the dense switches of 8b) |
+| Cable attached to its port | 1d-1 | Decided by Max on 2026-11-20 (`docs/cable-design.md`, section 4): the cable leaves from the mouth of its port, given by a port layout per device, with an RJ45 plug pushed into it; plugs drawn by the client from the cables it knows, not from block states; cable 0.25 px thick instead of a line. Check in the 26.3 sources how to draw a small model in the cable pass before coding | One source of truth (the cables known to the client); `ATTACH_HEIGHT` disappears |
+| Tower and laptop before lot 1d-1 | 1d-1 | Decided by Max on 2026-11-20: the tower and the laptop are redrawn on the design guide, with the position of their ports, before lot 1d-1 (issue #56) | Step 1 needs the position of every port; the laptop has none in its current model |
+| Cable on the ground: drawn, not placed in the world | 1d-2 | Decided by Max on 2026-11-20 (`docs/cable-design.md`, section 5): each client computes the route from the terrain and recomputes it when a block changes on it; nothing in the world, nothing saved, no cost on the server; the player walks over it. Wall sockets, clips, trunking and trays (2b, 8a) are real blocks that become fixed points of the route | A single copy of the network (the engine), the server decides and the client displays |
+| Cord laid on the ground, separated by a wall | 1d-2 | Decided by Max on 2026-11-20: the route goes around the obstacle in a corridor around the straight line (through a door), climbs up to one block; with no route on the ground, the cable hangs in the air as today, until the wall sockets of 2b | The clean answer to a wall is a wall socket |
+| Placement of the cable steps | 1d-1, 1d-2, 2b, 8a | Decided by Max on 2026-11-20 (`docs/cable-design.md`, section 1), each step playable alone: 1. port chosen by aiming and cable attached to its port with its plug, lot 1d-1 (lot 1d renamed 1d-1); 2. thick cable laid on the ground, new lot 1d-2, in version 0.2.0 so as not to delay 0.1.0; 3. RJ45 wall sockets and cable fixed to the wall, 2b; 4. trunking in 2b, cable trays in 8a | Cables improve step by step without delaying 0.1.0 |
 
 History of the decision on issue #10: during the interview, Max first answered that the tower would have no terminal for now, that its terminal would need a screen, keyboard and mouse plugged in, and that the tower would later be crafted from components. On review of the summary, he confirmed the principle written above (terminal on the tower from lot 1c-1, peripherals optional by default). The tower crafted from components stays an idea of its own (idea issue "PC tower built from components"), independent of this decision.
 
@@ -64,7 +68,8 @@ This document describes the design. The tasks of each lot are GitHub issues, one
 | 1b | The box assigns addresses | Each computer connected to the box receives an address |
 | 1c-1 | Terminal and ping command | From a computer, `ping` to another computer, which answers |
 | 1c-2 | Network diagnostics | `tcpdump` shows the ARP and ICMP frames of a `ping` |
-| 1d | Desktop switch | More computers than the box has ports |
+| 1d-1 | Desktop switch | More computers than the box has ports; the player chooses the port by aiming at it, the cable leaves from the port with its plug |
+| 1d-2 | Cable on the ground | Cables come down from the ports, lie on the floor and go around walls; the player walks over them (version 0.2.0) |
 | 1e | Electricity | A device without power is off |
 | 1f | TCP | A connection opens between two computers, carries a message and closes |
 | 2a | Wi-Fi | The laptop connects without a cable |
@@ -195,9 +200,9 @@ The lot is split in two sub-lots (architecture approved by Max on 2026-11-17):
 Chosen architecture:
 
 - Layered frames (`network/protocol/`): an Ethernet frame carries a source MAC, a destination MAC (or broadcast), a type and a typed content. IPv4 (0x0800), then UDP and DHCP, ARP (official type 0x0806) and ICMP are each added as a variant of the layer below.
-- One MAC per port, first byte `02` (locally administered address), unique in the world and saved; a device that is broken then placed again gets new ones. Each port has a type: Ethernet or line input. The Ethernet cord takes the first free local network port; how to choose the exact port is an open decision, to take before lot 1d (see "Open decisions").
+- One MAC per port, first byte `02` (locally administered address), unique in the world and saved; a device that is broken then placed again gets new ones. Each port has a type: Ethernet or line input. The Ethernet cord takes the first free local network port; how to choose the exact port is an open decision, to take before lot 1d-1 (see "Open decisions").
 - Simulation (`network/sim/`): delivery queue processed at each server tick, timers, a tap on each incoming or outgoing frame (for a future analyzer), clock on game time. A change that happens between two ticks (connection, unplugging, device placed or removed) is applied at the start of the next tick, with the time of that tick: its frames, timers and reports start from the tick where its frames are delivered (fixed on 2026-11-18, see the in-game test of the loop). It runs even when chunks are not loaded.
-- Switching (`network/switching/`): learning of MACs on received frames, broadcast if the destination is unknown or addressed to all, entries expire after 300 game seconds (value recommended by IEEE 802.1D), forgotten at the next tick when the cable is removed. The box is this switch plus a local point, on which its own service will be plugged (DHCP at 1b-2); the desktop switch of lot 1d will be the same switch, without a local point.
+- Switching (`network/switching/`): learning of MACs on received frames, broadcast if the destination is unknown or addressed to all, entries expire after 300 game seconds (value recommended by IEEE 802.1D), forgotten at the next tick when the cable is removed. The box is this switch plus a local point, on which its own service will be plugged (DHCP at 1b-2); the desktop switch of lot 1d-1 will be the same switch, without a local point.
 - Loop protection, until the STP of lot 8b: a broadcast frame that comes back to a switch it has already crossed is dropped and reported (log, and a message to players within 32 blocks, at most one per minute and per device). Safety net: 10,000 frames processed per tick at most, 50,000 in the queue.
 - Presence frame: **scaffolding, to remove at lot 1c** when DHCP and ARP produce real traffic. A computer broadcasts a frame of type 0x88B5 (IEEE experimental type) when its cable is connected, then every 30 s, so that the box learns its MAC before DHCP exists.
 - 1b-2: DHCP client of the computer following RFC 2131 (DISCOVER, OFFER, REQUEST, ACK with a transaction identifier; renewal at 50% of the lease, then at 87.5% by broadcast). A computer that had an address before a server restart directly asks for its old address again (INIT-REBOOT state): its lease is therefore saved. Range 192.168.1.10 to 192.168.1.200 in /24, box at 192.168.1.1 (gateway and name server), lease of one game day (24,000 ticks), the box remembers the address lent to each MAC. Two DHCP servers on the same network: the indicator reports the conflict.
@@ -408,22 +413,39 @@ Pushed back: completion with Tab and read-only viewing (backlog), fixed address 
 
 Playable at the end: `tcpdump` runs on one computer while another `ping`s it; the ARP request, its reply, then the ICMP echoes scroll by.
 
-- `tcpdump` reads the frames of `FrameTap`, on the interface of the machine only: its incoming and outgoing frames and the broadcasts it receives, never the traffic of other machines. This is what a real computer sees behind a box or a switch, and lot 1d shows it.
+- `tcpdump` reads the frames of `FrameTap`, on the interface of the machine only: its incoming and outgoing frames and the broadcasts it receives, never the traffic of other machines. This is what a real computer sees behind a box or a switch, and lot 1d-1 shows it.
 - Output in the real format, with the information that really exists in the engine. The timestamp is the time of the tick plus the latency carried by the frame.
-- Options `-n` (accepted; same output, there is no DNS yet), `-e` (MAC addresses, needed in lot 1d), `-c n`.
+- Options `-n` (accepted; same output, there is no DNS yet), `-e` (MAC addresses, needed in lot 1d-1), `-c n`.
 - Filters: a closed grammar that really filters the frames, `arp`, `icmp`, `udp`, `port <n>`, `host <address>`. Anything else is refused with an error; `and` and `or` come later if needed.
 - `dhclient -v eth0` shows the real exchange (`DHCPDISCOVER`, `DHCPOFFER`, `DHCPREQUEST`, `DHCPACK`); `dhclient -r eth0` releases the lease and removes the address and the routes of the interface.
 
-The order of lots 1c-1, 1c-2 and 1d follows the learning: use the network, observe what travels on it, then see what a switch changes (unicast and broadcast).
+The order of lots 1c-1, 1c-2 and 1d-1 follows the learning: use the network, observe what travels on it, then see what a switch changes (unicast and broadcast).
 
-### 1d: desktop switch
+### 1d-1: desktop switch
 
 | Type | Equipment | Role |
 |---|---|---|
 | Block | 5-port desktop switch | Multiplies the network sockets, without configuration |
 | Block | 8-port desktop switch | Same, with more ports |
+| Mechanic | Port chosen by aiming | The aimed port is outlined and named by the status panel before the click; elsewhere on the device, the first free port |
+| Rendering | Cable attached to its port | The cable leaves from the port, with an RJ45 plug pushed into it; thick cable instead of a line; the hanging curve stays until 1d-2 |
 
-Playable at the end: six or more computers on the same box, all reachable by `ping`.
+Playable at the end: six or more computers on the same box, all reachable by `ping`, each cable in the port the player chose.
+
+Design of the port choice and of the attachment: `docs/cable-design.md`, sections 3 and 4 (decided on 2026-11-20). Before the lot: the tower and the laptop redrawn on the design guide with the position of their ports (issue #56).
+
+### 1d-2: cable on the ground
+
+In version 0.2.0 (decided on 2026-11-20), so as not to delay 0.1.0.
+
+| Type | Equipment | Role |
+|---|---|---|
+| Rendering | Cable on the ground | The cable comes down from the plug, follows the floor, climbs steps and goes around walls, up to the other device; drawn by the client, no collision |
+| Rendering | Hanging fallback | With no route on the ground (wall without an opening, terrain not received), the cable hangs in the air as today |
+
+Playable at the end: a room cabled with several computers, the cables lying side by side on the floor and going out through the door; the player walks over them.
+
+Design: `docs/cable-design.md`, section 5. Steps 3 and 4 (wall sockets and cable fixed to the wall in 2b, trunking in 2b, cable trays in 8a) reuse its chain of spans (section 6).
 
 ## Lot 1e: electricity
 
@@ -477,8 +499,13 @@ Playable at the end: the laptop, without a cable, `ping`s the tower.
 | Block | RJ45 wall socket | Connection point in a room |
 | Block | Communications enclosure | Panel where all the cables of the home arrive, with the box |
 | Block | Cable trunking | Guides the cables along the walls |
+| Block | Wall clip (added on 2026-11-20) | Holds a cable along a wall; a fixed point of its route (`docs/cable-design.md`, section 6) |
 
 Playable at the end: a computer connected to the socket of a bedroom reaches the box stored in the enclosure.
+
+Cables (decided on 2026-11-20, `docs/cable-design.md`, section 6): the wall socket is a device with ports (aim and plugs of lot 1d-1); wall clips and trunking are real blocks that become fixed points of the route of a cable, stored in the link; the length of a cable becomes the length of its route.
+
+Needs noted by Max on 2026-11-20, to design with the lot: a preview of the route before a cable through a wall is laid, then a way to find hidden cables again in offices, for example a view through the walls while holding a cable, each cable in the colour of its cord; later a detection tool of lot 9a could do the same (`docs/cable-design.md`, section 6).
 
 ### 2c: peripherals and local services
 
@@ -508,7 +535,7 @@ Playable at the end: each new device obtains an address and answers `ping`.
 
 ## Lot 3: arrival at the subscriber
 
-So that this lot is playable before the street exists, a test block provides the line. This block is brought forward to lot 1d (proposed issue): the line input port of the box can then be tested (state "inactive" until the block is connected) long before lot 3, which then only adds the real equipment.
+So that this lot is playable before the street exists, a test block provides the line. This block is brought forward to lot 1d-1 (proposed issue): the line input port of the box can then be tested (state "inactive" until the block is connected) long before lot 3, which then only adds the real equipment.
 
 | Type | Equipment | Role |
 |---|---|---|
@@ -678,7 +705,7 @@ Distant lots: the lists are complete, but the split will be reviewed when we get
 | Item | Patch cord | Short cord between the panel and the switch |
 | Block | Cable guide | Guides the cords between two pieces of equipment |
 | Block | Blanking panel | Closes an empty slot of the rack |
-| Block | Cable tray | Supports the cables on the ceiling between the racks and the rooms |
+| Block | Cable tray | Supports the cables on the ceiling between the racks and the rooms; a carrier whose path becomes part of the route of the cables it holds (`docs/cable-design.md`, section 6) |
 
 Playable at the end: a floor cabled from the wall sockets up to the switch in the rack.
 
@@ -771,6 +798,8 @@ Distant lots: the lists are complete, but the split will be reviewed when we get
 
 Playable at the end: a cord made by hand, tested, then used.
 
+Idea noted by Max on 2026-11-20: a cable detector that shows where hidden cables run, like the view through the walls planned with the wall sockets of 2b (`docs/cable-design.md`, section 6).
+
 ### 9b: mobile network
 
 | Type | Equipment | Role |
@@ -810,12 +839,12 @@ Playable at the end: the whole mod is accessible without creative mode.
 | Textures | Screens and fronts lit or off depending on the state |
 | Sounds | Fans, connection clicks, beeps |
 | Models | Rework of the provisional models and textures, following `docs/design-guide.md`. `models/block/laptop_open.json` is used by no blockstate (the open laptop uses `laptop.json`): to remove or to use during the rework (noted on 2026-11-19) |
-| Cord on the ground | The cord is rendered laid on the ground instead of a stretched line (idea noted on 2026-11-17, not approved) |
+| Cord on the ground | Moved to lot 1d-2 (decided on 2026-11-20, `docs/cable-design.md`); lot F keeps the polish: rounded bends, a little slack |
 | HUD interface | More professional and more polished HUD for the status panel and the messages (requested by Max on 2026-11-18) |
 
 HUD interface: the current rendering (compact or detailed panel, messages with symbol and colour) is **approved by Max on 2026-11-18 as a base**; nothing has to change before lot F. The future work is about the look: a more professional and more polished HUD, with a check of the rendering on several window sizes (in 854 x 480, the second line of the cord tooltip wraps). The message module (see `docs/messages.md`) separates data from drawing: the server only sends keys, values and a level, the panel lines are built in plain Java (`StatusPanel`), and only the client decides the look. The new interface therefore replaces the drawing (`client/ClientMessages`, `client/PortStatusLayer`) without touching the engine, the packets or the texts.
 
-Cord on the ground, idea to refine when we reach the lot:
+Cord on the ground, idea noted on 2026-11-17 (now designed for lot 1d-2 in `docs/cable-design.md`, decided on 2026-11-20):
 
 - No physics simulation: the route is computed once. The cable follows the terrain between the two devices, with a slight sag between two supports.
 - The route is recomputed only when a block changes on the path.
@@ -825,7 +854,8 @@ Cord on the ground, idea to refine when we reach the lot:
 ## Dependencies
 
 - Lot 1a is required by everything else.
-- 1c-1 depends on 1b: without an address, no `ping`. 1c-2 depends on 1c-1 and comes before 1d, whose switches it helps to understand.
+- Cables (decided on 2026-11-20, `docs/cable-design.md`): the port choice and the plugs of 1d-1 come before the cable on the ground of 1d-2; the wall sockets, wall clips and trunking of 2b, then the cable trays of 8a, reuse its chain of spans.
+- 1c-1 depends on 1b: without an address, no `ping`. 1c-2 depends on 1c-1 and comes before 1d-1, whose switches it helps to understand.
 - 1f (TCP) depends on 1c-1 (IP stack per interface) and is required by 2c (file sharing), 7b (web server) and 8d (SSH).
 - Lot 1e is required by the powerline adapter, the PoE injector and room power (8e).
 - Lot 3 needs the test block as long as lots 4 to 6 are not done.
