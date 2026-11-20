@@ -1,5 +1,6 @@
 Title: A long cable is drawn under the ground
 Labels: type: bug, area: interface, priority: medium
+Milestone: version 0.1.0
 
 Found by the capture run `distance` (lot 1c-1, issue #52): seen from above either end, the cable of 99 blocks is only drawn on about 5 blocks at each end, then goes under the ground.
 
