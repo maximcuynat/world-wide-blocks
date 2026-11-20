@@ -1,0 +1,17 @@
+{
+  "description": "Palette of the design guide (docs/design-guide.md, section 4): the only colours allowed in the textures of the mod. Single source, read by design/tools/wwb_design.py and by BlockResourcesTest. Each role has a base tone and may have a highlight (hi) and a shadow (sh) tone.",
+  "roles": {
+    "light": {"base": "#c4c8ce", "hi": "#dde0e4", "sh": "#969aa2"},
+    "dark": {"base": "#3a3d42", "hi": "#4b4f56", "sh": "#2a2c30"},
+    "metal": {"base": "#7d838b", "hi": "#9aa0a8", "sh": "#555a61"},
+    "socket": {"base": "#1c1e22", "sh": "#0b0b0d"},
+    "contacts": {"base": "#b09646", "hi": "#c8aa3c"},
+    "led_green": {"base": "#4ade80"},
+    "led_orange": {"base": "#f0aa3c"},
+    "screen": {"base": "#0d1b2a"}
+  },
+  "exceptions": {
+    "textures/block/laptop.png": "Drawn before the design guide; redrawn with the laptop (issue #56).",
+    "textures/item/ethernet_cable.png": "Cords are a colour family of their own (design guide, section 4); the icon is reworked in lot F."
+  }
+}

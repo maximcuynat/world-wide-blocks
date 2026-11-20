@@ -14,20 +14,20 @@ import zlib
 
 TEXELS_PER_PX = 4  # design guide, section 3
 
-# Design guide, section 4: role -> (base, highlight, shadow). None when the role has no such tone.
-PALETTE = {
-    'light': ('#c4c8ce', '#dde0e4', '#969aa2'),
-    'dark': ('#3a3d42', '#4b4f56', '#2a2c30'),
-    'metal': ('#7d838b', '#9aa0a8', '#555a61'),
-    'socket': ('#1c1e22', None, '#0b0b0d'),
-    'contacts': ('#b09646', '#c8aa3c', None),
-    'led_green': ('#4ade80', None, None),
-    'led_orange': ('#f0aa3c', None, None),
-    'screen': ('#0d1b2a', None, None),
-}
+REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+
+def _load_palette():
+    """Design guide, section 4: role -> (base, highlight, shadow), None when the role has no such tone.
+    Read from design/palette.json, the single source of the palette (also read by BlockResourcesTest)."""
+    with open(os.path.join(REPO, 'design', 'palette.json'), encoding='utf-8') as f:
+        roles = json.load(f)['roles']
+    return {role: (tones['base'], tones.get('hi'), tones.get('sh')) for role, tones in roles.items()}
+
+
+PALETTE = _load_palette()
 TONES = {'base': 0, 'hi': 1, 'sh': 2}
 
-REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 BLOCKBENCH_DIR = os.path.join(REPO, 'design', 'blockbench')
 
 

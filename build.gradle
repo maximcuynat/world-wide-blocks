@@ -136,6 +136,8 @@ dependencies {
     testImplementation platform('org.junit:junit-bom:5.13.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // JSON of the block resources in BlockResourcesTest, at the version the game ships (Minecraft 26.3 libraries).
+    testImplementation 'com.google.code.gson:gson:2.14.0'
 
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
