@@ -9,7 +9,7 @@ Written on 2026-11-20. Status: **approved by Max on 2026-11-20**; nothing is cod
 - lot 1d renamed 1d-1; lot 1d-2 in version 0.2.0;
 - the tower and the laptop redrawn on the design guide, with the position of their ports, before lot 1d-1.
 
-Visual design of the cables, chosen by Max on 2026-11-20 from the previews of `design/tools/cables.py` (drafts under `design/blockbench/drafts/`): one RJ45 size on every device (2 x 2 texels), the plug with its long boot, the two-tone outline of the aimed port, the eight cord colours of `design/palette.json` (key `cords`), the cord icon with the taller plug, the overhang of the plug behind the tower and the laptop accepted (section 4). Proposed the same day, not decided yet: the lane step of 0.5 px (section 5) and the cords as items (colour, type, length, section 7).
+Visual design of the cables, chosen by Max on 2026-11-20 from the previews of `design/tools/cables.py` (drafts under `design/blockbench/drafts/`): one RJ45 size on every device (2 x 2 texels), the plug with its long boot, the two-tone outline of the aimed port, the eight cord colours of `design/palette.json` (key `cords`), the cord icon with the taller plug (exported in blue on 2026-11-20, `design/tools/cables.py --export-icon`), the overhang of the plug behind the tower and the laptop accepted (section 4). Proposed the same day, not decided yet: the lane step of 0.5 px (section 5) and the cords as items (colour, type, length, section 7).
 
 ## 1. Steps
 

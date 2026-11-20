@@ -73,7 +73,7 @@ Eight base colours, with a highlight and a shadow for the materials. Values take
 | Orange LED | `#f0aa3c` | | | Activity, warning |
 | Screen, off | `#0d1b2a` | | | Screens and glass |
 
-**Cord colours** (chosen by Max on 2026-11-20; key `cords` of `design/palette.json`): a family of their own, for the cable, the boot of the plugs and the cord item, never in the textures of the devices. Blue, the colour of every cord today (`CableRenderer`, `#2f6fd6`), is the default; the blues of the current cord icon go with its rework. Grey is a dark blue-grey, apart from the metal; white is a warm off-white, apart from the clear body of the plugs and from light plastic. A colour carries no rule of the game (`docs/cable-design.md`, section 7).
+**Cord colours** (chosen by Max on 2026-11-20; key `cords` of `design/palette.json`): a family of their own, for the cable, the boot of the plugs and the cord item, never in the textures of the devices. Blue, the colour of every cord today (`CableRenderer`, `#2f6fd6`), is the default, and the colour of the cord icon (`textures/item/ethernet_cable.png`, the variant with the taller plug, exported on 2026-11-20 by `design/tools/cables.py --export-icon`). Grey is a dark blue-grey, apart from the metal; white is a warm off-white, apart from the clear body of the plugs and from light plastic. A colour carries no rule of the game (`docs/cable-design.md`, section 7).
 
 | Cord | Base | Highlight | Shadow |
 |---|---|---|---|

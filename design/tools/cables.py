@@ -1,7 +1,9 @@
 """Cables, design drafts (docs/cable-design.md): the RJ45 plug, the thick cable on the ground, the highlight of the aimed
-port, the cord colours and the cord icon. Writes drafts only, under design/blockbench/drafts/; nothing is exported.
+port, the cord colours and the cord icon. Writes drafts only, under design/blockbench/drafts/, except --export-icon.
 
-    python3 design/tools/cables.py
+    python3 design/tools/cables.py                  the drafts below
+    python3 design/tools/cables.py --export-icon    the cord icon, in blue (the default cord colour, design guide,
+                                                    section 4), to textures/item/ethernet_cable.png of the mod assets
 
 - drafts/rj45_plug.bbmodel: the plug alone, for a port facing north, mouth at the centre of the block.
 - drafts/cable_scene.bbmodel: plugs, cables, highlight and floor of the scene, in scene coordinates, to draw with the
@@ -292,7 +294,22 @@ def build_icon():
         f.write(d.encode_png(icon_pixels()))
 
 
+ICON_ASSET = os.path.join(d.REPO, 'src', 'main', 'resources', 'assets', 'worldwideblocks', 'textures', 'item',
+                          'ethernet_cable.png')
+
+
+def export_icon():
+    """The cord icon chosen on 2026-11-20 (taller plug), in blue, the colour of every cord until colours come."""
+    with open(ICON_ASSET, 'wb') as f:
+        f.write(d.encode_png(icon_pixels('blue')))
+    print('written', os.path.relpath(ICON_ASSET, d.REPO))
+
+
 if __name__ == '__main__':
+    import sys
+    if sys.argv[1:] == ['--export-icon']:
+        export_icon()
+        sys.exit()
     build_scene()
     build_lanes()
     build_plug()
