@@ -22,6 +22,10 @@ import io.github.maximcuynat.worldwideblocks.capture.CaptureScenario.Size;
 import io.github.maximcuynat.worldwideblocks.capture.CaptureScenario.Step;
 import io.github.maximcuynat.worldwideblocks.client.StatusPanelShownEvent;
 import io.github.maximcuynat.worldwideblocks.gametest.scene.TrialScenes;
+import io.github.maximcuynat.worldwideblocks.network.DeviceId;
+import io.github.maximcuynat.worldwideblocks.network.Link;
+import io.github.maximcuynat.worldwideblocks.network.NetworkDevices;
+import io.github.maximcuynat.worldwideblocks.network.NetworkManager;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
@@ -93,6 +97,9 @@ final class CaptureRun {
     /** The screen a step expects to be open: shots check it, and a pause screen is closed only when none is. */
     private enum ExpectedScreen { NONE, INVENTORY, CHAT }
 
+    /** Stages of a {@link Step.Restart}. */
+    private enum Restarting { LOOKING_AWAY, REOPENING, ENTERING }
+
     /** Ticks a message of the action bar counts as shown (the game shows it 3 s). */
     private static final int ACTION_BAR_TICKS = 60;
     /** Ticks between the click of a {@code useFirst} shot and its screenshot, for the server to answer. */
@@ -140,6 +147,15 @@ final class CaptureRun {
     private boolean waitingForSave;
     /** Result of a failure, written once its screenshot is saved. */
     private String failure;
+    /** Chat lines received when a {@link Step.Silence} began. */
+    private int silenceMark;
+    private final AtomicBoolean cableRemoved = new AtomicBoolean();
+    private final AtomicBoolean sprintOver = new AtomicBoolean();
+    /** A question about the sprint is waiting on the server thread. */
+    private final AtomicBoolean sprintQueried = new AtomicBoolean();
+    private Restarting restarting;
+    /** Ticks in the world again after a restart, for chunks and payloads to reach the client. */
+    private int enteredTicks;
 
     /** The last panel drawn, as the client posted it. */
     private StatusPanelShownEvent panel;
@@ -368,7 +384,11 @@ final class CaptureRun {
         }
         Step current = steps.get(this.step);
         this.stepTicks++;
-        int allowed = current instanceof Step.Wait wait ? wait.ticks() : 0;
+        int allowed = switch (current) {
+            case Step.Wait wait -> wait.ticks();
+            case Step.Silence silence -> silence.ticks();
+            default -> 0;
+        };
         this.limit("step " + (this.step + 1) + " (" + current + ") did not end; " + this.observed(minecraft),
                 this.stepTicks - allowed);
         boolean done = switch (current) {
@@ -385,6 +405,10 @@ final class CaptureRun {
             case Step.GameMode mode -> this.gameMode(minecraft, mode);
             case Step.MessageSymbols symbols -> this.messageSymbols(minecraft, symbols);
             case Step.Wait wait -> this.stepTicks >= wait.ticks();
+            case Step.Silence silence -> this.silence(silence);
+            case Step.RemoveCable remove -> this.removeCable(minecraft, remove);
+            case Step.Sprint sprint -> this.sprint(minecraft, sprint);
+            case Step.Restart restart -> this.restart(minecraft);
             case Step.Shot shot -> this.shot(minecraft, shot);
         };
         if (done) {
@@ -610,6 +634,126 @@ final class CaptureRun {
         return this.stepTicks >= 4 * STABLE_TICKS; // the game watches the file and reads it again
     }
 
+    private boolean silence(Step.Silence silence) {
+        if (!this.stepStarted) {
+            this.stepStarted = true;
+            this.silenceMark = this.chat.size();
+            return false;
+        }
+        if (this.chat.size() > this.silenceMark) {
+            throw new IllegalStateException("a line reached the chat after " + this.stepTicks + " of " + silence.ticks()
+                    + " ticks of silence: " + this.chat.subList(this.silenceMark, this.chat.size()));
+        }
+        return this.stepTicks >= silence.ticks();
+    }
+
+    private boolean removeCable(Minecraft minecraft, Step.RemoveCable remove) {
+        TrialScenes.Result result = this.scene.get();
+        if (result == null || Math.max(remove.from(), remove.to()) >= result.devices().size()) {
+            throw new IllegalStateException("no device " + Math.max(remove.from(), remove.to()) + " in the last scene");
+        }
+        if (!this.stepStarted) {
+            this.stepStarted = true;
+            this.cableRemoved.set(false);
+            BlockPos fromPos = result.devices().get(remove.from());
+            BlockPos toPos = result.devices().get(remove.to());
+            IntegratedServer server = minecraft.getSingleplayerServer();
+            server.execute(() -> {
+                try {
+                    NetworkManager network = NetworkManager.of(server);
+                    DeviceId from = NetworkDevices.idOf(server.overworld(), fromPos);
+                    DeviceId to = NetworkDevices.idOf(server.overworld(), toPos);
+                    Optional<Link> link = network.linksOf(from).stream()
+                            .filter(candidate -> candidate.a().device().equals(to) || candidate.b().device().equals(to))
+                            .findFirst();
+                    if (link.isEmpty()) {
+                        this.serverError.set("no cable between devices " + remove.from() + " and " + remove.to());
+                    } else if (network.disconnect(link.get().a()).isPresent()) {
+                        this.cableRemoved.set(true);
+                    } else {
+                        this.serverError.set("the engine did not remove the cable " + link.get());
+                    }
+                } catch (RuntimeException e) {
+                    this.serverError.set("cable removal on the server: " + e);
+                }
+            });
+            return false;
+        }
+        return this.cableRemoved.get() && this.stepTicks >= STABLE_TICKS;
+    }
+
+    private boolean sprint(Minecraft minecraft, Step.Sprint sprint) {
+        IntegratedServer server = minecraft.getSingleplayerServer();
+        if (!this.stepStarted) {
+            this.stepStarted = true;
+            this.sprintOver.set(false);
+            this.sprintQueried.set(false);
+            server.execute(() -> server.tickRateManager().requestGameToSprint(sprint.ticks()));
+            return false;
+        }
+        // Asked on the server thread, after the request (its tasks run in order): never a state read across threads.
+        if (!this.sprintOver.get() && this.sprintQueried.compareAndSet(false, true)) {
+            server.execute(() -> {
+                this.sprintOver.set(!server.tickRateManager().isSprinting());
+                this.sprintQueried.set(false);
+            });
+        }
+        return this.sprintOver.get() && this.stepTicks >= STABLE_TICKS;
+    }
+
+    /**
+     * Quits to the title screen and opens the world again. The panel event is posted only when the panel changes: the
+     * player looks up first, so that the run sees the panel hide, and a panel after the reopening is drawn again.
+     */
+    private boolean restart(Minecraft minecraft) {
+        if (!this.stepStarted) {
+            this.stepStarted = true;
+            this.restarting = Restarting.LOOKING_AWAY;
+            this.aimed = null;
+            this.sneaking = false;
+            IntegratedServer server = minecraft.getSingleplayerServer();
+            server.execute(() -> {
+                ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+                player.teleportTo(player.level(), player.getX(), player.getY(), player.getZ(), Set.<Relative>of(),
+                        player.getYRot(), -90f, true);
+            });
+            return false;
+        }
+        String world = WORLD_PREFIX + this.scenarioName;
+        switch (this.restarting) {
+            case LOOKING_AWAY -> {
+                boolean hidden = this.panel != null && this.panel.device().isEmpty() && this.aimedBlock(minecraft).isEmpty();
+                if (hidden && this.stepTicks >= STABLE_TICKS) {
+                    LOGGER.info("Capture {}: saving and quitting to the title screen", this.scenarioName);
+                    // The stage changes first: the call saves and stops the integrated server before it returns.
+                    this.restarting = Restarting.REOPENING;
+                    minecraft.disconnectFromWorld(ClientLevel.DEFAULT_QUIT_MESSAGE);
+                }
+            }
+            case REOPENING -> {
+                if (minecraft.gui.screen() instanceof TitleScreen && minecraft.level == null) {
+                    LOGGER.info("Capture {}: opening \"{}\" again", this.scenarioName, world);
+                    this.restarting = Restarting.ENTERING;
+                    this.enteredTicks = -1;
+                    minecraft.createWorldOpenFlows().openWorld(world,
+                            () -> this.serverError.set("opening \"" + world + "\" again was cancelled"));
+                }
+            }
+            case ENTERING -> {
+                boolean inWorld = minecraft.player != null && minecraft.level != null
+                        && minecraft.getSingleplayerServer() != null && minecraft.gui.screen() == null
+                        && minecraft.gui.overlay() == null;
+                if (!inWorld) {
+                    this.enteredTicks = -1; // a screen of the game (warning, backup) is reported by the time limit
+                } else if (++this.enteredTicks >= SETTLE_TICKS) {
+                    LOGGER.info("Capture {}: in the world again", this.scenarioName);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /**
      * True while the last aim still holds, as observed on the client: the crosshair on the device, the posture asked,
      * the panel of that device drawn. True when no aim was asked yet.
@@ -755,6 +899,7 @@ final class CaptureRun {
                 .append(" | GUI scale ").append(window.getGuiScale())
                 .append(minecraft.options.guiScale().get() == 0 ? " (auto)" : " (set)")
                 .append(" | GUI ").append(window.getGuiScaledWidth()).append('x').append(window.getGuiScaledHeight())
+                .append(" | game time ").append(minecraft.level == null ? "none" : String.valueOf(minecraft.level.getGameTime()))
                 .append(" | ").append(minecraft.player != null && minecraft.player.isShiftKeyDown() ? "sneaking" : "standing")
                 .append(" | crosshair on ").append(this.aimedBlock(minecraft).map(BlockPos::toShortString).orElse("no block"));
         if (this.panel == null || this.panel.device().isEmpty()) {

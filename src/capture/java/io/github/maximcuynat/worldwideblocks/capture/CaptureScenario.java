@@ -116,6 +116,35 @@ public record CaptureScenario(String name, String description, List<Size> sizes,
         }
 
         /**
+         * Lets the game run for some ticks and fails the run if a line reaches the chat meanwhile: proves that a message
+         * stops.
+         */
+        record Silence(int ticks) implements Step {
+        }
+
+        /**
+         * The server removes one cable between two devices of the last scene (their indexes), as the engine does when a
+         * player unplugs it, without a gesture: a gesture unplugs the first cable of the device, maybe not this one.
+         */
+        record RemoveCable(int from, int to) implements Step {
+        }
+
+        /**
+         * The server runs these ticks as fast as it can, as {@code /tick sprint} does, without the command in the chat;
+         * the step ends when the sprint is over. The game reports the sprint to the operators: one chat line.
+         */
+        record Sprint(int ticks) implements Step {
+        }
+
+        /**
+         * Saves and quits to the title screen, then opens the same world again, as a player does: the integrated server
+         * stops and reads its save back. The player looks up first, so that the panel hides before quitting and a panel
+         * seen after the reopening is a new one; aim again afterwards.
+         */
+        record Restart() implements Step {
+        }
+
+        /**
          * A screenshot in each combination of the scenario, named {@code <name>-<size>-<scale>-<language>.png}, with
          * the values read at that moment written to {@code values.txt}. With {@code useFirst}, a click of the use key
          * just before each screenshot, for a message of the action bar, which fades after 3 s.

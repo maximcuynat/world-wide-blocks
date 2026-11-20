@@ -24,7 +24,7 @@ The default branch is `developement`: a fresh clone is already on it. `scripts/i
 ./gradlew runClient          # development client
 ```
 
-`runGameTestServer` runs a dedicated server: it proves nothing about what the client draws. A display change is checked by a capture run, a client that opens a trial world, takes the screenshots on its own and quits; only what cannot be automated is done by hand. Rule and current state in [`docs/automated-checks.md`](docs/automated-checks.md): until the capture runs exist, the `runClient` procedures of [`docs/lot-plan.md`](docs/lot-plan.md) apply.
+`runGameTestServer` runs a dedicated server: it proves nothing about what the client draws. A display change is checked by a capture run, a client that opens a trial world, takes the screenshots on its own and quits; only what cannot be automated is done by hand. Rule, command and current state in [`docs/automated-checks.md`](docs/automated-checks.md); the checks by eye of lots 1b-1 and 1b-2 are capture scenarios, named in [`docs/lot-plan.md`](docs/lot-plan.md).
 
 ## Branches
 

@@ -50,7 +50,7 @@ Details in [`docs/automated-checks.md`](docs/automated-checks.md).
 
 ## Constraints of the sandbox
 
-- Gradle cannot run in Claude Code's sandbox: the maintainer runs `./gradlew build test`, `./gradlew runGameTestServer` and the capture runs (until they exist, the `runClient` procedures of `docs/lot-plan.md`), and reports the result. Never claim a build or a test passed without that report.
+- Gradle cannot run in Claude Code's sandbox: the maintainer runs `./gradlew build test`, `./gradlew runGameTestServer` and the capture runs (`./gradlew runClientCapture -Pscenario=<name>`), and reports the result. Never claim a build or a test passed without that report.
 - The sandbox reads neither `~/.gitconfig` nor `~/.ssh`. Prefix git commands with `GIT_CONFIG_GLOBAL=/dev/null XDG_CONFIG_HOME=$TMPDIR/xdg` (otherwise gitleaks sees git's warning and blocks the commit), and commit with the identity of the existing commits passed explicitly (`git log -1 --format='%an <%ae>'`, then `git -c user.name=… -c user.email=… commit`), never an identity guessed from the machine. These commits are unsigned (`docs/repository-security.md`, section 3.8).
 - Commit messages: Conventional Commits, checked by the `commit-msg` hook; `!` marks a change that breaks existing worlds.
 

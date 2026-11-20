@@ -251,35 +251,36 @@ Test method (since lot 1b-1): the logic is proved by automatic tests; manual tri
 
 1. `./gradlew build test`: compilation (`gametest` source set included) and unit tests of the engine, in plain Java.
 2. `./gradlew runGameTestServer`: automatic game tests, without a window, in a throwaway world (`run-gametest/`, ignored by git). The result is at the end of `run-gametest/logs/latest.log` ("All N required tests passed"). They cover: cord whose start is broken or destroyed by an explosion (creative and survival, cord count), dimension change and disconnection during a pending connection, full ports, MAC expiry (exact bounds), saving and reloading the network, loop reported by a single message per minute for two boxes (exact gap of 1,200 ticks) and limit forgotten only for the network that changes (separate lot, because they touch the global limits of the engine), construction of each trial scene, refusal of `/worldwideblocks test` outside a trial world. Messages are checked through the module's listener (channel, key, values, recipient), without going through a player's chat.
-3. Check by eye with `/worldwideblocks test <scene>` (short alias `/wwb`): `./gradlew runClient`, a creative world whose name starts with "Trials" (the command is refused elsewhere; it exists only in development and only for operators). Stand facing a clear area: the scene is built 3 blocks in front of you, turned towards you, and refused if the area is not empty. Aim at each device before the screenshot (F2) to show its panel, standing (compact) then sneaking (detailed). `/worldwideblocks test clear` removes the last scene.
+3. Check by eye: a capture run per scene (`docs/automated-checks.md`), `./gradlew runClientCapture -Pscenario=<name>`. The run creates its own trial world in `run-capture/`, builds the scene, aims at each device standing then sneaking, takes the screenshots in English and in French, at 854 x 480 and 1920 x 1080, writes what it read next to them and quits; the assistant reads `run-capture/screenshots/<name>/` and `values.txt`. The scenarios are in `src/capture` (`CaptureScenarios`).
 
-| Scene | What to look at |
+| Scenario | What it shows |
 |---|---|
 | `box` | Compact panel: "0/4 ports connected"; sneaking: ports 1 to 4 free, port 5 (line) inactive; front facing the player |
-| `box_hosts` | Cables to 3 computers; box compact "3/4 ports connected", sneaking: 3 ports connected with the learned MAC, port 4 free; computer compact "Connected", sneaking: its port and its MAC |
-| `chain` | Each box shows its computer and those of the other box; sneaking, port 1 of the left box: one MAC followed by "(+1)" |
-| `loop` | A single loop message in the chat (not one per box), again a single one one game minute later |
-| `full_ports` | Cord in hand, right-click on the box: "✖ Internet Box: no free port." in red above the hotbar |
-| `distance` | 99-block cable drawn over its whole length; both ends "Connected" (walk to the second end to aim at it) |
+| `box_hosts` | Box compact "3/4 ports connected", sneaking: 3 ports connected with the learned MAC, port 4 free; computer compact, then sneaking: its port and its MAC; `/worldwideblocks links` in the chat |
+| `chain` | Sneaking, port 1 of the left box: one MAC followed by "(+1)"; the right box, one MAC per port and its DHCP server off; no conflict message |
+| `loop` | A single loop message in the chat, again a single one one game minute later; one cable between the boxes removed, then no message for a minute and a half (the run fails if one comes) |
+| `full_ports` | Cord in hand, right-click on the box: "✖ Internet Box: no free port." in red above the hotbar, then "Error: …" with `messageSymbols = false` |
+| `distance` | The 99-block cable seen from above each end, both ends with their panel |
+| `tooltip` | The tooltip of the cord in the inventory |
 
-Screenshots go in `run/screenshots`, messages in `run/logs/latest.log`, diagnostic log lines in `run/logs/debug.log` (in English).
+`/worldwideblocks test <scene>` (short alias `/wwb`) stays for trying a scene by hand in `./gradlew runClient`, in a creative world whose name starts with "Trials" (refused elsewhere; development only, operators only).
 
-From issue #15 (lot 1c-1), without the presence frame: the MACs learned by a box (`box_hosts`, `chain`) are shown during the first 300 game seconds after the scene is built, then again for 300 s after each DHCP renewal of the computer (every 600 s); look at them within 5 minutes of building the scene. The addresses lent by the box stay shown.
+From issue #15 (lot 1c-1), without the presence frame: the MACs learned by a box (`box_hosts`, `chain`) are shown during the first 300 game seconds after the scene is built, then again for 300 s after each DHCP renewal of the computer (every 600 s); the capture runs take their shots within the first minute. The addresses lent by the box stay shown.
 
-#### Check by eye of the message module (game in French)
+#### Check by eye of the message module
 
-Preparation: `./gradlew runClient`, then Options, Language: French. Open (or create) a creative world whose name starts with "Trials", stand facing a clear area. Take a screenshot (F2) at each point marked 📷.
+Capture runs, in English and in French (`./gradlew runClientCapture -Pscenario=<name>`):
 
-The game texts below are quoted in English (`en_us.json`); in this French game, the same keys show the French text of `fr_fr.json`.
+| Point | Scenario |
+|---|---|
+| 1. Tooltip and action bar | `tooltip` (3 grey lines), `full_ports` ("✖ Internet Box: no free port." in red) |
+| 2. Compact then detailed panel | `box_hosts` |
+| 3. 2 MACs on port 1 of the left box | `chain` |
+| 4. Laptop at the end of the 99-block cable | `distance` |
+| 5. Loop message, single and readable, stopped by removing a cable | `loop` |
+| 6. French texts, `/worldwideblocks links`, symbol fallback | All of them in French; `box_hosts` (links); `full_ports` (`messageSymbols = false`, put back by the run) |
 
-1. **Tooltip and action bar.** Take an Ethernet cord from the World Wide Blocks tab and hover over it in the inventory: 3 grey lines ("Right-click two devices to connect them.", etc.) 📷. `/worldwideblocks test full_ports`, cord in hand, right-click on the box: "✖ Internet Box: no free port." in red above the hotbar 📷. `/worldwideblocks test clear`.
-2. **Compact then detailed panel (box).** `/worldwideblocks test box_hosts`. Aim at the box standing: "Internet Box", "3/4 ports connected" with a green light, "Sneak: details" in grey 📷. Sneak while aiming at it: "Port 1: connected, 02:…" (full MAC) for ports 1 to 3, "Port 4: free", "Port 5 (line): inactive" 📷. Aim at a computer: "Connected", then sneaking "Port 1: connected" and "MAC 02:…" 📷. `/worldwideblocks test clear`.
-3. **2 MACs on port 1 of the left box.** `/worldwideblocks test chain`. Aim at the left box while sneaking: "Port 1: connected, 02:… (+1)" 📷. The right box, sneaking: port 1 with a single MAC (the left computer), ports 2 and 3 with the MAC of their computer. `/worldwideblocks test clear`.
-4. **Laptop at the end of the 99-block cable.** `/worldwideblocks test distance`. Aim at the tower: "Connected". Walk to the laptop, 99 blocks ahead: the cable is drawn all along; aim at the laptop: "Connected", then sneaking its port and its MAC 📷. `/worldwideblocks test clear`.
-5. **Loop message, single and readable.** `/worldwideblocks test loop`, stay next to it (less than 32 blocks). In the chat: a single message, "⚠ Network loop near Internet Box [x, y, z]. Remove one cable of the loop." in yellow 📷. One minute later: again a single message, not two. Remove one of the two cables between the boxes (empty hand, sneak + right-click on the left box): no more messages. In `run/logs/latest.log`, one line in English "Network loop: …" per message. `/worldwideblocks test clear`.
-6. **French texts and symbol fallback.** Everything above is in French and uses formal address; `/worldwideblocks links` writes the device as "Internet Box [x, y, z] (minecraft:overworld)" (in French: the name from `fr_fr.json`) and whole-number lengths. If a symbol (ℹ ✔ ⚠ ✖) is displayed badly: in `run/config/worldwideblocks-client.toml`, set `messageSymbols = false` (re-read without relaunching the game) and redo point 1: "Error: Internet Box: no free port.". Set it back to `true` afterwards.
-
-To report: the screenshots, and any text that is cut off, overflows the panel, is badly translated or whose symbol is displayed badly.
+To report: any text cut off, overflowing the panel, badly translated, or whose symbol is displayed badly.
 
 #### Status of lot 1b-2
 
@@ -324,20 +325,22 @@ Automatic tests: unit tests of the layers, of the server, of the client at the e
 | 9. Restart | Not seen by eye | Game test `dhcp_restart_asks_for_the_same_address` (network.dat read back, INIT-REBOOT, same address); the client display after a real quit and reopen is not proved |
 | 10. Loop | Not seen by eye | Game tests `loop_reported_once_per_minute` and `loop_forgotten_only_for_changed_network` (one loop message per minute); "no conflict message" in the `loop` scene is proved only at engine level, by the unit tests `NetworkSimulationTest.twoBoxesInALoop…` and `twoLoopsInTwoNetworks…` (second server off: a single loop event, no conflict) |
 
-Procedure, kept for the next checks. Preparation: `./gradlew runClient`, Options, Language: French, a creative world with cheats whose name starts with "Trials", standing facing a clear area. Aim at each device standing (compact panel) then sneaking (detailed panel), screenshot (F2) at each point marked 📷. `/worldwideblocks test clear` after each scene.
+Capture runs for the next checks, in English and in French (`./gradlew runClientCapture -Pscenario=<name>`):
 
-1. **Address of the computers.** `/worldwideblocks test box_hosts`. Each computer, compact: "192.168.1.1x (DHCP : obtenue)" with a green light 📷; sneaking: "Port 1 : connecté", "MAC 02:…", "Adresse 192.168.1.1x / 255.255.255.0", "Passerelle 192.168.1.1", "Serveur DNS 192.168.1.1", "Bail : encore 19:5x" (it counts down), "DHCP : obtenue" 📷. The box, sneaking: under the ports, "Adresses prêtées : 3" and three lines "192.168.1.1x → 02:…" 📷.
-2. **Unplugged, plugged again.** In the same scene, empty hand, sneak + right-click on a computer: the end of its cable comes into your hand ("Bout retiré de Tour PC…") and the computer shows "Non connecté". Right-click the same computer with that cord: it is plugged in again and shows the same address as before 📷.
-3. **Renewal.** Right after building the scene, note the time left on a computer (about 20:00), then `/tick sprint 600s` (half of the lease): the time left shows about the same value again, not 10 minutes less, because the lease was renewed at half time on the way 📷.
-4. **Chain, one server.** `/worldwideblocks test chain`: the three computers have an address from the left box; the right box, sneaking: "Serveur DHCP : arrêté" 📷. No conflict message in the chat.
-5. **No box.** `/worldwideblocks test dhcp_no_box`: both computers "Pas d'adresse (DHCP : recherche)" with a yellow light 📷.
-6. **Conflict.** `/worldwideblocks test dhcp_conflict`: a single yellow message in the chat, "⚠ Deux serveurs DHCP sur le réseau de Box internet [x, y, z]. N'en gardez qu'un." 📷; the computer still has an address. In `run/logs/latest.log`, one line "Two DHCP servers on one network: …" naming both boxes.
-7. **Full pool.** `/worldwideblocks test dhcp_pool_full`: the computer "Pas d'adresse (DHCP : recherche)"; the box, sneaking: "Adresses prêtées : 191", four lines then "+187 autres" 📷.
-8. **Server off.** `/worldwideblocks test dhcp_server_off`: the box, sneaking, "Serveur DHCP : arrêté"; the computer without address 📷.
-9. **Restart.** Build `box_hosts`, note the addresses, save and quit to the title screen, open the world again: the computers show the same addresses at once, state "obtenue" 📷. Then remove the scene by hand: `/worldwideblocks test clear` only knows the scenes built since you joined.
-10. **Loop.** `/worldwideblocks test loop`: still a single loop message per minute, and no conflict message.
+| Point | Scenario | What it shows |
+|---|---|---|
+| 1. Address of the computers | `dhcp_addresses` | A computer compact ("192.168.1.1x (DHCP: bound)", green light) then detailed (MAC, address and mask, gateway, DNS server, time left on the lease, state); the box detailed, with the addresses it lent |
+| 2. Unplugged, plugged again | `dhcp_addresses` | Empty hand, sneak and right-click on the computer: "Not connected"; right-click with the end of its cable: the same address again |
+| 3. Renewal | `dhcp_renewal` | Time left about 20:00, then 600 s of game at once (`/tick sprint`): about 20:00 again, not 10:00 |
+| 4. Chain, one server | `chain` | The left box lends 3 addresses, the right box "DHCP server: off", its computers with an address, no conflict message |
+| 5. No box | `dhcp_no_box` | Both computers "No address (DHCP: selecting)", yellow light |
+| 6. Conflict | `dhcp_conflict` | A single "⚠ Two DHCP servers on the network of …" in the chat; the computer keeps an address; the English log line in `run-capture/logs/latest.log` names both boxes |
+| 7. Full pool | `dhcp_pool_full` | The computer without address; the box "Addresses lent: 191", four lines, "+187 more" |
+| 8. Server off | `dhcp_server_off` | The box "DHCP server: off"; the computer without address |
+| 9. Restart | `dhcp_restart` | Each computer's address, then save and quit to the title screen, open the world again: the same addresses, state "bound" |
+| 10. Loop | `loop` | One loop message per minute, no conflict message, none once a cable of the loop is removed |
 
-To report: the screenshots, and any text cut off, overflowing the panel, badly translated, or a time left that does not count down.
+To report: any text cut off, overflowing the panel, badly translated, or a time left that does not count down.
 
 ### 1c-1: terminal and ping command
 

@@ -15,7 +15,7 @@ A capture run is a development client that works on its own: it opens a trial wo
 - [x] Combinations of window sizes and GUI scales (at least 854 x 480 and 1920 x 1080) and of languages (English and French) declared by the scenario
 - [x] Named screenshots (scenario, step, size, scale, language) in a folder of their own, ignored by git
 - [x] A values file next to the screenshots (text shown, states, sizes read at each step), so that the report rests on values as well as on images
-- [ ] The eye check of lot 1b-1 (`/worldwideblocks test` scenes `box`, `box_hosts`, `chain`, `loop`, `full_ports`, `distance`) and of the message module (`docs/lot-plan.md`) written as capture scenarios
-- [ ] The ten points of the eye check of lot 1b-2 (`docs/lot-plan.md`) written as capture scenarios; the restart after quitting to the title screen and the client setting `messageSymbols` scripted too, or left out with a one-line reason
-- [ ] The manual procedures of lots 1b-1 and 1b-2 and the "Test method" paragraph of `docs/lot-plan.md` replaced by the names of the scenarios and the command to run
-- [ ] A first run of each scenario by the maintainer, screenshots and values read and reported by the assistant
+- [x] The eye check of lot 1b-1 (`/worldwideblocks test` scenes `box`, `box_hosts`, `chain`, `loop`, `full_ports`, `distance`) and of the message module (`docs/lot-plan.md`) written as capture scenarios
+- [x] The ten points of the eye check of lot 1b-2 (`docs/lot-plan.md`) written as capture scenarios; the restart after quitting to the title screen and the client setting `messageSymbols` scripted too, or left out with a one-line reason
+- [x] The manual procedures of lots 1b-1 and 1b-2 and the "Test method" paragraph of `docs/lot-plan.md` replaced by the names of the scenarios and the command to run
+- [x] A first run of each scenario by the maintainer, screenshots and values read and reported by the assistant
