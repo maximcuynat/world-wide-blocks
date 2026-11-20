@@ -28,7 +28,6 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpMessageType;
 import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Address;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
-import io.github.maximcuynat.worldwideblocks.network.protocol.PresencePayload;
 import io.github.maximcuynat.worldwideblocks.os.ConsoleSession;
 
 /** The IPv4 stack of the computers and of the box, configured by real DHCP exchanges, read with ip in the console. */
@@ -101,9 +100,7 @@ class HostStackSimulationTest {
     void theRenewalAsksTheBoxsMacByArpThenGoesUnicastToIt() {
         this.tickUntil(T1);
 
-        List<Sent> fromTower = this.sentBy(this.tower, T1).stream()
-                .filter(s -> !(s.frame().payload() instanceof PresencePayload))
-                .toList();
+        List<Sent> fromTower = this.sentBy(this.tower, T1);
         assertEquals(2, fromTower.size(), fromTower.toString());
         assertEquals(MacAddress.BROADCAST, fromTower.get(0).frame().destination());
         assertEquals(Ipv4Address.of(192, 168, 1, 1), ((ArpPacket) fromTower.get(0).frame().payload()).targetIp());

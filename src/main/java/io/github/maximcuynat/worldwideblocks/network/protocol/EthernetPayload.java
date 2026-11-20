@@ -7,7 +7,7 @@ package io.github.maximcuynat.worldwideblocks.network.protocol;
  *
  * <p>The contents are immutable records: a frame relayed by a switch is the same object.
  */
-public sealed interface EthernetPayload permits ArpPacket, Ipv4Packet, PresencePayload {
+public sealed interface EthernetPayload permits ArpPacket, Ipv4Packet {
 
     EtherType etherType();
 }

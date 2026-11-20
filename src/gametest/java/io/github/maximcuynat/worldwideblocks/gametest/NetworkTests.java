@@ -62,7 +62,7 @@ final class NetworkTests {
             if (unplugged[0] < 0) {
                 Optional<MacTable.Entry> learned = learned(scene, boxA, hostMac);
                 if (learned.isEmpty()) {
-                    return; // the presence of H has not been delivered yet
+                    return; // the DHCP exchange of H has not been delivered yet
                 }
                 helper.assertValueEqual(learned.get().port(), endOn(ab, boxA).index(), "port of A behind which H is");
                 scene.network().disconnect(endOn(bh, host));

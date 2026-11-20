@@ -14,7 +14,6 @@ import io.github.maximcuynat.worldwideblocks.network.ip.NetInterface;
 import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Packet;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
-import io.github.maximcuynat.worldwideblocks.network.protocol.PresencePayload;
 import io.github.maximcuynat.worldwideblocks.os.HostName;
 import io.github.maximcuynat.worldwideblocks.os.MachineContext;
 import io.github.maximcuynat.worldwideblocks.os.OperatingSystem;
@@ -29,18 +28,12 @@ import io.github.maximcuynat.worldwideblocks.os.command.CommandRegistry;
  * an address the interface does not have yet. Each change of its
  * lease configures the interface ({@link DhcpClientScript}).
  *
- * <p>It also broadcasts a presence frame when its cable is connected then every 30 s, so a switch
- * keeps its MAC: <b>scaffolding to remove in lot 1c</b> (issue #15). DHCP alone does not do it yet: a
- * computer with an address is silent until T1 (600 s), while a switch forgets a MAC after 300 s.
+ * <p>It sends only real traffic: DHCP, ARP, and what its commands send. A computer with an address that runs
+ * nothing is silent until the renewal of its lease at T1 (600 s), so a switch forgets its MAC after 300 s and
+ * learns it again at its next frame, as with a real machine (the presence frame of lot 1b-1, which kept it, was
+ * removed by issue #15).
  */
 public final class HostLogic implements DeviceLogic {
-    /** 30 game seconds between two presence frames, well below the 300 s expiry of switches. */
-    public static final long PRESENCE_INTERVAL_TICKS = 30L * 20L;
-
-    /** Presence timer; the stale generation of a cable removed then plugged back in is ignored. */
-    private record PresenceTimer(int port, long generation) {
-    }
-
     /** Timer of the DHCP client of a port. */
     private record DhcpTimer(int port, DhcpClient.Timer timer) {
     }
@@ -51,7 +44,6 @@ public final class HostLogic implements DeviceLogic {
 
     /** Block identifier of the computer, for its host name. */
     private final String deviceType;
-    private final long[] generation;
     private final DhcpClient[] dhcp;
     private final Ipv4Stack stack = new Ipv4Stack();
     private final OperatingSystem system = new OperatingSystem(this.stack, CommandRegistry.standard());
@@ -64,7 +56,6 @@ public final class HostLogic implements DeviceLogic {
      */
     public HostLogic(String deviceType, int portCount, RandomGenerator random, IntFunction<DhcpClient.Memory> memories) {
         this.deviceType = deviceType;
-        this.generation = new long[portCount];
         this.dhcp = new DhcpClient[portCount];
         for (int i = 0; i < portCount; i++) {
             int port = i;
@@ -84,24 +75,18 @@ public final class HostLogic implements DeviceLogic {
     @Override
     public void onLinkUp(DeviceContext context, int port) {
         this.stack.setCarrier(this.interfaces(context)[port], true);
-        this.generation[port]++;
-        this.announce(context, port);
         this.dhcp[port].linkUp(this.port(context, port));
     }
 
     @Override
     public void onLinkDown(DeviceContext context, int port) {
         this.stack.setCarrier(this.interfaces(context)[port], false);
-        this.generation[port]++;
         this.dhcp[port].linkDown();
     }
 
     @Override
     public void onTimer(DeviceContext context, Object key) {
-        if (key instanceof PresenceTimer timer && timer.generation() == this.generation[timer.port()]
-                && context.isLinked(timer.port())) {
-            this.announce(context, timer.port());
-        } else if (key instanceof DhcpTimer timer && context.isLinked(timer.port())) {
+        if (key instanceof DhcpTimer timer && context.isLinked(timer.port())) {
             this.dhcp[timer.port()].onTimer(this.port(context, timer.port()), timer.timer());
         } else if (key instanceof SystemTimer timer) {
             this.interfaces(context);
@@ -170,11 +155,6 @@ public final class HostLogic implements DeviceLogic {
             }
         }
         return this.interfaces;
-    }
-
-    private void announce(DeviceContext context, int port) {
-        context.send(port, new EthernetFrame(context.mac(port), MacAddress.BROADCAST, PresencePayload.INSTANCE));
-        context.schedule(PRESENCE_INTERVAL_TICKS, new PresenceTimer(port, this.generation[port]));
     }
 
     /** The machine as its stack and its operating system see it during the current call. */

@@ -48,8 +48,8 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
  * a player click is handled after the simulation tick. It is therefore queued and applied
  * at the start of the next tick, with the time of that tick. Thus its frames, its timers and its
  * reports start from the very tick where its frames are delivered. (Applied immediately with the time
- * of the previous tick, a presence sent on connection was delivered one tick after its date: the
- * following presences fell 1,199 ticks after the loop report instead of 1,200.)
+ * of the previous tick, a frame sent on connection was delivered one tick after its date: the
+ * presence frames of lot 1b-1, every 30 s, fell 1,199 ticks after the loop report instead of 1,200.)
  *
  * <p>The runtime state (device behavior, queue, timers) is not saved: at
  * server start, each device starts from zero and each existing cable is announced as

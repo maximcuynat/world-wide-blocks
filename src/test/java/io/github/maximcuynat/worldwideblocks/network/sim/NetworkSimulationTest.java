@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.SplittableRandom;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,8 +23,9 @@ import io.github.maximcuynat.worldwideblocks.network.NetworkGraph;
 import io.github.maximcuynat.worldwideblocks.network.NetworkNode;
 import io.github.maximcuynat.worldwideblocks.network.PortKind;
 import io.github.maximcuynat.worldwideblocks.network.PortRef;
+import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpFrames;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpStore;
-import io.github.maximcuynat.worldwideblocks.network.protocol.EtherType;
+import io.github.maximcuynat.worldwideblocks.network.protocol.DhcpMessageType;
 import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 import io.github.maximcuynat.worldwideblocks.network.switching.MacTable;
@@ -100,7 +102,7 @@ class NetworkSimulationTest {
         return this.learned(box).stream().filter(e -> e.mac().equals(mac)).map(MacTable.Entry::port).toList();
     }
 
-    /** Every frame the device sent between these ticks (presence, DHCP…). */
+    /** Every frame the device sent between these ticks (DHCP, ARP…). */
     private long framesSentBy(DeviceId host, long from, long to) {
         return this.seen.stream()
                 .filter(s -> s.direction() == FrameDirection.SENT && s.port().device().equals(host))
@@ -108,13 +110,9 @@ class NetworkSimulationTest {
                 .count();
     }
 
-    /** Only the presence frames (since lot 1b-2, a computer also sends DHCP). */
-    private long presencesSentBy(DeviceId host, long from, long to) {
-        return this.seen.stream()
-                .filter(s -> s.direction() == FrameDirection.SENT && s.port().device().equals(host))
-                .filter(s -> s.frame().type() == EtherType.LOCAL_EXPERIMENTAL)
-                .filter(s -> s.now() >= from && s.now() <= to)
-                .count();
+    /** The DHCPDISCOVER of a computer: the first broadcast it sends when its cable is plugged. */
+    private static boolean isDiscover(EthernetFrame frame) {
+        return DhcpFrames.toServer(frame).map(message -> message.type() == DhcpMessageType.DISCOVER).orElse(false);
     }
 
     private void tickUntil(long from, long to) {
@@ -142,7 +140,7 @@ class NetworkSimulationTest {
     }
 
     @Test
-    void thePresenceIsAnExperimentalTypeBroadcastRelayedToTheOtherComputers() {
+    void aBroadcastOfAComputerIsRelayedToTheOtherComputers() {
         DeviceId box = box(0);
         DeviceId tower = host(5);
         DeviceId laptop = host(10);
@@ -156,29 +154,40 @@ class NetworkSimulationTest {
                 .filter(s -> s.frame().source().equals(mac(tower, 0)))
                 .findFirst().orElseThrow();
         assertTrue(received.frame().isBroadcast());
-        assertEquals(EtherType.LOCAL_EXPERIMENTAL, received.frame().type());
+        assertTrue(isDiscover(received.frame()), received.frame().toString());
         // The box received it on port 0 and sent it back on ports 1, 2 and 3, not on the line input.
         List<Integer> boxOutputs = seen.stream()
                 .filter(s -> s.direction() == FrameDirection.SENT && s.port().device().equals(box))
                 .filter(s -> s.frame().source().equals(mac(tower, 0)))
-                .filter(s -> s.frame().type() == EtherType.LOCAL_EXPERIMENTAL)
+                .filter(s -> isDiscover(s.frame()))
                 .map(s -> s.port().index()).toList();
         assertEquals(List.of(1, 2, 3), boxOutputs);
     }
 
+    /** Half of the lease of the box: the renewal (T1), at 600 s. */
+    private static final long T1 = 12_000L;
+
     @Test
-    void aComputerRebroadcastsItsPresenceEvery30Seconds() {
+    void aComputerWithAnAddressIsSilentUntilItsRenewalAndTheBoxForgetsItMeanwhile() {
+        // Accepted at the start of lot 1c-1 (issue #15): without the presence frame of lot 1b-1, a computer
+        // that runs nothing sends nothing between its DHCP exchange and T1, as a real machine.
         DeviceId box = box(0);
         DeviceId tower = host(5);
         plug(box, 0, tower, 0);
+        sim.tick(0);
+        assertEquals(List.of(0), learnedPorts(box, mac(tower, 0)));
 
-        tickUntil(0, 1300);
+        tickUntil(1, MacTable.DEFAULT_AGING_TICKS + BoxLogic.PURGE_INTERVAL_TICKS);
+        assertTrue(learnedPorts(box, mac(tower, 0)).isEmpty(), "forgotten 300 s after the DHCP exchange");
 
-        assertEquals(3, presencesSentBy(tower, 0, 1300)); // ticks 0, 600 and 1200
+        tickUntil(MacTable.DEFAULT_AGING_TICKS + BoxLogic.PURGE_INTERVAL_TICKS + 1, T1);
+        assertEquals(0, framesSentBy(tower, 1, T1 - 1));
+        assertTrue(framesSentBy(tower, T1, T1) > 0, "the renewal at T1");
+        assertEquals(List.of(0), learnedPorts(box, mac(tower, 0)), "learned again at the renewal");
     }
 
     @Test
-    void removingTheCableForgetsTheMacAtTheNextTickAndStopsThePresence() {
+    void removingTheCableForgetsTheMacAtTheNextTickAndTheComputerFallsSilent() {
         DeviceId box = box(0);
         DeviceId tower = host(5);
         DeviceId laptop = host(10);
@@ -227,7 +236,7 @@ class NetworkSimulationTest {
         plug(box, 0, tower, 0);
         plug(box, 1, laptop, 0);
         sim.tick(0);
-        // Still queued: the laptop's presence and the tower's presence relayed to it.
+        // Still queued: the DHCP frames of the laptop, and those of the tower relayed to it.
         assertTrue(sim.pendingFrames() > 0);
 
         unplug(box, 1);
@@ -281,9 +290,9 @@ class NetworkSimulationTest {
         sim.tick(0);
 
         assertEquals(0, sim.pendingFrames());
-        long presenceReceptions = seen.stream().filter(s -> s.direction() == FrameDirection.RECEIVED)
-                .filter(s -> s.frame().type() == EtherType.LOCAL_EXPERIMENTAL).count();
-        assertTrue(presenceReceptions < 10, "receptions of the presence: " + presenceReceptions);
+        long discoverReceptions = seen.stream().filter(s -> s.direction() == FrameDirection.RECEIVED)
+                .filter(s -> isDiscover(s.frame())).count();
+        assertTrue(discoverReceptions < 10, "receptions of the DHCPDISCOVER: " + discoverReceptions);
         // With the DHCP exchange of the computer (DISCOVER, two offers, REQUEST, two ACK), still bounded.
         long receptions = seen.stream().filter(s -> s.direction() == FrameDirection.RECEIVED).count();
         assertTrue(receptions < 40, "receptions: " + receptions);
@@ -307,16 +316,19 @@ class NetworkSimulationTest {
         plug(box1, 1, box2, 1);
         plug(box1, 2, box2, 2);
         plug(box1, 0, tower, 0);
-        sim.tick(0);
+        sim.tick(0); // the DHCP exchange of the computer loops
         sim.drainEvents();
+        sim.consoleLine(tower, "ping 192.168.1.250"); // an ARP request broadcast every second, from tick 1
 
-        sim.tick(599);
-        assertTrue(sim.drainEvents().isEmpty(), "no frame between two presences");
-
-        sim.tick(600); // new presence, same loop
-        List<SimulationEvent> events = sim.drainEvents();
-        assertEquals(1, events.size(), events.toString());
-        assertEquals(box1, ((SimulationEvent.LoopDetected) events.getFirst()).network());
+        List<Long> sightings = new ArrayList<>();
+        for (long t = 1; t <= 41; t++) {
+            sim.tick(t);
+            for (SimulationEvent event : sim.drainEvents()) {
+                assertEquals(box1, ((SimulationEvent.LoopDetected) event).network());
+                sightings.add(t);
+            }
+        }
+        assertEquals(List.of(1L, 21L, 41L), sightings, "every request of the ping, a second apart");
     }
 
     @Test
@@ -389,26 +401,24 @@ class NetworkSimulationTest {
         sim.tick(101);
         // Learned at the very tick of sending: the frame is delivered in the tick where it leaves.
         assertEquals(101L, learned(box).getFirst().lastSeen());
-        tickUntil(102, 800);
+        tickUntil(102, 101 + T1);
 
-        List<Long> presences = seen.stream()
+        // The DHCP exchange (DISCOVER then REQUEST) at tick 101, then nothing until the renewal, at T1 counted
+        // from that very tick (ARP for the box, then REQUEST): the timers start with the frames.
+        List<Long> sent = seen.stream()
                 .filter(s -> s.direction() == FrameDirection.SENT && s.port().device().equals(tower))
-                .filter(s -> s.frame().type() == EtherType.LOCAL_EXPERIMENTAL)
                 .map(Seen::now).toList();
-        assertEquals(List.of(101L, 701L), presences);
-        // The DHCP exchange (DISCOVER then REQUEST) also starts at tick 101, then nothing until T1.
-        List<Long> dhcp = seen.stream()
-                .filter(s -> s.direction() == FrameDirection.SENT && s.port().device().equals(tower))
-                .filter(s -> s.frame().type() == EtherType.IPV4)
-                .map(Seen::now).toList();
-        assertEquals(List.of(101L, 101L), dhcp);
+        assertEquals(List.of(101L, 101L, 101 + T1, 101 + T1), sent);
     }
 
     @Test
     void aLoopBornBetweenTwoTicksIsReportedEveryMinuteExactly() {
         // Defect found on 2026-11-18 by the game test: reports 1,800 ticks apart instead of 1,200.
-        // The engine sees the loop at every presence (every 600 ticks); the message module,
-        // with the same time, forwards only one per minute.
+        // The engine sees the loop at the DHCP exchange of the computer, then at every request of a ping
+        // typed 20 ticks later (every 20 ticks); the message module, with the same time, forwards only one
+        // per minute. The ping does not follow the clock of the connection: that the timers of a connection
+        // made between two ticks start at the next tick is checked by aConnectionBetweenTwoTicksStartsAtTheNextTick
+        // (renewal at 101 + T1), which the presence frames checked here before issue #15.
         DeviceId box1 = box(0);
         DeviceId box2 = box(20);
         plug(box1, 1, box2, 1);
@@ -421,6 +431,9 @@ class NetworkSimulationTest {
         List<Long> sightings = new ArrayList<>();
         List<Long> reports = new ArrayList<>();
         for (long t = 51; t <= 2500; t++) {
+            if (t == 71) {
+                sim.consoleLine(tower, "ping 192.168.1.250"); // between tick 70 and tick 71: requests from 71
+            }
             sim.tick(t);
             for (SimulationEvent event : sim.drainEvents()) {
                 if (event instanceof SimulationEvent.LoopDetected loop) {
@@ -432,7 +445,9 @@ class NetworkSimulationTest {
             }
         }
 
-        assertEquals(List.of(51L, 651L, 1251L, 1851L, 2451L), sightings);
+        List<Long> expected = new ArrayList<>(List.of(51L));
+        LongStream.iterate(71, t -> t <= 2500, t -> t + 20).forEach(expected::add);
+        assertEquals(expected, sightings);
         assertEquals(List.of(51L, 1251L, 2451L), reports);
     }
 
@@ -443,7 +458,7 @@ class NetworkSimulationTest {
         plug(box1, 0, box2, 0);
         sim.tick(0);
         DeviceId tower = host(25);
-        plug(box2, 1, tower, 0); // between tick 0 and tick 1: presence delivered at tick 1
+        plug(box2, 1, tower, 0); // between tick 0 and tick 1: the DHCP exchange is delivered at tick 1
         sim.tick(1);
         unplug(box2, 1);
         assertEquals(1L, learned(box1).getFirst().lastSeen());
