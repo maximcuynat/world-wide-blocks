@@ -21,9 +21,15 @@
 
 ## Shared shell
 
-- Max's `!` commands run in the current folder of my session. Never end a command in a subfolder (`cd src/...`): do the `cd` in a subshell `( cd … && … )` or use absolute paths, and check that the shell is at the project root before giving a checkpoint. A `./gradlew` failed for this reason. (2026-11-17)
+- Max's `!` commands run in the current folder of my session. Never end a command in a subfolder (`cd src/...`): do the `cd` in a subshell `( cd … && … )` or use absolute paths, and check that the shell is at the project root before giving a checkpoint. A `./gradlew` failed for this reason. (2026-11-17) The `cd` of a command carries over to the next one: a `cd run-capture/logs && …` or `cd src/main/.../os && …` left the session there on 2026-11-20. Never start a command with `cd` into a subfolder; give paths from the root instead.
+
+## Java
+
+- Never write a backslash followed by `u` in Java source, comments included: the compiler reads it as a unicode escape before anything else. `{@code \u@\h}` (the `PS1` of bash) in a javadoc stopped the compilation (2026-11-20, caught by the local compilation before the maintainer's build). Describe such text in words, or double the backslash.
 
 ## Minecraft / NeoForge API
+
+- Checking that a method exists is not enough: read what it does with edge values before using it. `GuiGraphicsExtractor.enableScissor` was checked by name only; `GuiRenderer.enableScissor` clamps the area to the window and a height of 0 throws, so a scissor recorded before a window resize crashed the client (2026-11-19, terminal prototype; copied from the prototype branch on 2026-11-20). In screens, prefer code that cannot fail on a resize (cut the text with `Font.plainSubstrByWidth`).
 
 - Never write a Minecraft constant, enum or method name from memory: look it up in the extracted sources (`build/moddev/artifacts/minecraft-patched-*-sources.jar`, and the NeoForge sources from maven.neoforged.net) before using it. Example: `PushReaction.BLOCK` became `PushReaction.IMMOVEABLE` in 26.3, the build failed. (2026-11-17)
 - Also check the exact package of each import, not only that the class exists: `RegisterClientPayloadHandlersEvent` is in `neoforge.client.network.event`, not in `neoforge.network.event`. Before a commit, check all `net.neoforged.neoforge.*` imports against the sources (one file per import). (2026-11-17)
