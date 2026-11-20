@@ -60,7 +60,7 @@ The current textures do not follow one density: tower 2 texels per px, box 4, la
 
 Eight base colours, with a highlight and a shadow for the materials. Values taken from the textures of the time, except the light plastic highlight.
 
-**Single source: `design/palette.json`**, read by the design tools (`design/tools/wwb_design.py`) and checked by `BlockResourcesTest` (`./gradlew build test`): every colour of every texture of the mod must be one of its tones, except the textures listed in its `exceptions`, each with its reason. A new colour means changing `design/palette.json` and this table together.
+**Single source: `design/palette.json`**, read by the design tools (`design/tools/wwb_design.py`) and checked by `BlockResourcesTest` (`./gradlew build test`): every colour of every texture of the mod must be one of the tones of its roles; the textures listed in its `cord_textures` (the plugs, `textures/block/rj45_plug.png`, and the cord item, `textures/item/ethernet_cable.png`) may also use the cord colours, and no other texture may (`cordColoursAreRefusedOutsideTheCordTextures`); the textures listed in its `exceptions`, each with its reason, are left out. A new colour means changing `design/palette.json` and this table together.
 
 | Role | Base | Highlight | Shadow | Used for |
 |---|---|---|---|---|

@@ -67,4 +67,4 @@
 
 - A translation delegated to agents is checked by a tool, not by their report: compare the code without comments with the previous commit (only consistent renames allowed), and look for renames to a name that already exists in the file, which can change what a name refers to and still compile. (2026-11-18)
 - Agents fill gaps with plausible inventions: a log tag that never existed, English game texts quoted for a check made in a French game. Reread every historical statement of a translated document: a fact must stay true, even when the wording changes. (2026-11-18)
-
+- `cp` is an alias of `cp -i` in this shell: in a script it asks "overwrite?", reads no answer and leaves the file as it was, while the command goes on (a temporary edit was not undone and its backup was then deleted). Use `/bin/cp`, and check the file with `git diff` before deleting a backup. (2026-11-20)

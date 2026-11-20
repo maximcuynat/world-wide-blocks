@@ -21,8 +21,11 @@
     "black": {"base": "#26282c", "hi": "#3d4046", "sh": "#141517"},
     "white": {"base": "#e9dfc4", "hi": "#f4edda", "sh": "#bdb196"}
   },
+  "cord_textures": {
+    "description": "The only textures that may use the cord colours (key cords) besides the roles (design guide, section 4): the plugs and the cord item. Every other texture uses the roles alone.",
+    "textures": ["textures/block/rj45_plug.png", "textures/item/ethernet_cable.png"]
+  },
   "exceptions": {
-    "textures/item/ethernet_cable.png": "Cords are a colour family of their own (design guide, section 4); the icon is reworked in lot F.",
-    "textures/block/rj45_plug.png": "Temporary: the boots of the plug use the cord colours; replaced by the rule of the cord colours for the plug and the cord icon only (issue 1d/07)."
+    "textures/item/ethernet_cable.png": "Cords are a colour family of their own (design guide, section 4); the icon is reworked in lot F."
   }
 }

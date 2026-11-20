@@ -9,7 +9,7 @@ The cable leaves from the port itself, with an RJ45 plug pushed into it, and get
 - [x] Plug exported: one texture `rj45_plug.png` (32 x 32) for the eight cord colours, one model per colour where only the UV of the boot changes
 - [ ] The client picks the plug model from the colour of the link (`worldwideblocks:block/rj45_plug_<colour>`, loaded as standalone models, `docs/cable-design.md`, section 4)
 - [ ] Cord item icon exported, the variant with the taller plug chosen on 2026-11-20 (`ICON` of `design/tools/cables.py`, in the cord colours; design guide, section 4); the palette exception of `textures/item/ethernet_cable.png` removed
-- [ ] `BlockResourcesTest` accepts the roles and the cord colours of `design/palette.json` for the plug texture and the cord item icon only, the roles alone elsewhere (design guide, section 4)
+- [x] `BlockResourcesTest` accepts the roles and the cord colours of `design/palette.json` for the plug texture and the cord item icon only, the roles alone elsewhere (design guide, section 4)
 - [ ] The end of a cable is the mouth of its port (port layout, `FACING` read on the client); `ATTACH_HEIGHT` removed; the held cable goes from the plug to the hand
 - [ ] Plugs drawn by the client from the cables it knows, not from block states
 - [ ] Cable 0.25 px thick, square section, lit by the light of the world, instead of the line; the plug may stand out of the block (tower, laptop), accepted
