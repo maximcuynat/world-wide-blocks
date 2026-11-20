@@ -57,6 +57,7 @@ import net.minecraft.world.level.WorldDataConfiguration;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import net.minecraft.world.level.storage.LevelStorageSource;
+import net.minecraft.world.level.storage.PrimaryLevelData;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -346,6 +347,14 @@ final class CaptureRun {
                     server.getCommands().performPrefixedCommand(source, "time set noon");
                     server.getCommands().performPrefixedCommand(source, "time pause");
                     server.getCommands().performPrefixedCommand(source, "weather clear");
+                    // The test dimensions of the run (WorldPresets.createTestWorldDimensions) are not those of
+                    // vanilla: their lifecycle is experimental, and opening the world again asks to confirm a
+                    // warning (WorldOpenFlows.openWorldCheckWorldStemCompatibility, BackupConfirmScreen). A player
+                    // confirms it once, then NeoForge saves it in level.dat (confirmedExperimentalSettings): the run
+                    // confirms it here, so that the step Restart opens the world as such a player does.
+                    if (server.getWorldData() instanceof PrimaryLevelData data) {
+                        data.withConfirmedWarning(true);
+                    }
                     ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
                     BlockPos at = player.blockPosition();
                     player.teleportTo(player.level(), at.getX() + 0.5, at.getY(), at.getZ() + 0.5, Set.<Relative>of(),
