@@ -26,7 +26,7 @@ Why 2.4: the box and the laptop are already at this factor; only the depth and t
 |---|---|---|---|---|---|
 | PC tower | 210 x 450 x 450 | M | 8.1 x 17.3 x 17.3, over the cap, reduced (1 px = 30 mm): **7 x 15 x 15** | 7 x 15 x 15 | Redrawn on 2026-11-20 (was 8 x 15 x 15); Java shape narrowed |
 | Internet box, standing (the 183 x 183 x 80 case turned upright, 2026-11-20) | 183 x 80 x 183 | E | 7.0 x 3.1 x 7.0: **7 x 3 x 7** | 7 x 3 x 7 | Standing since 2026-11-20 (was 7 x 7 x 3 flat); Java shape turned with the orientation |
-| Laptop, closed | 360 x 240 x 20 | M | 13.8 x 9.2 x 0.8: **14 x 9 x 2** (base 1 + lid 1, minimum thickness) | 14 x 10 x 2 | Depth 10 to 9 px |
+| Laptop, closed | 360 x 240 x 20 | M | 13.8 x 9.2 x 0.8: **14 x 9 x 2** (base 1 + lid 1, minimum thickness) | 14 x 9 x 2 | Redrawn on 2026-11-20 (was 14 x 10 x 2); Java shapes narrowed |
 | 8-port desktop switch | 158 x 102 x 27 | E | 6.1 x 3.9 x 1.0: **6.5 x 4 x 1** (width raised by the fit rule for 8 ports) | none | New |
 | 5-port desktop switch | 100 x 75 x 25, provisional value, not verified | M | 3.8 x 2.9 x 1.0: **4 x 3 x 1** | none | New |
 

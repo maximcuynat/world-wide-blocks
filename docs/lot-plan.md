@@ -838,7 +838,7 @@ Playable at the end: the whole mod is accessible without creative mode.
 | Lights | Link and activity lights per port, animated |
 | Textures | Screens and fronts lit or off depending on the state |
 | Sounds | Fans, connection clicks, beeps |
-| Models | Rework of the provisional models and textures, following `docs/design-guide.md`. `models/block/laptop_open.json` is used by no blockstate (the open laptop uses `laptop.json`): to remove or to use during the rework (noted on 2026-11-19) |
+| Models | Rework of the remaining provisional models and textures, following `docs/design-guide.md`. The internet box, the PC tower and the laptop were redrawn on 2026-11-19 and 2026-11-20; `models/block/laptop_open.json`, used by no blockstate, was removed on 2026-11-20 |
 | Cord on the ground | Moved to lot 1d-2 (decided on 2026-11-20, `docs/cable-design.md`); lot F keeps the polish: rounded bends, a little slack |
 | HUD interface | More professional and more polished HUD for the status panel and the messages (requested by Max on 2026-11-18) |
 

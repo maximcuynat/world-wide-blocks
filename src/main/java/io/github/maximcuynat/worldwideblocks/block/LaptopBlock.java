@@ -24,7 +24,8 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * Laptop: 14 px wide, 10 px deep. An empty-hand right-click opens or closes the screen.
+ * Laptop: 14 px wide, 9 px deep (360 x 240 mm in real life, scaled up by 2.4, docs/design-guide.md). An empty-hand
+ * right-click opens or closes the screen.
  * FACING is the side where the user sits (the front edge of the keyboard).
  */
 public class LaptopBlock extends NetworkDeviceBlock {
@@ -34,10 +35,11 @@ public class LaptopBlock extends NetworkDeviceBlock {
     public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
 
     // Shapes for a laptop whose user is to the north: the screen stands on the south side.
-    private static final VoxelShape CLOSED_NORTH = Block.box(1.0, 0.0, 3.0, 15.0, 2.0, 13.0);
+    private static final VoxelShape CLOSED_NORTH = Block.box(1.0, 0.0, 3.5, 15.0, 2.0, 12.5);
     private static final VoxelShape OPEN_NORTH = Shapes.or(
-            Block.box(1.0, 0.0, 3.0, 15.0, 1.0, 13.0),
-            Block.box(1.0, 1.0, 12.0, 15.0, 9.5, 16.0));
+            Block.box(1.0, 0.0, 3.5, 15.0, 1.0, 12.5),
+            // The screen leans back by 22.5 degrees around its front bottom edge: a box around it, within one texel.
+            Block.box(1.0, 1.0, 11.5, 15.0, 9.25, 16.0));
     private static final Map<Direction, VoxelShape> CLOSED_SHAPES = Shapes.rotateHorizontal(CLOSED_NORTH);
     private static final Map<Direction, VoxelShape> OPEN_SHAPES = Shapes.rotateHorizontal(OPEN_NORTH);
 

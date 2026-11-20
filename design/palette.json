@@ -11,7 +11,6 @@
     "screen": {"base": "#0d1b2a"}
   },
   "exceptions": {
-    "textures/block/laptop.png": "Drawn before the design guide; redrawn with the laptop (issue #56).",
     "textures/item/ethernet_cable.png": "Cords are a colour family of their own (design guide, section 4); the icon is reworked in lot F."
   }
 }
