@@ -86,7 +86,9 @@ Eight base colours, with a highlight and a shadow for the materials. Values take
 | Black | `#26282c` | `#3d4046` | `#141517` |
 | White | `#e9dfc4` | `#f4edda` | `#bdb196` |
 
-Out of the palette until its rework: the Ethernet cable item keeps its own blues (exception in `design/palette.json`). Colours of the current textures that go away at the rework: the blue LED (`#3a8fe8`) and the pink pixel (`#d05a8a`) of the tower, the screen text of the laptop (`#cbd5e1`, the screen content belongs to the terminal and to lot F).
+**Where the cord colours are allowed:** the RJ45 plug texture (`rj45_plug.png`, one boot per cord colour) and the cord item icon only. At lot 1d-1, `BlockResourcesTest` accepts the roles and the cord colours for these two textures, the roles alone for every other texture (Max, 2026-11-20).
+
+Out of the palette until its rework: the Ethernet cable item keeps its own blues (exception in `design/palette.json`, removed when the icon with the taller plug is exported). Colours of the current textures that go away at the rework: the blue LED (`#3a8fe8`) and the pink pixel (`#d05a8a`) of the tower, the screen text of the laptop (`#cbd5e1`, the screen content belongs to the terminal and to lot F).
 
 ## 5. Drawing
 

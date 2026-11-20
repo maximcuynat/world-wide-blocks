@@ -5,6 +5,6 @@ A common design guide for all equipment (scale, texture density, palette, generi
 
 - [x] Design guide approved by Max
 - [x] Internet box redrawn following the guide, approved in Blockbench, exported to the assets
-- [ ] 5-port desktop switch drawn and approved (the block itself is issue "Desktop switch, 5 ports", lot 1d-1)
+- [x] 5-port desktop switch drawn and approved (the block itself is issue "Desktop switch, 5 ports", lot 1d-1)
 - [x] PC tower aligned on the guide
 - [x] Laptop aligned on the guide

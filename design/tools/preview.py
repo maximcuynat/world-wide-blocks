@@ -10,7 +10,9 @@ model format (the face keeps the shading of its direction before the rotation: a
 "shade": false, as in the Java model format, is drawn without the face shading.
 
 --scene draws all the projects together in one view, as if placed next to each other: <id>@<dx>,<dz>
-moves a project by dx, dz model px (for example drafts/box@-9,0). --span sets the width of the view
+moves a project by dx, dz model px (for example drafts/box@-9,0); <id>@<dx>,<dy>,<dz>,<angle> also moves it up
+by dy and first turns it around the vertical axis through the centre of the block by 90, 180 or 270 degrees, as the
+y of a blockstate (90: the north face turns to the east), for example a plug in a port that faces east. --span sets the width of the view
 in model px, so that several images share the same scale. --centre sets the point at the centre of the view (model
 px of the scene), for a close-up; --views picks the views (45: north and east faces, 225: south and west faces).
 """
@@ -117,16 +119,47 @@ def rotate(vector, rotation, inverse, is_direction):
     return v
 
 
+SIDES = ('north', 'east', 'south', 'west')
+
+
 def load_placed(spec):
-    """<id> or <id>@<dx>,<dz>: the elements of a project, moved by dx, dz model px."""
+    """<id>, <id>@<dx>,<dz> or <id>@<dx>,<dy>,<dz>,<angle>: the elements of a project, moved (and turned)."""
     device_id, _, offset = spec.partition('@')
-    dx, dz = (float(v) for v in offset.split(',')) if offset else (0.0, 0.0)
+    values = [float(v) for v in offset.split(',')] if offset else [0.0, 0.0]
+    if len(values) == 4:   # kept in the frame of the project, with a placement: (angle, offset)
+        place = (values[3], values[:3])
+        return [b + (place,) for b in load(device_id)]
+    dx, dz = values
     placed = []
     for f, t, faces, px, su, sv, rotation, shade in load(device_id):
         if rotation:
             rotation = (rotation[0], rotation[1], [rotation[2][0] + dx, rotation[2][1], rotation[2][2] + dz])
-        placed.append(([f[0] + dx, f[1], f[2] + dz], [t[0] + dx, t[1], t[2] + dz], faces, px, su, sv, rotation, shade))
+        placed.append(([f[0] + dx, f[1], f[2] + dz], [t[0] + dx, t[1], t[2] + dz], faces, px, su, sv, rotation, shade, None))
     return placed
+
+
+def place(vector, placement, inverse, is_direction):
+    """A point (or a direction) of a project turned around the vertical axis through the centre of the block and
+    moved (placement: angle, offset), or brought back into the frame of the project (inverse)."""
+    angle, offset = placement
+    a = math.radians(-angle if inverse else angle)
+    c = [8.0, 0.0, 8.0]
+    v = list(vector)
+    if inverse and not is_direction:
+        v = [v[i] - offset[i] for i in range(3)]
+    u, w = (v[0], v[2]) if is_direction else (v[0] - c[0], v[2] - c[2])
+    x, z = u * math.cos(a) - w * math.sin(a), u * math.sin(a) + w * math.cos(a)
+    out = [x, v[1], z] if is_direction else [x + c[0], v[1], z + c[2]]
+    if not inverse and not is_direction:
+        out = [out[i] + offset[i] for i in range(3)]
+    return out
+
+
+def placed_face(face, placement):
+    """Direction in the scene of a face of a turned project (for the shading)."""
+    if not placement or face not in SIDES:
+        return face
+    return SIDES[(SIDES.index(face) + int(round(placement[0] / 90))) % 4]
 
 
 TILE = 16   # screen pixels: each tile only tests the boxes whose outline on the screen touches it
@@ -141,19 +174,28 @@ def render(boxes, azimuth, px, span=None, centre=None):
     n = math.hypot(right[0], right[2])
     right = (right[0] / n, 0.0, right[2] / n)
     up = (right[1] * dirn[2] - right[2] * dirn[1], right[2] * dirn[0] - right[0] * dirn[2], right[0] * dirn[1] - right[1] * dirn[0])
-    lo = [min(b[0][i] for b in boxes) for i in range(3)]
-    hi = [max(b[1][i] for b in boxes) for i in range(3)]
+    extents = []   # (from, to) of each box in the scene; a placed (turned) project by its turned corners
+    for b in boxes:
+        if b[8]:
+            corners = [place((x, y, z), b[8], False, False) for x in (b[0][0], b[1][0]) for y in (b[0][1], b[1][1]) for z in (b[0][2], b[1][2])]
+            extents.append(([min(c[i] for c in corners) for i in range(3)], [max(c[i] for c in corners) for i in range(3)]))
+        else:
+            extents.append((b[0], b[1]))
+    lo = [min(e[0][i] for e in extents) for i in range(3)]
+    hi = [max(e[1][i] for e in extents) for i in range(3)]
     centre = centre or [(lo[i] + hi[i]) / 2 for i in range(3)]
     span = span or max(hi[i] - lo[i] for i in range(3)) * 1.6 + 2
     size = int(span * px)
     img = [[BACKGROUND] * size for _ in range(size)]
     tiles = {}
-    for box in boxes:   # outline of each box on the screen, from its corners (turned with the element)
-        (f, t), rotation = box[:2], box[6]
+    for box in boxes:   # outline of each box on the screen, from its corners (turned with the element, placed)
+        (f, t), rotation, placement = box[:2], box[6], box[8]
         xs, ys = [], []
         for corner in ((x, y, z) for x in (f[0], t[0]) for y in (f[1], t[1]) for z in (f[2], t[2])):
             if rotation:
                 corner = rotate(corner, rotation, False, False)
+            if placement:
+                corner = place(corner, placement, False, False)
             rel = [corner[i] - centre[i] for i in range(3)]
             xs.append((sum(rel[i] * right[i] for i in range(3)) + span / 2) * px)
             ys.append((span / 2 - sum(rel[i] * up[i] for i in range(3))) * px)
@@ -168,11 +210,14 @@ def render(boxes, azimuth, px, span=None, centre=None):
             a, b = (sx + 0.5) / px - span / 2, span / 2 - (sy + 0.5) / px
             origin = [centre[i] + a * right[i] + b * up[i] - dirn[i] * 50 for i in range(3)]
             best = None
-            for (f, t, faces, pixels, su, sv, rotation, shade) in candidates:
+            for (f, t, faces, pixels, su, sv, rotation, shade, placement) in candidates:
                 ray_o, ray_d = origin, dirn
+                if placement:  # into the frame of the project
+                    ray_o = place(ray_o, placement, True, False)
+                    ray_d = place(ray_d, placement, True, True)
                 if rotation:   # into the frame of the element, where it is an axis-aligned box
-                    ray_o = rotate(origin, rotation, True, False)
-                    ray_d = rotate(dirn, rotation, True, True)
+                    ray_o = rotate(ray_o, rotation, True, False)
+                    ray_d = rotate(ray_d, rotation, True, True)
                 tmin, tmax, hit = -1e9, 1e9, None
                 for i, (neg, pos) in enumerate((('west', 'east'), ('down', 'up'), ('north', 'south'))):
                     if abs(ray_d[i]) < 1e-12:
@@ -186,10 +231,10 @@ def render(boxes, azimuth, px, span=None, centre=None):
                         tmin, hit = near, face
                     tmax = min(tmax, max(t1, t2))
                 if hit and tmin <= tmax and (best is None or tmin < best[0]):
-                    best = (tmin, hit, f, t, faces, pixels, su, sv, ray_o, ray_d, shade)
+                    best = (tmin, hit, f, t, faces, pixels, su, sv, ray_o, ray_d, shade, placement)
             if best is None:
                 continue
-            tm, face, f, t, faces, pixels, su, sv, ray_o, ray_d, shade = best
+            tm, face, f, t, faces, pixels, su, sv, ray_o, ray_d, shade, placement = best
             fc = faces.get(face)
             if not fc or fc.get('texture') is None:
                 continue
@@ -201,7 +246,7 @@ def render(boxes, azimuth, px, span=None, centre=None):
             r, g, bl, al = pixels[tv][tu]
             if al == 0:
                 continue
-            k = SHADE[face] if shade else 1.0
+            k = SHADE[placed_face(face, placement)] if shade else 1.0
             img[sy][sx] = (int(r * k), int(g * k), int(bl * k), 255)
     return img
 
