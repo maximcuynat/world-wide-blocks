@@ -1,6 +1,6 @@
 Title: Test operator line block
 Labels: type: feature, area: blocks, priority: low
-Milestone: lot 1d
+Milestone: lot 1d-1
 
 Brought forward from lot 3 (`docs/lot-plan.md`, lot 3): a creative mode block that stands for the upstream operator, so that the line input port of the box can be tried long before the street and the ISP exist. It is replaced by the real chain over lots 4 to 6.
 
