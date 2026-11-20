@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SplittableRandom;
+import java.util.stream.LongStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import io.github.maximcuynat.worldwideblocks.network.PortKind;
 import io.github.maximcuynat.worldwideblocks.network.PortRef;
 import io.github.maximcuynat.worldwideblocks.network.dhcp.DhcpStore;
 import io.github.maximcuynat.worldwideblocks.network.ip.Ipv4Stack;
+import io.github.maximcuynat.worldwideblocks.network.protocol.ArpPacket;
 import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Address;
 import io.github.maximcuynat.worldwideblocks.os.ConsoleLine;
 import io.github.maximcuynat.worldwideblocks.os.ConsoleSession;
@@ -328,6 +330,30 @@ class PingSimulationTest {
         assertEquals(List.of(new ConsoleLine.Advice("terminal.worldwideblocks.advice.ping.no_reply", List.of(target))),
                 this.advice().subList(this.advice().size() - 1, this.advice().size()));
         assertEquals(before + expected.size(), this.console().lines().size());
+    }
+
+    /**
+     * A continuous {@code ping} to an absent address of the local network broadcasts an ARP request every second, as
+     * long as it runs: three for each resolution, one second apart, and when the entry fails the next request of
+     * {@code ping} starts a new one. Real traffic that a loop of boxes carries (issue #15: the loop game tests and
+     * capture use it since the presence frame is gone).
+     */
+    @Test
+    void aContinuousPingToAnAbsentAddressBroadcastsArpWithoutEnd() {
+        List<Long> broadcasts = new ArrayList<>();
+        this.sim.setTap((now, port, direction, frame) -> {
+            if (direction == FrameDirection.SENT && port.device().equals(this.tower) && frame.isBroadcast()
+                    && frame.payload() instanceof ArpPacket arp && arp.targetIp().equals(Ipv4Address.of(192, 168, 1, 250))) {
+                broadcasts.add(now);
+            }
+        });
+
+        this.type("ping 192.168.1.250", 60 * SECOND);
+
+        // The first request at the tick after the line, then one per second: when the entry fails, the request of
+        // ping due at that tick starts a new resolution at once. 61 broadcasts in 60 s, never a gap.
+        List<Long> everySecond = LongStream.rangeClosed(0, 60).map(second -> 1 + second * SECOND).boxed().toList();
+        assertEquals(everySecond, broadcasts);
     }
 
     /** {@code MAXWAIT}: 10 s after the last request when no reply came. */
