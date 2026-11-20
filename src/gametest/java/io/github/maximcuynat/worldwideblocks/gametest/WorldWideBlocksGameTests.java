@@ -91,7 +91,9 @@ public final class WorldWideBlocksGameTests {
             new Case("terminal_keys_reach_the_console", Batch.SHARED, 40, TerminalTests::keysReachTheConsole),
             new Case("terminal_payloads_round_trip", Batch.SHARED, 20, TerminalTests::payloadsRoundTrip),
             new Case("terminal_laptop_gestures", Batch.SHARED, 40, TerminalTests::laptopGestures),
-            new Case("terminal_laptop_item_keeps_its_lid", Batch.SHARED, 40, TerminalTests::laptopItemKeepsItsLid)),
+            new Case("terminal_laptop_item_keeps_its_lid", Batch.SHARED, 40, TerminalTests::laptopItemKeepsItsLid),
+            new Case("terminal_tower_opens_as_a_chest", Batch.SHARED, 40, TerminalTests::towerOpensAsAChest),
+            new Case("terminal_laptop_sneak_unplugs", Batch.SHARED, 40, TerminalTests::laptopSneakUnplugs)),
             // Scenes of /worldwideblocks test, except "distance" (99 blocks, larger than the test area).
             // The loop scene hits the engine's global limits: separate batch.
             Arrays.stream(TrialScenario.values())

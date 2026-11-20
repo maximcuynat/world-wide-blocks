@@ -138,6 +138,13 @@ public record CaptureScenario(String name, String description, List<Size> sizes,
         }
 
         /**
+         * Notches of the mouse wheel over the screen open, as the operating system reports them to the game
+         * ({@code MouseHandler.onScroll}): positive turns the wheel up, towards the older lines.
+         */
+        record Scroll(int notches) implements Step {
+        }
+
+        /**
          * Keys of the terminal: the physical key (SDL3 scancode, {@code InputConstants}), the symbol of a QWERTY layout
          * ({@code shortcutKey}, what the terminal reads for Ctrl shortcuts), the modifiers (SDL masks: Shift 3, Ctrl
          * 192).
@@ -147,6 +154,7 @@ public record CaptureScenario(String name, String description, List<Size> sizes,
             ESCAPE(InputConstants.KEY_ESCAPE, 27, 0),
             UP(InputConstants.KEY_UP, 0, 0),
             SHIFT_PAGE_UP(InputConstants.KEY_PAGEUP, 0, InputConstants.MOD_SHIFT),
+            SHIFT_PAGE_DOWN(InputConstants.KEY_PAGEDOWN, 0, InputConstants.MOD_SHIFT),
             CTRL_C(InputConstants.KEY_C, 'c', InputConstants.MOD_CONTROL),
             CTRL_D(InputConstants.KEY_D, 'd', InputConstants.MOD_CONTROL),
             CTRL_L(InputConstants.KEY_L, 'l', InputConstants.MOD_CONTROL),

@@ -286,8 +286,10 @@ public final class CaptureScenarios {
      * size does not follow the GUI scale ({@code values.txt}: columns, rows, text size). The empty console and its
      * prompt; {@code help} (lines of the game, translated); {@code ip a}, whose line {@code lo} wraps; a larger text
      * (Ctrl+=, the option put back by the run); a running {@code ping} ("Ctrl+C: stop" in the title), stopped by
-     * Ctrl+C; Ctrl+C at the prompt then Ctrl+L; scrolled up (Shift+Page Up); the history (Up); Esc then a new opening
-     * (same session, the game time goes on: no pause); {@code exit} closes the screen; the laptop, with accents typed.
+     * Ctrl+C; Ctrl+C at the prompt then Ctrl+L; scrolled up (Shift+Page Up), then down by one notch of the wheel; back
+     * to the bottom (Shift+Page Down), then up by one notch ({@code values.txt}: rows scrolled up); the history (Up);
+     * Esc then a new opening (same session, the game time goes on: no pause); {@code exit} closes the screen; the
+     * laptop, with accents typed.
      */
     static final CaptureScenario TERMINAL_SCREEN = new CaptureScenario("terminal_screen",
             "terminal of the tower and the laptop: prompt, help, wrap, text size, keys, Esc, exit",
@@ -320,6 +322,11 @@ public final class CaptureScenarios {
                     new Step.Shot("cleared"),
                     new Step.Press(Step.TerminalKey.SHIFT_PAGE_UP),
                     new Step.Shot("scrolled_up"),
+                    new Step.Scroll(-1),
+                    new Step.Shot("wheel_down"),
+                    new Step.Press(Step.TerminalKey.SHIFT_PAGE_DOWN),
+                    new Step.Scroll(1),
+                    new Step.Shot("wheel_up"),
                     new Step.Press(Step.TerminalKey.ESCAPE),
                     new Step.Wait(SETTLE),
                     new Step.OpenTerminal(1),

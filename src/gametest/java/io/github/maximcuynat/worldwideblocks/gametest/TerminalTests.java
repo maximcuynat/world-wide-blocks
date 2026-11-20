@@ -30,6 +30,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
@@ -46,6 +47,8 @@ import net.minecraft.world.phys.Vec3;
  */
 final class TerminalTests {
     private static final BlockPos COMPUTER = new BlockPos(3, 0, 3);
+    /** A box for the cable of the laptop, beside it. */
+    private static final BlockPos BOX = new BlockPos(5, 0, 3);
     /** Height of a click on the keyboard of the open laptop (its top is at 1/16 of a block). */
     private static final double KEYBOARD = 0.05;
     /** Height of a click on the screen of the laptop. */
@@ -362,6 +365,71 @@ final class TerminalTests {
                     helper.assertTrue(placed.getBlock() instanceof LaptopBlock, "laptop placed again: " + placed);
                     helper.assertTrue(!placed.getValue(LaptopBlock.OPEN), "placed closed, as its item");
                     scene.adopt(List.of(helper.absolutePos(COMPUTER)));
+                })
+                .thenSucceed();
+    }
+
+    /**
+     * The tower opens as a chest: with a block or any other item in hand, the terminal opens and nothing is placed;
+     * sneaking with a block places it against the tower; the cord in hand connects a cable instead.
+     */
+    static void towerOpensAsAChest(GameTestHelper helper) {
+        NetworkScene scene = NetworkScene.of(helper);
+        DeviceId tower = scene.place(COMPUTER, ModBlocks.PC_TOWER.get());
+        TestPlayer alice = scene.player(GameType.CREATIVE);
+
+        helper.startSequence()
+                .thenExecuteAfter(2, () -> {
+                    alice.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.STONE));
+                    scene.rightClick(alice, COMPUTER);
+                    helper.assertValueEqual(atKeyboard(scene, tower), Optional.of(alice.getUUID()), "a block in hand opens the terminal");
+                    helper.assertBlockPresent(Blocks.AIR, COMPUTER.above());
+                    type(scene, alice, tower, TerminalInputPayload.Kind.CLOSE, "");
+                    helper.assertValueEqual(atKeyboard(scene, tower), Optional.empty(), "after Esc");
+
+                    alice.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.STICK));
+                    scene.rightClick(alice, COMPUTER);
+                    helper.assertValueEqual(atKeyboard(scene, tower), Optional.of(alice.getUUID()), "a stick in hand opens the terminal");
+                    type(scene, alice, tower, TerminalInputPayload.Kind.CLOSE, "");
+
+                    alice.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.STONE));
+                    scene.sneakRightClick(alice, COMPUTER);
+                    helper.assertBlockPresent(Blocks.STONE, COMPUTER.above());
+                    helper.assertValueEqual(atKeyboard(scene, tower), Optional.empty(), "sneaking with a block: no terminal");
+
+                    alice.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.ETHERNET_CABLE.get()));
+                    scene.rightClick(alice, COMPUTER);
+                    helper.assertTrue(scene.hasPendingCord(alice), "the cord in hand starts a cable");
+                    helper.assertValueEqual(atKeyboard(scene, tower), Optional.empty(), "the cord in hand: no terminal");
+                })
+                .thenSucceed();
+    }
+
+    /**
+     * Sneak + right-click with an empty hand on the keyboard of the open laptop takes off the end of its cable (lot 1a),
+     * without opening the terminal or moving the lid.
+     */
+    static void laptopSneakUnplugs(GameTestHelper helper) {
+        NetworkScene scene = NetworkScene.of(helper);
+        DeviceId laptop = scene.place(COMPUTER, ModBlocks.LAPTOP.get());
+        DeviceId box = scene.place(BOX, ModBlocks.INTERNET_BOX.get());
+        scene.cable(box, laptop);
+        TestPlayer alice = scene.player(GameType.CREATIVE);
+
+        helper.startSequence()
+                .thenExecuteAfter(2, () -> {
+                    helper.assertValueEqual(scene.network().linksOf(laptop).size(), 1, "cables of the laptop before");
+                    alice.setShiftKeyDown(true);
+                    try {
+                        scene.rightClickAt(alice, COMPUTER, KEYBOARD);
+                    } finally {
+                        alice.setShiftKeyDown(false);
+                    }
+                    scene.assertMessages(alice, MessageChannel.ACTION_BAR, "message.worldwideblocks.cable.end_taken", 1);
+                    helper.assertTrue(scene.hasPendingCord(alice), "the end taken off waits in hand");
+                    helper.assertValueEqual(scene.network().linksOf(laptop).size(), 0, "cables of the laptop after");
+                    helper.assertValueEqual(atKeyboard(scene, laptop), Optional.empty(), "sneaking: no terminal");
+                    helper.assertTrue(lid(helper), "sneaking: the lid does not move");
                 })
                 .thenSucceed();
     }

@@ -419,6 +419,7 @@ final class CaptureRun {
             case Step.OpenTerminal open -> this.openTerminal(minecraft, open);
             case Step.Type type -> this.type(minecraft, type);
             case Step.Press press -> this.press(minecraft, press);
+            case Step.Scroll scroll -> this.scroll(minecraft, scroll);
             case Step.Shot shot -> this.shot(minecraft, shot);
         };
         if (done) {
@@ -719,6 +720,20 @@ final class CaptureRun {
         }
         if (this.expectedScreen == ExpectedScreen.TERMINAL && !(minecraft.gui.screen() instanceof TerminalScreen)) {
             this.expectedScreen = ExpectedScreen.NONE; // the server closed it: the shell ended
+        }
+        return this.stepTicks >= STABLE_TICKS;
+    }
+
+    /** Wheel notches, one event each, through the handler the operating system calls; the terminal must be open. */
+    private boolean scroll(Minecraft minecraft, Step.Scroll scroll) {
+        if (!this.stepStarted) {
+            this.stepStarted = true;
+            this.terminal(minecraft);
+            long handle = minecraft.getWindow().handle();
+            for (int i = 0; i < Math.abs(scroll.notches()); i++) {
+                minecraft.mouseHandler.onScroll(handle, 0.0, Math.signum(scroll.notches()));
+            }
+            return false;
         }
         return this.stepTicks >= STABLE_TICKS;
     }
