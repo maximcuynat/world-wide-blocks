@@ -270,3 +270,8 @@ Max asked for a design proposal, no code: choice of the port, cable attached to 
 ## Issue definitions waiting for a sync (2026-11-20)
 
 Not to be synchronised from `design/equipment` (`tasks/lessons.md`): wait for the merge of `lot/1c-1` into `developement` and the rebase of this branch. Changed here and not yet on GitHub: cross-links in `ideas/04-cables-and-guides.md`, `ideas/13-port-types.md`, `ideas/14-port-lights.md`, `1d/05-port-layouts.md`, `1d/07-cable-attached-to-port.md`, `1d-2/01-cable-route.md`; ticked boxes of `backlog/05-equipment-design-guide.md` (#56).
+
+## Design: PC tower (session of 2026-11-20)
+
+- [x] PC tower redrawn on the guide (`design/tools/pc_tower.py`, front "classic" with the optical bay, RJ45 low on an expansion card, both chosen by Max on 2026-11-20): 7 x 15 x 15 px, Java shape `boxZ(7.0, 0.0, 15.0, 0.5, 15.5)`, display values, export, drafts deleted, sheet `design/blockbench/pc_tower.md`. Build green and checked in game by Max on 2026-11-20.
+- [ ] Next: the laptop (RJ45 on the left side of the base, toward the back, proposed).
