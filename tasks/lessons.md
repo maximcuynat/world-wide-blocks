@@ -49,6 +49,7 @@
 
 - Never give a `gh` command as working without checking its `--help` or its documentation: `gh project link --owner @me` was refused, the login is needed (`--owner <login>`). Mark an unchecked command as such. (2026-11-18)
 - A command that waits for an answer (`scripts/dev` confirmations, `gh auth refresh`) cannot be run through the assistant's shell (`!` included): tell the maintainer to run it in a real terminal. (2026-11-18)
+- `scripts/dev project sync` and `update-issues` write the definition files of the folder they run in, whatever their age: run from the worktree of `design/equipment`, `update-issues` put back older texts on #11, #15, #16 and #45 (2026-11-20, 00:29Z). When giving these commands, say from which folder and branch to run them (the one with the newest definitions), and when issue bodies change unexpectedly, read `userContentEdits` (GraphQL) and compare each version with the files of every branch before concluding. (2026-11-20)
 
 ## Shell (zsh) and text tools
 
