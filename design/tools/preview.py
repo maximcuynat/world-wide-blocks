@@ -1,10 +1,14 @@
 """Isometric preview of Blockbench projects, without Blockbench.
 
-Usage: python3 design/tools/preview.py <out.png> <id> [<id> ...] [--px 24]
+Usage: python3 design/tools/preview.py <out.png> <id> [<id> ...] [--px 24] [--scene] [--span N]
 
 Draws each project of design/blockbench/<id>.bbmodel from the front (north and east faces) and from
 the back (south and west faces), with the face shading of the game (top 1.0, north and south 0.8,
 east and west 0.6, bottom 0.5), side by side. Elements must not be rotated.
+
+--scene draws all the projects together in one view, as if placed next to each other: <id>@<dx>,<dz>
+moves a project by dx, dz model px (for example drafts/box@-9,0). --span sets the width of the view
+in model px, so that several images share the same scale.
 """
 import argparse
 import base64
@@ -88,13 +92,20 @@ def load(device_id):
     for e in project['elements']:
         if any(e.get('rotation', [0, 0, 0])):
             raise SystemExit('rotated element %s: not supported by the preview' % e['name'])
-        boxes.append((e['from'], e['to'], e['faces']))
-    return boxes, pixels, scale_u, scale_v
+        boxes.append((e['from'], e['to'], e['faces'], pixels, scale_u, scale_v))
+    return boxes
 
 
-def render(model, azimuth, px):
+def load_placed(spec):
+    """<id> or <id>@<dx>,<dz>: the elements of a project, moved by dx, dz model px."""
+    device_id, _, offset = spec.partition('@')
+    dx, dz = (float(v) for v in offset.split(',')) if offset else (0.0, 0.0)
+    return [([f[0] + dx, f[1], f[2] + dz], [t[0] + dx, t[1], t[2] + dz], faces, px, su, sv)
+            for f, t, faces, px, su, sv in load(device_id)]
+
+
+def render(boxes, azimuth, px, span=None):
     """One view. azimuth 45: camera at north-east (front and east faces); 225: south-west."""
-    boxes, pixels, su, sv = model
     el, az = math.radians(30), math.radians(azimuth)
     cam = (math.cos(el) * math.sin(az), math.sin(el), -math.cos(el) * math.cos(az))
     dirn = tuple(-c for c in cam)
@@ -105,7 +116,7 @@ def render(model, azimuth, px):
     lo = [min(b[0][i] for b in boxes) for i in range(3)]
     hi = [max(b[1][i] for b in boxes) for i in range(3)]
     centre = [(lo[i] + hi[i]) / 2 for i in range(3)]
-    span = max(hi[i] - lo[i] for i in range(3)) * 1.6 + 2
+    span = span or max(hi[i] - lo[i] for i in range(3)) * 1.6 + 2
     size = int(span * px)
     img = [[BACKGROUND] * size for _ in range(size)]
     for sy in range(size):
@@ -113,7 +124,7 @@ def render(model, azimuth, px):
             a, b = (sx + 0.5) / px - span / 2, span / 2 - (sy + 0.5) / px
             origin = [centre[i] + a * right[i] + b * up[i] - dirn[i] * 50 for i in range(3)]
             best = None
-            for (f, t, faces) in boxes:
+            for (f, t, faces, pixels, su, sv) in boxes:
                 tmin, tmax, hit = -1e9, 1e9, None
                 for i, (neg, pos) in enumerate((('west', 'east'), ('down', 'up'), ('north', 'south'))):
                     if abs(dirn[i]) < 1e-12:
@@ -127,10 +138,10 @@ def render(model, azimuth, px):
                         tmin, hit = near, face
                     tmax = min(tmax, max(t1, t2))
                 if hit and tmin <= tmax and (best is None or tmin < best[0]):
-                    best = (tmin, hit, f, t, faces)
+                    best = (tmin, hit, f, t, faces, pixels, su, sv)
             if best is None:
                 continue
-            tm, face, f, t, faces = best
+            tm, face, f, t, faces, pixels, su, sv = best
             fc = faces.get(face)
             if not fc or fc.get('texture') is None:
                 continue
@@ -152,11 +163,13 @@ def main():
     p.add_argument('out')
     p.add_argument('ids', nargs='+')
     p.add_argument('--px', type=int, default=24, help='screen pixels per model pixel')
+    p.add_argument('--scene', action='store_true', help='draw all the projects together in one view')
+    p.add_argument('--span', type=float, help='width of the view in model px (same scale for all)')
     args = p.parse_args()
+    groups = [[b for spec in args.ids for b in load_placed(spec)]] if args.scene else [load_placed(s) for s in args.ids]
     views = []
-    for device_id in args.ids:
-        model = load(device_id)
-        views += [render(model, 45, args.px), render(model, 225, args.px)]
+    for boxes in groups:
+        views += [render(boxes, 45, args.px, args.span), render(boxes, 225, args.px, args.span)]
     gap = 8
     h = max(len(v) for v in views)
     w = sum(len(v[0]) for v in views) + gap * (len(views) - 1)

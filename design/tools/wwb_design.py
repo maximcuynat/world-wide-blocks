@@ -241,7 +241,7 @@ def write_bbmodel(device_id, project, preview_dir=None, force=False):
     if os.path.exists(path) and not force:
         sys.exit('%s exists: it may have been saved from Blockbench and is then the reference. '
                  'Not overwritten (use --force only for a project never saved from Blockbench).' % path)
-    os.makedirs(BLOCKBENCH_DIR, exist_ok=True)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w') as f:
         json.dump(project, f, indent=2)
         f.write('\n')
@@ -260,3 +260,62 @@ def main_args():
     p.add_argument('--preview', metavar='DIR', help='also write the texture PNG into DIR')
     p.add_argument('--table', action='store_true', help='print the ports and LEDs table and the display values, write nothing')
     return p.parse_args()
+
+
+class RecessedFront:
+    """Front with recessed ports (design guide, section 5): the front of a body is a panel `depth`
+    px thick, split around the holes (a strip above, a strip below, posts between the holes). The
+    bottom of each hole is the front of the body, seen through it; the walls get their own areas.
+
+    envelope: (from, to) of the whole body, front panel included. holes: list of (column, width)
+    on the envelope front, in texels from the viewer's left; rows: (row, height) of the holes.
+    Elements: `case` (the body behind the panel), `front_top`, `front_bottom`, `front_middle_<n>`."""
+
+    def __init__(self, envelope, depth, holes, rows):
+        self.envelope, self.depth = envelope, depth
+        (x1, y1, z1), (x2, y2, z2) = envelope
+        t = TEXELS_PER_PX
+        self.holes_x = sorted((x2 - (c + w) / t, x2 - c / t) for c, w in holes)   # west to east
+        self.hole_y = (y2 - (rows[0] + rows[1]) / t, y2 - rows[0] / t)
+        zf = z1 + depth
+        self.case = {'name': 'case', 'from': [x1, y1, zf], 'to': [x2, y2, z2]}
+        self.top = {'name': 'front_top', 'from': [x1, self.hole_y[1], z1], 'to': [x2, y2, zf]}
+        self.bottom = {'name': 'front_bottom', 'from': [x1, y1, z1], 'to': [x2, self.hole_y[0], zf]}
+        edges = [x1] + [x for hole in self.holes_x for x in hole] + [x2]
+        self.middle = [{'name': 'front_middle_%d' % (i + 1), 'from': [edges[2 * i], self.hole_y[0], z1],
+                        'to': [edges[2 * i + 1], self.hole_y[1], zf]} for i in range(len(edges) // 2)]
+
+    def elements(self):
+        return [self.case, self.top, self.bottom] + self.middle
+
+    def add_walls(self, sheet, ceiling, floor, sides):
+        """Reserves and paints the walls of the holes, from light to dark: floor (lit from above),
+        ceiling and sides; the bottom (socket shadow tone) is drawn on the envelope front.
+        ceiling, floor, sides: texel position (x, y) of each area on the sheet."""
+        (x1, _, _), (x2, _, _) = self.envelope
+        sheet.add_face('wall', 'ceiling', ceiling[0], ceiling[1], x2 - x1, self.depth)
+        sheet.add_face('wall', 'floor', floor[0], floor[1], x2 - x1, self.depth)
+        sheet.add_face('wall', 'vertical', sides[0], sides[1], self.depth, self.hole_y[1] - self.hole_y[0])
+        sheet.fill('wall', 'floor', 'dark', 'sh')
+        sheet.fill('wall', 'ceiling', 'socket')
+        sheet.fill('wall', 'vertical', 'socket')
+
+    def map_faces(self, sheet):
+        """Gives each face of the body elements its part of the envelope ('env' areas of the sheet),
+        a wall of a hole, or nothing (hidden, left out of the model)."""
+        lo, hi = self.envelope
+        planes = {'north': (2, lo[2]), 'south': (2, hi[2]), 'west': (0, lo[0]),
+                  'east': (0, hi[0]), 'down': (1, lo[1]), 'up': (1, hi[1])}
+        for e in self.elements():
+            for face, (axis, plane) in planes.items():
+                if (e['from'] if face in ('north', 'west', 'down') else e['to'])[axis] == plane:
+                    sheet.add_slice(e['name'], face, ('env', face), self.envelope, (e['from'], e['to']))
+        # The front of the case is the bottom of the holes: same drawing as the envelope front.
+        sheet.add_slice('case', 'north', ('env', 'north'), self.envelope, (lo, [hi[0], hi[1], lo[2]]))
+        sheet.faces[('front_top', 'down')] = sheet.faces[('wall', 'ceiling')]
+        sheet.faces[('front_bottom', 'up')] = sheet.faces[('wall', 'floor')]
+        for i, e in enumerate(self.middle):
+            if i > 0:
+                sheet.faces[(e['name'], 'west')] = sheet.faces[('wall', 'vertical')]
+            if i < len(self.middle) - 1:
+                sheet.faces[(e['name'], 'east')] = sheet.faces[('wall', 'vertical')]

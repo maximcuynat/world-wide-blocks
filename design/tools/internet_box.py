@@ -1,141 +1,116 @@
-"""Internet box, version 2: 7 x 7 x 3 px overall (design/blockbench/internet_box.md).
+"""Internet box, version 3: standing box, 7 x 3 x 7 px (design/blockbench/internet_box.md).
 
-Elements, all inside the outer box of version 1 (so the Java shape does not change):
-- base: dark plinth, set back 0.5 px, so that the box seems to stand off the desk;
-- case: the body, behind a front panel 0.5 px thick;
-- front_*: the front panel, split around the 4 LAN ports, which are real holes 0.5 px deep: the
-  bottom of each port, with its contacts at the bottom, is drawn on the front of the case, seen
-  through the hole;
-- cover: top cover set back 0.25 px, which draws a bevel around the top.
+Family signature (design guide, section 5): a standing case, with a black glass band that stands out
+of the top of the front, and 4 large recessed LAN ports low on the front.
 
-The body is drawn as one envelope (front, back, sides, top, bottom); each element takes its own part
-of it (Sheet.add_slice), so the texture runs on across the elements.
-
-Variants of colour: --variant light (light body) or dark (dark body).
+Elements (front facing north):
+- base: dark plinth, set back 0.5 px;
+- case and front_*: the body behind a front panel 0.5 px thick, split around the 4 LAN ports
+  (RecessedFront);
+- band: the glass status band, 0.25 px out of the front, set back 0.5 px from each side edge;
+- cover: top cover set back 0.25 px (bevel).
 """
 import json
 
 import wwb_design as d
 
 ID = 'internet_box'
-ENVELOPE = ([4.5, 0.5, 4.5], [11.5, 2.75, 11.5])
-PANEL_Z = (4.5, 5.0)              # front panel thickness: depth of the ports
-LAN_COLS = (11, 15, 19, 23)       # LAN 1 to 4, columns on the front, from the viewer's left
-PORT_ROWS = (4, 7)                # rows 4 to 6 on the front
 T = d.TEXELS_PER_PX
+ENVELOPE = ([4.5, 0.5, 6.75], [11.5, 6.75, 9.5])   # the band takes the first 0.25 px of the depth
+LAN_COLS = (6, 10, 14, 18)                         # LAN 1 to 4, from the viewer's left
+PORT_ROWS = (18, 3)
+BAND_ROWS = (2, 5)                                 # band height on the front, from the top
 
-
-def front_x(col):
-    """Model x of the left edge of a front column (front: column 0 on the east side)."""
-    return ENVELOPE[1][0] - col / T
-
-
-def front_y(row):
-    return ENVELOPE[1][1] - row / T
-
-
-HOLES_X = sorted((front_x(c + 3), front_x(c)) for c in LAN_COLS)   # west to east
-HOLE_Y = (front_y(PORT_ROWS[1]), front_y(PORT_ROWS[0]))
-
-BASE = {'name': 'base', 'from': [5.0, 0, 5.0], 'to': [11.0, 0.5, 11.0], 'cullfaces': ('down',)}
-CASE = {'name': 'case', 'from': [4.5, 0.5, PANEL_Z[1]], 'to': [11.5, 2.75, 11.5]}
-COVER = {'name': 'cover', 'from': [4.75, 2.75, 4.75], 'to': [11.25, 3.0, 11.25]}
-FRONT_TOP = {'name': 'front_top', 'from': [4.5, HOLE_Y[1], PANEL_Z[0]], 'to': [11.5, 2.75, PANEL_Z[1]]}
-FRONT_BOTTOM = {'name': 'front_bottom', 'from': [4.5, 0.5, PANEL_Z[0]], 'to': [11.5, HOLE_Y[0], PANEL_Z[1]]}
-_edges = [4.5] + [x for hole in HOLES_X for x in hole] + [11.5]
-FRONT_MIDDLE = [{'name': 'front_middle_%d' % (i + 1), 'from': [_edges[2 * i], HOLE_Y[0], PANEL_Z[0]],
-                 'to': [_edges[2 * i + 1], HOLE_Y[1], PANEL_Z[1]]} for i in range(len(_edges) // 2)]
-ELEMENTS = [BASE, CASE, FRONT_TOP, FRONT_BOTTOM] + FRONT_MIDDLE + [COVER]
+FRONT = d.RecessedFront(ENVELOPE, 0.5, [(c, 3) for c in LAN_COLS], PORT_ROWS)
+BASE = {'name': 'base', 'from': [5.0, 0, 7.25], 'to': [11.0, 0.5, 9.0], 'cullfaces': ('down',)}
+COVER = {'name': 'cover', 'from': [4.75, 6.75, 7.0], 'to': [11.25, 7.0, 9.25]}
+_top = ENVELOPE[1][1]
+BAND = {'name': 'band', 'from': [5.0, _top - (BAND_ROWS[0] + BAND_ROWS[1]) / T, 6.5],
+        'to': [11.0, _top - BAND_ROWS[0] / T, 6.75]}
+ELEMENTS = [BASE] + FRONT.elements() + [BAND, COVER]
 ENV = {'name': 'env', 'from': ENVELOPE[0], 'to': ENVELOPE[1]}   # for the ports table only
 
 
-def build(variant):
-    body = 'light' if variant == 'light' else 'dark'
+def build():
     sheet = d.Sheet(128)
+    # Areas of the sheet (texels).
+    sheet.add_face('env', 'north', 0, 0, 7, 6.25)
+    sheet.add_face('env', 'south', 32, 0, 7, 6.25)
+    sheet.add_face('env', 'east', 64, 0, 2.75, 6.25)
+    sheet.add_face('env', 'west', 80, 0, 2.75, 6.25)
+    sheet.add_face('env', 'up', 96, 0, 7, 2.75)
+    sheet.add_face('env', 'down', 96, 16, 7, 2.75)
+    sheet.add_face('cover', 'up', 0, 32, 6.5, 2.25)
+    sheet.add_face('cover', 'north', 32, 32, 6.5, 0.25)
+    sheet.add_face('cover', 'south', 32, 34, 6.5, 0.25)
+    sheet.add_face('cover', 'east', 32, 36, 2.25, 0.25)
+    sheet.add_face('cover', 'west', 32, 38, 2.25, 0.25)
+    sheet.add_face('base', 'down', 64, 32, 6, 1.75)
+    sheet.add_face('base', 'north', 0, 44, 6, 0.5)
+    sheet.add_face('base', 'south', 32, 44, 6, 0.5)
+    sheet.add_face('base', 'east', 64, 44, 1.75, 0.5)
+    sheet.add_face('base', 'west', 80, 44, 1.75, 0.5)
+    FRONT.add_walls(sheet, (0, 52), (0, 56), (32, 52))
+    sheet.add_face('band', 'north', 0, 64, 6, 1.25)
+    sheet.add_face('band', 'up', 0, 72, 6, 0.25)
+    sheet.add_face('band', 'down', 0, 74, 6, 0.25)
+    sheet.add_face('band', 'east', 32, 64, 0.25, 1.25)
+    sheet.add_face('band', 'west', 34, 64, 0.25, 1.25)
 
-    # Areas of the sheet (texels): the body envelope, the cover, the base, the walls of the holes.
-    sheet.add_face('env', 'up', 0, 0, 7, 7)
-    sheet.add_face('env', 'down', 32, 0, 7, 7)
-    sheet.add_face('cover', 'up', 64, 0, 6.5, 6.5)
-    sheet.add_face('base', 'down', 96, 0, 6, 6)
-    for i, face in enumerate(('north', 'south', 'east', 'west')):
-        sheet.add_face('env', face, 32 * i, 32, 7, 2.25)
-        sheet.add_face('cover', face, 32 * i, 44, 6.5, 0.25)
-        sheet.add_face('base', face, 32 * i, 48, 6, 0.5)
-    sheet.add_face('wall', 'ceiling', 0, 52, 7, PANEL_Z[1] - PANEL_Z[0])
-    sheet.add_face('wall', 'floor', 0, 56, 7, PANEL_Z[1] - PANEL_Z[0])
-    sheet.add_face('wall', 'vertical', 32, 52, PANEL_Z[1] - PANEL_Z[0], HOLE_Y[1] - HOLE_Y[0])
-
-    # Body: sides with a shadow line at the bottom (the cover bevel draws the top edge).
+    # Body: light plastic, shadow line at the bottom of the sides; rim around the cover in highlight.
     for face in ('north', 'south', 'east', 'west'):
         _, _, w, h = sheet.faces[('env', face)]
-        sheet.fill('env', face, body)
-        sheet.rect('env', face, 0, h - 1, w, 1, body, 'sh')
-    sheet.fill('env', 'up', body, 'hi')     # only a 1-texel rim shows around the cover
-    sheet.fill('env', 'down', body)
+        sheet.fill('env', face, 'light')
+        sheet.rect('env', face, 0, h - 1, w, 1, 'light', 'sh')
+    sheet.fill('env', 'up', 'light', 'hi')
+    sheet.fill('env', 'down', 'light')
 
-    # Front: slim glass status strip with the power and line LEDs, then the 4 LAN ports (their
-    # bottom, seen through the holes of the front panel), an LED above each.
-    sheet.rect('env', 'north', 2, 3, 7, 3, 'screen')
-    sheet.led('Power LED', 'env', 'north', 4, 4)
-    sheet.led('Line LED', 'env', 'north', 6, 4)
+    # Front: 4 LAN ports low (their bottom, seen through the holes), an LED above each.
     for n, col in enumerate(LAN_COLS, start=1):
-        sheet.rj45('LAN %d port, hole %g px deep' % (n, PANEL_Z[1] - PANEL_Z[0]), 'env', 'north', col, PORT_ROWS[0], depth_tone='sh', contacts='bottom')
-        sheet.led('LAN %d LED' % n, 'env', 'north', col + 1, 2)
+        sheet.rj45('LAN %d port, hole 0.5 px deep' % n, 'env', 'north', col, PORT_ROWS[0], depth_tone='sh', contacts='bottom')
+        sheet.led('LAN %d LED' % n, 'env', 'north', col + 1, PORT_ROWS[0] - 2)
 
-    # Back: line input on the left, power socket (metal ring) on the right, centred on the same row.
-    sheet.rj45('Line input', 'env', 'south', 5, 3, large=False)
-    sheet.rect('env', 'south', 20, 2, 4, 4, 'metal')
-    sheet.rect('env', 'south', 21, 3, 2, 2, 'socket', 'sh')
-    sheet.items.append(('Power socket', 'env', 'south', 20, 2, 4, 4, 'metal ring, socket shadow hole (21 to 22, 3 to 4)'))
+    # Glass band: all its faces in the screen colour, power and line LEDs on the left.
+    for face in ('north', 'up', 'down', 'east', 'west'):
+        sheet.fill('band', face, 'screen')
+    sheet.led('Power LED', 'band', 'north', 1, 2)
+    sheet.led('Line LED', 'band', 'north', 3, 2)
 
-    # Walls of the holes, from light to dark: floor (lit from above), ceiling and sides, bottom.
-    sheet.fill('wall', 'floor', 'dark', 'sh')
-    sheet.fill('wall', 'ceiling', 'socket')
-    sheet.fill('wall', 'vertical', 'socket')
+    # Back (painted, it faces the wall): line input on the left, power socket on the right.
+    sheet.rj45('Line input', 'env', 'south', 7, 18, large=False)
+    sheet.rect('env', 'south', 18, 17, 4, 4, 'metal')
+    sheet.rect('env', 'south', 19, 18, 2, 2, 'socket', 'sh')
+    sheet.items.append(('Power socket', 'env', 'south', 18, 17, 4, 4, 'metal ring, socket shadow hole (19 to 20, 18 to 19)'))
 
-    # Cover: plain top with a field of vent dots over the back half; sides in highlight tone.
-    sheet.fill('cover', 'up', body)
-    for row in range(13, 23, 2):
-        for col in range(5, 22, 2):
-            sheet.rect('cover', 'up', col, row, 1, 1, body, 'sh')
+    # Sides: vent dots in the shadow tone.
+    for face in ('east', 'west'):
+        for col in range(3, 9, 2):
+            for row in range(4, 21, 2):
+                sheet.rect('env', face, col, row, 1, 1, 'light', 'sh')
+
+    # Cover: plain top, sides in highlight; plinth in dark plastic shadow tone.
+    sheet.fill('cover', 'up', 'light')
     for face in ('north', 'south', 'east', 'west'):
-        sheet.fill('cover', face, body, 'hi')
-    # Base: dark plinth (its top is hidden by the case and left out).
+        sheet.fill('cover', face, 'light', 'hi')
     for face in ('north', 'south', 'east', 'west', 'down'):
         sheet.fill('base', face, 'dark', 'sh')
 
-    # Each face of the body elements: its part of the envelope, a wall of a hole, or left out (hidden).
-    planes = {'north': (2, ENVELOPE[0][2]), 'south': (2, ENVELOPE[1][2]), 'west': (0, ENVELOPE[0][0]),
-              'east': (0, ENVELOPE[1][0]), 'down': (1, ENVELOPE[0][1]), 'up': (1, ENVELOPE[1][1])}
-    for e in [CASE, FRONT_TOP, FRONT_BOTTOM] + FRONT_MIDDLE:
-        for face, (axis, plane) in planes.items():
-            if (e['from'] if face in ('north', 'west', 'down') else e['to'])[axis] == plane:
-                sheet.add_slice(e['name'], face, ('env', face), ENVELOPE, (e['from'], e['to']))
-    # The front of the case is the bottom of the holes: same drawing as the envelope front.
-    sheet.add_slice('case', 'north', ('env', 'north'), ENVELOPE, (ENVELOPE[0], [11.5, 2.75, 4.5]))
-    sheet.faces[('front_top', 'down')] = sheet.faces[('wall', 'ceiling')]
-    sheet.faces[('front_bottom', 'up')] = sheet.faces[('wall', 'floor')]
-    for i, e in enumerate(FRONT_MIDDLE):
-        if i > 0:
-            sheet.faces[(e['name'], 'west')] = sheet.faces[('wall', 'vertical')]
-        if i < len(FRONT_MIDDLE) - 1:
-            sheet.faces[(e['name'], 'east')] = sheet.faces[('wall', 'vertical')]
+    FRONT.map_faces(sheet)
     return sheet
 
+
+DISPLAY = d.display(7, 3, 7)
 
 if __name__ == '__main__':
     import argparse
     p = argparse.ArgumentParser()
-    p.add_argument('--variant', choices=('light', 'dark'), default='light')
     p.add_argument('--name', default=ID, help='file name of the project (default: the device id)')
     p.add_argument('--force', action='store_true', help='overwrite a project never saved from Blockbench')
     p.add_argument('--table', action='store_true', help='print the ports and LEDs table and the display values')
     args = p.parse_args()
-    sheet = build(args.variant)
-    display = d.display(7, 7, 3)
+    sheet = build()
     if args.table:
         print(d.ports_table(sheet, ELEMENTS + [ENV]))
-        print(json.dumps(display, indent=2))
+        print(json.dumps(DISPLAY, indent=2))
     else:
-        d.write_bbmodel(args.name, d.bbmodel(ID, ELEMENTS, sheet, display), force=args.force)
+        d.write_bbmodel(args.name, d.bbmodel(ID, ELEMENTS, sheet, DISPLAY), force=args.force)
