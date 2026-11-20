@@ -26,12 +26,12 @@
       "from": [
         5.0,
         0,
-        5.0
+        7.25
       ],
       "to": [
         11.0,
         0.5,
-        11.0
+        9.0
       ],
       "autouv": 0,
       "color": 0,
@@ -44,36 +44,36 @@
         "north": {
           "uv": [
             0,
-            48,
+            44,
             24,
-            50
+            46
           ],
           "texture": 0
         },
         "east": {
           "uv": [
             64,
-            48,
-            88,
-            50
+            44,
+            71,
+            46
           ],
           "texture": 0
         },
         "south": {
           "uv": [
             32,
-            48,
+            44,
             56,
-            50
+            46
           ],
           "texture": 0
         },
         "west": {
           "uv": [
-            96,
-            48,
-            120,
-            50
+            80,
+            44,
+            87,
+            46
           ],
           "texture": 0
         },
@@ -88,10 +88,10 @@
         },
         "down": {
           "uv": [
-            96,
-            0,
-            120,
-            24
+            64,
+            32,
+            88,
+            39
           ],
           "texture": 0,
           "cullface": "down"
@@ -108,12 +108,12 @@
       "from": [
         4.5,
         0.5,
-        5.0
+        7.25
       ],
       "to": [
         11.5,
-        2.75,
-        11.5
+        6.75,
+        9.5
       ],
       "autouv": 0,
       "color": 0,
@@ -126,54 +126,54 @@
         "north": {
           "uv": [
             0,
-            32,
+            0,
             28,
-            41
+            25
           ],
           "texture": 0
         },
         "east": {
           "uv": [
             64,
-            32,
-            90,
-            41
+            0,
+            73,
+            25
           ],
           "texture": 0
         },
         "south": {
           "uv": [
             32,
-            32,
+            0,
             60,
-            41
+            25
           ],
           "texture": 0
         },
         "west": {
           "uv": [
-            98,
-            32,
-            124,
-            41
+            82,
+            0,
+            91,
+            25
           ],
           "texture": 0
         },
         "up": {
           "uv": [
-            0,
+            96,
             2,
-            28,
-            28
+            124,
+            11
           ],
           "texture": 0
         },
         "down": {
           "uv": [
-            32,
-            0,
-            60,
-            26
+            96,
+            16,
+            124,
+            25
           ],
           "texture": 0
         }
@@ -188,13 +188,13 @@
       "locked": false,
       "from": [
         4.5,
-        1.75,
-        4.5
+        2.25,
+        6.75
       ],
       "to": [
         11.5,
-        2.75,
-        5.0
+        6.75,
+        7.25
       ],
       "autouv": 0,
       "color": 0,
@@ -207,18 +207,18 @@
         "north": {
           "uv": [
             0,
-            32,
+            0,
             28,
-            36
+            18
           ],
           "texture": 0
         },
         "east": {
           "uv": [
-            90,
-            32,
-            92,
-            36
+            73,
+            0,
+            75,
+            18
           ],
           "texture": 0
         },
@@ -233,18 +233,18 @@
         },
         "west": {
           "uv": [
-            96,
-            32,
-            98,
-            36
+            80,
+            0,
+            82,
+            18
           ],
           "texture": 0
         },
         "up": {
           "uv": [
+            96,
             0,
-            0,
-            28,
+            124,
             2
           ],
           "texture": 0
@@ -270,12 +270,12 @@
       "from": [
         4.5,
         0.5,
-        4.5
+        6.75
       ],
       "to": [
         11.5,
-        1.0,
-        5.0
+        1.5,
+        7.25
       ],
       "autouv": 0,
       "color": 0,
@@ -288,18 +288,18 @@
         "north": {
           "uv": [
             0,
-            39,
+            21,
             28,
-            41
+            25
           ],
           "texture": 0
         },
         "east": {
           "uv": [
-            90,
-            39,
-            92,
-            41
+            73,
+            21,
+            75,
+            25
           ],
           "texture": 0
         },
@@ -314,10 +314,10 @@
         },
         "west": {
           "uv": [
-            96,
-            39,
-            98,
-            41
+            80,
+            21,
+            82,
+            25
           ],
           "texture": 0
         },
@@ -332,10 +332,10 @@
         },
         "down": {
           "uv": [
-            32,
-            26,
-            60,
-            28
+            96,
+            25,
+            124,
+            27
           ],
           "texture": 0
         }
@@ -350,13 +350,13 @@
       "locked": false,
       "from": [
         4.5,
-        1.0,
-        4.5
+        1.5,
+        6.75
       ],
       "to": [
-        5.0,
-        1.75,
-        5.0
+        6.25,
+        2.25,
+        7.25
       ],
       "autouv": 0,
       "color": 0,
@@ -368,10 +368,10 @@
       "faces": {
         "north": {
           "uv": [
-            26,
-            36,
+            21,
+            18,
             28,
-            39
+            21
           ],
           "texture": 0
         },
@@ -395,10 +395,10 @@
         },
         "west": {
           "uv": [
-            96,
-            36,
-            98,
-            39
+            80,
+            18,
+            82,
+            21
           ],
           "texture": 0
         },
@@ -430,14 +430,14 @@
       "rescale": false,
       "locked": false,
       "from": [
-        5.75,
-        1.0,
-        4.5
+        7.0,
+        1.5,
+        6.75
       ],
       "to": [
-        6.0,
-        1.75,
-        5.0
+        7.25,
+        2.25,
+        7.25
       ],
       "autouv": 0,
       "color": 0,
@@ -449,10 +449,10 @@
       "faces": {
         "north": {
           "uv": [
-            22,
-            36,
-            23,
-            39
+            17,
+            18,
+            18,
+            21
           ],
           "texture": 0
         },
@@ -511,14 +511,14 @@
       "rescale": false,
       "locked": false,
       "from": [
-        6.75,
-        1.0,
-        4.5
+        8.0,
+        1.5,
+        6.75
       ],
       "to": [
-        7.0,
-        1.75,
-        5.0
+        8.25,
+        2.25,
+        7.25
       ],
       "autouv": 0,
       "color": 0,
@@ -530,10 +530,10 @@
       "faces": {
         "north": {
           "uv": [
+            13,
             18,
-            36,
-            19,
-            39
+            14,
+            21
           ],
           "texture": 0
         },
@@ -592,14 +592,14 @@
       "rescale": false,
       "locked": false,
       "from": [
-        7.75,
-        1.0,
-        4.5
+        9.0,
+        1.5,
+        6.75
       ],
       "to": [
-        8.0,
-        1.75,
-        5.0
+        9.25,
+        2.25,
+        7.25
       ],
       "autouv": 0,
       "color": 0,
@@ -611,10 +611,10 @@
       "faces": {
         "north": {
           "uv": [
-            14,
-            36,
-            15,
-            39
+            9,
+            18,
+            10,
+            21
           ],
           "texture": 0
         },
@@ -673,14 +673,14 @@
       "rescale": false,
       "locked": false,
       "from": [
-        8.75,
-        1.0,
-        4.5
+        10.0,
+        1.5,
+        6.75
       ],
       "to": [
         11.5,
-        1.75,
-        5.0
+        2.25,
+        7.25
       ],
       "autouv": 0,
       "color": 0,
@@ -693,18 +693,18 @@
         "north": {
           "uv": [
             0,
-            36,
-            11,
-            39
+            18,
+            6,
+            21
           ],
           "texture": 0
         },
         "east": {
           "uv": [
-            90,
-            36,
-            92,
-            39
+            73,
+            18,
+            75,
+            21
           ],
           "texture": 0
         },
@@ -749,19 +749,19 @@
       "uuid": "56f381a3-801b-5121-bc8a-cfe5acc91c5f"
     },
     {
-      "name": "cover",
+      "name": "band",
       "box_uv": false,
       "rescale": false,
       "locked": false,
       "from": [
-        4.75,
-        2.75,
-        4.75
+        5.0,
+        5.0,
+        6.5
       ],
       "to": [
-        11.25,
-        3.0,
-        11.25
+        11.0,
+        6.25,
+        6.75
       ],
       "autouv": 0,
       "color": 0,
@@ -774,45 +774,126 @@
         "north": {
           "uv": [
             0,
-            44,
-            26,
-            45
+            64,
+            24,
+            69
           ],
           "texture": 0
         },
         "east": {
           "uv": [
+            32,
             64,
-            44,
-            90,
-            45
+            33,
+            69
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "texture": null
+        },
+        "west": {
+          "uv": [
+            34,
+            64,
+            35,
+            69
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            0,
+            72,
+            24,
+            73
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            0,
+            74,
+            24,
+            75
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "af393dec-5bea-5d13-b23e-b61a2c77d016"
+    },
+    {
+      "name": "cover",
+      "box_uv": false,
+      "rescale": false,
+      "locked": false,
+      "from": [
+        4.75,
+        6.75,
+        7.0
+      ],
+      "to": [
+        11.25,
+        7.0,
+        9.25
+      ],
+      "autouv": 0,
+      "color": 0,
+      "origin": [
+        8,
+        0,
+        8
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            32,
+            32,
+            58,
+            33
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            32,
+            36,
+            41,
+            37
           ],
           "texture": 0
         },
         "south": {
           "uv": [
             32,
-            44,
+            34,
             58,
-            45
+            35
           ],
           "texture": 0
         },
         "west": {
           "uv": [
-            96,
-            44,
-            122,
-            45
+            32,
+            38,
+            41,
+            39
           ],
           "texture": 0
         },
         "up": {
           "uv": [
-            64,
             0,
-            90,
-            26
+            32,
+            26,
+            41
           ],
           "texture": 0
         },
@@ -840,6 +921,7 @@
     "e79f5bbf-e8c4-5932-95ba-d7dae542208a",
     "5cb845dc-29c5-56a6-8868-1d959b6f0fcd",
     "56f381a3-801b-5121-bc8a-cfe5acc91c5f",
+    "af393dec-5bea-5d13-b23e-b61a2c77d016",
     "0efbc82f-ff12-56d9-a441-a4d3a654b5ee"
   ],
   "textures": [
@@ -860,7 +942,7 @@
       "internal": true,
       "saved": false,
       "uuid": "0e3cb197-1e27-5394-b894-d10d3e26d9fa",
-      "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAABbUlEQVR42u3bMWrCUBjA8ezBE1QcOkqHnsKhdxKEju4Ojp6gh+jQqTdQOvQekQgRWwjaqC+v+X4/+JAsPkj+vpqqxfbru0o5xS/vH59Vyulr/aLF9Om5uucU5whAAAIQgAAEIAABCEAAAhCAAAQgAAEIQAACEIAABCAAAUQLYLXe3ORRAHYAAdgBBGAHEIAdQAB2AAHYAQRgBxCAHUAAdgABCEAAAsiBAAQQOoDwBAAAEFCU2zDrt7wJdgEE8KcneNktrjq+9wmYvy5/jAAuDGD0MG2d1CdgPHk8TNcAynJ0GAF0CKB+xZ4+ngbQnNh6uhwL4J/vAKkC8Ccg0/cAb6vZcbocuwDuAlyA3AKov76Ucqyf1/oAxNXXF0Gsn8f6AMTV9w8TrN/zD0NcgOABAJE1n72nmrb1XQkBEDlAZwKG+H8AtyUCEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMCB7aro8gu9bV9wAAAAASUVORK5CYII="
+      "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAABkklEQVR42u3dP0rDUBzA8eylJ1AcHIuDp3DwToLg6N6hY0/gIRycvIHi4D0ilbbEEiEkff/yPh94hAzhYfPl17SINq9v723M1Zwoaf+mx9TrP76+25irKfkGCEAAAhCAAAQQaP/1Ztt7HBrAmOsFYAIIwAQQgAkgABNAACaAAEwAAVQ1AZITQNoJIAATQAAmgABMgBwDuP98nHRuAmzPGlCIn382E+Dh6fnPKmUCZBvAYrE8rjHn57gBl1fXv2toAIf9xwZgAlQegAnQWS/ru+Mac17iW4AJ4FOACSAAAQigpgB271MxV8n7993AqdcnD4C6v4lFAAAAeAqN/PSZ7Ldh91Y3t23IJYDMP34IwAQQgAkggKwngABMAAGYAAIwARAAADCPp+Cc95/6+glAAAAAALk5/BGGWOu//d0JAVBzgF4JSCH0V7G+HhWAAAAAAPKxvFi1IdeQ/btHBEDsAHb/6aN7FIAJIAABCAAAPAOEewYATAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJixH08uoonS7Ci5AAAAAElFTkSuQmCC"
     }
   ],
   "display": {
@@ -872,13 +954,13 @@
       ],
       "translation": [
         0,
-        6.81,
-        3.93
+        4.87,
+        2.81
       ],
       "scale": [
-        1.21,
-        1.21,
-        1.21
+        1.25,
+        1.25,
+        1.25
       ]
     },
     "ground": {
@@ -889,13 +971,13 @@
       ],
       "translation": [
         0,
-        6.12,
+        5.25,
         0.0
       ],
       "scale": [
-        0.48,
-        0.48,
-        0.48
+        0.5,
+        0.5,
+        0.5
       ]
     },
     "fixed": {
@@ -906,13 +988,13 @@
       ],
       "translation": [
         0,
-        6.3,
+        4.5,
         0.0
       ],
       "scale": [
-        0.97,
-        0.97,
-        0.97
+        1.0,
+        1.0,
+        1.0
       ]
     },
     "thirdperson_righthand": {
@@ -923,13 +1005,13 @@
       ],
       "translation": [
         0,
-        3.73,
-        4.58
+        3.37,
+        3.26
       ],
       "scale": [
-        0.73,
-        0.73,
-        0.73
+        0.75,
+        0.75,
+        0.75
       ]
     },
     "firstperson_righthand": {
@@ -940,13 +1022,13 @@
       ],
       "translation": [
         0,
-        5.0,
+        3.6,
         0.0
       ],
       "scale": [
-        0.77,
-        0.77,
-        0.77
+        0.8,
+        0.8,
+        0.8
       ]
     },
     "firstperson_lefthand": {
@@ -957,13 +1039,13 @@
       ],
       "translation": [
         0,
-        5.0,
+        3.6,
         0.0
       ],
       "scale": [
-        0.77,
-        0.77,
-        0.77
+        0.8,
+        0.8,
+        0.8
       ]
     }
   }

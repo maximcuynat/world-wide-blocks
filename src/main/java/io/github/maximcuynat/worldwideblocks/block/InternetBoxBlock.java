@@ -1,6 +1,7 @@
 package io.github.maximcuynat.worldwideblocks.block;
 
 import java.util.List;
+import java.util.Map;
 
 import io.github.maximcuynat.worldwideblocks.network.DeviceRole;
 import io.github.maximcuynat.worldwideblocks.network.PortKind;
@@ -13,20 +14,21 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * Internet box, generic placeholder model: a flat square case of 7 x 7 x 3 px, centered in the block
- * (183 x 183 x 80 mm in real life, scaled up by about 2.4 like the PC tower). The 4 local network ports are
- * on the front, the line input at the back. FACING is the direction the front faces.
+ * Internet box: a standing case of 7 x 3 x 7 px (183 x 80 x 183 mm in real life, scaled up by 2.4,
+ * docs/design-guide.md), centered in the block. The 4 local network ports are on the front, the line
+ * input at the back. FACING is the direction the front faces.
  */
 public class InternetBoxBlock extends NetworkDeviceBlock {
     /** Ports 1 to 4: local network. Port 5: line input, inactive until lot 3. */
     public static final List<PortKind> PORTS = List.of(
             PortKind.ETHERNET, PortKind.ETHERNET, PortKind.ETHERNET, PortKind.ETHERNET, PortKind.LINE);
 
-    // Square: the same shape in all four orientations.
-    private static final VoxelShape SHAPE = Block.box(4.5, 0.0, 4.5, 11.5, 3.0, 11.5);
+    // Shape of a box whose front faces north, turned for the other orientations (as the blockstate turns the model).
+    private static final Map<Direction, VoxelShape> SHAPES = Shapes.rotateHorizontal(Block.box(4.5, 0.0, 6.5, 11.5, 7.0, 9.5));
 
     public InternetBoxBlock(BlockBehaviour.Properties properties) {
         super(properties, DeviceRole.BOX, PORTS);
@@ -41,7 +43,7 @@ public class InternetBoxBlock extends NetworkDeviceBlock {
 
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return SHAPE;
+        return SHAPES.get(state.getValue(FACING));
     }
 
     @Override

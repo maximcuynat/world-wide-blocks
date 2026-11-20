@@ -25,10 +25,10 @@ Why 2.4: the box and the laptop are already at this factor; only the depth and t
 | Equipment | Real size (W x D x H, mm) | Status | Result (px) | Current model (px) | Change |
 |---|---|---|---|---|---|
 | PC tower | 210 x 450 x 450 | M | 8.1 x 17.3 x 17.3, over the cap, reduced (1 px = 30 mm): **7 x 15 x 15** | 8 x 15 x 15 | Width 8 to 7 px |
-| Internet box | 183 x 183 x 80 | E | 7.0 x 7.0 x 3.1: **7 x 7 x 3** | 7 x 7 x 3 | None |
+| Internet box, standing (the 183 x 183 x 80 case turned upright, 2026-11-20) | 183 x 80 x 183 | E | 7.0 x 3.1 x 7.0: **7 x 3 x 7** | 7 x 3 x 7 | Standing since 2026-11-20 (was 7 x 7 x 3 flat); Java shape turned with the orientation |
 | Laptop, closed | 360 x 240 x 20 | M | 13.8 x 9.2 x 0.8: **14 x 9 x 2** (base 1 + lid 1, minimum thickness) | 14 x 10 x 2 | Depth 10 to 9 px |
 | 8-port desktop switch | 158 x 102 x 27 | E | 6.1 x 3.9 x 1.0: **6.5 x 4 x 1** (width raised by the fit rule for 8 ports) | none | New |
-| 5-port desktop switch | 100 x 100 x 25, provisional value, not verified | M | 3.8 x 3.8 x 1.0: **4 x 4 x 1** | none | New |
+| 5-port desktop switch | 100 x 75 x 25, provisional value, not verified | M | 3.8 x 2.9 x 1.0: **4 x 3 x 1** | none | New |
 
 The tower and the box values rest on unverified dimensions (status M and E): they are checked when each device is modelled, as `docs/network-equipment.md` says.
 
@@ -89,6 +89,8 @@ Reusable elements (first used on the internet box, `design/blockbench/internet_b
 - **Cover bevel:** the top cover set back 0.25 px on each side, 0.25 px high; its sides and the rim of the body around it in the highlight tone.
 - **Recessed ports:** the front is a panel 0.5 px thick, split around the ports (a strip above, a strip below, posts between the holes). The bottom of each port is the front of the body, seen through the hole, with the contacts row at the bottom so that it stays visible from above. Depth reads from light to dark: floor (dark plastic shadow tone), ceiling and sides (socket), bottom (socket shadow tone). The texture of the front is drawn once and shared out between the elements of the panel (`Sheet.add_slice`).
 - **Rule: relief on the front, painted ports at the back.** The back faces the wall: its ports stay drawn on a flat face.
+
+**Signature of a family.** Each family of devices (computer, box, switch, access point, and so on) has a visual signature of its own: its silhouette and the organisation of its front. Two families must be told apart at a glance, in the world and in the inventory, not only by their size. The signature is written at the top of the device sheet, and a new family is compared with the existing ones side by side (`design/tools/preview.py --scene`) before it is approved.
 - LEDs are drawn lit, in their normal operating colour, and do not change until lot F (lights driven by the state, see the idea issue "Port lights in the finishing lot").
 - Each LED has a fixed position, to the texel, written in the device sheet (face, column, row), so that the off and animated variants of lot F are simple to produce.
 - A port LED sits next to its port: above it on the same face when there is room. When the port face is full (a switch front of 1 px), the LEDs go on the top face, along the edge above that face, each one aligned on its port.
