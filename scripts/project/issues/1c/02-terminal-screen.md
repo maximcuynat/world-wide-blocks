@@ -17,5 +17,5 @@ The same console on the PC tower and on the laptop: a view of a machine that run
 - [ ] The player's keyboard layout for typed characters and shortcuts (Ctrl+C, Ctrl+L, Ctrl+D, read from the symbol of the layout); text only from the typed characters (`charTyped`), dead keys through the preedit; the real Ctrl key, also on macOS; Alt+letter never a shortcut; any typed character accepted
 - [ ] The screen does not pause the game in single player (`isPauseScreen` false) and survives a window resize (no scissor)
 - [ ] Font Monocraft v4.2.1 (SIL OFL 1.1), its licence text next to the TTF in the jar
-- [ ] Shell base: `hostname`, `help` (translated), `clear`, `history`, `exit`; unknown commands and options get the error of the real tool
+- [x] Shell base: `hostname`, `help` (translated), `clear`, `history`, `exit`; unknown commands and options get the error of the real tool
 - [ ] Output of the commands in literal English built by the server; lines of the game (help, advice after a failure, title bar) translated in both language files and turned off by a client setting for the advice (`docs/messages.md`, section 3)
