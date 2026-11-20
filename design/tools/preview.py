@@ -1,15 +1,18 @@
 """Isometric preview of Blockbench projects, without Blockbench.
 
-Usage: python3 design/tools/preview.py <out.png> <id> [<id> ...] [--px 24] [--scene] [--span N]
+Usage: python3 design/tools/preview.py <out.png> <id> [<id> ...] [--px 24] [--scene] [--span N] [--centre X,Y,Z]
+       [--views 45,225]
 
 Draws each project of design/blockbench/<id>.bbmodel from the front (north and east faces) and from
 the back (south and west faces), with the face shading of the game (top 1.0, north and south 0.8,
 east and west 0.6, bottom 0.5), side by side. An element may turn around one axis, as in the Java
-model format (the face keeps the shading of its direction before the rotation: a close enough view).
+model format (the face keeps the shading of its direction before the rotation: a close enough view). An element with
+"shade": false, as in the Java model format, is drawn without the face shading.
 
 --scene draws all the projects together in one view, as if placed next to each other: <id>@<dx>,<dz>
 moves a project by dx, dz model px (for example drafts/box@-9,0). --span sets the width of the view
-in model px, so that several images share the same scale.
+in model px, so that several images share the same scale. --centre sets the point at the centre of the view (model
+px of the scene), for a close-up; --views picks the views (45: north and east faces, 225: south and west faces).
 """
 import argparse
 import base64
@@ -95,7 +98,7 @@ def load(device_id):
         if len(turned) > 1:
             raise SystemExit('element %s turns on more than one axis: not supported by the preview' % e['name'])
         rotation = (turned[0][0], math.radians(turned[0][1]), e['origin']) if turned else None
-        boxes.append((e['from'], e['to'], e['faces'], pixels, scale_u, scale_v, rotation))
+        boxes.append((e['from'], e['to'], e['faces'], pixels, scale_u, scale_v, rotation, e.get('shade', True)))
     return boxes
 
 
@@ -119,14 +122,17 @@ def load_placed(spec):
     device_id, _, offset = spec.partition('@')
     dx, dz = (float(v) for v in offset.split(',')) if offset else (0.0, 0.0)
     placed = []
-    for f, t, faces, px, su, sv, rotation in load(device_id):
+    for f, t, faces, px, su, sv, rotation, shade in load(device_id):
         if rotation:
             rotation = (rotation[0], rotation[1], [rotation[2][0] + dx, rotation[2][1], rotation[2][2] + dz])
-        placed.append(([f[0] + dx, f[1], f[2] + dz], [t[0] + dx, t[1], t[2] + dz], faces, px, su, sv, rotation))
+        placed.append(([f[0] + dx, f[1], f[2] + dz], [t[0] + dx, t[1], t[2] + dz], faces, px, su, sv, rotation, shade))
     return placed
 
 
-def render(boxes, azimuth, px, span=None):
+TILE = 16   # screen pixels: each tile only tests the boxes whose outline on the screen touches it
+
+
+def render(boxes, azimuth, px, span=None, centre=None):
     """One view. azimuth 45: camera at north-east (front and east faces); 225: south-west."""
     el, az = math.radians(30), math.radians(azimuth)
     cam = (math.cos(el) * math.sin(az), math.sin(el), -math.cos(el) * math.cos(az))
@@ -137,16 +143,32 @@ def render(boxes, azimuth, px, span=None):
     up = (right[1] * dirn[2] - right[2] * dirn[1], right[2] * dirn[0] - right[0] * dirn[2], right[0] * dirn[1] - right[1] * dirn[0])
     lo = [min(b[0][i] for b in boxes) for i in range(3)]
     hi = [max(b[1][i] for b in boxes) for i in range(3)]
-    centre = [(lo[i] + hi[i]) / 2 for i in range(3)]
+    centre = centre or [(lo[i] + hi[i]) / 2 for i in range(3)]
     span = span or max(hi[i] - lo[i] for i in range(3)) * 1.6 + 2
     size = int(span * px)
     img = [[BACKGROUND] * size for _ in range(size)]
+    tiles = {}
+    for box in boxes:   # outline of each box on the screen, from its corners (turned with the element)
+        (f, t), rotation = box[:2], box[6]
+        xs, ys = [], []
+        for corner in ((x, y, z) for x in (f[0], t[0]) for y in (f[1], t[1]) for z in (f[2], t[2])):
+            if rotation:
+                corner = rotate(corner, rotation, False, False)
+            rel = [corner[i] - centre[i] for i in range(3)]
+            xs.append((sum(rel[i] * right[i] for i in range(3)) + span / 2) * px)
+            ys.append((span / 2 - sum(rel[i] * up[i] for i in range(3))) * px)
+        for ty in range(max(0, int(min(ys) - 1) // TILE), min(size - 1, int(max(ys) + 1)) // TILE + 1):
+            for tx in range(max(0, int(min(xs) - 1) // TILE), min(size - 1, int(max(xs) + 1)) // TILE + 1):
+                tiles.setdefault((tx, ty), []).append(box)
     for sy in range(size):
         for sx in range(size):
+            candidates = tiles.get((sx // TILE, sy // TILE))
+            if not candidates:
+                continue
             a, b = (sx + 0.5) / px - span / 2, span / 2 - (sy + 0.5) / px
             origin = [centre[i] + a * right[i] + b * up[i] - dirn[i] * 50 for i in range(3)]
             best = None
-            for (f, t, faces, pixels, su, sv, rotation) in boxes:
+            for (f, t, faces, pixels, su, sv, rotation, shade) in candidates:
                 ray_o, ray_d = origin, dirn
                 if rotation:   # into the frame of the element, where it is an axis-aligned box
                     ray_o = rotate(origin, rotation, True, False)
@@ -164,10 +186,10 @@ def render(boxes, azimuth, px, span=None):
                         tmin, hit = near, face
                     tmax = min(tmax, max(t1, t2))
                 if hit and tmin <= tmax and (best is None or tmin < best[0]):
-                    best = (tmin, hit, f, t, faces, pixels, su, sv, ray_o, ray_d)
+                    best = (tmin, hit, f, t, faces, pixels, su, sv, ray_o, ray_d, shade)
             if best is None:
                 continue
-            tm, face, f, t, faces, pixels, su, sv, ray_o, ray_d = best
+            tm, face, f, t, faces, pixels, su, sv, ray_o, ray_d, shade = best
             fc = faces.get(face)
             if not fc or fc.get('texture') is None:
                 continue
@@ -179,7 +201,7 @@ def render(boxes, azimuth, px, span=None):
             r, g, bl, al = pixels[tv][tu]
             if al == 0:
                 continue
-            k = SHADE[face]
+            k = SHADE[face] if shade else 1.0
             img[sy][sx] = (int(r * k), int(g * k), int(bl * k), 255)
     return img
 
@@ -191,11 +213,15 @@ def main():
     p.add_argument('--px', type=int, default=24, help='screen pixels per model pixel')
     p.add_argument('--scene', action='store_true', help='draw all the projects together in one view')
     p.add_argument('--span', type=float, help='width of the view in model px (same scale for all)')
+    p.add_argument('--centre', help='point at the centre of the view, X,Y,Z in model px of the scene')
+    p.add_argument('--views', default='45,225', help='views to draw: 45 (north and east faces), 225 (south and west)')
     args = p.parse_args()
+    centre = [float(v) for v in args.centre.split(',')] if args.centre else None
+    azimuths = [int(v) for v in args.views.split(',')]
     groups = [[b for spec in args.ids for b in load_placed(spec)]] if args.scene else [load_placed(s) for s in args.ids]
     views = []
     for boxes in groups:
-        views += [render(boxes, 45, args.px, args.span), render(boxes, 225, args.px, args.span)]
+        views += [render(boxes, azimuth, args.px, args.span, centre) for azimuth in azimuths]
     gap = 8
     h = max(len(v) for v in views)
     w = sum(len(v[0]) for v in views) + gap * (len(views) - 1)
