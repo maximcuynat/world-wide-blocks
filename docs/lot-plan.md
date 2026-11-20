@@ -439,6 +439,20 @@ Done at step 6 (issue #15): the presence frame is removed (`PresencePayload`, th
 
 Done at step 7 (issue #16): game tests `ping_between_two_computers` (two towers on the box, `ping -c 3` from one to the other: three replies in order, no loss, status 0) and `ping_absent_address` (`ping -c 3` to an address nobody has: three `Destination Host Unreachable` from the computer itself, `+3 errors`, status 1); capture scenario `terminal`.
 
+#### Status of lot 1c-1
+
+Coded from 2026-11-19 to 2026-11-20 on the `lot/1c-1` branch (issues #10 to #16 and #52, after the prototype #30), in 7 steps, one commit each after a green build. `developement` merged into the branch before closing it (design of the devices, issue #69). Final checks on 2026-11-20: clean build with 382 unit tests, 50 game tests, the 18 capture scenarios (17 passed, `failure_check` failed on purpose and put the settings back); the status panels of 13 scenarios identical to the runs made before the merge.
+
+| Type | Equipment | Status |
+|---|---|---|
+| Interface | Terminal screen | Done: on the tower and on the keyboard of the open laptop, one console per machine kept by the server, one player at the keyboard, packets checked by the server, Monocraft, its own text size, scrollback, history, the player's keyboard layout |
+| Mechanic | IPv4 stack of the computers | Done: `lo` and `eth0` configured by the DHCP lease, routes, UDP demultiplexing; the box has 192.168.1.1 |
+| Mechanic | ARP | Done: RFC 826, neighbour table with the states and delays of Linux, the box answers for 192.168.1.1 |
+| Mechanic | ICMP and latency | Done: echo and destination unreachable (RFC 792); latency carried by each frame (cables, devices); the box answers Net Unreachable outside its network |
+| Interface | Commands | Done: `ip addr`, `ip link`, `ip route`, `ip neigh`, `ping [-c n]`, `hostname`, `help`, `clear`, `history`, `exit`; output compared with Debian 13, except the lines reported to lot 1c-2 (`dynamic`, `valid_lft`, `NO-CARRIER`, `qdisc fq_codel`) |
+| Mechanic | Presence frame | Removed: a computer sends only real traffic |
+| Tooling | Capture runs | Done: permanent scenarios for every check by eye, checks of the frame of the terminal and of its rows (`Expect`), addresses read from the leases |
+
 #### Check by eye of lot 1c-1
 
 Capture runs, in English and in French, at 854 x 480 and 1920 x 1080 (`./gradlew runClientCapture -Pscenario=<name>`); the assistant reads the screenshots and `values.txt` and reports. Only the keystrokes through the keyboard layouts of the operating system stay by hand (they cannot be injected): done by Max on 2026-11-20, AZERTY and QWERTY on macOS, all as expected (step 5c).

@@ -128,6 +128,14 @@ Review of step 3 (2026-11-19):
   - #12 "Outputs compared with a real machine before writing their tests": proven only for what the reference shows (a Debian 13 container: `lo`, a fixed address, `ip link`, `ip route`, `ip neigh`, captured at step 0 before the tests of step 1). Not from a real machine: `dynamic` and `valid_lft` of a lease, `NO-CARRIER`, `qdisc fq_codel` (the container shows `noqueue`), taken from the sources. Not ticked: to report to lot 1c-2 (issue file 1c-2/02 already holds the lease part), a change of plan.
   Decided by Max on 2026-11-20: report the four items to lot 1c-2 in the lot branch, without a separate plan pull request; `update-issues` only from `developement` once the pull request of the lot is merged (rule 5 kept: no sync from a branch behind). `developement` merged into `lot/1c-1` first (d066322, signed by Max; conflicts in the javadoc of `LaptopBlock` and `PcTowerBlock` and in `tasks/lessons.md`, resolved keeping both sides). Then 1c/03: the box reworded to what the reference shows and ticked, a sentence for the report; 1c-2/02: `NO-CARRIER` and the queue of a physical interface added to its box of real outputs.
 
+
+Review of lot 1c-1 (2026-11-20):
+
+- Issues #10 to #16 and #52: every box of their definition files ticked, each on a named proof (`tasks/todo.md` above, follow-up comments on GitHub); #12: four lines not seen on a real machine reported to lot 1c-2 (issue file 1c-2/02), decided by Max.
+- `developement` merged into `lot/1c-1` (d066322, by Max, signed); three conflicts resolved keeping both sides (javadoc of `LaptopBlock` and `PcTowerBlock`, `tasks/lessons.md`); the click points on the new laptop shapes checked (keyboard still 1 px high, the click of the capture at 4.5/16, on the keyboard).
+- Final checks by Max after the merge: `./gradlew clean build test` green (382 unit tests, 0 failure, jar checked), `runGameTestServer` 50 game tests passed, the 18 capture scenarios run: 17 exit 0, `failure_check` exit 1 as expected (step 5 "no device 9", config, window, GUI scale and language put back). Panels of 13 scenarios compared with the runs before the merge, MACs, times, positions and host names masked: identical in all 168 shots. Screenshots looked at: the new models in `box_hosts` and `dhcp_addresses`; the laptop terminal opened by its keyboard (`terminal_screen`).
+- Found and fixed on the way: the step `Restart` of the capture runs waited on the experimental settings screen (most likely confirmed by hand by Max once); the address of the laptop written in the `terminal` scenario (now read from its lease, with `Expect` checks). Lessons recorded.
+- Left: `update-issues` from `developement` once the pull request of the lot is merged (decided by Max); the four `ip` lines in lot 1c-2.
 ## Tooling: Projects board automation (session of 2026-11-19)
 
 Branch `chore/project-board`. Design approved by Max on 2026-11-19.
