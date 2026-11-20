@@ -73,7 +73,20 @@ Eight base colours, with a highlight and a shadow for the materials. Values take
 | Orange LED | `#f0aa3c` | | | Activity, warning |
 | Screen, off | `#0d1b2a` | | | Screens and glass |
 
-Out of the palette: the Ethernet cable item keeps its own blues (cables are a family of their own, by colour of cord). Colours of the current textures that go away at the rework: the blue LED (`#3a8fe8`) and the pink pixel (`#d05a8a`) of the tower, the screen text of the laptop (`#cbd5e1`, the screen content belongs to the terminal and to lot F).
+**Cord colours** (chosen by Max on 2026-11-20; key `cords` of `design/palette.json`): a family of their own, for the cable, the boot of the plugs and the cord item, never in the textures of the devices. Blue, the colour of every cord today (`CableRenderer`, `#2f6fd6`), is the default; the blues of the current cord icon go with its rework. Grey is a dark blue-grey, apart from the metal; white is a warm off-white, apart from the clear body of the plugs and from light plastic. A colour carries no rule of the game (`docs/cable-design.md`, section 7).
+
+| Cord | Base | Highlight | Shadow |
+|---|---|---|---|
+| Blue | `#2f6fd6` | `#5a8de0` | `#1f4f9f` |
+| Grey | `#5e6a7a` | `#7c8798` | `#424b58` |
+| Yellow | `#e3bd2d` | `#f0d35e` | `#a8871a` |
+| Green | `#3c9e4a` | `#62bb6d` | `#276f32` |
+| Red | `#cf3b3b` | `#e26666` | `#942626` |
+| Orange | `#e57a2e` | `#ef9a5a` | `#a9541b` |
+| Black | `#26282c` | `#3d4046` | `#141517` |
+| White | `#e9dfc4` | `#f4edda` | `#bdb196` |
+
+Out of the palette until its rework: the Ethernet cable item keeps its own blues (exception in `design/palette.json`). Colours of the current textures that go away at the rework: the blue LED (`#3a8fe8`) and the pink pixel (`#d05a8a`) of the tower, the screen text of the laptop (`#cbd5e1`, the screen content belongs to the terminal and to lot F).
 
 ## 5. Drawing
 
