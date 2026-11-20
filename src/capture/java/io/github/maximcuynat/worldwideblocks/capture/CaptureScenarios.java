@@ -26,6 +26,12 @@ public final class CaptureScenarios {
      * lines after three; a {@code ping -c 3} has ended.
      */
     private static final int FIVE_SECONDS = 100;
+    /** The left tower of the scene {@code box_hosts} (device 1; 0 is the box, 2 the laptop, 3 the right tower). */
+    private static final int TOWER_LEFT = 1;
+    /** A reply of {@code ping}, from the address given as a regular expression. */
+    private static final String REPLY = "64 bytes from %s: icmp_seq=[123] ttl=64 time=[0-9.]+ ms";
+    /** The statistics of {@code ping -c 3} without loss. */
+    private static final String NO_LOSS = "3 packets transmitted, 3 received, 0% packet loss, .*";
     /** Half a lease of one game day: 600 s, the renewal time T1. */
     private static final int HALF_LEASE = 12_000;
 
@@ -374,32 +380,41 @@ public final class CaptureScenarios {
 
     /**
      * Lot 1c-1, issue #16, check by eye of the lot: from the terminal of the left tower of {@code box_hosts}, each
-     * command on a cleared screen (Ctrl+L): {@code ip a} (its address from the box); {@code ping -c 3} to the box,
-     * three replies; {@code ping -c 3} to the laptop (192.168.1.11 in this scene), three replies: the goal of the lot,
-     * a computer that pings another one which answers; {@code ping -c 3} to an address nobody has: three
-     * {@code Destination Host Unreachable} from the tower itself, the statistics, then the advice of the game.
+     * command on a cleared screen (Ctrl+L): {@code ip a} (the address of its lease); {@code ping -c 3} to the box, three
+     * replies; {@code ping -c 3} to the laptop, at the address of its lease read when the command is typed, three
+     * replies: the goal of the lot, a computer that pings another one which answers; {@code ping -c 3} to an address
+     * nobody has: three {@code Destination Host Unreachable} from the tower itself, the statistics, then the advice of
+     * the game. Before each shot, the run fails unless the terminal shows what is expected.
      */
     static final CaptureScenario TERMINAL = standard("terminal", "ip a, then ping to the box, to the laptop and to an absent address",
             new Step.BuildScene(TrialScenario.BOX_HOSTS),
             new Step.Wait(SETTLE),
-            new Step.OpenTerminal(1),
+            new Step.OpenTerminal(TOWER_LEFT),
             new Step.Type("ip a"),
             new Step.Press(Step.TerminalKey.ENTER),
+            new Step.Wait(SETTLE),
+            new Step.Expect("\\s*inet {address:1}/24 brd 192\\.168\\.1\\.255 scope global dynamic eth0", 1),
             new Step.Shot("ip_a"),
             new Step.Press(Step.TerminalKey.CTRL_L),
             new Step.Type("ping -c 3 192.168.1.1"),
             new Step.Press(Step.TerminalKey.ENTER),
             new Step.Wait(FIVE_SECONDS),
+            new Step.Expect(REPLY.formatted("192\\.168\\.1\\.1"), 3),
+            new Step.Expect(NO_LOSS, 1),
             new Step.Shot("ping_box"),
             new Step.Press(Step.TerminalKey.CTRL_L),
-            new Step.Type("ping -c 3 192.168.1.11"),
+            new Step.Type("ping -c 3 {address:2}"),
             new Step.Press(Step.TerminalKey.ENTER),
             new Step.Wait(FIVE_SECONDS),
+            new Step.Expect(REPLY.formatted("{address:2}"), 3),
+            new Step.Expect(NO_LOSS, 1),
             new Step.Shot("ping_computer"),
             new Step.Press(Step.TerminalKey.CTRL_L),
             new Step.Type("ping -c 3 192.168.1.250"),
             new Step.Press(Step.TerminalKey.ENTER),
             new Step.Wait(FIVE_SECONDS),
+            new Step.Expect("From {address:1} icmp_seq=[123] Destination Host Unreachable", 3),
+            new Step.Expect("3 packets transmitted, 0 received, \\+3 errors, 100% packet loss, .*", 1),
             new Step.Shot("ping_absent"),
             new Step.Press(Step.TerminalKey.ESCAPE));
 

@@ -6,12 +6,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 
@@ -27,6 +32,7 @@ import io.github.maximcuynat.worldwideblocks.network.DeviceId;
 import io.github.maximcuynat.worldwideblocks.network.Link;
 import io.github.maximcuynat.worldwideblocks.network.NetworkDevices;
 import io.github.maximcuynat.worldwideblocks.network.NetworkManager;
+import io.github.maximcuynat.worldwideblocks.network.sim.HostLogic;
 import io.github.maximcuynat.worldwideblocks.terminal.TerminalLayout;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -154,6 +160,12 @@ final class CaptureRun {
     private String failure;
     /** The use key was clicked by a {@link Step.OpenTerminal}. */
     private boolean terminalClicked;
+    /** The tick of the step at which a {@link Step.Type} typed its text, -1 before. */
+    private int typedAt = -1;
+    /** Addresses asked to the server by the current step ({@code {address:N}}), null until they arrive. */
+    private final AtomicReference<Map<Integer, String>> addresses = new AtomicReference<>();
+    /** A computer of the last scene named in a text: {@code {address:N}}. */
+    private static final Pattern ADDRESS_OF = Pattern.compile("\\{address:(\\d+)\\}");
     /** Chat lines received when a {@link Step.Silence} began. */
     private int silenceMark;
     private final AtomicBoolean cableRemoved = new AtomicBoolean();
@@ -427,6 +439,7 @@ final class CaptureRun {
             case Step.Restart restart -> this.restart(minecraft);
             case Step.OpenTerminal open -> this.openTerminal(minecraft, open);
             case Step.Type type -> this.type(minecraft, type);
+            case Step.Expect expect -> this.expect(minecraft, expect);
             case Step.Press press -> this.press(minecraft, press);
             case Step.Scroll scroll -> this.scroll(minecraft, scroll);
             case Step.Shot shot -> this.shot(minecraft, shot);
@@ -708,12 +721,86 @@ final class CaptureRun {
 
     private boolean type(Minecraft minecraft, Step.Type type) {
         if (!this.stepStarted) {
-            this.stepStarted = true;
-            TerminalScreen terminal = this.terminal(minecraft);
-            type.text().codePoints().forEach(codepoint -> terminal.charTyped(new CharacterEvent(codepoint)));
+            this.typedAt = -1;
+        }
+        Optional<Map<Integer, String>> addresses = this.addressesFor(minecraft, type.text());
+        if (addresses.isEmpty()) {
             return false;
         }
-        return this.stepTicks >= 2;
+        if (this.typedAt < 0) {
+            TerminalScreen terminal = this.terminal(minecraft);
+            withAddresses(type.text(), addresses.get(), false).codePoints()
+                    .forEach(codepoint -> terminal.charTyped(new CharacterEvent(codepoint)));
+            this.typedAt = this.stepTicks;
+            return false;
+        }
+        return this.stepTicks >= this.typedAt + 2;
+    }
+
+    /** Counts the rows shown by the terminal that match, and fails the run if the count is not the one expected. */
+    private boolean expect(Minecraft minecraft, Step.Expect expect) {
+        Optional<Map<Integer, String>> addresses = this.addressesFor(minecraft, expect.regex());
+        if (addresses.isEmpty()) {
+            return false;
+        }
+        Pattern pattern = Pattern.compile(withAddresses(expect.regex(), addresses.get(), true));
+        List<String> rows = this.terminal(minecraft).layout().visibleRows();
+        long found = rows.stream().filter(row -> pattern.matcher(row.stripTrailing()).matches()).count();
+        if (found != expect.count()) {
+            throw new IllegalStateException("expected " + expect.count() + " rows matching \"" + pattern + "\" in the terminal, found "
+                    + found + ": " + rows);
+        }
+        return true;
+    }
+
+    /**
+     * The addresses named by {@code {address:N}} in this text, asked to the server at the first tick of the step: empty
+     * until they arrive. A computer without a DHCP lease fails the run.
+     */
+    private Optional<Map<Integer, String>> addressesFor(Minecraft minecraft, String text) {
+        if (this.stepStarted) {
+            return Optional.ofNullable(this.addresses.get());
+        }
+        this.stepStarted = true;
+        this.addresses.set(null);
+        Set<Integer> wanted = ADDRESS_OF.matcher(text).results()
+                .map(match -> Integer.parseInt(match.group(1))).collect(Collectors.toSet());
+        if (wanted.isEmpty()) {
+            this.addresses.set(Map.of());
+            return Optional.empty();
+        }
+        TrialScenes.Result result = this.scene.get();
+        wanted.forEach(device -> TerminalScenes.requireDevice(result, device));
+        IntegratedServer server = minecraft.getSingleplayerServer();
+        server.execute(() -> {
+            try {
+                Map<Integer, String> found = new HashMap<>();
+                for (int device : wanted) {
+                    DeviceId id = NetworkDevices.idOf(server.overworld(), result.devices().get(device));
+                    Optional<String> address = NetworkManager.of(server).logic(id)
+                            .filter(HostLogic.class::isInstance)
+                            .flatMap(logic -> ((HostLogic) logic).dhcpClient(0).lease())
+                            .map(lease -> lease.address().toString());
+                    if (address.isEmpty()) {
+                        this.serverError.set("device " + device + " of the scene has no DHCP lease");
+                        return;
+                    }
+                    found.put(device, address.get());
+                }
+                this.addresses.set(Map.copyOf(found));
+            } catch (RuntimeException e) {
+                this.serverError.set("addresses of the scene: " + e);
+            }
+        });
+        return Optional.empty();
+    }
+
+    /** The text with each {@code {address:N}} replaced by the address, quoted for a regular expression or not. */
+    private static String withAddresses(String text, Map<Integer, String> addresses, boolean quoted) {
+        return ADDRESS_OF.matcher(text).replaceAll(match -> {
+            String address = addresses.get(Integer.parseInt(match.group(1)));
+            return Matcher.quoteReplacement(quoted ? Pattern.quote(address) : address);
+        });
     }
 
     /** A key to the terminal; Esc and the end of the shell close it, and the screen expected follows. */

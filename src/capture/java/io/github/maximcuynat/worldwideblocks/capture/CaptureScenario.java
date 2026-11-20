@@ -129,8 +129,20 @@ public record CaptureScenario(String name, String description, List<Size> sizes,
         record OpenTerminal(int device) implements Step {
         }
 
-        /** Characters typed in the terminal open, one by one, as the operating system hands them to the game. */
+        /**
+         * Characters typed in the terminal open, one by one, as the operating system hands them to the game. A
+         * {@code {address:N}} in the text is replaced by the address that the computer N of the last scene holds at
+         * that moment (its DHCP lease, read on the server); the run fails if it has none.
+         */
         record Type(String text) implements Step {
+        }
+
+        /**
+         * Fails the run unless exactly {@code count} rows shown by the terminal open match this regular expression
+         * (whole row, trailing spaces ignored). A {@code {address:N}} in it is replaced, quoted, by the address of the
+         * computer N of the last scene, as in {@link Type}.
+         */
+        record Expect(String regex, int count) implements Step {
         }
 
         /** A key of the terminal, with its modifiers, as the game hands it to the screen. */
