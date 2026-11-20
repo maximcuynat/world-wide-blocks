@@ -217,3 +217,213 @@ PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
 --- 192.168.1.1 ping statistics ---
 4 packets transmitted, 2 received, 50% packet loss, time 3069ms
 rtt min/avg/max/mdev = 0.182/0.396/0.610/0.214 ms
+=== bash hostname
+user@laptop-3f2a:~$ hostname
+laptop-3f2a
+user@laptop-3f2a:~$ echo "[exit $?]"
+[exit 0]
+user@laptop-3f2a:~$ 
+=== bash hostname set
+user@laptop-3f2a:~$ hostname newname
+hostname: you must be root to change the host name
+user@laptop-3f2a:~$ echo "[exit $?]"
+[exit 1]
+user@laptop-3f2a:~$ 
+=== bash hostname invalid option
+user@laptop-3f2a:~$ hostname -z
+hostname: invalid option -- 'z'
+Usage: hostname [-b] {hostname|-F file}         set host name (from file)
+       hostname [-a|-A|-d|-f|-i|-I|-s|-y]       display formatted name
+       hostname                                 display host name
+
+       {yp,nis,}domainname {nisdomain|-F file}  set NIS domain name (from file)
+       {yp,nis,}domainname                      display NIS domain name
+
+       dnsdomainname                            display dns domain name
+
+       hostname -V|--version|-h|--help          print info and exit
+
+Program name:
+       {yp,nis,}domainname=hostname -y
+       dnsdomainname=hostname -d
+
+Program options:
+    -a, --alias            alias names
+    -A, --all-fqdns        all long host names (FQDNs)
+    -b, --boot             set default hostname if none available
+    -d, --domain           DNS domain name
+    -f, --fqdn, --long     long host name (FQDN)
+    -F, --file             read host name or NIS domain name from given file
+    -i, --ip-address       addresses for the host name
+    -I, --all-ip-addresses all addresses for the host
+    -s, --short            short host name
+    -y, --yp, --nis        NIS/YP domain name
+
+Description:
+   This command can get or set the host name or the NIS domain name. You can
+   also get the DNS domain or the FQDN (fully qualified domain name).
+   Unless you are using bind or NIS for host lookups you can change the
+   FQDN (Fully Qualified Domain Name) and the DNS domain name (which is
+   part of the FQDN) in the /etc/hosts file.
+user@laptop-3f2a:~$ echo "[exit $?]"
+[exit 255]
+user@laptop-3f2a:~$ 
+=== bash hostname two arguments
+user@laptop-3f2a:~$ hostname a b
+Usage: hostname [-b] {hostname|-F file}         set host name (from file)
+       hostname [-a|-A|-d|-f|-i|-I|-s|-y]       display formatted name
+       hostname                                 display host name
+
+       {yp,nis,}domainname {nisdomain|-F file}  set NIS domain name (from file)
+       {yp,nis,}domainname                      display NIS domain name
+
+       dnsdomainname                            display dns domain name
+
+       hostname -V|--version|-h|--help          print info and exit
+
+Program name:
+       {yp,nis,}domainname=hostname -y
+       dnsdomainname=hostname -d
+
+Program options:
+    -a, --alias            alias names
+    -A, --all-fqdns        all long host names (FQDNs)
+    -b, --boot             set default hostname if none available
+    -d, --domain           DNS domain name
+    -f, --fqdn, --long     long host name (FQDN)
+    -F, --file             read host name or NIS domain name from given file
+    -i, --ip-address       addresses for the host name
+    -I, --all-ip-addresses all addresses for the host
+    -s, --short            short host name
+    -y, --yp, --nis        NIS/YP domain name
+
+Description:
+   This command can get or set the host name or the NIS domain name. You can
+   also get the DNS domain or the FQDN (fully qualified domain name).
+   Unless you are using bind or NIS for host lookups you can change the
+   FQDN (Fully Qualified Domain Name) and the DNS domain name (which is
+   part of the FQDN) in the /etc/hosts file.
+user@laptop-3f2a:~$ echo "[exit $?]"
+[exit 255]
+user@laptop-3f2a:~$ 
+=== bash history
+user@laptop-3f2a:~$ hostname
+laptop-3f2a
+user@laptop-3f2a:~$ hostname
+laptop-3f2a
+user@laptop-3f2a:~$  hostname
+laptop-3f2a
+user@laptop-3f2a:~$    
+user@laptop-3f2a:~$ foo
+bash: foo: command not found
+user@laptop-3f2a:~$ history
+    1  hostname
+    2  foo
+    3  history
+user@laptop-3f2a:~$ 
+=== bash history count
+user@laptop-3f2a:~$ hostname
+laptop-3f2a
+user@laptop-3f2a:~$ history 1
+    2  history 1
+user@laptop-3f2a:~$ history 0
+user@laptop-3f2a:~$ history abc
+bash: history: abc: numeric argument required
+user@laptop-3f2a:~$ echo "[exit $?]"
+[exit 1]
+user@laptop-3f2a:~$ history -z
+bash: history: -z: invalid option
+history: usage: history [-c] [-d offset] [n] or history -anrw [filename] or history -ps arg [arg...]
+user@laptop-3f2a:~$ echo "[exit $?]"
+[exit 2]
+user@laptop-3f2a:~$ history 1 2
+bash: history: too many arguments
+user@laptop-3f2a:~$ echo "[exit $?]"
+[exit 1]
+user@laptop-3f2a:~$ 
+=== bash exit
+user@laptop-3f2a:~$ exit
+exit
+[shell ended, status 0]
+=== bash exit after a failure
+user@laptop-3f2a:~$ false
+user@laptop-3f2a:~$ exit
+exit
+[shell ended, status 1]
+=== bash exit 3
+user@laptop-3f2a:~$ exit 3
+exit
+[shell ended, status 3]
+=== bash exit abc
+user@laptop-3f2a:~$ exit abc
+exit
+bash: exit: abc: numeric argument required
+[shell ended, status 2]
+=== bash exit too many arguments
+user@laptop-3f2a:~$ exit 1 2
+exit
+bash: exit: too many arguments
+user@laptop-3f2a:~$ echo "[exit $?]"
+[exit 1]
+user@laptop-3f2a:~$ 
+=== bash ctrl-d on an empty line
+user@laptop-3f2a:~$ 
+exit
+[shell ended, status 0]
+=== bash ctrl-d on a line with text
+user@laptop-3f2a:~$ hostn<BEL><BS><BS><BS><BS><BS><ESC>[Kecho "[exit $?]"
+[exit 0]
+user@laptop-3f2a:~$ 
+=== bash ctrl-c at the prompt
+user@laptop-3f2a:~$ hostn^C
+user@laptop-3f2a:~$ echo "[exit $?]"
+[exit 130]
+user@laptop-3f2a:~$ 
+=== bash ctrl-l
+user@laptop-3f2a:~$ echo before
+before
+user@laptop-3f2a:~$ hostn<ESC>[H<ESC>[2Juser@laptop-3f2a:~$ hostname
+laptop-3f2a
+user@laptop-3f2a:~$ 
+=== bash clear
+user@laptop-3f2a:~$ echo before
+before
+user@laptop-3f2a:~$ clear
+<ESC>[H<ESC>[2J<ESC>[3Juser@laptop-3f2a:~$ echo "[exit $?]"
+[exit 0]
+user@laptop-3f2a:~$ 
+=== bash clear invalid option
+user@laptop-3f2a:~$ clear -z
+clear: invalid option -- 'z'
+Usage: clear [options]
+
+Options:
+  -T TERM     use this instead of $TERM
+  -V          print curses-version
+  -x          do not try to clear scrollback
+user@laptop-3f2a:~$ echo "[exit $?]"
+[exit 1]
+user@laptop-3f2a:~$ 
+=== bash clear extra argument
+user@laptop-3f2a:~$ clear foo
+Usage: clear [options]
+
+Options:
+  -T TERM     use this instead of $TERM
+  -V          print curses-version
+  -x          do not try to clear scrollback
+user@laptop-3f2a:~$ echo "[exit $?]"
+[exit 1]
+user@laptop-3f2a:~$ 
+=== bash help unknown topic
+user@laptop-3f2a:~$ help nothing
+bash: help: no help topics match `nothing'.  Try `help help' or `man -k nothing' or `info nothing'.
+user@laptop-3f2a:~$ echo "[exit $?]"
+[exit 1]
+user@laptop-3f2a:~$ 
+=== bash command not found
+user@laptop-3f2a:~$ foo
+bash: foo: command not found
+user@laptop-3f2a:~$ echo "[exit $?]"
+[exit 127]
+user@laptop-3f2a:~$ 

@@ -46,8 +46,20 @@ public interface DeviceLogic {
         return 0L;
     }
 
-    /** Ctrl+C typed in the local console of the device; ignored by a device without one. */
-    default void onConsoleInterrupt(DeviceContext context) {
+    /**
+     * Ctrl+C typed in the local console of the device; ignored by a device without one.
+     *
+     * @param typed the text typed at the prompt and not sent yet, shown before {@code ^C} when no command runs
+     */
+    default void onConsoleInterrupt(DeviceContext context, String typed) {
+    }
+
+    /** Ctrl+D on an empty line in the local console of the device; ignored by a device without one. */
+    default void onConsoleEndOfInput(DeviceContext context) {
+    }
+
+    /** Ctrl+L in the local console of the device; ignored by a device without one. */
+    default void onConsoleClear(DeviceContext context) {
     }
 
     /** MACs learned behind each port, for a device that switches (status panel); empty otherwise. */

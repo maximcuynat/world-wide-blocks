@@ -15,4 +15,18 @@ public interface TerminalOutput {
      */
     default void advise(String key, String... values) {
     }
+
+    /**
+     * A line of the game ({@link ConsoleLine.Game}): a language key and its values, translated by the client and always
+     * shown. Ignored where there is no console.
+     */
+    default void game(String key, String... values) {
+    }
+
+    /**
+     * Clears the screen, as the escape sequences of {@code clear} do: {@code ESC[H ESC[2J}, then {@code ESC[3J} unless
+     * the scrollback is kept. Ignored where there is no console.
+     */
+    default void clear(boolean keepScrollback) {
+    }
 }

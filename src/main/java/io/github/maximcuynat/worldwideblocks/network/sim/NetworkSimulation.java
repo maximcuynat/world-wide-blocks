@@ -13,6 +13,7 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 
 import io.github.maximcuynat.worldwideblocks.network.DeviceId;
 import io.github.maximcuynat.worldwideblocks.network.Latency;
@@ -174,12 +175,35 @@ public final class NetworkSimulation {
         });
     }
 
-    /** Ctrl+C in the local console of a device: applied at the start of the next tick, like a typed line. */
+    /** Ctrl+C in the local console of a device, with nothing typed at the prompt. */
     public void consoleInterrupt(DeviceId device) {
+        this.consoleInterrupt(device, "");
+    }
+
+    /**
+     * Ctrl+C in the local console of a device: applied at the start of the next tick, like a typed line.
+     *
+     * @param typed the text typed at the prompt and not sent
+     */
+    public void consoleInterrupt(DeviceId device, String typed) {
+        this.consoleKey(device, (logic, context) -> logic.onConsoleInterrupt(context, typed));
+    }
+
+    /** Ctrl+D on an empty line in the local console of a device: applied at the start of the next tick. */
+    public void consoleEndOfInput(DeviceId device) {
+        this.consoleKey(device, DeviceLogic::onConsoleEndOfInput);
+    }
+
+    /** Ctrl+L in the local console of a device: applied at the start of the next tick. */
+    public void consoleClear(DeviceId device) {
+        this.consoleKey(device, DeviceLogic::onConsoleClear);
+    }
+
+    private void consoleKey(DeviceId device, BiConsumer<DeviceLogic, DeviceContext> key) {
         this.later(() -> {
             DeviceLogic logic = this.logics.get(device);
             if (logic != null && this.graph.node(device).isPresent()) {
-                logic.onConsoleInterrupt(new Context(device, logic, null));
+                key.accept(logic, new Context(device, logic, null));
             }
         });
     }

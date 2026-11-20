@@ -15,6 +15,7 @@ import io.github.maximcuynat.worldwideblocks.network.protocol.EthernetFrame;
 import io.github.maximcuynat.worldwideblocks.network.protocol.Ipv4Packet;
 import io.github.maximcuynat.worldwideblocks.network.protocol.MacAddress;
 import io.github.maximcuynat.worldwideblocks.network.protocol.PresencePayload;
+import io.github.maximcuynat.worldwideblocks.os.HostName;
 import io.github.maximcuynat.worldwideblocks.os.MachineContext;
 import io.github.maximcuynat.worldwideblocks.os.OperatingSystem;
 import io.github.maximcuynat.worldwideblocks.os.command.CommandRegistry;
@@ -48,6 +49,8 @@ public final class HostLogic implements DeviceLogic {
     private record SystemTimer(Object key) {
     }
 
+    /** Block identifier of the computer, for its host name. */
+    private final String deviceType;
     private final long[] generation;
     private final DhcpClient[] dhcp;
     private final Ipv4Stack stack = new Ipv4Stack();
@@ -56,9 +59,11 @@ public final class HostLogic implements DeviceLogic {
     private NetInterface[] interfaces;
 
     /**
-     * @param memories saved lease of each port, which its DHCP client asks for again after a server restart
+     * @param deviceType block identifier of the computer, for its host name ({@link HostName})
+     * @param memories   saved lease of each port, which its DHCP client asks for again after a server restart
      */
-    public HostLogic(int portCount, RandomGenerator random, IntFunction<DhcpClient.Memory> memories) {
+    public HostLogic(String deviceType, int portCount, RandomGenerator random, IntFunction<DhcpClient.Memory> memories) {
+        this.deviceType = deviceType;
         this.generation = new long[portCount];
         this.dhcp = new DhcpClient[portCount];
         for (int i = 0; i < portCount; i++) {
@@ -121,9 +126,21 @@ public final class HostLogic implements DeviceLogic {
     }
 
     @Override
-    public void onConsoleInterrupt(DeviceContext context) {
+    public void onConsoleInterrupt(DeviceContext context, String typed) {
         this.interfaces(context);
-        this.system.localConsole().interrupt(new Machine(context));
+        this.system.localConsole().interrupt(new Machine(context), typed);
+    }
+
+    @Override
+    public void onConsoleEndOfInput(DeviceContext context) {
+        this.interfaces(context);
+        this.system.localConsole().endOfInput();
+    }
+
+    @Override
+    public void onConsoleClear(DeviceContext context) {
+        this.interfaces(context);
+        this.system.localConsole().clearScreen();
     }
 
     /** A computer takes {@link Latency#COMPUTER_NANOS} to receive a frame. */
@@ -147,6 +164,9 @@ public final class HostLogic implements DeviceLogic {
             this.interfaces = new NetInterface[this.dhcp.length];
             for (int port = 0; port < this.dhcp.length; port++) {
                 this.interfaces[port] = this.stack.addEthernet("eth" + port, port, context.mac(port), context.isLinked(port));
+            }
+            if (this.interfaces.length > 0) {
+                this.system.setHostName(HostName.of(this.deviceType, context.mac(0)));
             }
         }
         return this.interfaces;

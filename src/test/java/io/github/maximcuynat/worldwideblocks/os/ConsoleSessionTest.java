@@ -199,8 +199,11 @@ class ConsoleSessionTest {
             this.console.submit(this.machine, "foo" + i);
         }
 
-        assertEquals(ConsoleSession.MAX_LINES, this.console.lines().size());
-        assertEquals("bash: foo5: command not found", this.console.lines().getFirst());
+        // Each line typed takes two lines: the prompt with the line, then the answer of bash.
+        int firstKept = ConsoleSession.MAX_LINES + 5 - ConsoleSession.MAX_LINES / 2;
+        assertEquals(ConsoleSession.MAX_LINES, this.console.entries().size());
+        assertEquals(new ConsoleLine.Input(this.console.prompt(), "foo" + firstKept), this.console.entries().getFirst());
+        assertEquals("bash: foo" + firstKept + ": command not found", this.console.lines().getFirst());
     }
 
     @Test

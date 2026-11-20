@@ -17,11 +17,13 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.Test;
+import io.github.maximcuynat.worldwideblocks.os.shell.Help;
 
 /**
  * Both language files are kept together, and every text fits its place with the longest values
  * (see {@code docs/messages.md}): 80 characters for the action bar, 45 for a line of the panel or
- * of the tooltip, 90 for the chat, 160 for an advice line of the terminal (two rows of its 80 columns).
+ * of the tooltip, 90 for the chat, 160 for an advice line of the terminal (two rows of its 80 columns), 80 for a
+ * line of {@code help} (one row).
  *
  * <p>Every key of these families must have its sample values below: a key added without a
  * sample makes the test fail, so that nobody forgets it.
@@ -33,6 +35,7 @@ class LangFilesTest {
     private static final int PANEL = 45;
     private static final int CHAT = 90;
     private static final int TERMINAL_ADVICE = 160;
+    private static final int TERMINAL_ROW = 80;
 
     private static final String PORT = "5";
     private static final String DISTANCE = "100";
@@ -50,7 +53,8 @@ class LangFilesTest {
             "message.worldwideblocks.network.", CHAT,
             "hud.worldwideblocks.", PANEL,
             "item.worldwideblocks.ethernet_cable.tooltip.", PANEL,
-            "terminal.worldwideblocks.advice.", TERMINAL_ADVICE);
+            "terminal.worldwideblocks.advice.", TERMINAL_ADVICE,
+            Help.KEYS, TERMINAL_ROW);
 
     /** Sample values of each key, built from the longest device name and the longest DHCP state of the language. */
     private static Map<String, List<String>> samples(String name, String state) {
@@ -105,6 +109,17 @@ class LangFilesTest {
             samples.put("terminal.worldwideblocks.advice.ping." + advice, List.of(IP));
         }
         samples.put("terminal.worldwideblocks.advice.ping.no_name_service", List.of());
+        // help: the summary of a command after its name padded to the column of names; the other lines without values.
+        samples.put(Help.KEYS + "intro", List.of());
+        for (int i = 1; i <= Help.KEY_LINES; i++) {
+            samples.put(Help.KEYS + "keys." + i, List.of());
+        }
+        Help.TOPICS.forEach((topic, lines) -> {
+            samples.put(Help.KEYS + "summary." + topic, List.of("hostname  "));
+            for (int i = 1; i <= lines; i++) {
+                samples.put(Help.KEYS + topic + "." + i, List.of());
+            }
+        });
         return samples;
     }
 
