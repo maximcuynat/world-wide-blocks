@@ -14,6 +14,8 @@
 
 - `runGameTestServer` runs a dedicated server: no client code (message display, panel, client settings, tooltips) runs there. A green build and green game tests prove nothing on the client side: tell Max so when delivering a step that touches it, and keep the display logic in plain, testable Java (`StatusPanel`) so that the client only draws. (2026-11-18)
 
+- Reading a screenshot at its full size misses what is a few pixels wide: the title of the terminal touched the border of its frame and the accent of "É" crossed it in every French capture, reported as fine (2026-11-20). Zoom on the edges of every frame and panel, and measure (a small pixel scan in the scratchpad) rather than look. Any geometric rule of a screen (inside the window, text inside its border, room for accents) is written as a check of the capture run, which fails the run.
+
 ## Network engine
 
 - Deferring a task (an event held until the next tick) opens a window where the state has changed: revalidate each pending change against the current state (device or cable still present) when applying it. A computer placed, cabled and removed in the same tick crashed the test server (2026-11-18). Write the test "added then removed before the tick" with every kind of pending queue.
@@ -55,7 +57,7 @@
 
 - zsh does not split an unquoted variable into words: `perl -i script $files` received the whole list as one file name, and `git grep … -- $paths` searched one path that does not exist and printed nothing. Pass lists through `xargs -0` or write the paths out, and never take an empty search result as proof before checking that the search can find something. (2026-11-18)
 - `perl -CSD` decodes the file but not a non-ASCII letter written in the expression (without `use utf8`): the substitution silently did nothing. After any bulk replacement, search again for what was replaced. (2026-11-18)
-- In this shell `cp` and `rm` ask before acting and wait without a terminal (`rm -r` blocked a command until its timeout): use `/bin/cp -f` and `/bin/rm -f` in scripts. (2026-11-18, `rm` added 2026-11-19)
+- In this shell `cp` and `rm` ask before acting and wait without a terminal (`rm -r` blocked a command until its timeout): use `/bin/cp -f` and `/bin/rm -f` in scripts. (2026-11-18, `rm` added 2026-11-19) The same holds for the commands given to the maintainer, whose `!` commands run in this shell: a `rm -r` in a command line given to Max asked for a confirmation, left a probe folder in `src/main/resources` and made the next `clean build` fail (2026-11-20). Write `/bin/rm -rf` in every command given.
 
 ## Translation and delegated rewrites
 
