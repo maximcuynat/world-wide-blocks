@@ -21,6 +21,11 @@ public final class CaptureScenarios {
     private static final int SETTLE = 40;
     /** One game minute: the loop message is repeated at most once per minute. */
     private static final int MINUTE = 1200;
+    /**
+     * Five game seconds: a {@code ping} to an absent address prints its first {@code Destination Host Unreachable}
+     * lines after three.
+     */
+    private static final int FIVE_SECONDS = 100;
     /** Half a lease of one game day: 600 s, the renewal time T1. */
     private static final int HALF_LEASE = 12_000;
 
@@ -82,8 +87,10 @@ public final class CaptureScenarios {
      * the chat and no DHCP conflict (the server of the right box is off), then a single other one a game minute later
      * ({@code values.txt} lists the lines that reached the chat between two shots). Then the server removes one of the
      * two cables between the boxes, and the run fails if any line reaches the chat during the minute and a half that
-     * follows: the second message proved that a minute of traffic in the loop is reported. The traffic is the presence
-     * frame of each computer, every 30 s; when issue #15 removes it, check that the loop still carries enough frames.
+     * follows: the second message proved that a minute of traffic in the loop is reported. The traffic is a continuous
+     * {@code ping} of the computer to an absent address, typed in its terminal after the first message: an ARP request
+     * broadcast every second (issue #15 removes the presence frame); the shot {@code ping_running} shows it, and it
+     * goes on, screen closed, until the end of the run.
      */
     static final CaptureScenario LOOP = standard("loop", "two boxes in a loop: one message per minute, none once broken",
             new Step.BuildScene(TrialScenario.LOOP),
@@ -91,6 +98,12 @@ public final class CaptureScenarios {
             new Step.OpenChat(),
             new Step.Shot("first_minute"),
             new Step.CloseScreen(),
+            new Step.OpenTerminal(2),
+            new Step.Type("ping 192.168.1.250"),
+            new Step.Press(Step.TerminalKey.ENTER),
+            new Step.Wait(FIVE_SECONDS),
+            new Step.Shot("ping_running"),
+            new Step.Press(Step.TerminalKey.ESCAPE),
             new Step.Wait(MINUTE),
             new Step.OpenChat(),
             new Step.Shot("second_minute"),
