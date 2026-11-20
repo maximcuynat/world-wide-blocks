@@ -366,3 +366,68 @@ Branch `docs/automated-checks`, from `developement`.
 - [x] 3. `CONTRIBUTING.md` ("Run the tests") and `docs/project-management.md` ("Where things live")
 
 Review: documentation only, nothing to build. The capture run exists only in the uncommitted prototype of the terminal screen, so the docs say that the `runClient` procedures of `docs/lot-plan.md` apply until the new issue is done. Left on purpose for that issue: the "Test method" paragraph and the eye check procedures of lots 1b-1 and 1b-2 in `docs/lot-plan.md`. After the merge: `scripts/dev project sync` creates the issue.
+
+## Design: equipment models (session of 2026-11-19)
+
+Branch `design/equipment`. Each device is drawn in Blockbench (`design/blockbench/<id>.bbmodel`, texture embedded), described in a few lines, approved by Max in Blockbench, and only then exported to the assets. Issue definition: `scripts/project/issues/backlog/05-equipment-design-guide.md` (to sync).
+
+Facts read from the code: no `.bbmodel` in the repository; current texture density differs per device (tower 2 texels per px, box 4, laptop 2 with stretched edges); front of every model faces north; Java shapes hard-coded in each block class; `laptop_open.json` used by no blockstate (noted in lot F, not deleted).
+
+- [x] 1. `docs/design-guide.md` (k = 2.4 with a 15 px cap, 4 texels per px, 8-colour palette, fixed LED positions, item display rule, port areas): approved by Max on 2026-11-19
+- [x] 2. Internet box version 1: `design/blockbench/internet_box.bbmodel` and its sheet drawn; ports placement (LAN front, line and power at the back) decided by Max as a playability choice; approved in Blockbench (three checks OK, no design remark), exported to the assets; build green and checked in game by Max on 2026-11-20
+- [ ] 3. 5-port desktop switch (provisional 100 x 75 x 25 mm, not verified, so 4 x 3 x 1 px; rough draft approved by Max on 2026-11-20 with the shallower depth)
+- [ ] 4. PC tower and laptop, aligned on the guide (later)
+- [ ] 5. `design/tools/` (shared helpers `wwb_design.py`, `internet_box.py`, `export.py`, README with the "saved from Blockbench = reference" rule) and the `CLAUDE.md` line: written, commit separate from the box, after Max's check in game
+- [x] 6. Internet box version 2 (plinth, cover bevel, discreet vents, slim glass status strip, LAN ports recessed 0.5 px, light body; dark variant archived): chosen by Max on 2026-11-20, guide section 5 updated, exported; build green and checked in game by Max on 2026-11-20
+- [x] 7. Box and switches told apart (Max, 2026-11-20: version 2 of the box looks like a switch). Guide: "Signature of a family" rule (section 5). Drafts in `design/blockbench/drafts/` (`design/tools/draft_box_switch.py`): box A (ports at the back, lights only on the front), box B (front ports small and grouped, dominant status panel, stepped top), box C (standing box, same case turned upright), and a rough 5-port switch; compared with `preview.py --scene`. Max chose track C (standing box) with the glass band of B standing 0.25 px out of the front, set back 0.5 px from each side edge, and the 4 large recessed ports; switch shallower (4 x 3 x 1). Done: `internet_box.py` on `RecessedFront` (version 3), `desktop_switch_5.py` and its project kept as the starting point of lot 1d, Java shape turned with the orientation, display values, export, drafts deleted, guide scale table. Build green and checked in game by Max on 2026-11-20.
+
+## Design: cables (session of 2026-11-20)
+
+Max asked for a design proposal, no code: choice of the port, cable attached to its port, cable on the ground, thought out step by step (1d: aim and plug; then cable on the ground before lot F; 2b: wall sockets and cable on the wall; 2b then 8a: trunking and trays).
+
+- [x] Code read: first free port everywhere, first occupied port to unplug; click point already reaches the server; the client knows the port of each cable end; cable attached at a fixed height of 0.3 block.
+- [x] Proposal `docs/cable-design.md` (aim zones, port layout, plug, thick cable, drawn route as a chain of spans, steps 3 and 4 checked), diagrams in `docs/images/`.
+- [x] `docs/lot-plan.md` updated as proposals: open decisions (choice of the port, drawn or placed cable, wall, placement of the steps), overview, lot 1d, new sub-lot 1d-2, 2b, lot F.
+- [x] Max's decisions (2026-11-20): aim with zones over the top of flat devices; plugs from the cables known to the client; cable on the ground drawn; wall gone around, otherwise hanging; lot 1d renamed 1d-1, lot 1d-2 in 0.2.0; tower and laptop redrawn before 1d-1. Needs of 2b noted (route preview through a wall, view of hidden cables, 9a detector), checked against the architecture in `docs/cable-design.md`, section 6.
+- [x] Issue definitions: `issues/1d/05` to `07` (lot 1d-1, kept in `issues/1d/` like 1c-1), `issues/1d-2/01` to `03`; milestones: 1d renamed 1d-1, 1d-2 added in 0.2.0; local validation of the definitions passed.
+- [ ] On GitHub (Max): rename the milestone "Lot 1d: Desktop switch" to "Lot 1d-1: Desktop switch" before `scripts/dev project sync`, otherwise sync creates a second milestone.
+
+## Issue definitions waiting for a sync (2026-11-20)
+
+Not to be synchronised from `design/equipment` (`tasks/lessons.md`): wait for the merge of `lot/1c-1` into `developement` and the rebase of this branch. Changed here and not yet on GitHub: cross-links in `ideas/04-cables-and-guides.md`, `ideas/13-port-types.md`, `ideas/14-port-lights.md`, `1d/05-port-layouts.md`, `1d/07-cable-attached-to-port.md`, `1d-2/01-cable-route.md`; ticked boxes of `backlog/05-equipment-design-guide.md` (#56).
+
+## Design: PC tower (session of 2026-11-20)
+
+- [x] PC tower redrawn on the guide (`design/tools/pc_tower.py`, front "classic" with the optical bay, RJ45 low on an expansion card, both chosen by Max on 2026-11-20): 7 x 15 x 15 px, Java shape `boxZ(7.0, 0.0, 15.0, 0.5, 15.5)`, display values, export, drafts deleted, sheet `design/blockbench/pc_tower.md`. Build green and checked in game by Max on 2026-11-20.
+- [ ] Next: the laptop (RJ45 on the left side of the base, toward the back, proposed).
+
+## Notes of 2026-11-20 (afternoon)
+
+- Merge of `lot/1c-1` into `developement`: when lot 1c-1 is finished and checked in game (Max). The device capture scenarios (`issues/0.1.0/07`) wait for it.
+- #11, #15, #16, #45: already restored on GitHub at 00:52 UTC on 2026-11-20, 22 minutes after the incident; their bodies are identical to their `lot/1c-1` definitions (compared the way `scripts/dev` builds a body). Later edits (02:31 UTC) on #11 (three boxes ticked) and #45 (one line reworded) come from lot 1c-1. Nothing to restore.
+- `origin/developement` (pull request #64 merged) merged locally into `design/equipment` (0132678), nothing pushed.
+- Laptop: drafts `design/blockbench/drafts/laptop*.bbmodel` from `design/tools/laptop.py` (open and closed, 14 x 9, dark plastic, small RJ45 recessed on the left flank toward the back); preview support for a rotated element added. Awaiting Max's review; no export.
+- Laptop redrawn (chosen by Max on 2026-11-20, metal ring around the port): `design/tools/laptop.py`, `design/blockbench/laptop.bbmodel` and `laptop_closed.bbmodel` (one shared texture), sheet `laptop.md`; Java shapes 14 x 9 (`LaptopBlock`), display values from the bounds of each model (3-axis centring), export, `laptop_open.json` removed, palette exception of the laptop removed, lot F line and guide scale table updated, drafts deleted. Point 2 (`DeviceShapeTests`, registered in `WorldWideBlocksGameTests`) added to the tree. Build green (`./gradlew build test`, `BlockResourcesTest` 5 of 5), game tests green (36 of 36, the 6 `device_shapes_*` and `device_placement_*` included) and laptop checked in game by Max on 2026-11-20 (four orientations open and closed, selection outline, screen leaning back, port with its ring, inventory, hand, ground). Committed in four steps: point 1, point 2, laptop, design tools; Max compiles each one with `git rebase --exec "./gradlew build test" 0132678`.
+- **Conflict to expect when `lot/1c-1` is merged: `LaptopBlock.java`.** This branch changes the class comment (14 x 9 px) and the shapes (`CLOSED_NORTH`, `OPEN_NORTH`); `lot/1c-1` adds the keyboard and screen gestures (`LaptopPart`, `KEYBOARD_TOP = 1/16`). Keep both: the shapes from here, the gestures from there; the keyboard is still 1 px high, so `LaptopPart` works unchanged. Then rerun `./gradlew build test` and `./gradlew runGameTestServer` (`device_shapes_laptop` checks the merged shapes).
+- [x] Laptop aligned on the guide (#56 box ticked in `backlog/05`).
+- Four commits made on 2026-11-20 (48d0a48, f130380, 6d69e9c, 0a49cfe); palette check replayed in Python on the trees of 48d0a48 and 6d69e9c (green). `build/issue-comments/56.md` written; board, `update-issues` and comment wait for the lot branch after the merge.
+- [x] Visual design of the cables, first round of previews (`design/tools/cables.py`); `preview.py` gained `--centre`, `--views`, `shade: false` and a tile culling (output identical, about 4 times faster).
+- Max's choices of 2026-11-20: one RJ45 size (2 x 2) everywhere, long boot, two-tone outline (not the status colours: the panel shows free in grey, connected in green), eight cord colours with a warmer white and a blue-grey, icon with the taller plug, overhang behind the tower and the laptop accepted; proposals 8 to 10 (colour as an item property changed with a dye, types as distinct items, length beside them) written in `docs/cable-design.md` section 7 and in the open decisions of `docs/lot-plan.md`; idea "Cable labels" (`issues/ideas/18`); idea #37 updated; issue definitions 1d/05 and 1d/07 updated (no sync from this branch).
+- [x] Box and tower with RJ45 ports of 2 x 2 texels, chosen by Max on 2026-11-20 (contacts on the bottom row of the back and on the back row of the floor of each hole; contacts on the bottom row of the painted ports too, the guide rule), written with `--force` (never saved from Blockbench) and exported; resource checks replayed in Python (palette, texture sizes, UVs); `docs/images/cable-mock.png` replaced by a preview of the chosen design. Build green and 36 game tests green (Max, 2026-11-20); committed in three steps (RJ45 size, cable design documents, design tools); drafts deleted. Not looked at in game yet: to do with the next `runClient`.
+
+## Notes of 2026-11-20 (evening)
+
+- Push of `design/equipment` (8 commits, backup): run by Max in a real terminal (the sandbox reads neither `~/.ssh` nor `~/.gitconfig`). No issue sync from this branch.
+- Box and tower with 2 x 2 ports: to look at in game at Max's next `runClient`.
+- [x] Desktop switches, one family (`design/tools/desktop_switches.py`, replaces `desktop_switch_5.py`; `RecessedFront.add_floor_contacts` shared with the box, which regenerates identically): 5-port final (same elements, contacts on the floor of the holes too) and 8-port (6.5 x 4 x 1, ports in two groups of 4, the spare texel between the groups). Chosen by Max on 2026-11-20 (two groups of 4 ports); final projects written in `design/blockbench/` (`--force` for the 5-port, never saved from Blockbench), drafts deleted, no export (blocks at lot 1d-1). Awaiting `./gradlew build test`, then commit.
+- [x] RJ45 plug for lot 1d-1, chosen by Max on 2026-11-20: `design/tools/rj45_plug.py`, `design/blockbench/rj45_plug_<colour>.bbmodel` (eight projects, one texture), sheet `rj45_plug.md`; `preview.py` turns placed projects (`<id>@dx,dy,dz,angle`); `docs/images/cable-mock.png` shows the plug in every port; issue 1d/07 and guide section 4 note the single texture and the colour check of lot 1d-1; #56 box of the 5-port switch ticked. Drafts deleted.
+
+## Merge order: `design/equipment` before `lot/1c-1` (decided by Max on 2026-11-20)
+
+`design/equipment` is merged into `developement` first, without waiting for lot 1c-1. **When `lot/1c-1` is merged (or brings `developement` in), on `lot/1c-1`:**
+
+- [ ] `LaptopBlock.java` conflicts: keep **the shapes of `design/equipment`** (class comment "14 px wide, 9 px deep", `CLOSED_NORTH = Block.box(1.0, 0.0, 3.5, 15.0, 2.0, 12.5)`, `OPEN_NORTH` = the base `Block.box(1.0, 0.0, 3.5, 15.0, 1.0, 12.5)` plus the screen `Block.box(1.0, 1.0, 11.5, 15.0, 9.25, 16.0)`) **and the gestures of `lot/1c-1`** (`LaptopPart`, `KEYBOARD_TOP = 1/16`: the keyboard is still 1 px high, so they work unchanged).
+- [ ] Other files that may conflict: `WorldWideBlocksGameTests.java` (keep both: the cases of 1c-1 and `DeviceShapeTests.cases()`), `tasks/todo.md` and `tasks/lessons.md` (keep both), `docs/lot-plan.md`, the issue definitions under `scripts/project/issues/` (the texts of 1c-1 for #11, #15, #16, #45; the texts of `design/equipment` for `0.1.0/05` to `07`, `1d/*`, `backlog/05`, `ideas/13`, `ideas/18`). `items/laptop.json` (open or closed select of 1c-1) was not touched here; `models/block/laptop_open.json` was removed here, used by no blockstate on either branch.
+- [ ] Then `./gradlew build test` and `./gradlew runGameTestServer` (`device_shapes_laptop` checks the merged shapes), and a look at the laptop in game (gestures on the new model).
+- [ ] After the merge of `lot/1c-1`, from the branch of the lot in progress: `scripts/dev project sync` (creates the idea "Cable labels", `ideas/18`, and the issues `0.1.0/05` to `07` if not yet created), `scripts/dev project update-issues` (bodies and ticked boxes), the comment of #56 (`build/issue-comments/56.md`, to rewrite there if `build/` was cleaned).
+- [ ] Then the device capture scenarios (`0.1.0/07`), which need the capture runs of `lot/1c-1`.

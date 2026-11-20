@@ -24,16 +24,17 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * PC tower: 8 px wide, 14 px deep, 15 px high, centered in the block.
- * FACING is the direction the front face looks toward. A right-click opens its terminal ({@link TerminalServer}): no
- * screen, keyboard or mouse is needed (issue #10).
+ * PC tower: 7 px wide, 15 px deep, 15 px high (210 x 450 x 450 mm in real life, scaled up by 2.4 then reduced to
+ * fit one block, docs/design-guide.md), centered in the block. Its network port is on an expansion card at the
+ * back, low. FACING is the direction the front face looks toward. A right-click opens its terminal
+ * ({@link TerminalServer}): no screen, keyboard or mouse is needed (issue #10).
  */
 public class PcTowerBlock extends NetworkDeviceBlock {
-    /** One built-in network card. */
+    /** One network card. */
     public static final List<PortKind> PORTS = List.of(PortKind.ETHERNET);
 
     // Shape for a tower aligned on the Z axis (front face north or south), rotated for the X axis.
-    private static final Map<Direction.Axis, VoxelShape> SHAPES = Shapes.rotateHorizontalAxis(Block.boxZ(8.0, 0.0, 15.0, 1.0, 15.0));
+    private static final Map<Direction.Axis, VoxelShape> SHAPES = Shapes.rotateHorizontalAxis(Block.boxZ(7.0, 0.0, 15.0, 0.5, 15.5));
 
     public PcTowerBlock(BlockBehaviour.Properties properties) {
         super(properties, DeviceRole.HOST, PORTS);

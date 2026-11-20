@@ -164,6 +164,8 @@ dependencies {
     testImplementation platform('org.junit:junit-bom:5.13.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // JSON of the block resources in BlockResourcesTest, at the version the game ships (Minecraft 26.3 libraries).
+    testImplementation 'com.google.code.gson:gson:2.14.0'
 
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
@@ -227,6 +229,10 @@ publishing {
 
 tasks.named('test', Test).configure {
     useJUnitPlatform()
+    // BlockResourcesTest reads the palette and the assets from the project directory, outside the classpath: declared
+    // as inputs, so that changing a colour of the palette runs the test again instead of leaving it up to date.
+    inputs.file('design/palette.json').withPropertyName('palette').withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.dir('src/main/resources/assets').withPropertyName('assets').withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 // ./gradlew build also compiles the game tests and the capture runs, so that a broken API shows without launching

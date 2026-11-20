@@ -26,8 +26,8 @@ Why 2.4: the box and the laptop are already at this factor; only the depth and t
 |---|---|---|---|---|---|
 | PC tower | 210 x 450 x 450 | M | 8.1 x 17.3 x 17.3, over the cap, reduced (1 px = 30 mm): **7 x 15 x 15** | 7 x 15 x 15 | Redrawn on 2026-11-20 (was 8 x 15 x 15); Java shape narrowed |
 | Internet box, standing (the 183 x 183 x 80 case turned upright, 2026-11-20) | 183 x 80 x 183 | E | 7.0 x 3.1 x 7.0: **7 x 3 x 7** | 7 x 3 x 7 | Standing since 2026-11-20 (was 7 x 7 x 3 flat); Java shape turned with the orientation |
-| Laptop, closed | 360 x 240 x 20 | M | 13.8 x 9.2 x 0.8: **14 x 9 x 2** (base 1 + lid 1, minimum thickness) | 14 x 10 x 2 | Depth 10 to 9 px |
-| 8-port desktop switch | 158 x 102 x 27 | E | 6.1 x 3.9 x 1.0: **6.5 x 4 x 1** (width raised by the fit rule for 8 ports) | none | New |
+| Laptop, closed | 360 x 240 x 20 | M | 13.8 x 9.2 x 0.8: **14 x 9 x 2** (base 1 + lid 1, minimum thickness) | 14 x 9 x 2 | Redrawn on 2026-11-20 (was 14 x 10 x 2); Java shapes narrowed |
+| 8-port desktop switch | 158 x 102 x 27 | E | 6.1 x 3.9 x 1.0: **6.5 x 4 x 1** (width raised by the fit rule for 8 ports; the spare texel of the front goes between two groups of 4 ports) | none | New, drawn on 2026-11-20 (`desktop_switch_8.md`), block at lot 1d-1 |
 | 5-port desktop switch | 100 x 75 x 25, provisional value, not verified | M | 3.8 x 2.9 x 1.0: **4 x 3 x 1** | none | New |
 
 The tower and the box values rest on unverified dimensions (status M and E): they are checked when each device is modelled, as `docs/network-equipment.md` says.
@@ -58,7 +58,9 @@ The current textures do not follow one density: tower 2 texels per px, box 4, la
 
 ## 4. Palette
 
-Eight base colours, with a highlight and a shadow for the materials. No other colour without updating this table. Values taken from the current textures, except the light plastic highlight.
+Eight base colours, with a highlight and a shadow for the materials. Values taken from the textures of the time, except the light plastic highlight.
+
+**Single source: `design/palette.json`**, read by the design tools (`design/tools/wwb_design.py`) and checked by `BlockResourcesTest` (`./gradlew build test`): every colour of every texture of the mod must be one of its tones, except the textures listed in its `exceptions`, each with its reason. A new colour means changing `design/palette.json` and this table together.
 
 | Role | Base | Highlight | Shadow | Used for |
 |---|---|---|---|---|
@@ -71,13 +73,29 @@ Eight base colours, with a highlight and a shadow for the materials. No other co
 | Orange LED | `#f0aa3c` | | | Activity, warning |
 | Screen, off | `#0d1b2a` | | | Screens and glass |
 
-Out of the palette: the Ethernet cable item keeps its own blues (cables are a family of their own, by colour of cord). Colours of the current textures that go away at the rework: the blue LED (`#3a8fe8`) and the pink pixel (`#d05a8a`) of the tower, the screen text of the laptop (`#cbd5e1`, the screen content belongs to the terminal and to lot F).
+**Cord colours** (chosen by Max on 2026-11-20; key `cords` of `design/palette.json`): a family of their own, for the cable, the boot of the plugs and the cord item, never in the textures of the devices. Blue, the colour of every cord today (`CableRenderer`, `#2f6fd6`), is the default; the blues of the current cord icon go with its rework. Grey is a dark blue-grey, apart from the metal; white is a warm off-white, apart from the clear body of the plugs and from light plastic. A colour carries no rule of the game (`docs/cable-design.md`, section 7).
+
+| Cord | Base | Highlight | Shadow |
+|---|---|---|---|
+| Blue | `#2f6fd6` | `#5a8de0` | `#1f4f9f` |
+| Grey | `#5e6a7a` | `#7c8798` | `#424b58` |
+| Yellow | `#e3bd2d` | `#f0d35e` | `#a8871a` |
+| Green | `#3c9e4a` | `#62bb6d` | `#276f32` |
+| Red | `#cf3b3b` | `#e26666` | `#942626` |
+| Orange | `#e57a2e` | `#ef9a5a` | `#a9541b` |
+| Black | `#26282c` | `#3d4046` | `#141517` |
+| White | `#e9dfc4` | `#f4edda` | `#bdb196` |
+
+**Where the cord colours are allowed:** the RJ45 plug texture (`rj45_plug.png`, one boot per cord colour) and the cord item icon only. At lot 1d-1, `BlockResourcesTest` accepts the roles and the cord colours for these two textures, the roles alone for every other texture (Max, 2026-11-20).
+
+Out of the palette until its rework: the Ethernet cable item keeps its own blues (exception in `design/palette.json`, removed when the icon with the taller plug is exported). Colours of the current textures that go away at the rework: the blue LED (`#3a8fe8`) and the pink pixel (`#d05a8a`) of the tower, the screen text of the laptop (`#cbd5e1`, the screen content belongs to the terminal and to lot F).
 
 ## 5. Drawing
 
 - Flat colours. No gradient, no noise, no dithering. The game already shades each face by its direction: no light is drawn into the texture.
 - Edges: a 1-texel highlight line along the top edge of the side faces, a 1-texel shadow line along their bottom edge.
-- RJ45 port: 2 x 2 texels in socket colour, pitch of at least 3 texels. On a face with room (pitch of 4 texels or more), 3 x 3 texels with the top row in contacts colour.
+- **RJ45 port: one size on every device, 2 x 2 texels (0.5 px)**, as a real RJ45 has the same size everywhere; at the scale of section 2 this is the real size, and the grid of texels allows nothing smaller (Max, 2026-11-20). Pitch of at least 3 texels. **The contacts are always on the bottom row** (Max, 2026-11-20), painted or recessed: painted, the top row in socket colour and the bottom row in contacts colour; recessed (a hole 0.5 px deep), the bottom of the hole in socket shadow tone with its bottom row in contacts colour (seen from the front), and the back row of the floor of the hole in contacts colour as well (seen from above or from the side: the side walls of a 2 x 2 hole hide its bottom in a three-quarter view).
+- Other connectors (RJ11, fibre, power, console): told apart by the shape of their plug and the thickness of their cable, never by a smaller hole (`docs/cable-design.md`, section 4).
 - Ports are texture areas aligned on the 0.25 px grid (whole texels), at positions written in the device sheet (section 9). This keeps the models compatible with choosing a port by aiming at it, if that option is kept (open decision "Choice of the exact port" of `docs/lot-plan.md`, before lot 1d-1); this guide does not decide it.
 - LED: 1 x 1 texel. Button: at least 2 x 2 texels.
 - Vents: discreet, in the shadow tone of the body (dots or lines of 1 texel, 1 texel apart). The socket colour stays for real openings (ports, slots, holes).

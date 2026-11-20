@@ -1,0 +1,27 @@
+{
+  "description": "Palette of the design guide (docs/design-guide.md, section 4): the only colours allowed in the textures of the mod. Single source, read by design/tools/wwb_design.py and by BlockResourcesTest. Each role has a base tone and may have a highlight (hi) and a shadow (sh) tone.",
+  "roles": {
+    "light": {"base": "#c4c8ce", "hi": "#dde0e4", "sh": "#969aa2"},
+    "dark": {"base": "#3a3d42", "hi": "#4b4f56", "sh": "#2a2c30"},
+    "metal": {"base": "#7d838b", "hi": "#9aa0a8", "sh": "#555a61"},
+    "socket": {"base": "#1c1e22", "sh": "#0b0b0d"},
+    "contacts": {"base": "#b09646", "hi": "#c8aa3c"},
+    "led_green": {"base": "#4ade80"},
+    "led_orange": {"base": "#f0aa3c"},
+    "screen": {"base": "#0d1b2a"}
+  },
+  "cords": {
+    "description": "Colours of the cords, a family of their own (design guide, section 4): cable, boot of the plugs and the cord item. Not allowed in the textures of the devices. Chosen by Max on 2026-11-20; blue, the colour of every cord today (CableRenderer), is the default.",
+    "blue": {"base": "#2f6fd6", "hi": "#5a8de0", "sh": "#1f4f9f"},
+    "grey": {"base": "#5e6a7a", "hi": "#7c8798", "sh": "#424b58"},
+    "yellow": {"base": "#e3bd2d", "hi": "#f0d35e", "sh": "#a8871a"},
+    "green": {"base": "#3c9e4a", "hi": "#62bb6d", "sh": "#276f32"},
+    "red": {"base": "#cf3b3b", "hi": "#e26666", "sh": "#942626"},
+    "orange": {"base": "#e57a2e", "hi": "#ef9a5a", "sh": "#a9541b"},
+    "black": {"base": "#26282c", "hi": "#3d4046", "sh": "#141517"},
+    "white": {"base": "#e9dfc4", "hi": "#f4edda", "sh": "#bdb196"}
+  },
+  "exceptions": {
+    "textures/item/ethernet_cable.png": "Cords are a colour family of their own (design guide, section 4); the icon is reworked in lot F."
+  }
+}
