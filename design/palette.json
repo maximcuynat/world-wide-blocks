@@ -22,6 +22,7 @@
     "white": {"base": "#e9dfc4", "hi": "#f4edda", "sh": "#bdb196"}
   },
   "exceptions": {
-    "textures/item/ethernet_cable.png": "Cords are a colour family of their own (design guide, section 4); the icon is reworked in lot F."
+    "textures/item/ethernet_cable.png": "Cords are a colour family of their own (design guide, section 4); the icon is reworked in lot F.",
+    "textures/block/rj45_plug.png": "Temporary: the boots of the plug use the cord colours; replaced by the rule of the cord colours for the plug and the cord icon only (issue 1d/07)."
   }
 }
