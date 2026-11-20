@@ -433,6 +433,23 @@ Done at step 5d (issue #11, proofs of the gestures and of the wheel): game tests
 
 Done at step 6 (issue #15): the presence frame is removed (`PresencePayload`, the type 0x88B5, the presence timers of the computers). A computer sends only real traffic: DHCP, ARP and what its commands send; a computer with an address that runs nothing is silent until T1, and the box forgets its MAC 300 s after its last frame (unit test `aComputerWithAnAddressIsSilentUntilItsRenewalAndTheBoxForgetsItMeanwhile`). The loop game tests and the capture scenario `loop` get their traffic from a continuous `ping` to an absent address of the local network, which broadcasts an ARP request every second (unit test `aContinuousPingToAnAbsentAddressBroadcastsArpWithoutEnd`); `loop` shows it in the shot `ping_running`.
 
+Done at step 7 (issue #16): game tests `ping_between_two_computers` (two towers on the box, `ping -c 3` from one to the other: three replies in order, no loss, status 0) and `ping_absent_address` (`ping -c 3` to an address nobody has: three `Destination Host Unreachable` from the computer itself, `+3 errors`, status 1); capture scenario `terminal`.
+
+#### Check by eye of lot 1c-1
+
+Capture runs, in English and in French, at 854 x 480 and 1920 x 1080 (`./gradlew runClientCapture -Pscenario=<name>`); the assistant reads the screenshots and `values.txt` and reports. Only the keystrokes through the keyboard layouts of the operating system stay by hand (they cannot be injected): done by Max on 2026-11-20, AZERTY and QWERTY on macOS, all as expected (step 5c).
+
+| Point | Scenario | What it shows |
+|---|---|---|
+| 1. Address of the computer | `terminal` | `ip a`: `lo`, and `eth0` with the address lent by the box (`dynamic`, lifetimes) |
+| 2. Ping the box | `terminal` | `ping -c 3 192.168.1.1`: three replies, statistics without loss |
+| 3. Ping another computer | `terminal` | `ping -c 3` to the laptop: three replies; the goal of the lot |
+| 4. Absent address | `terminal` | `ping -c 3 192.168.1.250`: three `Destination Host Unreachable` from the tower itself, statistics with `+3 errors`, then the advice of the game, translated |
+| 5. Terminal screen | `terminal_screen` | Prompt, `help` translated, `ip a` wrapped, text size (Ctrl+=), a running `ping` stopped by Ctrl+C, Ctrl+L, scrolling (Shift+Page Up / Page Down, wheel), history (Up), Esc then reopening, `exit`, the laptop with accents typed; automatic GUI scale and scale 2 |
+| 6. Advice turned off | `terminal_advice` | The advice after a failed `ping`, then hidden by the client option `terminalAdvice` |
+| 7. Loop without the presence frame | `loop` | One loop message, a `ping` in the terminal (`ping_running`), one more message a minute later, none once a cable is removed |
+
+
 **Throwaway prototype**: done on 2026-11-19 (issue #30, closed, findings in the issue; branch `proto/terminal-screen`, never merged): keyboard input (SDL3) with the AZERTY and QWERTY layouts, dead keys, shortcuts and arrows reaching the screen, Monocraft against the game font, character grid at 854 x 480 and 1920 x 1080, frame and colours, a screen that does not pause the game in single player. Its automatic capture run (`runClientCapture`) becomes permanent in this lot (issue #52, `docs/automated-checks.md`).
 
 Pushed back: completion with Tab and read-only viewing (backlog), fixed address with `ip addr add` (idea issue "Configure the devices like real ones", once the operating system has files), `traceroute` (6c), `nslookup` and `dig` (7b), `ss` and `nc` (1f), `uptime`, `reboot` and `poweroff` (1e), pipes, redirections, variables and background jobs (scripts), terminal text shown on the block in the world (F).

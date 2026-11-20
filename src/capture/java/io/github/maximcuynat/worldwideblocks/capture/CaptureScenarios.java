@@ -23,7 +23,7 @@ public final class CaptureScenarios {
     private static final int MINUTE = 1200;
     /**
      * Five game seconds: a {@code ping} to an absent address prints its first {@code Destination Host Unreachable}
-     * lines after three.
+     * lines after three; a {@code ping -c 3} has ended.
      */
     private static final int FIVE_SECONDS = 100;
     /** Half a lease of one game day: 600 s, the renewal time T1. */
@@ -372,8 +372,39 @@ public final class CaptureScenarios {
             new Step.Shot("advice_off"),
             new Step.Press(Step.TerminalKey.ESCAPE));
 
+    /**
+     * Lot 1c-1, issue #16, check by eye of the lot: from the terminal of the left tower of {@code box_hosts}, each
+     * command on a cleared screen (Ctrl+L): {@code ip a} (its address from the box); {@code ping -c 3} to the box,
+     * three replies; {@code ping -c 3} to the laptop (192.168.1.11 in this scene), three replies: the goal of the lot,
+     * a computer that pings another one which answers; {@code ping -c 3} to an address nobody has: three
+     * {@code Destination Host Unreachable} from the tower itself, the statistics, then the advice of the game.
+     */
+    static final CaptureScenario TERMINAL = standard("terminal", "ip a, then ping to the box, to the laptop and to an absent address",
+            new Step.BuildScene(TrialScenario.BOX_HOSTS),
+            new Step.Wait(SETTLE),
+            new Step.OpenTerminal(1),
+            new Step.Type("ip a"),
+            new Step.Press(Step.TerminalKey.ENTER),
+            new Step.Shot("ip_a"),
+            new Step.Press(Step.TerminalKey.CTRL_L),
+            new Step.Type("ping -c 3 192.168.1.1"),
+            new Step.Press(Step.TerminalKey.ENTER),
+            new Step.Wait(FIVE_SECONDS),
+            new Step.Shot("ping_box"),
+            new Step.Press(Step.TerminalKey.CTRL_L),
+            new Step.Type("ping -c 3 192.168.1.11"),
+            new Step.Press(Step.TerminalKey.ENTER),
+            new Step.Wait(FIVE_SECONDS),
+            new Step.Shot("ping_computer"),
+            new Step.Press(Step.TerminalKey.CTRL_L),
+            new Step.Type("ping -c 3 192.168.1.250"),
+            new Step.Press(Step.TerminalKey.ENTER),
+            new Step.Wait(FIVE_SECONDS),
+            new Step.Shot("ping_absent"),
+            new Step.Press(Step.TerminalKey.ESCAPE));
+
     private static final Map<String, CaptureScenario> BY_NAME = List.of(BOX, BOX_HOSTS, CHAIN, LOOP, FULL_PORTS, DISTANCE,
-            TOOLTIP, TERMINAL_SCREEN, TERMINAL_ADVICE, DHCP_ADDRESSES, DHCP_RENEWAL, DHCP_NO_BOX, DHCP_CONFLICT, DHCP_POOL_FULL, DHCP_SERVER_OFF, DHCP_RESTART,
+            TOOLTIP, TERMINAL, TERMINAL_SCREEN, TERMINAL_ADVICE, DHCP_ADDRESSES, DHCP_RENEWAL, DHCP_NO_BOX, DHCP_CONFLICT, DHCP_POOL_FULL, DHCP_SERVER_OFF, DHCP_RESTART,
             FAILURE_CHECK).stream()
             .collect(Collectors.toUnmodifiableMap(CaptureScenario::name, Function.identity()));
 
