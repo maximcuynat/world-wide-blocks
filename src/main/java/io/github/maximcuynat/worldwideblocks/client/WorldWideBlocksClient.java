@@ -33,7 +33,7 @@ public final class WorldWideBlocksClient {
     private final CableRenderer cableRenderer = new CableRenderer(this.links);
     private final WorldWideBlocksClientConfig config = new WorldWideBlocksClientConfig();
     private final ClientMessages messages = new ClientMessages(this.config);
-    private final ClientTerminal terminal = new ClientTerminal();
+    private final ClientTerminal terminal = new ClientTerminal(this.config);
 
     public WorldWideBlocksClient(IEventBus modEventBus, ModContainer modContainer) {
         modContainer.registerConfig(ModConfig.Type.CLIENT, this.config.spec());

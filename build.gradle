@@ -232,7 +232,7 @@ tasks.named('test', Test).configure {
 // ./gradlew build also compiles the game tests and the capture runs, so that a broken API shows without launching
 // the game, and checks that none of their files reached the jar.
 var checkJarContents = tasks.register('checkJarContents') {
-    description = 'Fails if a class or resource of the gametest or capture source sets is in the jar.'
+    description = 'Fails if a class or resource of the gametest or capture source sets, a path of the old namespace netcraft or a hidden file or folder (.claude, .DS_Store...) is in the jar.'
     def jarFile = tasks.named('jar', Jar).flatMap { it.archiveFile }
     def devOutputs = files(sourceSets.gametest.output, sourceSets.capture.output)
     inputs.file(jarFile)
@@ -249,7 +249,13 @@ var checkJarContents = tasks.register('checkJarContents') {
         devEntries.remove(manifest)
         def zip = new java.util.zip.ZipFile(jarFile.get().asFile)
         try {
-            def leaked = zip.entries().toList()*.name.findAll { it in devEntries || it.contains('worldwideblocks_capture') }
+            def names = zip.entries().toList()*.name
+            def leaked = names.findAll { it in devEntries || it.contains('worldwideblocks_capture') }
+            // Folders included: an empty folder left in build/resources (renamed mod, tool of the editor) is an entry too.
+            def stray = names.findAll { name ->
+                def segments = name.split('/').findAll { !it.isEmpty() }
+                segments.any { it == 'netcraft' || it.startsWith('.') }
+            }
             def jarManifest = zip.getEntry(manifest)
             if (jarManifest != null && zip.getInputStream(jarManifest).getText('UTF-8').contains('worldwideblocks_capture')) {
                 leaked << manifest
@@ -257,10 +263,13 @@ var checkJarContents = tasks.register('checkJarContents') {
             if (!leaked.isEmpty()) {
                 throw new GradleException("Development files in the jar: " + leaked.take(10))
             }
+            if (!stray.isEmpty()) {
+                throw new GradleException("Paths of the old namespace netcraft or hidden files in the jar (./gradlew clean, then look at src/main/resources): " + stray.take(10))
+            }
             if (devEntries.isEmpty()) {
                 throw new GradleException("No development file found to compare with the jar")
             }
-            logger.lifecycle("Jar checked: none of the " + devEntries.size() + " files of gametest and capture is in it")
+            logger.lifecycle("Jar checked: none of the " + devEntries.size() + " files of gametest and capture is in it, no netcraft path, no hidden file or folder (" + names.size() + " entries)")
         } finally {
             zip.close()
         }

@@ -280,8 +280,80 @@ public final class CaptureScenarios {
             new Step.Aim(3, false),
             new Step.Shot("tower_right_after"));
 
+    /**
+     * Lot 1c-1, issue #11: the terminal of the tower then of the laptop, opened by a click as a player does (on the
+     * keyboard of the laptop), at 854 x 480 and 1920 x 1080, with the automatic GUI scale and with scale 2: its text
+     * size does not follow the GUI scale ({@code values.txt}: columns, rows, text size). The empty console and its
+     * prompt; {@code help} (lines of the game, translated); {@code ip a}, whose line {@code lo} wraps; a larger text
+     * (Ctrl+=, the option put back by the run); a running {@code ping} ("Ctrl+C: stop" in the title), stopped by
+     * Ctrl+C; Ctrl+C at the prompt then Ctrl+L; scrolled up (Shift+Page Up); the history (Up); Esc then a new opening
+     * (same session, the game time goes on: no pause); {@code exit} closes the screen; the laptop, with accents typed.
+     */
+    static final CaptureScenario TERMINAL_SCREEN = new CaptureScenario("terminal_screen",
+            "terminal of the tower and the laptop: prompt, help, wrap, text size, keys, Esc, exit",
+            CaptureScenario.STANDARD_SIZES, List.of(AUTO_SCALE, 2), CaptureScenario.BOTH_LANGUAGES, List.of(
+                    new Step.BuildScene(TrialScenario.BOX_HOSTS),
+                    new Step.Wait(SETTLE),
+                    new Step.OpenTerminal(1),
+                    new Step.Shot("opened"),
+                    new Step.Type("help"),
+                    new Step.Press(Step.TerminalKey.ENTER),
+                    new Step.Shot("help"),
+                    new Step.Type("hostname"),
+                    new Step.Press(Step.TerminalKey.ENTER),
+                    new Step.Type("ip a"),
+                    new Step.Press(Step.TerminalKey.ENTER),
+                    new Step.Shot("ip_a"),
+                    new Step.Press(Step.TerminalKey.CTRL_PLUS),
+                    new Step.Shot("text_larger"),
+                    new Step.Press(Step.TerminalKey.CTRL_ZERO),
+                    new Step.Type("ping 192.168.1.1"),
+                    new Step.Press(Step.TerminalKey.ENTER),
+                    new Step.Wait(60),
+                    new Step.Shot("ping_running"),
+                    new Step.Press(Step.TerminalKey.CTRL_C),
+                    new Step.Wait(10),
+                    new Step.Shot("ping_stopped"),
+                    new Step.Type("histo"),
+                    new Step.Press(Step.TerminalKey.CTRL_C),
+                    new Step.Press(Step.TerminalKey.CTRL_L),
+                    new Step.Shot("cleared"),
+                    new Step.Press(Step.TerminalKey.SHIFT_PAGE_UP),
+                    new Step.Shot("scrolled_up"),
+                    new Step.Press(Step.TerminalKey.ESCAPE),
+                    new Step.Wait(SETTLE),
+                    new Step.OpenTerminal(1),
+                    new Step.Press(Step.TerminalKey.UP),
+                    new Step.Shot("reopened_history_up"),
+                    new Step.Press(Step.TerminalKey.CTRL_C),
+                    new Step.Type("exit"),
+                    new Step.Press(Step.TerminalKey.ENTER),
+                    new Step.Wait(SETTLE),
+                    new Step.OpenTerminal(2),
+                    new Step.Type("é è ç à ù ê ë œ ~ @"),
+                    new Step.Shot("laptop"),
+                    new Step.Press(Step.TerminalKey.ESCAPE)));
+
+    /**
+     * Lot 1c-1, issue #11: an advice of the game after a failed command, drawn apart from the output (its colour and
+     * symbol are a choice of taste of the maintainer), then hidden by the client option {@code terminalAdvice}, put
+     * back by the run. {@code ping -c 2} to an address nobody has: ARP finds nobody, the advice of
+     * {@code host_unreachable} follows the statistics.
+     */
+    static final CaptureScenario TERMINAL_ADVICE = standard("terminal_advice", "advice after a failed ping, shown then turned off",
+            new Step.BuildScene(TrialScenario.BOX_HOSTS),
+            new Step.Wait(SETTLE),
+            new Step.OpenTerminal(1),
+            new Step.Type("ping -c 2 192.168.1.250"),
+            new Step.Press(Step.TerminalKey.ENTER),
+            new Step.Wait(8 * 20),
+            new Step.Shot("advice_shown"),
+            new Step.TerminalAdvice(false),
+            new Step.Shot("advice_off"),
+            new Step.Press(Step.TerminalKey.ESCAPE));
+
     private static final Map<String, CaptureScenario> BY_NAME = List.of(BOX, BOX_HOSTS, CHAIN, LOOP, FULL_PORTS, DISTANCE,
-            TOOLTIP, DHCP_ADDRESSES, DHCP_RENEWAL, DHCP_NO_BOX, DHCP_CONFLICT, DHCP_POOL_FULL, DHCP_SERVER_OFF, DHCP_RESTART,
+            TOOLTIP, TERMINAL_SCREEN, TERMINAL_ADVICE, DHCP_ADDRESSES, DHCP_RENEWAL, DHCP_NO_BOX, DHCP_CONFLICT, DHCP_POOL_FULL, DHCP_SERVER_OFF, DHCP_RESTART,
             FAILURE_CHECK).stream()
             .collect(Collectors.toUnmodifiableMap(CaptureScenario::name, Function.identity()));
 

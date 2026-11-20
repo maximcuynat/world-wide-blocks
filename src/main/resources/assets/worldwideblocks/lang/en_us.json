@@ -39,6 +39,8 @@
   "message.worldwideblocks.level.error": "Error",
   "message.worldwideblocks.device": "%s [%s, %s, %s]",
   "worldwideblocks.configuration.messageSymbols": "Symbols in front of messages",
+  "worldwideblocks.configuration.terminalTextSize": "Terminal text size (0: automatic)",
+  "worldwideblocks.configuration.terminalAdvice": "Advice after a failed command",
   "item.worldwideblocks.ethernet_cable.tooltip.connect": "Right-click two devices to connect them.",
   "item.worldwideblocks.ethernet_cable.tooltip.unplug": "Sneak + click a device: unplug.",
   "item.worldwideblocks.ethernet_cable.tooltip.cancel": "Sneak + click in the air: cancel.",
@@ -98,5 +100,7 @@
   "terminal.worldwideblocks.help.ip.2": "ip route: the routes. ip neigh: the addresses found by ARP.",
   "terminal.worldwideblocks.help.ip.3": "Only these show something; a change (add, del, set...) is not permitted.",
   "terminal.worldwideblocks.help.ping.1": "ping <address>: a request per second until Ctrl+C; ping -c <n> <address>: n.",
-  "terminal.worldwideblocks.help.ping.2": "Only the -c option exists, and an address is needed: no name service yet."
+  "terminal.worldwideblocks.help.ping.2": "Only the -c option exists, and an address is needed: no name service yet.",
+  "terminal.worldwideblocks.title.close": "Esc: close",
+  "terminal.worldwideblocks.title.stop": "Ctrl+C: stop"
 }

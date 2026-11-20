@@ -21,11 +21,13 @@ import com.mojang.logging.LogUtils;
 import io.github.maximcuynat.worldwideblocks.capture.CaptureScenario.Size;
 import io.github.maximcuynat.worldwideblocks.capture.CaptureScenario.Step;
 import io.github.maximcuynat.worldwideblocks.client.StatusPanelShownEvent;
+import io.github.maximcuynat.worldwideblocks.client.TerminalScreen;
 import io.github.maximcuynat.worldwideblocks.gametest.scene.TrialScenes;
 import io.github.maximcuynat.worldwideblocks.network.DeviceId;
 import io.github.maximcuynat.worldwideblocks.network.Link;
 import io.github.maximcuynat.worldwideblocks.network.NetworkDevices;
 import io.github.maximcuynat.worldwideblocks.network.NetworkManager;
+import io.github.maximcuynat.worldwideblocks.terminal.TerminalLayout;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
@@ -34,6 +36,8 @@ import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.client.tutorial.TutorialSteps;
@@ -95,7 +99,7 @@ final class CaptureRun {
     private enum Phase { TITLE, CREATING, SETTLING, SETUP, STEPS, FAILING, FINISHED }
 
     /** The screen a step expects to be open: shots check it, and a pause screen is closed only when none is. */
-    private enum ExpectedScreen { NONE, INVENTORY, CHAT }
+    private enum ExpectedScreen { NONE, INVENTORY, CHAT, TERMINAL }
 
     /** Stages of a {@link Step.Restart}. */
     private enum Restarting { LOOKING_AWAY, REOPENING, ENTERING }
@@ -121,7 +125,7 @@ final class CaptureRun {
     private String originalLanguage;
     private boolean originalPauseOnLostFocus;
     private TutorialSteps originalTutorialStep;
-    /** Content of the client options file of the mod before the run changed it; null if it did not. */
+    /** Content of the client options file of the mod when the run began, put back at the end; null if it had none. */
     private String originalModConfig;
 
     // World, written by the server thread.
@@ -147,6 +151,8 @@ final class CaptureRun {
     private boolean waitingForSave;
     /** Result of a failure, written once its screenshot is saved. */
     private String failure;
+    /** The use key was clicked by a {@link Step.OpenTerminal}. */
+    private boolean terminalClicked;
     /** Chat lines received when a {@link Step.Silence} began. */
     private int silenceMark;
     private final AtomicBoolean cableRemoved = new AtomicBoolean();
@@ -404,11 +410,15 @@ final class CaptureRun {
             case Step.Command command -> this.command(minecraft, command);
             case Step.GameMode mode -> this.gameMode(minecraft, mode);
             case Step.MessageSymbols symbols -> this.messageSymbols(minecraft, symbols);
+            case Step.TerminalAdvice advice -> this.booleanOption(minecraft, "terminalAdvice", advice.enabled());
             case Step.Wait wait -> this.stepTicks >= wait.ticks();
             case Step.Silence silence -> this.silence(silence);
             case Step.RemoveCable remove -> this.removeCable(minecraft, remove);
             case Step.Sprint sprint -> this.sprint(minecraft, sprint);
             case Step.Restart restart -> this.restart(minecraft);
+            case Step.OpenTerminal open -> this.openTerminal(minecraft, open);
+            case Step.Type type -> this.type(minecraft, type);
+            case Step.Press press -> this.press(minecraft, press);
             case Step.Shot shot -> this.shot(minecraft, shot);
         };
         if (done) {
@@ -469,14 +479,23 @@ final class CaptureRun {
             // The centre of the shape of the block, not of the cube: a box is 3/16 of a block high.
             VoxelShape shape = player.level().getBlockState(device).getShape(player.level(), device);
             Vec3 target = shape.isEmpty() ? Vec3.atCenterOf(device) : shape.bounds().getCenter().add(Vec3.atLowerCornerOf(device));
-            double eyeY = at.getY() + player.getEyeHeight(sneaking ? Pose.CROUCHING : Pose.STANDING);
-            double dx = target.x - (at.getX() + 0.5);
-            double dy = target.y - eyeY;
-            double dz = target.z - (at.getZ() + 0.5);
-            float yaw = (float) (Mth.atan2(dz, dx) * Mth.RAD_TO_DEG) - 90f;
-            float pitch = (float) -(Mth.atan2(dy, Math.sqrt(dx * dx + dz * dz)) * Mth.RAD_TO_DEG);
-            player.teleportTo(player.level(), at.getX() + 0.5, at.getY(), at.getZ() + 0.5, Set.<Relative>of(), yaw, pitch, true);
+            this.faceTarget(player, at, target, sneaking);
         });
+    }
+
+    /** The player at {@code at}, standing, facing this point; on the server thread. */
+    private void faceTarget(ServerPlayer player, BlockPos at, Vec3 target) {
+        this.faceTarget(player, at, target, false);
+    }
+
+    private void faceTarget(ServerPlayer player, BlockPos at, Vec3 target, boolean sneaking) {
+        double eyeY = at.getY() + player.getEyeHeight(sneaking ? Pose.CROUCHING : Pose.STANDING);
+        double dx = target.x - (at.getX() + 0.5);
+        double dy = target.y - eyeY;
+        double dz = target.z - (at.getZ() + 0.5);
+        float yaw = (float) (Mth.atan2(dz, dx) * Mth.RAD_TO_DEG) - 90f;
+        float pitch = (float) -(Mth.atan2(dy, Math.sqrt(dx * dx + dz * dz)) * Mth.RAD_TO_DEG);
+        player.teleportTo(player.level(), at.getX() + 0.5, at.getY(), at.getZ() + 0.5, Set.<Relative>of(), yaw, pitch, true);
     }
 
     private boolean view(Minecraft minecraft, Step.View view) {
@@ -614,6 +633,14 @@ final class CaptureRun {
 
     /** Edits the line {@code messageSymbols = ...} of the client options file of the mod, which the game reads again. */
     private boolean messageSymbols(Minecraft minecraft, Step.MessageSymbols symbols) throws IOException {
+        return this.booleanOption(minecraft, "messageSymbols", symbols.enabled());
+    }
+
+    /**
+     * Edits the line {@code name = true|false} of the client options file of the mod, as a player would; the game
+     * watches the file and reads it again. The whole file is put back at the end of the run.
+     */
+    private boolean booleanOption(Minecraft minecraft, String name, boolean value) throws IOException {
         if (!this.stepStarted) {
             this.stepStarted = true;
             Path file = minecraft.gameDirectory.toPath().resolve(MOD_CLIENT_CONFIG);
@@ -621,17 +648,86 @@ final class CaptureRun {
                 throw new IllegalStateException(MOD_CLIENT_CONFIG + " not found");
             }
             String content = Files.readString(file, StandardCharsets.UTF_8);
-            if (!content.matches("(?s).*\\bmessageSymbols\\s*=\\s*(true|false).*")) {
-                throw new IllegalStateException("no messageSymbols option in " + MOD_CLIENT_CONFIG);
+            String line = "\\b" + name + "\\s*=\\s*(true|false)";
+            if (!content.matches("(?s).*" + line + ".*")) {
+                throw new IllegalStateException("no " + name + " option in " + MOD_CLIENT_CONFIG);
             }
-            if (this.originalModConfig == null) {
-                this.originalModConfig = content;
-            }
-            Files.writeString(file, content.replaceAll("\\bmessageSymbols\\s*=\\s*(true|false)",
-                    "messageSymbols = " + symbols.enabled()), StandardCharsets.UTF_8);
+            Files.writeString(file, content.replaceAll(line, name + " = " + value), StandardCharsets.UTF_8);
             return false;
         }
-        return this.stepTicks >= 4 * STABLE_TICKS; // the game watches the file and reads it again
+        return this.stepTicks >= 4 * STABLE_TICKS;
+    }
+
+    /** Aims at a computer (the keyboard of an open laptop), clicks the use key, waits for its terminal screen. */
+    private boolean openTerminal(Minecraft minecraft, Step.OpenTerminal open) {
+        TerminalScenes.requireDevice(this.scene.get(), open.device());
+        BlockPos device = this.scene.get().devices().get(open.device());
+        BlockPos at = device.relative(Direction.SOUTH, 2);
+        if (!this.stepStarted) {
+            this.stepStarted = true;
+            this.terminalClicked = false;
+            this.stableTicks = 0;
+            this.sneaking = false;
+            this.aimed = null;
+            this.standing = at;
+            IntegratedServer server = minecraft.getSingleplayerServer();
+            server.execute(() -> {
+                ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+                this.faceTarget(player, at, TerminalScenes.clickPoint(player.level().getBlockState(device), device));
+            });
+            return false;
+        }
+        if (!this.terminalClicked) {
+            boolean onDevice = this.aimedBlock(minecraft).filter(device::equals).isPresent() && minecraft.gui.screen() == null;
+            this.stableTicks = onDevice ? this.stableTicks + 1 : 0;
+            if (this.stableTicks >= STABLE_TICKS) {
+                KeyMapping.click(minecraft.options.keyUse.getKey());
+                this.terminalClicked = true;
+                this.stableTicks = 0;
+            }
+            return false;
+        }
+        boolean shown = minecraft.gui.screen() instanceof TerminalScreen terminal && terminal.device().equals(device);
+        this.stableTicks = shown ? this.stableTicks + 1 : 0;
+        if (this.stableTicks >= STABLE_TICKS) {
+            this.expectedScreen = ExpectedScreen.TERMINAL;
+            return true;
+        }
+        return false;
+    }
+
+    private boolean type(Minecraft minecraft, Step.Type type) {
+        if (!this.stepStarted) {
+            this.stepStarted = true;
+            TerminalScreen terminal = this.terminal(minecraft);
+            type.text().codePoints().forEach(codepoint -> terminal.charTyped(new CharacterEvent(codepoint)));
+            return false;
+        }
+        return this.stepTicks >= 2;
+    }
+
+    /** A key to the terminal; Esc and the end of the shell close it, and the screen expected follows. */
+    private boolean press(Minecraft minecraft, Step.Press press) {
+        if (!this.stepStarted) {
+            this.stepStarted = true;
+            Step.TerminalKey key = press.key();
+            this.terminal(minecraft).keyPressed(new KeyEvent(key.key, key.keycode, key.modifiers));
+            if (key == Step.TerminalKey.ESCAPE) {
+                this.expectedScreen = ExpectedScreen.NONE;
+            }
+            return false;
+        }
+        if (this.expectedScreen == ExpectedScreen.TERMINAL && !(minecraft.gui.screen() instanceof TerminalScreen)) {
+            this.expectedScreen = ExpectedScreen.NONE; // the server closed it: the shell ended
+        }
+        return this.stepTicks >= STABLE_TICKS;
+    }
+
+    private TerminalScreen terminal(Minecraft minecraft) {
+        if (minecraft.gui.screen() instanceof TerminalScreen terminal) {
+            return terminal;
+        }
+        throw new IllegalStateException("no terminal open (screen " + minecraft.gui.screen() + ")");
     }
 
     private boolean silence(Step.Silence silence) {
@@ -773,6 +869,7 @@ final class CaptureRun {
         return switch (this.expectedScreen) {
             case NONE -> screen == null && this.aimHolds(minecraft);
             case CHAT -> screen instanceof ChatScreen;
+            case TERMINAL -> screen instanceof TerminalScreen;
             case INVENTORY -> screen == this.inventory && minecraft.player != null
                     && this.inventory.hovered().filter(slot -> slot == this.heldSlot(minecraft) && slot.hasItem()).isPresent();
         };
@@ -820,6 +917,7 @@ final class CaptureRun {
             }
             this.screenshots++;
             this.writeValues(minecraft, file, language);
+            this.checkTerminalFrame(minecraft, file);
             this.combination++;
             if (this.combination >= total) {
                 this.chatWritten = this.chat.size();
@@ -909,6 +1007,18 @@ final class CaptureRun {
             this.panel.lines().forEach(text -> line.append(" / ").append(text));
         }
         line.append(" | screen ").append(minecraft.gui.screen() == null ? "none" : minecraft.gui.screen().getClass().getSimpleName());
+        if (minecraft.gui.screen() instanceof TerminalScreen terminal) {
+            TerminalScreen.Layout grid = terminal.layout();
+            line.append(" | terminal ").append(grid.columns()).append('x').append(grid.rows())
+                    .append(", text size ").append(grid.scale()).append(grid.automatic() ? " (auto)" : " (set)")
+                    .append(", scrolled up ").append(grid.scrollUp())
+                    .append(" | frame ").append(grid.frame().frame()).append(" in a GUI of ")
+                    .append(grid.guiWidth()).append('x').append(grid.guiHeight())
+                    .append(", title ").append(grid.frame().title())
+                    .append(", text area ").append(grid.frame().text())
+                    .append(" | rows:");
+            grid.visibleRows().forEach(row -> line.append(" ⏎ ").append(row));
+        }
         if (this.inventory != null && minecraft.gui.screen() == this.inventory) {
             line.append(" | tooltip:");
             Screen.getTooltipFromItem(minecraft, this.heldSlot(minecraft).getItem())
@@ -923,6 +1033,26 @@ final class CaptureRun {
         LOGGER.info("Capture {}: {}", this.scenarioName, line.toString().strip());
     }
 
+    /**
+     * A terminal open fails the run when its frame was drawn for another GUI size than the window's, or leaves it, or
+     * when its title (accents included) or its text area crosses the border ({@link TerminalLayout#frameProblem}).
+     */
+    private void checkTerminalFrame(Minecraft minecraft, String file) {
+        if (minecraft.gui.screen() instanceof TerminalScreen terminal) {
+            TerminalScreen.Layout grid = terminal.layout();
+            Window window = minecraft.getWindow();
+            int width = window.getGuiScaledWidth();
+            int height = window.getGuiScaledHeight();
+            if (grid.guiWidth() != width || grid.guiHeight() != height) {
+                throw new IllegalStateException(file + ": the terminal was drawn for a GUI of " + grid.guiWidth() + "x"
+                        + grid.guiHeight() + ", the window has " + width + "x" + height);
+            }
+            TerminalLayout.frameProblem(grid.frame(), width, height).ifPresent(problem -> {
+                throw new IllegalStateException(file + ": " + problem);
+            });
+        }
+    }
+
     // ---- Settings and end ----
 
     private void saveSettings(Minecraft minecraft) {
@@ -933,6 +1063,12 @@ final class CaptureRun {
         this.originalLanguage = minecraft.getLanguageManager().getSelected();
         this.originalPauseOnLostFocus = minecraft.options.pauseOnLostFocus;
         this.originalTutorialStep = minecraft.options.tutorialStep;
+        Path modConfig = minecraft.gameDirectory.toPath().resolve(MOD_CLIENT_CONFIG);
+        try {
+            this.originalModConfig = Files.isRegularFile(modConfig) ? Files.readString(modConfig, StandardCharsets.UTF_8) : null;
+        } catch (IOException e) {
+            throw new IllegalStateException("cannot read " + MOD_CLIENT_CONFIG, e);
+        }
         this.settingsSaved = true;
         minecraft.options.pauseOnLostFocus = false;
         // The hints of the tutorial ("Move with ...") are drawn over the top right corner, where they hide the panel.

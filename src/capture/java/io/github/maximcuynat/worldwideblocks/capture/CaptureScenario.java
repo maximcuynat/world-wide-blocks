@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+import com.mojang.blaze3d.platform.InputConstants;
+
 import io.github.maximcuynat.worldwideblocks.gametest.scene.TrialScenario;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.ItemLike;
@@ -106,13 +108,61 @@ public record CaptureScenario(String name, String description, List<Size> sizes,
 
         /**
          * Sets the client option {@code messageSymbols} of the mod, by editing {@code config/worldwideblocks-client.toml}
-         * as a player would; the game reads the file again. Put back at the end of the run.
+         * as a player would; the game reads the file again. The file is put back at the end of the run, whatever
+         * changed it (this step, or Ctrl+= in the terminal).
          */
         record MessageSymbols(boolean enabled) implements Step {
         }
 
+        /** Sets the client option {@code terminalAdvice} of the mod, as {@link MessageSymbols} does. */
+        record TerminalAdvice(boolean enabled) implements Step {
+        }
+
         /** Lets the game run for some ticks. */
         record Wait(int ticks) implements Step {
+        }
+
+        /**
+         * The player stands 2 blocks south of a computer of the last scene, aims at it (at the keyboard of an open
+         * laptop) and clicks the use key, as a player does; the step ends when its terminal screen is open.
+         */
+        record OpenTerminal(int device) implements Step {
+        }
+
+        /** Characters typed in the terminal open, one by one, as the operating system hands them to the game. */
+        record Type(String text) implements Step {
+        }
+
+        /** A key of the terminal, with its modifiers, as the game hands it to the screen. */
+        record Press(TerminalKey key) implements Step {
+        }
+
+        /**
+         * Keys of the terminal: the physical key (SDL3 scancode, {@code InputConstants}), the symbol of a QWERTY layout
+         * ({@code shortcutKey}, what the terminal reads for Ctrl shortcuts), the modifiers (SDL masks: Shift 3, Ctrl
+         * 192).
+         */
+        enum TerminalKey {
+            ENTER(InputConstants.KEY_RETURN, '\r', 0),
+            ESCAPE(InputConstants.KEY_ESCAPE, 27, 0),
+            UP(InputConstants.KEY_UP, 0, 0),
+            SHIFT_PAGE_UP(InputConstants.KEY_PAGEUP, 0, InputConstants.MOD_SHIFT),
+            CTRL_C(InputConstants.KEY_C, 'c', InputConstants.MOD_CONTROL),
+            CTRL_D(InputConstants.KEY_D, 'd', InputConstants.MOD_CONTROL),
+            CTRL_L(InputConstants.KEY_L, 'l', InputConstants.MOD_CONTROL),
+            CTRL_PLUS(InputConstants.KEY_EQUALS, '=', InputConstants.MOD_CONTROL),
+            CTRL_MINUS(InputConstants.KEY_MINUS, '-', InputConstants.MOD_CONTROL),
+            CTRL_ZERO(InputConstants.KEY_0, '0', InputConstants.MOD_CONTROL);
+
+            final int key;
+            final int keycode;
+            final int modifiers;
+
+            TerminalKey(int key, int keycode, int modifiers) {
+                this.key = key;
+                this.keycode = keycode;
+                this.modifiers = modifiers;
+            }
         }
 
         /**

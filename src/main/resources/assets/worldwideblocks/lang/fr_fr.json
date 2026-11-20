@@ -39,6 +39,8 @@
   "message.worldwideblocks.level.error": "Erreur",
   "message.worldwideblocks.device": "%s [%s, %s, %s]",
   "worldwideblocks.configuration.messageSymbols": "Symboles devant les messages",
+  "worldwideblocks.configuration.terminalTextSize": "Taille du texte du terminal (0 : automatique)",
+  "worldwideblocks.configuration.terminalAdvice": "Conseils après une commande en échec",
   "item.worldwideblocks.ethernet_cable.tooltip.connect": "Clic droit sur deux appareils : les relier.",
   "item.worldwideblocks.ethernet_cable.tooltip.unplug": "Accroupi + clic sur un appareil : débrancher.",
   "item.worldwideblocks.ethernet_cable.tooltip.cancel": "Accroupi + clic dans le vide : annuler.",
@@ -98,5 +100,7 @@
   "terminal.worldwideblocks.help.ip.2": "ip route : les routes. ip neigh : les adresses trouvées par ARP.",
   "terminal.worldwideblocks.help.ip.3": "Seul l'affichage existe ; une modification (add, del, set...) n'est pas permise.",
   "terminal.worldwideblocks.help.ping.1": "ping <adresse> : une requête par seconde jusqu'à Ctrl+C ; -c <n> : n requêtes.",
-  "terminal.worldwideblocks.help.ping.2": "Seule l'option -c existe, et il faut une adresse : pas de service de noms."
+  "terminal.worldwideblocks.help.ping.2": "Seule l'option -c existe, et il faut une adresse : pas de service de noms.",
+  "terminal.worldwideblocks.title.close": "Échap : fermer",
+  "terminal.worldwideblocks.title.stop": "Ctrl+C : arrêter"
 }

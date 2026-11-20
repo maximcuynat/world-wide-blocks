@@ -40,11 +40,15 @@ final class ClientMessages {
     private Component render(Message message) {
         Component body = ClientText.of(message.key(), message.args());
         MessageLevel level = message.level();
-        MutableComponent line = this.config.messageSymbols()
+        return withLevel(this.config.messageSymbols(), level, body).withStyle(color(level));
+    }
+
+    /** A text with its level in front: its symbol, or its translated word (client setting {@code messageSymbols}). */
+    static MutableComponent withLevel(boolean symbols, MessageLevel level, Component body) {
+        return symbols
                 ? Component.literal(symbol(level) + " ").append(body)
                 : Component.translatable("message.worldwideblocks.with_level",
                         Component.translatable("message.worldwideblocks.level." + level.name().toLowerCase(Locale.ROOT)), body);
-        return line.withStyle(color(level));
     }
 
     private static String symbol(MessageLevel level) {

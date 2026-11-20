@@ -36,6 +36,8 @@ class LangFilesTest {
     private static final int CHAT = 90;
     private static final int TERMINAL_ADVICE = 160;
     private static final int TERMINAL_ROW = 80;
+    /** A hint of the title bar of the terminal, next to the name of the machine at 854 x 480. */
+    private static final int TERMINAL_TITLE = 20;
 
     private static final String PORT = "5";
     private static final String DISTANCE = "100";
@@ -55,7 +57,8 @@ class LangFilesTest {
             "hud.worldwideblocks.", PANEL,
             "item.worldwideblocks.ethernet_cable.tooltip.", PANEL,
             "terminal.worldwideblocks.advice.", TERMINAL_ADVICE,
-            Help.KEYS, TERMINAL_ROW);
+            Help.KEYS, TERMINAL_ROW,
+            "terminal.worldwideblocks.title.", TERMINAL_TITLE);
 
     /** Sample values of each key, built from the longest device name and the longest DHCP state of the language. */
     private static Map<String, List<String>> samples(String name, String state) {
@@ -112,6 +115,8 @@ class LangFilesTest {
         }
         samples.put("terminal.worldwideblocks.advice.ping.no_name_service", List.of());
         // help: the summary of a command after its name padded to the column of names; the other lines without values.
+        samples.put("terminal.worldwideblocks.title.close", List.of());
+        samples.put("terminal.worldwideblocks.title.stop", List.of());
         samples.put(Help.KEYS + "intro", List.of());
         for (int i = 1; i <= Help.KEY_LINES; i++) {
             samples.put(Help.KEYS + "keys." + i, List.of());
