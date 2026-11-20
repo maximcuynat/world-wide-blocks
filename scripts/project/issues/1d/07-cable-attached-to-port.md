@@ -7,6 +7,7 @@ The cable leaves from the port itself, with an RJ45 plug pushed into it, and get
 - [ ] First, check in the 26.3 sources how to draw a small model or textured quads in `SubmitCustomGeometryEvent`
 - [x] Plug model (one RJ45 size, clear body and long boot), drawn following the design guide and approved by the maintainer on 2026-11-20: `design/blockbench/rj45_plug_<colour>.bbmodel` and its sheet `rj45_plug.md`, by `design/tools/rj45_plug.py`
 - [ ] Plug exported: one texture `rj45_plug.png` (32 x 32) for the eight cord colours, one model per colour where only the UV of the boot changes; the client picks the model from the colour of the link
+- [ ] Cord item icon exported, the variant with the taller plug chosen on 2026-11-20 (`ICON` of `design/tools/cables.py`, in the cord colours; design guide, section 4); the palette exception of `textures/item/ethernet_cable.png` removed
 - [ ] `BlockResourcesTest` accepts the roles and the cord colours of `design/palette.json` for the plug texture and the cord item icon only, the roles alone elsewhere (design guide, section 4)
 - [ ] The end of a cable is the mouth of its port (port layout, `FACING` read on the client); `ATTACH_HEIGHT` removed; the held cable goes from the plug to the hand
 - [ ] Plugs drawn by the client from the cables it knows, not from block states
