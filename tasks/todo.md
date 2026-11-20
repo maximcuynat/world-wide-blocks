@@ -266,3 +266,7 @@ Max asked for a design proposal, no code: choice of the port, cable attached to 
 - [x] Max's decisions (2026-11-20): aim with zones over the top of flat devices; plugs from the cables known to the client; cable on the ground drawn; wall gone around, otherwise hanging; lot 1d renamed 1d-1, lot 1d-2 in 0.2.0; tower and laptop redrawn before 1d-1. Needs of 2b noted (route preview through a wall, view of hidden cables, 9a detector), checked against the architecture in `docs/cable-design.md`, section 6.
 - [x] Issue definitions: `issues/1d/05` to `07` (lot 1d-1, kept in `issues/1d/` like 1c-1), `issues/1d-2/01` to `03`; milestones: 1d renamed 1d-1, 1d-2 added in 0.2.0; local validation of the definitions passed.
 - [ ] On GitHub (Max): rename the milestone "Lot 1d: Desktop switch" to "Lot 1d-1: Desktop switch" before `scripts/dev project sync`, otherwise sync creates a second milestone.
+
+## Issue definitions waiting for a sync (2026-11-20)
+
+Not to be synchronised from `design/equipment` (`tasks/lessons.md`): wait for the merge of `lot/1c-1` into `developement` and the rebase of this branch. Changed here and not yet on GitHub: cross-links in `ideas/04-cables-and-guides.md`, `ideas/13-port-types.md`, `ideas/14-port-lights.md`, `1d/05-port-layouts.md`, `1d/07-cable-attached-to-port.md`, `1d-2/01-cable-route.md`; ticked boxes of `backlog/05-equipment-design-guide.md` (#56).

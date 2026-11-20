@@ -2,7 +2,7 @@ Title: Cable attached to its port, with its plug
 Labels: type: feature, area: interface, priority: high
 Milestone: lot 1d-1
 
-The cable leaves from the port itself, with an RJ45 plug pushed into it, and gets a thickness. The hanging curve between the two plugs stays until lot 1d-2. Design in `docs/cable-design.md`, section 4 (decided on 2026-11-20).
+The cable leaves from the port itself, with an RJ45 plug pushed into it, and gets a thickness. The hanging curve between the two plugs stays until lot 1d-2. Design in `docs/cable-design.md`, section 4 (decided on 2026-11-20). Related ideas: cables and cable guides (#25), port types (#37).
 
 - [ ] First, check in the 26.3 sources how to draw a small model or textured quads in `SubmitCustomGeometryEvent`
 - [ ] Plug models, large and small, drawn in Blockbench following the design guide and approved
