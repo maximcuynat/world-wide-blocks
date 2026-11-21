@@ -9,4 +9,4 @@ For each device, automatic screenshots to look at instead of a check by hand, bu
 - [ ] The switches added to the device scenarios at lot 1d-1, once their blocks exist (`device_switch_5`, `device_switch_8`)
 - [x] The four orientations side by side with the selection outline (an orientation added to the devices of `TrialScenario`)
 - [x] Inventory (the item drawn large with its real inventory settings), first and third person in hand, on the ground, in an item frame
-- [ ] Screenshots in `run-capture/screenshots/device_<id>/`, read and reported by the assistant
+- [x] Screenshots in `run-capture/screenshots/device_<id>/`, read and reported by the assistant
