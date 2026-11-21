@@ -55,7 +55,7 @@ On the face that carries the ports, each port owns the strip of the face up to h
 
 ![Aim zones](images/cable-aim-zones.png)
 
-Box front on the left (zones over the lower band of the front). Switch on the right: its top as seen from the front (LEDs along the front edge), then its front; each port's zone runs over both. Holes in black, one tint per zone.
+Box front on the left (zones over the lower band of the front). Switch on the right: its top as seen from the front (LEDs along the front edge), then its front; each port's zone runs over both. Holes in black, one tint per zone. Drawn from the device drawings by `python3 design/tools/port_layout.py --zones-image docs/images/cable-aim-zones.png` (redrawn on 2026-11-21 with the RJ45 holes of 2 x 2 texels).
 
 | Device | Hole | Aim zone | Gain |
 |---|---|---|---|
@@ -91,7 +91,7 @@ The click point is turned into the north frame of the device, then looked up in 
   - the model is a plug in a port facing north, its mouth at 8, 8, 8 (sheet `design/blockbench/rj45_plug.md`): the client turns it with the port (0 north, 90 east, 180 south, 270 west, as the `y` of a blockstate) and moves its mouth to the mouth of the port given by `PortLayout`;
   - **loading at lot 1d-1:** no block state uses these models, so the game does not bake them by itself. The client registers them as standalone models: `ModelEvent.RegisterStandalone`, one `StandaloneModelKey` per colour, `SimpleUnbakedStandaloneModel.simpleModelWrapper(id)` (a `BlockStateModelPart`, drawn with `SubmitNodeCollector.submitBlockModel` and `Sheets.cutoutBlockItemSheet()`; confirmed at lot 1d-1 on 2026-11-21, `client/PlugModels`), then picks the model from the colour of the link (blue for every link until the colour is a property of the link, section 7). The cable takes the base tone of its colour from one texel of the boot of the plug texture (`port/CordColour`), drawn as quads of `RenderTypes.entitySolid` lit by the light of the world.
 - **Overhang accepted** (Max, 2026-11-20, realistic): the mouth of the tower is 0.5 px from the edge of its block and that of the laptop 1 px, so their plug goes out of the block; a tower or a laptop against a wall has its plug drawn inside the wall, as a real plug stands out behind a computer pushed against a wall.
-- **Thick cable:** square section of 0.25 px (a 6 mm cord x 2.4 is 0.23 px), four faces per segment, lit by the light of the world where it passes, in the colour of the cord. It replaces the line of `RenderTypes.lines`. The held cable goes from the plug to the hand.
+- **Thick cable:** square section of 0.25 px (a 6 mm cord x 2.4 is 0.23 px), four faces per segment, lit by the light of the world where it passes, in the colour of the cord. It replaces the line of `RenderTypes.lines`. Never less than one pixel of the screen wide (Max, 2026-11-21): from close it keeps its 0.25 px, from afar the section widens so that the cable stays visible (a 0.25 px cable is thinner than a pixel beyond about 12 blocks at 1920 x 1080). The held cable goes from the plug to the hand.
 - **In step 1 the cable keeps today's hanging curve**, between the ends of the two plugs. Step 2 replaces this curve.
 - Preview of the chosen plug (`design/tools/rj45_plug.py` and `preview.py`, not the game's rendering), turned with each port as the client will: internet box LAN 1 to 4, 5-port switch, 8-port switch, laptop (left flank), tower (back), each with a cable stub to the floor, the colours in the order of the palette.
 

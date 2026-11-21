@@ -10,6 +10,7 @@ Java shape of the block (front facing north).
     python3 design/tools/port_layout.py <id>             # Markdown table for the device sheet
     python3 design/tools/port_layout.py <id> --java      # the ports as the Java records print them (PortLayout.Port)
     python3 design/tools/port_layout.py --all [--java]
+    python3 design/tools/port_layout.py --zones-image docs/images/cable-aim-zones.png
 """
 import desktop_switches
 import internet_box
@@ -170,13 +171,95 @@ def table(device_id):
     return '\n'.join(rows)
 
 
+# --- Image of the aim zones (docs/images/cable-aim-zones.png) ----------------------------------------------------
+
+def zones(width, height, holes, rows, zone_rows, scale=16):
+    """A face seen from the front, scale pixels per texel: the zone of each port tinted (two tints in turn) over the rows
+    of zone_rows, a grey line between two zones, the holes in black. holes: (column, width) in texels from the viewer's
+    left; rows: (row, height) of the holes. Copied from the draft of the cable design session
+    (research/design-scratchpad/cable_mock.py, 2026-11-20), which drew the first version of the image."""
+    img = [[(196, 200, 206, 255)] * (width * scale) for _ in range(height * scale)]
+    tints = [(255, 214, 170), (170, 214, 255)]
+    centres = [c + w / 2 for c, w in holes]
+    for i, (c, w) in enumerate(holes):
+        left = 0 if i == 0 else (centres[i - 1] + centres[i]) / 2
+        right = width if i == len(holes) - 1 else (centres[i] + centres[i + 1]) / 2
+        for y in range(zone_rows[0] * scale, zone_rows[1] * scale):
+            for x in range(int(left * scale), int(right * scale)):
+                img[y][x] = tints[i % 2] + (255,)
+        for y in range(rows[0] * scale, (rows[0] + rows[1]) * scale):
+            for x in range(c * scale, (c + w) * scale):
+                img[y][x] = (28, 30, 34, 255)
+    for i in range(1, len(holes)):
+        x = int((centres[i - 1] + centres[i]) / 2 * scale)
+        for y in range(zone_rows[0] * scale, zone_rows[1] * scale):
+            img[y][x] = (90, 90, 90, 255)
+    return img
+
+
+def _texel(img, col, row, colour, scale):
+    for y in range(row * scale, (row + 1) * scale):
+        for x in range(col * scale, (col + 1) * scale):
+            img[y][x] = colour
+
+
+def zones_image(path):
+    """The image of docs/cable-design.md, section 3, from the drawings of today: the front of the internet box (zones
+    over the lower band of the front, LAN LEDs above the ports) on the left; on the right the 5-port switch, its top as
+    seen from the front (port LEDs along the front edge, power LED at the left end) above its front, each zone running
+    over both. The zones follow the rule of PortLayouts (halfway between two ports, to the edge at the ends)."""
+    led = d.colour('led_green')
+    lo, hi = internet_box.ENVELOPE
+    top = hi[1]
+    _, box_ports = layout('internet_box')
+    band = box_ports[0]['zone'][0][1]
+    zone_rows = (int(round((top - band[4]) * d.TEXELS_PER_PX)), int(round((top - band[1]) * d.TEXELS_PER_PX)))
+    box = zones(int((hi[0] - lo[0]) * d.TEXELS_PER_PX), int((hi[1] - lo[1]) * d.TEXELS_PER_PX),
+                [(c, 2) for c in internet_box.LAN_COLS], internet_box.PORT_ROWS, zone_rows)
+    for c in internet_box.LAN_COLS:
+        _texel(box, c, internet_box.PORT_ROWS[0] - 2, led, 16)
+
+    spec = desktop_switches.SWITCHES['desktop_switch_5']
+    slo, shi = spec['envelope']
+    width = int((shi[0] - slo[0]) * d.TEXELS_PER_PX)
+    depth = int((shi[2] - slo[2]) * d.TEXELS_PER_PX)
+    height = int((shi[1] - slo[1]) * d.TEXELS_PER_PX)
+    holes = [(c, 2) for c in spec['ports']]
+    scale = 28
+    upper = zones(width, depth, holes, (0, 0), (0, depth), scale)
+    # The top seen from the front: its front edge at the bottom, next to the front face; LEDs on row 1 from that edge,
+    # one above the right texel of each port, the power LED at the left end (desktop_switches.py).
+    for c in spec['ports']:
+        _texel(upper, c + 1, depth - 2, led, scale)
+    _texel(upper, 0, depth - 2, led, scale)
+    front = zones(width, height, holes, desktop_switches.PORT_ROWS, (0, height), scale)
+    switch = upper + front
+    for x in range(len(switch[0])):
+        switch[len(upper)][x] = (120, 120, 120, 255)
+        switch[len(upper) + 1][x] = (120, 120, 120, 255)
+
+    h = max(len(box), len(switch))
+    gap = 40
+    canvas = [[(255, 255, 255, 255)] * (len(box[0]) + gap + len(switch[0])) for _ in range(h)]
+    for y, row in enumerate(box):
+        canvas[y][:len(row)] = row
+    for y, row in enumerate(switch):
+        canvas[y][len(box[0]) + gap:len(box[0]) + gap + len(row)] = row
+    with open(path, 'wb') as out:
+        out.write(d.encode_png(canvas))
+
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('device', nargs='?', choices=sorted(DEVICES))
     parser.add_argument('--all', action='store_true')
     parser.add_argument('--java', action='store_true', help='print the ports as the Java records print them')
+    parser.add_argument('--zones-image', metavar='PNG', help='draw the image of the aim zones (docs/images/cable-aim-zones.png)')
     args = parser.parse_args()
+    if args.zones_image:
+        zones_image(args.zones_image)
+        raise SystemExit(0)
     ids = sorted(DEVICES) if args.all or not args.device else [args.device]
     for device in ids:
         print(java(device) if args.java else '## %s\n\n%s\n' % (device, table(device)))
