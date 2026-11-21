@@ -2,6 +2,7 @@ package io.github.maximcuynat.worldwideblocks.capture;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import io.github.maximcuynat.worldwideblocks.WorldWideBlocks;
 import net.minecraft.client.Minecraft;
@@ -18,6 +19,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.neoforged.neoforge.client.model.standalone.StandaloneModelKey;
+import io.github.maximcuynat.worldwideblocks.client.PlugModels;
+import io.github.maximcuynat.worldwideblocks.port.CordColour;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -40,9 +44,9 @@ final class ModelCheck {
             Direction.WEST, Direction.EAST, null};
 
     /** What was checked and what is wrong. */
-    record Result(int states, int items, int quads, List<String> problems) {
+    record Result(int states, int items, int plugs, int quads, List<String> problems) {
         String summary() {
-            return this.states + " block states, " + this.items + " items, " + this.quads + " quads";
+            return this.states + " block states, " + this.items + " items, " + this.plugs + " plug models, " + this.quads + " quads";
         }
     }
 
@@ -103,7 +107,29 @@ final class ModelCheck {
                 problems.add("item " + id + ": missing texture");
             }
         }
-        return new Result(states, items, quads, List.copyOf(problems));
+        // The plug models (lot 1d-1): standalone models, used by no block state.
+        int plugs = 0;
+        for (Map.Entry<CordColour, StandaloneModelKey<BlockStateModelPart>> plug : PlugModels.keys().entrySet()) {
+            plugs++;
+            BlockStateModelPart part = models.getStandaloneModel(plug.getValue());
+            if (part == null) {
+                problems.add("plug " + plug.getKey().serializedName() + ": model not loaded");
+                continue;
+            }
+            boolean missingTexture = false;
+            int plugQuads = 0;
+            for (Direction side : SIDES_AND_NONE) {
+                for (BakedQuad quad : part.getQuads(side)) {
+                    plugQuads++;
+                    missingTexture |= isMissing(quad.materialInfo().sprite());
+                }
+            }
+            quads += plugQuads;
+            if (plugQuads == 0 || missingTexture) {
+                problems.add("plug " + plug.getKey().serializedName() + ": " + (plugQuads == 0 ? "no quads" : "missing texture"));
+            }
+        }
+        return new Result(states, items, plugs, quads, List.copyOf(problems));
     }
 
     private static boolean isMissing(Material.Baked material) {

@@ -86,6 +86,19 @@ public enum TrialScenario {
                     device(-3, 3, ModBlocks.PC_TOWER::get), device(3, 3, ModBlocks.LAPTOP::get)),
             List.of(cable(0, 2), cable(1, 3))),
     /**
+     * Plugs and cables (issue #63): a box and a 5-port switch facing the player, linked to each other and to computers
+     * turned by 90, 180 and 270 degrees, the 5-port switch to an 8-port switch turned by 90 degrees, which goes on to a
+     * box turned by 270 degrees: a plug in a port of every kind of device, in the four orientations.
+     */
+    PLUGS("plugs", "box and switches linked to turned computers and devices",
+            List.of(device(-3, 0, ModBlocks.INTERNET_BOX::get), device(3, 0, ModBlocks.DESKTOP_SWITCH_5::get),
+                    new Device(-5, 3, ModBlocks.PC_TOWER::get, 90, UnaryOperator.identity()),
+                    new Device(-2, 4, ModBlocks.LAPTOP::get, 180, UnaryOperator.identity()),
+                    new Device(1, 4, ModBlocks.PC_TOWER::get, 270, UnaryOperator.identity()),
+                    new Device(5, 3, ModBlocks.DESKTOP_SWITCH_8::get, 90, UnaryOperator.identity()),
+                    new Device(4, 7, ModBlocks.INTERNET_BOX::get, 270, UnaryOperator.identity())),
+            List.of(cable(0, 2), cable(0, 3), cable(0, 1), cable(1, 4), cable(1, 5), cable(5, 6))),
+    /**
      * Internet box for its capture scenario (issue #68): one box alone in front of the player for the close-up views,
      * and four more in a row behind it, turned by 0, 90, 180 and 270 degrees.
      */

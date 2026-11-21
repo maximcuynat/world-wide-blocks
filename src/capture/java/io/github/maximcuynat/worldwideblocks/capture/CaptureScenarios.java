@@ -443,6 +443,46 @@ public final class CaptureScenarios {
                     new Step.Hold(null),
                     new Step.AimPort(0, 0, 2.5, false, true), new Step.Shot("box_take_end")));
 
+    /**
+     * Lot 1d-1, issue #63, scene {@code plugs}: the RJ45 plug in each port that has a cable and the thick cable leaving
+     * from it: the box and the 5-port switch from the front, three-quarter and above; each turned device seen from the
+     * side of its port (tower turned by 90 and 270 degrees, laptop by 180, 8-port switch by 90, box by 270); the whole
+     * scene from above; the box again at night (cables and plugs darken with the world); then a cord started on port 4 of
+     * the switch, the cable going from its plug to the hand, in first
+     * and third person.
+     */
+    static final CaptureScenario PLUGS = new CaptureScenario("plugs", "plugs in their ports, thick cables, turned devices, held cable",
+            List.of(new CaptureScenario.Size(1920, 1080)), List.of(AUTO_SCALE), List.of("en_us"), List.of(
+                    new Step.BuildScene(TrialScenario.PLUGS),
+                    new Step.Wait(SETTLE),
+                    new Step.GameMode(GameType.SPECTATOR),
+                    new Step.HideHud(true),
+                    new Step.Orbit(0, 0, 20, 1.1), new Step.Shot("box_front"),
+                    new Step.Orbit(0, 35, 30, 1.2), new Step.Shot("box_three_quarter"),
+                    new Step.Orbit(1, 0, 25, 0.9), new Step.Shot("switch_front"),
+                    new Step.Orbit(1, 325, 45, 1.0), new Step.Shot("switch_three_quarter"),
+                    new Step.Orbit(2, 270, 25, 1.6), new Step.Shot("tower_90_port"),
+                    new Step.Orbit(3, 270, 30, 1.3), new Step.Shot("laptop_180_port"),
+                    new Step.Orbit(4, 90, 25, 1.6), new Step.Shot("tower_270_port"),
+                    new Step.Orbit(5, 90, 30, 1.0), new Step.Shot("switch8_90_port"),
+                    new Step.Orbit(6, 270, 25, 1.2), new Step.Shot("box_270_port"),
+                    new Step.Orbit(0, 0, 55, 9.0, 3.0), new Step.Shot("scene"),
+                    // At night the cables and the plugs darken with the world: they are lit by its light.
+                    new Step.Command("time set midnight"),
+                    new Step.Wait(20),
+                    new Step.Orbit(0, 35, 30, 1.2), new Step.Shot("box_night"),
+                    new Step.Command("time set noon"),
+                    new Step.Wait(20),
+                    new Step.HideHud(false),
+                    new Step.GameMode(GameType.CREATIVE),
+                    new Step.Hold(ModItems.ETHERNET_CABLE),
+                    new Step.AimPort(1, 3, 2.0, false, false),
+                    new Step.Use(),
+                    new Step.Shot("held_cable"),
+                    new Step.Camera(CameraType.THIRD_PERSON_BACK),
+                    new Step.Shot("held_cable_third_person"),
+                    new Step.Camera(CameraType.FIRST_PERSON)));
+
     // ---- Devices (issue #68): close-up views, the four orientations, the item ----
 
     /** One size and one language for the devices: the models carry no text. */
@@ -525,7 +565,7 @@ public final class CaptureScenarios {
 
     private static final Map<String, CaptureScenario> BY_NAME = List.of(BOX, BOX_HOSTS, CHAIN, LOOP, FULL_PORTS, DISTANCE,
             TOOLTIP, TERMINAL, TERMINAL_SCREEN, TERMINAL_ADVICE, DHCP_ADDRESSES, DHCP_RENEWAL, DHCP_NO_BOX, DHCP_CONFLICT, DHCP_POOL_FULL, DHCP_SERVER_OFF, DHCP_RESTART,
-            DEVICE_BOX, DEVICE_TOWER, DEVICE_LAPTOP, DEVICE_SWITCH_5, DEVICE_SWITCH_8, PORT_AIM, FAILURE_CHECK).stream()
+            DEVICE_BOX, DEVICE_TOWER, DEVICE_LAPTOP, DEVICE_SWITCH_5, DEVICE_SWITCH_8, PORT_AIM, PLUGS, FAILURE_CHECK).stream()
             .collect(Collectors.toUnmodifiableMap(CaptureScenario::name, Function.identity()));
 
     private CaptureScenarios() {

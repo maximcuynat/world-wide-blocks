@@ -40,6 +40,7 @@ public final class WorldWideBlocksClient {
         modContainer.registerConfig(ModConfig.Type.CLIENT, this.config.spec());
         modEventBus.addListener(this::registerPayloadHandlers);
         modEventBus.addListener(this::registerGuiLayers);
+        modEventBus.addListener(PlugModels::register);
         NeoForge.EVENT_BUS.addListener(this::onLoggingOut);
         NeoForge.EVENT_BUS.addListener(this::extractCables);
         NeoForge.EVENT_BUS.addListener(this::submitCables);
