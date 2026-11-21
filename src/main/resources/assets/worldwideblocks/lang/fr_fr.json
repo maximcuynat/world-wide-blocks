@@ -3,6 +3,7 @@
   "block.worldwideblocks.pc_tower": "Tour PC",
   "block.worldwideblocks.laptop": "PC portable",
   "block.worldwideblocks.internet_box": "Box internet",
+  "block.worldwideblocks.desktop_switch_5": "Switch 5 ports",
   "commands.worldwideblocks.links.none": "Aucun lien réseau.",
   "commands.worldwideblocks.links.header": "%s lien(s) réseau :",
   "commands.worldwideblocks.links.entry": "%s port %s ↔ %s port %s : %s blocs, %s",

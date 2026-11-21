@@ -439,6 +439,10 @@ public final class CaptureScenarios {
     static final CaptureScenario DEVICE_LAPTOP = device("device_laptop", "laptop: close-up views open and closed, four orientations",
             TrialScenario.DEVICE_LAPTOP, ModItems.LAPTOP::get, 1.6, closeUps(5, "closed_", 1.6));
 
+    /** The 5-port desktop switch: 4 x 3 x 1 px, seen from 0.8 block (issue #17). */
+    static final CaptureScenario DEVICE_SWITCH_5 = device("device_switch_5", "5-port switch: close-up views, four orientations",
+            TrialScenario.DEVICE_SWITCH_5, ModItems.DESKTOP_SWITCH_5::get, 0.8, List.of());
+
     /**
      * The views of a device: the close-ups of device 0 (and the extra steps, a second device), HUD hidden, in spectator
      * mode; then the four orientations of devices 1 to 4 seen from above the row; then each of them aimed, HUD shown, as
@@ -496,7 +500,7 @@ public final class CaptureScenarios {
 
     private static final Map<String, CaptureScenario> BY_NAME = List.of(BOX, BOX_HOSTS, CHAIN, LOOP, FULL_PORTS, DISTANCE,
             TOOLTIP, TERMINAL, TERMINAL_SCREEN, TERMINAL_ADVICE, DHCP_ADDRESSES, DHCP_RENEWAL, DHCP_NO_BOX, DHCP_CONFLICT, DHCP_POOL_FULL, DHCP_SERVER_OFF, DHCP_RESTART,
-            DEVICE_BOX, DEVICE_TOWER, DEVICE_LAPTOP, FAILURE_CHECK).stream()
+            DEVICE_BOX, DEVICE_TOWER, DEVICE_LAPTOP, DEVICE_SWITCH_5, FAILURE_CHECK).stream()
             .collect(Collectors.toUnmodifiableMap(CaptureScenario::name, Function.identity()));
 
     private CaptureScenarios() {

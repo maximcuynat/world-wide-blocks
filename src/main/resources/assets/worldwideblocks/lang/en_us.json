@@ -3,6 +3,7 @@
   "block.worldwideblocks.pc_tower": "PC Tower",
   "block.worldwideblocks.laptop": "Laptop",
   "block.worldwideblocks.internet_box": "Internet Box",
+  "block.worldwideblocks.desktop_switch_5": "5-Port Switch",
   "commands.worldwideblocks.links.none": "No network link.",
   "commands.worldwideblocks.links.header": "%s network link(s):",
   "commands.worldwideblocks.links.entry": "%s port %s ↔ %s port %s: %s blocks, %s",

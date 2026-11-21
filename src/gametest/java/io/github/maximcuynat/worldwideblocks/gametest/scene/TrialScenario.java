@@ -91,6 +91,10 @@ public enum TrialScenario {
     /** Laptop for its capture scenario, as {@link #DEVICE_BOX}, with a closed laptop alone on the right (device 5). */
     DEVICE_LAPTOP("device_laptop", "laptop alone, open then closed, then four laptops in the four orientations",
             withClosedLaptop(turnedRow(ModBlocks.LAPTOP::get, UnaryOperator.identity())),
+            List.of()),
+    /** 5-port desktop switch for its capture scenario (issue #17), as {@link #DEVICE_BOX}. */
+    DEVICE_SWITCH_5("device_switch_5", "5-port switch alone, then four in the four orientations",
+            turnedRow(ModBlocks.DESKTOP_SWITCH_5::get, UnaryOperator.identity()),
             List.of());
 
     /**
