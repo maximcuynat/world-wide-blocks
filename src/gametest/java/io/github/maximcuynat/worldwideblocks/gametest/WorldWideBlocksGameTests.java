@@ -60,6 +60,13 @@ public final class WorldWideBlocksGameTests {
 
     private static final List<Case> CASES = Stream.concat(Stream.concat(Stream.of(
             new Case("cable_no_free_port", Batch.SHARED, 20, CableTests::noFreePort),
+            // Port chosen by aiming (lot 1d-1, issue #62).
+            new Case("port_aim_both_ends", Batch.SHARED, 20, PortAimTests::bothEndsFollowTheAimedPorts),
+            new Case("port_aim_outside_zones", Batch.SHARED, 20, PortAimTests::outsideTheZonesTheFirstFreePort),
+            new Case("port_aim_in_use", Batch.SHARED, 20, PortAimTests::aimedPortInUse),
+            new Case("port_aim_line_input", Batch.SHARED, 20, PortAimTests::aimedLineInputRefused),
+            new Case("port_aim_unplug", Batch.SHARED, 20, PortAimTests::unplugTheAimedPort),
+            new Case("port_aim_take_end", Batch.SHARED, 20, PortAimTests::takeTheEndOfTheAimedPort),
             new Case("cable_start_broken_creative", Batch.SHARED, 100, CableTests::startBrokenCreative),
             new Case("cable_start_broken_survival", Batch.SHARED, 100, CableTests::startBrokenSurvival),
             new Case("cable_start_exploded_survival", Batch.SHARED, 100, CableTests::startExplodedSurvival),

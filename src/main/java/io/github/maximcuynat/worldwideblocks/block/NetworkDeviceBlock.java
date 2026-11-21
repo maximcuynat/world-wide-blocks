@@ -23,8 +23,8 @@ import net.minecraft.world.phys.BlockHitResult;
  * with its cables, when it leaves its position. It must refuse pistons ({@code PushReaction.IMMOVEABLE}),
  * because the engine identifies it by its position.
  *
- * <p>Sneaking + empty-hand right-click: the end of its cable is taken off the device and kept
- * in hand, the other end staying connected. A plain right-click is specific to each device
+ * <p>Sneaking + empty-hand right-click: the end of the cable of the aimed port (else of the first occupied port) is
+ * taken off the device and kept in hand, the other end staying connected. A plain right-click is specific to each device
  * ({@link #useDevice}).
  */
 public abstract class NetworkDeviceBlock extends HorizontalDirectionalBlock implements NetworkDevice {
@@ -59,7 +59,8 @@ public abstract class NetworkDeviceBlock extends HorizontalDirectionalBlock impl
     protected final InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         if (player.isSecondaryUseActive()) {
             if (level instanceof ServerLevel serverLevel) {
-                EthernetCableItem.takeCableEnd(serverLevel, player, pos);
+                EthernetCableItem.takeCableEnd(serverLevel, player, pos,
+                        DevicePorts.aimed(state, pos, hitResult.getLocation(), hitResult.getDirection()).map(PortLayout.Port::index));
             }
             return InteractionResult.SUCCESS;
         }

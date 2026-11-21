@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import io.github.maximcuynat.worldwideblocks.block.DevicePorts;
+import io.github.maximcuynat.worldwideblocks.port.PortLayout;
 import io.github.maximcuynat.worldwideblocks.message.MessageChannel;
 import io.github.maximcuynat.worldwideblocks.message.MessageHub;
 import io.github.maximcuynat.worldwideblocks.message.server.MessageCenter;
@@ -134,6 +136,30 @@ public final class NetworkScene implements GameTestListener {
                 Direction.UP, absolute, false);
         return player.gameMode.useItemOn(player, this.helper.getLevel(),
                 player.getItemInHand(InteractionHand.MAIN_HAND), InteractionHand.MAIN_HAND, hit);
+    }
+
+    /**
+     * Right-click in the middle of the aim zone of a port of a device (its first rectangle, on its face), as a player
+     * who aims at that port: the click point and face reach the gesture as in the game (issue #62).
+     */
+    public InteractionResult rightClickPort(TestPlayer player, BlockPos relative, int port) {
+        BlockPos absolute = this.helper.absolutePos(relative);
+        PortLayout.Area area = DevicePorts.layout(this.helper.getLevel().getBlockState(absolute)).orElseThrow()
+                .ports().get(port).zone().getFirst();
+        BlockHitResult hit = new BlockHitResult(DevicePorts.toWorld(absolute, area.box().centre()),
+                DevicePorts.direction(area.side()), absolute, false);
+        return player.gameMode.useItemOn(player, this.helper.getLevel(),
+                player.getItemInHand(InteractionHand.MAIN_HAND), InteractionHand.MAIN_HAND, hit);
+    }
+
+    /** Sneaking + right-click in the middle of the aim zone of a port. */
+    public InteractionResult sneakRightClickPort(TestPlayer player, BlockPos relative, int port) {
+        player.setShiftKeyDown(true);
+        try {
+            return this.rightClickPort(player, relative, port);
+        } finally {
+            player.setShiftKeyDown(false);
+        }
     }
 
     /** Sneaking + right-click on a device. */

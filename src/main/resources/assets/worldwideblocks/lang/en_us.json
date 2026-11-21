@@ -14,6 +14,8 @@
   "item.worldwideblocks.ethernet_cable": "Ethernet Cable",
   "message.worldwideblocks.cable.start": "%s, port %s: right-click the second device.",
   "message.worldwideblocks.cable.no_free_port": "%s: no free port.",
+  "message.worldwideblocks.cable.port_in_use": "%s, port %s: already in use.",
+  "message.worldwideblocks.cable.port_empty": "%s, port %s: no cable plugged in.",
   "message.worldwideblocks.cable.cancelled": "Connection cancelled.",
   "message.worldwideblocks.cable.start_gone": "The first end no longer exists: connection cancelled.",
   "message.worldwideblocks.cable.cancelled_dimension": "Dimension changed: connection cancelled, the cord is free.",

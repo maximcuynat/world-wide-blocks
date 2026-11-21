@@ -71,6 +71,8 @@ class LangFilesTest {
         Map<String, List<String>> samples = new LinkedHashMap<>();
         samples.put("message.worldwideblocks.cable.start", List.of(name, PORT));
         samples.put("message.worldwideblocks.cable.no_free_port", List.of(name));
+        samples.put("message.worldwideblocks.cable.port_in_use", List.of(name, PORT));
+        samples.put("message.worldwideblocks.cable.port_empty", List.of(name, PORT));
         samples.put("message.worldwideblocks.cable.cancelled", List.of());
         samples.put("message.worldwideblocks.cable.start_gone", List.of());
         samples.put("message.worldwideblocks.cable.cancelled_dimension", List.of());

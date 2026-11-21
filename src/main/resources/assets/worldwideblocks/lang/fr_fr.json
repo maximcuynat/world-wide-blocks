@@ -14,6 +14,8 @@
   "item.worldwideblocks.ethernet_cable": "Cordon Ethernet",
   "message.worldwideblocks.cable.start": "%s, port %s : clic droit sur le second appareil.",
   "message.worldwideblocks.cable.no_free_port": "%s : aucun port libre.",
+  "message.worldwideblocks.cable.port_in_use": "%s, port %s : déjà utilisé.",
+  "message.worldwideblocks.cable.port_empty": "%s, port %s : aucun câble branché.",
   "message.worldwideblocks.cable.cancelled": "Branchement annulé.",
   "message.worldwideblocks.cable.start_gone": "La première extrémité n'existe plus : branchement annulé.",
   "message.worldwideblocks.cable.cancelled_dimension": "Changement de dimension : branchement annulé, le cordon est libre.",
