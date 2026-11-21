@@ -33,6 +33,11 @@ public final class ModBlocks {
             p -> p.mapColor(MapColor.COLOR_LIGHT_GRAY).strength(1.0F).sound(SoundType.METAL).noOcclusion()
                     .pushReaction(PushReaction.IMMOVEABLE));
 
+    public static final DeferredBlock<DesktopSwitchBlock> DESKTOP_SWITCH_8 = BLOCKS.registerBlock("desktop_switch_8",
+            p -> new DesktopSwitchBlock(p, PortLayouts.DESKTOP_SWITCH_8),
+            p -> p.mapColor(MapColor.COLOR_LIGHT_GRAY).strength(1.0F).sound(SoundType.METAL).noOcclusion()
+                    .pushReaction(PushReaction.IMMOVEABLE));
+
     private ModBlocks() {
     }
 }

@@ -9,5 +9,5 @@ One plain Java description of the ports of each device, the single source of tru
 - [ ] The aimed port outlined by a two-tone frame (light inside, dark outside)
 - [x] Layouts of the tower, the laptop, the internet box and the desktop switches, taken from their device sheets
 - [x] Unit tests: zones on a face of the body of the device and disjoint, each hole inside its zone, rotation in the four orientations
-- [ ] As many ports as the block's `PORTS` and zones on the real shape of the block, in every state: game tests, for every device including the two switches
+- [x] As many ports as the block's `PORTS` and zones on the real shape of the block, in every state: game tests, for every device including the two switches
 - [x] Each device sheet gets a "Port layout" table; `design/tools` prints the layout of a device for the Java code

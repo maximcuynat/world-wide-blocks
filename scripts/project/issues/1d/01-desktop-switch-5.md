@@ -8,4 +8,4 @@ Multiplies the network sockets, without configuration. It reuses the switching o
 - [x] 5 Ethernet ports
 - [x] Unit tests of a chain box, switch, PCs
 - [x] The 5-port switch added to the device capture scenarios (`device_switch_5`): a scene in `TrialScenario` and a line `device(...)` in `CaptureScenarios`, as for the box, the tower and the laptop (#68)
-- [ ] The 8-port switch added the same way (`device_switch_8`)
+- [x] The 8-port switch added the same way (`device_switch_8`)

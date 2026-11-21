@@ -18,6 +18,7 @@ public final class ModCreativeTabs {
                 output.accept(ModItems.LAPTOP.get());
                 output.accept(ModItems.INTERNET_BOX.get());
                 output.accept(ModItems.DESKTOP_SWITCH_5.get());
+                output.accept(ModItems.DESKTOP_SWITCH_8.get());
                 output.accept(ModItems.ETHERNET_CABLE.get());
             })
             .build());

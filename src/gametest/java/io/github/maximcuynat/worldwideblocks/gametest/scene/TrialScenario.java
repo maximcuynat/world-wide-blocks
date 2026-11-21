@@ -95,6 +95,10 @@ public enum TrialScenario {
     /** 5-port desktop switch for its capture scenario (issue #17), as {@link #DEVICE_BOX}. */
     DEVICE_SWITCH_5("device_switch_5", "5-port switch alone, then four in the four orientations",
             turnedRow(ModBlocks.DESKTOP_SWITCH_5::get, UnaryOperator.identity()),
+            List.of()),
+    /** 8-port desktop switch for its capture scenario (issue #18), as {@link #DEVICE_BOX}. */
+    DEVICE_SWITCH_8("device_switch_8", "8-port switch alone, then four in the four orientations",
+            turnedRow(ModBlocks.DESKTOP_SWITCH_8::get, UnaryOperator.identity()),
             List.of());
 
     /**
