@@ -103,7 +103,9 @@ public final class WorldWideBlocksGameTests {
             new Case("terminal_laptop_sneak_unplugs", Batch.SHARED, 40, TerminalTests::laptopSneakUnplugs),
             // ping (lot 1c-1, issue #16).
             new Case("ping_between_two_computers", Batch.SHARED, 200, PingTests::betweenTwoComputers),
-            new Case("ping_absent_address", Batch.SHARED, 200, PingTests::absentAddress)),
+            new Case("ping_absent_address", Batch.SHARED, 200, PingTests::absentAddress),
+            // Lot 1d-1, issue #19: more computers than the box has ports.
+            new Case("ping_seven_computers_box_and_switch", Batch.SHARED, 300, PingTests::sevenComputersOnABoxAndASwitch)),
             // Scenes of /worldwideblocks test, except "distance" (99 blocks, larger than the test area).
             // The loop scene hits the engine's global limits: separate batch.
             Arrays.stream(TrialScenario.values())

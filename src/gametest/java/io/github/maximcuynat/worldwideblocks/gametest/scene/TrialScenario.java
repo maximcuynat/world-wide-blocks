@@ -78,6 +78,16 @@ public enum TrialScenario {
             List.of(cable(0, 1)),
             Dhcp.serverOff(0)),
     /**
+     * The goal of lot 1d-1 (issue #19): seven computers, more than the box has ports: three on the box (devices 2 to 4)
+     * and four behind a 5-port switch (devices 5 to 8) plugged into port 1 of the box.
+     */
+    SEVEN_COMPUTERS("seven_computers", "box and 5-port switch, seven computers",
+            List.of(device(-3, 0, ModBlocks.INTERNET_BOX::get), device(3, 0, ModBlocks.DESKTOP_SWITCH_5::get),
+                    device(-6, 3, ModBlocks.PC_TOWER::get), device(-4, 4, ModBlocks.LAPTOP::get), device(-2, 3, ModBlocks.PC_TOWER::get),
+                    device(1, 4, ModBlocks.LAPTOP::get), device(3, 4, ModBlocks.PC_TOWER::get), device(5, 4, ModBlocks.LAPTOP::get),
+                    device(7, 3, ModBlocks.PC_TOWER::get)),
+            List.of(cable(0, 1), cable(0, 2), cable(0, 3), cable(0, 4), cable(1, 5), cable(1, 6), cable(1, 7), cable(1, 8))),
+    /**
      * Port chosen by aiming (issue #62): a box on the left and a 5-port switch on the right, each with port 1 linked to a
      * computer behind it, so that a free port and a connected port can be aimed at on both.
      */

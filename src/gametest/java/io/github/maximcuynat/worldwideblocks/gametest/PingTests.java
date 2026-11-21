@@ -88,6 +88,55 @@ final class PingTests {
     }
 
     /**
+     * Lot 1d-1, issue #19: seven computers, more than the box has ports, three on the box and four behind a 5-port switch
+     * plugged into the box. Each gets its own address from the box, then each pings the next one in a ring (the last
+     * pings the first): every computer answers, through the switch, through the box, or through both.
+     */
+    static void sevenComputersOnABoxAndASwitch(GameTestHelper helper) {
+        NetworkScene scene = NetworkScene.of(helper);
+        DeviceId box = scene.place(new BlockPos(4, 0, 8), ModBlocks.INTERNET_BOX.get());
+        DeviceId sw = scene.place(new BlockPos(12, 0, 8), ModBlocks.DESKTOP_SWITCH_5.get());
+        scene.cable(box, sw);
+        List<DeviceId> computers = new java.util.ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            DeviceId computer = scene.place(new BlockPos(1 + 3 * i, 0, 3), i == 1 ? ModBlocks.LAPTOP.get() : ModBlocks.PC_TOWER.get());
+            scene.cable(box, computer);
+            computers.add(computer);
+        }
+        for (int i = 0; i < 4; i++) {
+            DeviceId computer = scene.place(new BlockPos(9 + 2 * i, 0, 13), i % 2 == 0 ? ModBlocks.PC_TOWER.get() : ModBlocks.LAPTOP.get());
+            scene.cable(sw, computer);
+            computers.add(computer);
+        }
+        List<Ipv4Address> addresses = new java.util.ArrayList<>();
+
+        helper.startSequence()
+                .thenExecuteAfter(2 * LEASED, () -> {
+                    for (DeviceId computer : computers) {
+                        addresses.add(address(helper, scene, computer));
+                    }
+                    helper.assertValueEqual(new java.util.HashSet<>(addresses).size(), computers.size(), "different addresses: " + addresses);
+                    for (int i = 0; i < computers.size(); i++) {
+                        scene.network().consoleLine(computers.get(i), "ping -c 2 " + addresses.get((i + 1) % computers.size()));
+                    }
+                })
+                .thenExecuteAfter(ENDED, () -> {
+                    for (int i = 0; i < computers.size(); i++) {
+                        ConsoleSession console = console(scene, computers.get(i));
+                        Ipv4Address target = addresses.get((i + 1) % computers.size());
+                        Pattern reply = Pattern.compile("64 bytes from " + Pattern.quote(target.toString())
+                                + ": icmp_seq=[12] ttl=64 time=[0-9.]+ ms");
+                        helper.assertValueEqual(matching(console, reply).size(), 2,
+                                "replies of computer " + ((i + 1) % computers.size() + 1) + " to computer " + (i + 1) + ": " + console.lines());
+                        helper.assertTrue(console.lines().stream()
+                                .anyMatch(line -> line.startsWith("2 packets transmitted, 2 received, 0% packet loss")),
+                                "statistics without loss on computer " + (i + 1) + ": " + console.lines());
+                    }
+                })
+                .thenSucceed();
+    }
+
+    /**
      * A {@code ping -c 3} to an address of the local network that nobody has: ARP finds nobody, and the computer
      * reports {@code Destination Host Unreachable} from its own address for each request.
      */

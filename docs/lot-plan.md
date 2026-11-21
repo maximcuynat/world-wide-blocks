@@ -502,6 +502,10 @@ Playable at the end: six or more computers on the same box, all reachable by `pi
 
 Design of the port choice and of the attachment: `docs/cable-design.md`, sections 3 and 4 (decided on 2026-11-20). Before the lot: the tower and the laptop redrawn on the design guide with the position of their ports (issue #56).
 
+#### Status of lot 1d-1
+
+Coded on 2026-11-21 on the `lot/1d-1` branch (issues #61, #17, #18, #62, #63, #19), one commit per step after `./gradlew build test`, `./gradlew runGameTestServer` and the capture runs of the step, all run and read by the assistant during a session where Max was away; to be looked at by Max. The port layout of each device (`port/PortLayout`), the 5-port and 8-port desktop switches (role `switch`, the switching of the box without its local point), the port chosen by aiming (outline, panel line, the four gestures), the RJ45 plug in each port and the thick cable. Playable goal checked: the game test `ping_seven_computers_box_and_switch` (seven computers, three on the box and four behind a 5-port switch, each pings the next one) and the capture `seven_computers` (the scene, the box lending seven addresses, the switch learning a MAC behind each port, a `ping -c 3` from a tower behind the switch to a tower of the box: three replies, 0% loss, time 0.108 ms, the 0.104 ms of a computer of the box plus the 2 µs of the switch each way). Captures of the lot: `device_switch_5`, `device_switch_8`, `port_aim`, `plugs`, `seven_computers` (`docs/automated-checks.md`). Not done: the test operator line block (issue #31), whose connection to the line port is still to be designed. Choices waiting for Max: section "Decisions to validate by Max" of `tasks/todo.md`.
+
 ### 1d-2: cable on the ground
 
 In version 0.2.0 (decided on 2026-11-20), so as not to delay 0.1.0.

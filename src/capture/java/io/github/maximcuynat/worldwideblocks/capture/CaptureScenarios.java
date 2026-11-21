@@ -423,6 +423,30 @@ public final class CaptureScenarios {
             new Step.Press(Step.TerminalKey.ESCAPE));
 
     /**
+     * Lot 1d-1, issue #19, check by eye of the lot, scene {@code seven_computers}: the scene from above; the box, detailed
+     * (port 1 learns the four computers behind the switch, seven addresses lent); the switch, detailed (a MAC learned
+     * behind each port, the box and its computers behind port 1); then from the terminal of a tower behind the switch,
+     * {@code ping -c 3} to a tower of the box, at the address of its lease: three replies without loss.
+     */
+    static final CaptureScenario SEVEN_COMPUTERS = standard("seven_computers", "seven computers on a box and a switch, all reachable by ping",
+            new Step.BuildScene(TrialScenario.SEVEN_COMPUTERS),
+            new Step.Wait(2 * SETTLE),
+            new Step.View(0, 3, 6, 5, 1),
+            new Step.Shot("scene"),
+            new Step.Aim(0, true),
+            new Step.Shot("box_detailed"),
+            new Step.Aim(1, true),
+            new Step.Shot("switch_detailed"),
+            new Step.OpenTerminal(6),
+            new Step.Type("ping -c 3 {address:2}"),
+            new Step.Press(Step.TerminalKey.ENTER),
+            new Step.Wait(FIVE_SECONDS),
+            new Step.Expect(REPLY.formatted("{address:2}"), 3),
+            new Step.Expect(NO_LOSS, 1),
+            new Step.Shot("ping_through_switch_and_box"),
+            new Step.Press(Step.TerminalKey.ESCAPE));
+
+    /**
      * Lot 1d-1, issue #62, scene {@code port_aim}: cord in hand, the aimed port of the box and of the switch, outlined and
      * named first in the panel, from the front and from above: a free port ("Port 2: free"), a connected one, compact then
      * detailed (sneaking: the device at the other end and its port); on the switch the zone on its top. Then with an empty
@@ -565,7 +589,7 @@ public final class CaptureScenarios {
 
     private static final Map<String, CaptureScenario> BY_NAME = List.of(BOX, BOX_HOSTS, CHAIN, LOOP, FULL_PORTS, DISTANCE,
             TOOLTIP, TERMINAL, TERMINAL_SCREEN, TERMINAL_ADVICE, DHCP_ADDRESSES, DHCP_RENEWAL, DHCP_NO_BOX, DHCP_CONFLICT, DHCP_POOL_FULL, DHCP_SERVER_OFF, DHCP_RESTART,
-            DEVICE_BOX, DEVICE_TOWER, DEVICE_LAPTOP, DEVICE_SWITCH_5, DEVICE_SWITCH_8, PORT_AIM, PLUGS, FAILURE_CHECK).stream()
+            DEVICE_BOX, DEVICE_TOWER, DEVICE_LAPTOP, DEVICE_SWITCH_5, DEVICE_SWITCH_8, PORT_AIM, PLUGS, SEVEN_COMPUTERS, FAILURE_CHECK).stream()
             .collect(Collectors.toUnmodifiableMap(CaptureScenario::name, Function.identity()));
 
     private CaptureScenarios() {
