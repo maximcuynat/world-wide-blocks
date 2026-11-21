@@ -180,7 +180,7 @@ What steps 1 and 2 must keep possible, and do:
 
 ## 7. Cords as items: colour, type and length (proposals, 2026-11-20)
 
-Proposed by Max on 2026-11-20, to decide before the lot that brings each part (open decisions of `docs/lot-plan.md`). Nothing is coded.
+Proposed by Max on 2026-11-20, to decide before the lot that brings each part (open decisions of `docs/lot-plan.md`). Nothing is coded, except the base of lot 1d-1 (one plug model per colour, `port/CordColour`); the colour of the cords is the idea issue "Cord colours: a property of the cord and of the link" (`ideas/20-cord-colours.md`).
 
 ### Colour
 
