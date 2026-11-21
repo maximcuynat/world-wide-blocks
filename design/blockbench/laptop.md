@@ -50,6 +50,14 @@ Face coordinates: column and row in texels from the top left corner of the face 
 
 **For lot 1d-1 (port layout, issue "Port layout of each device"):** one port, index 0 of `LaptopBlock.PORTS`, on the left flank of the base for the seated user (east for FACING north), hole z 10.5 to 11, y 0.25 to 0.75, size small (2 x 2 texels: the base is 1 px high), mouth at x = 15, outward direction +x (east); the same in both states of the lid. **Aim zone:** the left flank of the base only, to place the outline (decided by Max on 2026-11-20): with a single port, a click anywhere with a cord takes this port, and the keyboard and screen gestures happen only with an empty hand, so nothing on the top.
 
+## Port layout
+
+The layout used by the game since lot 1d-1 (`PortLayouts` in the Java code, `docs/cable-design.md`, section 3), for a front facing north, in model pixels; the game turns it with `FACING` as the blockstate turns the model. Printed by `python3 design/tools/port_layout.py laptop`, which reads the holes from the drawing of the device: the hole, the mouth (where the plug goes in, on the face), the outward direction of the plug, and the aim zone (where a click with a cord chooses the port). `PortLayoutTest` (unit tests) and `PortLayoutTests` (game tests, against the real shape of the block) check these values.
+
+| Port | Engine index | Face | Connector | Hole (model px) | Mouth | Outward | Aim zone |
+|---|---|---|---|---|---|---|---|
+| 1 | 0 | east | RJ45 | x 14.5 to 15, y 0.25 to 0.75, z 10.5 to 11 | 15, 0.5, 10.75 | east | east: x 15 to 15, y 0 to 1, z 3.5 to 12.5 |
+
 ## Display
 
 From the bounds of each model (guide, section 7; centred on the three axes, the open screen being off-centre).

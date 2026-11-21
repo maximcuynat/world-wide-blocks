@@ -4,5 +4,5 @@ Milestone: lot 1d-1
 
 Same as the 5-port switch, with 8 ports.
 
-- [ ] Block and its resources
-- [ ] 8 Ethernet ports
+- [x] Block and its resources
+- [x] 8 Ethernet ports

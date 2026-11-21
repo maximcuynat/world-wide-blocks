@@ -2,6 +2,8 @@
   "values": [
     "worldwideblocks:pc_tower",
     "worldwideblocks:laptop",
-    "worldwideblocks:internet_box"
+    "worldwideblocks:internet_box",
+    "worldwideblocks:desktop_switch_5",
+    "worldwideblocks:desktop_switch_8"
   ]
 }

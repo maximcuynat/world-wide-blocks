@@ -5,6 +5,7 @@ import java.util.Map;
 
 import io.github.maximcuynat.worldwideblocks.network.DeviceRole;
 import io.github.maximcuynat.worldwideblocks.network.PortKind;
+import io.github.maximcuynat.worldwideblocks.port.PortLayouts;
 import io.github.maximcuynat.worldwideblocks.terminal.TerminalServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -35,7 +36,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  */
 public class LaptopBlock extends NetworkDeviceBlock {
     /** One Ethernet port; Wi-Fi comes in lot 2a. */
-    public static final List<PortKind> PORTS = List.of(PortKind.ETHERNET);
+    public static final List<PortKind> PORTS = PortLayouts.LAPTOP.kinds();
 
     public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
 
@@ -49,7 +50,7 @@ public class LaptopBlock extends NetworkDeviceBlock {
     private static final Map<Direction, VoxelShape> OPEN_SHAPES = Shapes.rotateHorizontal(OPEN_NORTH);
 
     public LaptopBlock(BlockBehaviour.Properties properties) {
-        super(properties, DeviceRole.HOST, PORTS);
+        super(properties, DeviceRole.HOST, PortLayouts.LAPTOP);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(OPEN, true));
     }
 

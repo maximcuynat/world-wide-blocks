@@ -54,6 +54,14 @@ Face coordinates: column and row in texels from the top left corner of the face 
 
 **For lot 1d-1 (port layout, issue "Port layout of each device"):** one port, index 0 of `PcTowerBlock.PORTS`, on the back face (south for a tower facing north), hole x 8.5 to 9, y 4.25 to 4.75, RJ45 (2 x 2 texels, the single size; painted, the plug stands on the plate), mouth at z = 15.5, outward direction +z (south). Placed low, on an expansion card just above the power supply (Max, 2026-11-20): a cable leaving near the floor suits the cable on the ground of lot 1d-2. On most real towers the built-in port is on the I/O panel at the top; this one is an added network card.
 
+## Port layout
+
+The layout used by the game since lot 1d-1 (`PortLayouts` in the Java code, `docs/cable-design.md`, section 3), for a front facing north, in model pixels; the game turns it with `FACING` as the blockstate turns the model. Printed by `python3 design/tools/port_layout.py pc_tower`, which reads the holes from the drawing of the device: the hole, the mouth (where the plug goes in, on the face), the outward direction of the plug, and the aim zone (where a click with a cord chooses the port). `PortLayoutTest` (unit tests) and `PortLayoutTests` (game tests, against the real shape of the block) check these values.
+
+| Port | Engine index | Face | Connector | Hole (model px) | Mouth | Outward | Aim zone |
+|---|---|---|---|---|---|---|---|
+| 1 | 0 | south | RJ45 | x 8.5 to 9, y 4.25 to 4.75, z 15.5 to 15.5 | 8.75, 4.5, 15.5 | south | south: x 4.5 to 11.5, y 0 to 15, z 15.5 to 15.5 |
+
 ## Display
 
 w = 7, d = 15, h = 15 (guide, section 7). Gui scale 0.57 (the height decides), magnification 0.912.

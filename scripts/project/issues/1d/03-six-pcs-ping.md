@@ -4,6 +4,6 @@ Milestone: lot 1d-1
 
 Playable at the end of lot 1d-1: more PCs than the box has ports.
 
-- [ ] Game test: six PCs behind a box and a switch, each gets an address and answers `ping`
-- [ ] Test scene (test scene command of the mod), checked by eye
-- [ ] Status of lot 1d-1 in `docs/lot-plan.md`
+- [x] Game test: six PCs behind a box and a switch, each gets an address and answers `ping`
+- [x] Test scene (test scene command of the mod), checked by eye
+- [x] Status of lot 1d-1 in `docs/lot-plan.md`

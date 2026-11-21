@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import io.github.maximcuynat.worldwideblocks.network.sync.ClientLink;
@@ -44,6 +45,11 @@ public final class ClientLinkCache {
 
     public boolean isConnected(BlockPos pos, int port) {
         return this.linksByPort.containsKey(new Port(pos, port));
+    }
+
+    /** The cable plugged into this port, if the client knows it. */
+    public Optional<ClientLink> linkAt(BlockPos pos, int port) {
+        return Optional.ofNullable(this.linksByPort.get(new Port(pos, port)));
     }
 
     public Collection<ClientLink> links() {

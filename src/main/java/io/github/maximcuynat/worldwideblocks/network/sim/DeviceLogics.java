@@ -22,6 +22,7 @@ final class DeviceLogics {
             case HOST -> new HostLogic(node.deviceType(), node.portCount(), RandomGenerator.getDefault(), port -> dhcp.client(node.port(port)));
             case BOX -> new BoxLogic(portsOfKind(node, PortKind.ETHERNET),
                     new DhcpServer(DhcpServerConfig.INTERNET_BOX, dhcp.server(node.id())));
+            case SWITCH -> new SwitchLogic(portsOfKind(node, PortKind.ETHERNET));
         };
     }
 

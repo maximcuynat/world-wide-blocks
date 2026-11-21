@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "worldwideblocks:block/desktop_switch_8"
+    },
+    "facing=east": {
+      "model": "worldwideblocks:block/desktop_switch_8",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "worldwideblocks:block/desktop_switch_8",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "worldwideblocks:block/desktop_switch_8",
+      "y": 270
+    }
+  }
+}

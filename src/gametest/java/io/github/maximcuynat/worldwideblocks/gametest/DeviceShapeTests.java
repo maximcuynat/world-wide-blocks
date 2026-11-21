@@ -55,7 +55,9 @@ final class DeviceShapeTests {
     static final Map<String, Supplier<? extends Block>> DEVICES = Map.of(
             "pc_tower", ModBlocks.PC_TOWER,
             "internet_box", ModBlocks.INTERNET_BOX,
-            "laptop", ModBlocks.LAPTOP);
+            "laptop", ModBlocks.LAPTOP,
+            "desktop_switch_5", ModBlocks.DESKTOP_SWITCH_5,
+            "desktop_switch_8", ModBlocks.DESKTOP_SWITCH_8);
 
     private record Bounds(double[] min, double[] max, boolean rotated) {
     }

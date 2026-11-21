@@ -20,6 +20,8 @@ All sent by `EthernetCableItem.tell()` (`player.sendOverlayMessage`), to the pla
 |---|---|---|
 | `start` | %s, port %s: right-click the second device. | First click, cord in hand |
 | `no_free_port` | %s: no free port. | First click on a full device |
+| `port_in_use` | %s, port %s: already in use. | Click, cord in hand, on an aimed port that has a cable (lot 1d-1, issue #62) |
+| `port_empty` | %s, port %s: no cable plugged in. | Sneak + click on an aimed port without a cable, cord in hand or empty hand (lot 1d-1) |
 | `cancelled` | Connection cancelled. | Sneak + click in the air, connection started |
 | `start_gone` | The first end no longer exists: connection cancelled. | Second click, or each inventory tick, if the start has disappeared |
 | `cancelled_dimension` | Dimension changed: connection cancelled, the cord is free. | Inventory tick after a dimension change |
@@ -30,7 +32,7 @@ All sent by `EthernetCableItem.tell()` (`player.sendOverlayMessage`), to the pla
 | `end_taken` | End removed from %s, the other stays on %s, port %s. | Sneak + click, empty hand |
 | `retracted` | %s: cable unplugged, the cord is free. | Click on the device where the other end is plugged in |
 | `result.not_a_device` | This is not a network device. | Engine refusal at the second click |
-| `result.incompatible_port` | This port does not accept this cable. | Same |
+| `result.incompatible_port` | This port does not accept this cable. | Same; also a click, cord in hand, on the aimed line input of the box (lot 1d-1) |
 | `result.same_device` | Pick a device other than the first one. | Same |
 | `result.other_dimension` | Both devices must be in the same dimension. | Same |
 | `result.too_far` | Too far: %s blocks, %s maximum. | Same |

@@ -18,6 +18,8 @@ import io.github.maximcuynat.worldwideblocks.network.NetworkManager;
 import io.github.maximcuynat.worldwideblocks.network.NetworkNode;
 import io.github.maximcuynat.worldwideblocks.network.PendingCable;
 import io.github.maximcuynat.worldwideblocks.network.PortRef;
+import io.github.maximcuynat.worldwideblocks.block.DevicePorts;
+import io.github.maximcuynat.worldwideblocks.port.PortLayout;
 import io.github.maximcuynat.worldwideblocks.registry.ModDataComponents;
 import io.github.maximcuynat.worldwideblocks.registry.ModItems;
 import net.minecraft.ChatFormatting;
@@ -43,6 +45,9 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Ethernet cord: a right-click on a device, then a right-click on another, connects them.
+ * Every gesture takes the port the player aims at, when the click falls in the aim zone of a port
+ * ({@link DevicePorts#aimed}, issue #62); elsewhere on the device, the first free port (the first occupied port to
+ * unplug or take an end off).
  * Sneaking + right-click on a device, cord in hand: unplugs its cable at both ends.
  * Sneaking + empty-hand right-click: takes off a single end and keeps it in hand (see {@link #takeCableEnd}).
  * Sneaking + right-click in the air: cancels a started connection, or puts away an end held in hand.
@@ -92,17 +97,19 @@ public class EthernetCableItem extends Item {
         if (node.isEmpty()) {
             return InteractionResult.FAIL;
         }
+        Optional<Integer> aimed = DevicePorts.aimed(level.getBlockState(pos), pos, context.getClickLocation(), context.getClickedFace())
+                .map(PortLayout.Port::index);
         CableStart pending = stack.get(ModDataComponents.CABLE_START.get());
         if (pending != null && pending.device().equals(GlobalPos.of(level.dimension(), pos))) {
             // Click on the device where the other end is connected: unplug it, the cord stays free in hand.
             stack.remove(ModDataComponents.CABLE_START.get());
             tell(player, MessageLevel.SUCCESS, "message.worldwideblocks.cable.retracted", NetworkDevices.nameArg(node.get()));
         } else if (player.isSecondaryUseActive()) {
-            this.unplug(serverLevel, player, node.get());
+            this.unplug(serverLevel, player, node.get(), aimed);
         } else if (pending != null) {
-            this.finish(serverLevel, player, stack, node.get());
+            this.finish(serverLevel, player, stack, node.get(), aimed);
         } else {
-            this.start(serverLevel, player, stack, node.get());
+            this.start(serverLevel, player, stack, node.get(), aimed);
         }
         return InteractionResult.SUCCESS;
     }
@@ -146,9 +153,13 @@ public class EthernetCableItem extends Item {
         return InteractionResult.SUCCESS;
     }
 
-    private void start(ServerLevel level, Player player, ItemStack stack, NetworkNode node) {
+    /** First click: from the aimed port, or else from the first free port. */
+    private void start(ServerLevel level, Player player, ItemStack stack, NetworkNode node, Optional<Integer> aimed) {
         NetworkManager network = NetworkManager.of(level.getServer());
-        Optional<PortRef> port = network.firstFreePort(node.id(), MEDIUM);
+        if (aimed.isPresent() && !this.aimedPortAccepts(network, player, node, aimed.get())) {
+            return;
+        }
+        Optional<PortRef> port = aimed.isPresent() ? Optional.of(node.port(aimed.get())) : network.firstFreePort(node.id(), MEDIUM);
         if (port.isEmpty()) {
             tell(player, MessageLevel.ERROR, "message.worldwideblocks.cable.no_free_port", NetworkDevices.nameArg(node));
             return;
@@ -159,7 +170,25 @@ public class EthernetCableItem extends Item {
                 NetworkDevices.nameArg(node), MessageArg.number(port.get().displayNumber()));
     }
 
-    private void finish(ServerLevel level, Player player, ItemStack stack, NetworkNode end) {
+    /**
+     * The aimed port can take a new cable: it takes this kind of cable and has none. Otherwise the player is told why,
+     * with the number of the port.
+     */
+    private boolean aimedPortAccepts(NetworkManager network, Player player, NetworkNode node, int port) {
+        if (!MEDIUM.accepts(node.portKind(port))) {
+            tell(player, MessageLevel.ERROR, "message.worldwideblocks.cable.result." + ConnectResult.INCOMPATIBLE_PORT.key());
+            return false;
+        }
+        if (network.linkAt(node.port(port)).isPresent()) {
+            tell(player, MessageLevel.ERROR, "message.worldwideblocks.cable.port_in_use", NetworkDevices.nameArg(node),
+                    MessageArg.number(port + 1));
+            return false;
+        }
+        return true;
+    }
+
+    /** Second click: on the aimed port, or else on the first free port. */
+    private void finish(ServerLevel level, Player player, ItemStack stack, NetworkNode end, Optional<Integer> aimed) {
         NetworkManager network = NetworkManager.of(level.getServer());
         CableStart pending = stack.get(ModDataComponents.CABLE_START.get());
         DeviceId startId = pending.portRef().device();
@@ -182,8 +211,11 @@ public class EthernetCableItem extends Item {
             return;
         }
 
+        if (aimed.isPresent() && !startId.equals(end.id()) && !this.aimedPortAccepts(network, player, end, aimed.get())) {
+            return;
+        }
         // No free port opposite: aim at port 0 to get the "port in use" refusal.
-        PortRef endPort = network.firstFreePort(end.id(), MEDIUM).orElse(end.port(0));
+        PortRef endPort = aimed.isPresent() ? end.port(aimed.get()) : network.firstFreePort(end.id(), MEDIUM).orElse(end.port(0));
         boolean consume = !player.hasInfiniteMaterials();
         ConnectOutcome outcome = network.connect(startPort, endPort, MEDIUM, consume);
         if (!outcome.isSuccess()) {
@@ -201,11 +233,10 @@ public class EthernetCableItem extends Item {
                 MessageArg.blocks(link.length()));
     }
 
-    /** Sneaking + right-click, cord in hand: unplugs both ends and puts the cord away. */
-    private void unplug(ServerLevel level, Player player, NetworkNode node) {
-        Optional<Link> removed = disconnectFirst(level, node);
+    /** Sneaking + right-click, cord in hand: unplugs both ends of the cable of the aimed port (else the first one) and puts the cord away. */
+    private void unplug(ServerLevel level, Player player, NetworkNode node, Optional<Integer> aimed) {
+        Optional<Link> removed = disconnect(level, player, node, aimed);
         if (removed.isEmpty()) {
-            tell(player, MessageLevel.ERROR, "message.worldwideblocks.cable.nothing_to_unplug", NetworkDevices.nameArg(node));
             return;
         }
         // Only a cable that consumed a cord gives one back.
@@ -225,14 +256,13 @@ public class EthernetCableItem extends Item {
      * <p>A cable placed in creative (no cord consumed) does not give a cord in survival: it is
      * simply unplugged at both ends, otherwise free cords would be made.
      */
-    public static void takeCableEnd(ServerLevel level, Player player, BlockPos pos) {
+    public static void takeCableEnd(ServerLevel level, Player player, BlockPos pos, Optional<Integer> aimed) {
         Optional<NetworkNode> node = NetworkDevices.validate(level, NetworkDevices.idOf(level, pos));
         if (node.isEmpty()) {
             return;
         }
-        Optional<Link> removed = disconnectFirst(level, node.get());
+        Optional<Link> removed = disconnect(level, player, node.get(), aimed);
         if (removed.isEmpty()) {
-            tell(player, MessageLevel.ERROR, "message.worldwideblocks.cable.nothing_to_unplug", NetworkDevices.nameArg(node.get()));
             return;
         }
         Link link = removed.get();
@@ -256,6 +286,26 @@ public class EthernetCableItem extends Item {
                 .orElse(MessageArg.text("?"));
         tell(player, MessageLevel.INFO, "message.worldwideblocks.cable.end_taken",
                 NetworkDevices.nameArg(node.get()), otherName, MessageArg.number(other.displayNumber()));
+    }
+
+    /**
+     * Unplugs the cable of the aimed port, or of the first occupied port when no port is aimed; tells the player when
+     * there is none ("port N: no cable plugged in", or "no cable plugged in" for the whole device).
+     */
+    private static Optional<Link> disconnect(ServerLevel level, Player player, NetworkNode node, Optional<Integer> aimed) {
+        if (aimed.isEmpty()) {
+            Optional<Link> removed = disconnectFirst(level, node);
+            if (removed.isEmpty()) {
+                tell(player, MessageLevel.ERROR, "message.worldwideblocks.cable.nothing_to_unplug", NetworkDevices.nameArg(node));
+            }
+            return removed;
+        }
+        Optional<Link> removed = NetworkManager.of(level.getServer()).disconnect(node.port(aimed.get()));
+        if (removed.isEmpty()) {
+            tell(player, MessageLevel.ERROR, "message.worldwideblocks.cable.port_empty", NetworkDevices.nameArg(node),
+                    MessageArg.number(aimed.get() + 1));
+        }
+        return removed;
     }
 
     /** Unplugs the cable from the first occupied port of the device. */

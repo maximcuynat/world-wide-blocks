@@ -10,7 +10,9 @@ public enum DeviceRole {
     /** Computer: a network card that sends and receives for itself (PC tower, laptop). */
     HOST("host"),
     /** Internet box: a switch on its local network ports, and its own services on the local point (DHCP server). */
-    BOX("box");
+    BOX("box"),
+    /** Desktop switch: the switching of the box on all its ports, without a local point nor a service (lot 1d-1). */
+    SWITCH("switch");
 
     private final String serializedName;
 

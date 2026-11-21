@@ -1,6 +1,6 @@
 # Cables: choosing the port, attaching to the port, cable on the ground
 
-Written on 2026-11-20. Status: **approved by Max on 2026-11-20**; nothing is coded yet. The decisions are recorded in the "Decisions taken" table of `docs/lot-plan.md`:
+Written on 2026-11-20. Status: **approved by Max on 2026-11-20**; steps 1a and 1b (sections 3 and 4) coded in lot 1d-1 on 2026-11-21 (`port/PortLayout`, `client/CableRenderer`). The decisions are recorded in the "Decisions taken" table of `docs/lot-plan.md`:
 
 - choice of the port by aiming, with aim zones that go on over the top face of flat devices;
 - plugs drawn by the client from the cables it knows (check in the 26.3 sources how to draw a small model in the cable pass before coding);
@@ -55,7 +55,7 @@ On the face that carries the ports, each port owns the strip of the face up to h
 
 ![Aim zones](images/cable-aim-zones.png)
 
-Box front on the left (zones over the lower band of the front). Switch on the right: its top as seen from the front (LEDs along the front edge), then its front; each port's zone runs over both. Holes in black, one tint per zone.
+Box front on the left (zones over the lower band of the front). Switch on the right: its top as seen from the front (LEDs along the front edge), then its front; each port's zone runs over both. Holes in black, one tint per zone. Drawn from the device drawings by `python3 design/tools/port_layout.py --zones-image docs/images/cable-aim-zones.png` (redrawn on 2026-11-21 with the RJ45 holes of 2 x 2 texels).
 
 | Device | Hole | Aim zone | Gain |
 |---|---|---|---|
@@ -89,9 +89,9 @@ The click point is turned into the north frame of the device, then looked up in 
   - models `assets/worldwideblocks/models/block/rj45_plug_<colour>.json`, that is `worldwideblocks:block/rj45_plug_<colour>`, where `<colour>` is a key of `cords` in `design/palette.json`: `blue`, `grey`, `yellow`, `green`, `red`, `orange`, `black`, `white`. The eight models differ only by the UV of the boot;
   - one texture `assets/worldwideblocks/textures/block/rj45_plug.png` (`worldwideblocks:block/rj45_plug`, 32 x 32), in `textures/block/`, which the block atlas loads by itself (`assets/minecraft/atlases/blocks.json` of 26.3, directory `block`): no atlas file to write;
   - the model is a plug in a port facing north, its mouth at 8, 8, 8 (sheet `design/blockbench/rj45_plug.md`): the client turns it with the port (0 north, 90 east, 180 south, 270 west, as the `y` of a blockstate) and moves its mouth to the mouth of the port given by `PortLayout`;
-  - **loading at lot 1d-1:** no block state uses these models, so the game does not bake them by itself. The client registers them as standalone models: `ModelEvent.RegisterStandalone`, one `StandaloneModelKey` per colour, `SimpleUnbakedStandaloneModel.quadCollection(id)` (classes read in the sources of NeoForge 26.3.0.103; their use is to confirm at lot 1d-1, first box of issue 1d/07), then picks the model from the colour of the link.
+  - **loading at lot 1d-1:** no block state uses these models, so the game does not bake them by itself. The client registers them as standalone models: `ModelEvent.RegisterStandalone`, one `StandaloneModelKey` per colour, `SimpleUnbakedStandaloneModel.simpleModelWrapper(id)` (a `BlockStateModelPart`, drawn with `SubmitNodeCollector.submitBlockModel` and `Sheets.cutoutBlockItemSheet()`; confirmed at lot 1d-1 on 2026-11-21, `client/PlugModels`), then picks the model from the colour of the link (blue for every link until the colour is a property of the link, section 7). The cable takes the base tone of its colour from one texel of the boot of the plug texture (`port/CordColour`), drawn as quads of `RenderTypes.entitySolid` lit by the light of the world.
 - **Overhang accepted** (Max, 2026-11-20, realistic): the mouth of the tower is 0.5 px from the edge of its block and that of the laptop 1 px, so their plug goes out of the block; a tower or a laptop against a wall has its plug drawn inside the wall, as a real plug stands out behind a computer pushed against a wall.
-- **Thick cable:** square section of 0.25 px (a 6 mm cord x 2.4 is 0.23 px), four faces per segment, lit by the light of the world where it passes, in the colour of the cord. It replaces the line of `RenderTypes.lines`. The held cable goes from the plug to the hand.
+- **Thick cable:** square section of 0.25 px (a 6 mm cord x 2.4 is 0.23 px), four faces per segment, lit by the light of the world where it passes, in the colour of the cord. It replaces the line of `RenderTypes.lines`. Never less than one pixel of the screen wide (Max, 2026-11-21): from close it keeps its 0.25 px, from afar the section widens so that the cable stays visible (a 0.25 px cable is thinner than a pixel beyond about 12 blocks at 1920 x 1080). The held cable goes from the plug to the hand.
 - **In step 1 the cable keeps today's hanging curve**, between the ends of the two plugs. Step 2 replaces this curve.
 - Preview of the chosen plug (`design/tools/rj45_plug.py` and `preview.py`, not the game's rendering), turned with each port as the client will: internet box LAN 1 to 4, 5-port switch, 8-port switch, laptop (left flank), tower (back), each with a cable stub to the floor, the colours in the order of the palette.
 
@@ -180,7 +180,7 @@ What steps 1 and 2 must keep possible, and do:
 
 ## 7. Cords as items: colour, type and length (proposals, 2026-11-20)
 
-Proposed by Max on 2026-11-20, to decide before the lot that brings each part (open decisions of `docs/lot-plan.md`). Nothing is coded.
+Proposed by Max on 2026-11-20, to decide before the lot that brings each part (open decisions of `docs/lot-plan.md`). Nothing is coded, except the base of lot 1d-1 (one plug model per colour, `port/CordColour`); the colour of the cords is the idea issue "Cord colours: a property of the cord and of the link" (`ideas/20-cord-colours.md`).
 
 ### Colour
 

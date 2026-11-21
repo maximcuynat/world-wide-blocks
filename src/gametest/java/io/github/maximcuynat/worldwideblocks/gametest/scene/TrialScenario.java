@@ -78,6 +78,37 @@ public enum TrialScenario {
             List.of(cable(0, 1)),
             Dhcp.serverOff(0)),
     /**
+     * The goal of lot 1d-1 (issue #19): seven computers, more than the box has ports: three on the box (devices 2 to 4)
+     * and four behind a 5-port switch (devices 5 to 8) plugged into port 1 of the box.
+     */
+    SEVEN_COMPUTERS("seven_computers", "box and 5-port switch, seven computers",
+            List.of(device(-3, 0, ModBlocks.INTERNET_BOX::get), device(3, 0, ModBlocks.DESKTOP_SWITCH_5::get),
+                    device(-6, 3, ModBlocks.PC_TOWER::get), device(-4, 4, ModBlocks.LAPTOP::get), device(-2, 3, ModBlocks.PC_TOWER::get),
+                    device(1, 4, ModBlocks.LAPTOP::get), device(3, 4, ModBlocks.PC_TOWER::get), device(5, 4, ModBlocks.LAPTOP::get),
+                    device(7, 3, ModBlocks.PC_TOWER::get)),
+            List.of(cable(0, 1), cable(0, 2), cable(0, 3), cable(0, 4), cable(1, 5), cable(1, 6), cable(1, 7), cable(1, 8))),
+    /**
+     * Port chosen by aiming (issue #62): a box on the left and a 5-port switch on the right, each with port 1 linked to a
+     * computer behind it, so that a free port and a connected port can be aimed at on both.
+     */
+    PORT_AIM("port_aim", "box and 5-port switch, port 1 of each linked to a computer",
+            List.of(device(-2, 0, ModBlocks.INTERNET_BOX::get), device(2, 0, ModBlocks.DESKTOP_SWITCH_5::get),
+                    device(-3, 3, ModBlocks.PC_TOWER::get), device(3, 3, ModBlocks.LAPTOP::get)),
+            List.of(cable(0, 2), cable(1, 3))),
+    /**
+     * Plugs and cables (issue #63): a box and a 5-port switch facing the player, linked to each other and to computers
+     * turned by 90, 180 and 270 degrees, the 5-port switch to an 8-port switch turned by 90 degrees, which goes on to a
+     * box turned by 270 degrees: a plug in a port of every kind of device, in the four orientations.
+     */
+    PLUGS("plugs", "box and switches linked to turned computers and devices",
+            List.of(device(-3, 0, ModBlocks.INTERNET_BOX::get), device(3, 0, ModBlocks.DESKTOP_SWITCH_5::get),
+                    new Device(-5, 3, ModBlocks.PC_TOWER::get, 90, UnaryOperator.identity()),
+                    new Device(-2, 4, ModBlocks.LAPTOP::get, 180, UnaryOperator.identity()),
+                    new Device(1, 4, ModBlocks.PC_TOWER::get, 270, UnaryOperator.identity()),
+                    new Device(5, 3, ModBlocks.DESKTOP_SWITCH_8::get, 90, UnaryOperator.identity()),
+                    new Device(4, 7, ModBlocks.INTERNET_BOX::get, 270, UnaryOperator.identity())),
+            List.of(cable(0, 2), cable(0, 3), cable(0, 1), cable(1, 4), cable(1, 5), cable(5, 6))),
+    /**
      * Internet box for its capture scenario (issue #68): one box alone in front of the player for the close-up views,
      * and four more in a row behind it, turned by 0, 90, 180 and 270 degrees.
      */
@@ -91,6 +122,14 @@ public enum TrialScenario {
     /** Laptop for its capture scenario, as {@link #DEVICE_BOX}, with a closed laptop alone on the right (device 5). */
     DEVICE_LAPTOP("device_laptop", "laptop alone, open then closed, then four laptops in the four orientations",
             withClosedLaptop(turnedRow(ModBlocks.LAPTOP::get, UnaryOperator.identity())),
+            List.of()),
+    /** 5-port desktop switch for its capture scenario (issue #17), as {@link #DEVICE_BOX}. */
+    DEVICE_SWITCH_5("device_switch_5", "5-port switch alone, then four in the four orientations",
+            turnedRow(ModBlocks.DESKTOP_SWITCH_5::get, UnaryOperator.identity()),
+            List.of()),
+    /** 8-port desktop switch for its capture scenario (issue #18), as {@link #DEVICE_BOX}. */
+    DEVICE_SWITCH_8("device_switch_8", "8-port switch alone, then four in the four orientations",
+            turnedRow(ModBlocks.DESKTOP_SWITCH_8::get, UnaryOperator.identity()),
             List.of());
 
     /**

@@ -89,7 +89,7 @@ final class PortStatusLayer implements GuiLayer {
         boolean detailed = minecraft.player != null && minecraft.player.isShiftKeyDown();
         // Same game time as the server's, which the client receives and advances: the time left on a lease.
         List<StatusPanel.Line> panel = StatusPanel.lines(device.ports(), port -> this.cache.isConnected(pos, port),
-                toStatus(this.deviceStatus.at(pos)), detailed, minecraft.level.getGameTime());
+                toStatus(this.deviceStatus.at(pos)), detailed, minecraft.level.getGameTime(), this.aimedPort(minecraft, pos));
         List<Component> texts = panel.stream().map(line -> (Component) ClientText.of(line.key(), line.args())).toList();
         // The loaded language, not the code chosen: the code changes before the texts are reloaded.
         List<Object> drawn = List.of(pos, state.getBlock(), panel, Language.getInstance());
@@ -129,6 +129,26 @@ final class PortStatusLayer implements GuiLayer {
             graphics.text(font, texts.get(i), x + LIGHT_SIZE + LIGHT_GAP, y, light != null ? COLOR_TEXT : COLOR_DETAIL);
             y += lineHeight;
         }
+    }
+
+    /**
+     * The port aimed at on this device ({@link PortAim}), and the other end of its cable: the device there is named only
+     * when its chunk is loaded on the client.
+     */
+    private Optional<StatusPanel.AimedPort> aimedPort(Minecraft minecraft, BlockPos pos) {
+        return PortAim.current(minecraft).filter(aimed -> aimed.pos().equals(pos)).map(aimed -> {
+            int index = aimed.port().index();
+            Optional<StatusPanel.OtherEnd> other = this.cache.linkAt(pos, index).map(link -> {
+                boolean here = link.a().equals(pos) && link.portA() == index;
+                BlockPos otherPos = here ? link.b() : link.a();
+                int otherPort = here ? link.portB() : link.portA();
+                Optional<String> key = minecraft.level.hasChunkAt(otherPos)
+                        && minecraft.level.getBlockState(otherPos).getBlock() instanceof NetworkDevice
+                        ? Optional.of(minecraft.level.getBlockState(otherPos).getBlock().getDescriptionId()) : Optional.empty();
+                return new StatusPanel.OtherEnd(key, otherPort);
+            });
+            return new StatusPanel.AimedPort(index, other);
+        });
     }
 
     /** No panel this frame: posted once when a panel was drawn before. */

@@ -60,6 +60,13 @@ public final class WorldWideBlocksGameTests {
 
     private static final List<Case> CASES = Stream.concat(Stream.concat(Stream.of(
             new Case("cable_no_free_port", Batch.SHARED, 20, CableTests::noFreePort),
+            // Port chosen by aiming (lot 1d-1, issue #62).
+            new Case("port_aim_both_ends", Batch.SHARED, 20, PortAimTests::bothEndsFollowTheAimedPorts),
+            new Case("port_aim_outside_zones", Batch.SHARED, 20, PortAimTests::outsideTheZonesTheFirstFreePort),
+            new Case("port_aim_in_use", Batch.SHARED, 20, PortAimTests::aimedPortInUse),
+            new Case("port_aim_line_input", Batch.SHARED, 20, PortAimTests::aimedLineInputRefused),
+            new Case("port_aim_unplug", Batch.SHARED, 20, PortAimTests::unplugTheAimedPort),
+            new Case("port_aim_take_end", Batch.SHARED, 20, PortAimTests::takeTheEndOfTheAimedPort),
             new Case("cable_start_broken_creative", Batch.SHARED, 100, CableTests::startBrokenCreative),
             new Case("cable_start_broken_survival", Batch.SHARED, 100, CableTests::startBrokenSurvival),
             new Case("cable_start_exploded_survival", Batch.SHARED, 100, CableTests::startExplodedSurvival),
@@ -96,7 +103,9 @@ public final class WorldWideBlocksGameTests {
             new Case("terminal_laptop_sneak_unplugs", Batch.SHARED, 40, TerminalTests::laptopSneakUnplugs),
             // ping (lot 1c-1, issue #16).
             new Case("ping_between_two_computers", Batch.SHARED, 200, PingTests::betweenTwoComputers),
-            new Case("ping_absent_address", Batch.SHARED, 200, PingTests::absentAddress)),
+            new Case("ping_absent_address", Batch.SHARED, 200, PingTests::absentAddress),
+            // Lot 1d-1, issue #19: more computers than the box has ports.
+            new Case("ping_seven_computers_box_and_switch", Batch.SHARED, 300, PingTests::sevenComputersOnABoxAndASwitch)),
             // Scenes of /worldwideblocks test, except "distance" (99 blocks, larger than the test area).
             // The loop scene hits the engine's global limits: separate batch.
             Arrays.stream(TrialScenario.values())
@@ -105,7 +114,9 @@ public final class WorldWideBlocksGameTests {
                             scenario == TrialScenario.LOOP ? Batch.ENGINE_LIMITS : Batch.SHARED, 20,
                             helper -> SceneTests.buildsScenario(helper, scenario)))),
             // Shapes and placement of the devices, in the four orientations (DeviceShapeTests).
-            DeviceShapeTests.cases())
+            Stream.concat(DeviceShapeTests.cases(),
+                    // Port layouts against the real shapes (issue #61).
+                    PortLayoutTests.cases()))
             .toList();
 
     private WorldWideBlocksGameTests() {

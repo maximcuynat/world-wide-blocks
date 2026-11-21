@@ -31,6 +31,7 @@ public final class WorldWideBlocksClient {
     private final ClientLinkCache links = new ClientLinkCache();
     private final ClientDeviceStatus deviceStatus = new ClientDeviceStatus();
     private final CableRenderer cableRenderer = new CableRenderer(this.links);
+    private final PortOutlineRenderer portOutline = new PortOutlineRenderer();
     private final WorldWideBlocksClientConfig config = new WorldWideBlocksClientConfig();
     private final ClientMessages messages = new ClientMessages(this.config);
     private final ClientTerminal terminal = new ClientTerminal(this.config);
@@ -39,6 +40,7 @@ public final class WorldWideBlocksClient {
         modContainer.registerConfig(ModConfig.Type.CLIENT, this.config.spec());
         modEventBus.addListener(this::registerPayloadHandlers);
         modEventBus.addListener(this::registerGuiLayers);
+        modEventBus.addListener(PlugModels::register);
         NeoForge.EVENT_BUS.addListener(this::onLoggingOut);
         NeoForge.EVENT_BUS.addListener(this::extractCables);
         NeoForge.EVENT_BUS.addListener(this::submitCables);
@@ -63,10 +65,12 @@ public final class WorldWideBlocksClient {
 
     private void extractCables(ExtractLevelRenderStateEvent event) {
         this.cableRenderer.extract(event);
+        this.portOutline.extract(event);
     }
 
     private void submitCables(SubmitCustomGeometryEvent event) {
         this.cableRenderer.submit(event);
+        this.portOutline.submit(event);
     }
 
     /** In singleplayer, two worlds must not get mixed up: everything is forgotten on leaving. */

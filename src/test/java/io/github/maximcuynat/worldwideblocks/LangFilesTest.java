@@ -60,11 +60,19 @@ class LangFilesTest {
             Help.KEYS, TERMINAL_ROW,
             "terminal.worldwideblocks.title.", TERMINAL_TITLE);
 
-    /** Sample values of each key, built from the longest device name and the longest DHCP state of the language. */
-    private static Map<String, List<String>> samples(String name, String state) {
+    /** The devices with a terminal (lot 1c-1). */
+    private static final List<String> COMPUTERS = List.of("pc_tower", "laptop");
+
+    /**
+     * Sample values of each key, built from the longest device name, the longest computer name (for the messages of a
+     * terminal: a switch or a box has none) and the longest DHCP state of the language.
+     */
+    private static Map<String, List<String>> samples(String name, String computer, String state) {
         Map<String, List<String>> samples = new LinkedHashMap<>();
         samples.put("message.worldwideblocks.cable.start", List.of(name, PORT));
         samples.put("message.worldwideblocks.cable.no_free_port", List.of(name));
+        samples.put("message.worldwideblocks.cable.port_in_use", List.of(name, PORT));
+        samples.put("message.worldwideblocks.cable.port_empty", List.of(name, PORT));
         samples.put("message.worldwideblocks.cable.cancelled", List.of());
         samples.put("message.worldwideblocks.cable.start_gone", List.of());
         samples.put("message.worldwideblocks.cable.cancelled_dimension", List.of());
@@ -81,7 +89,11 @@ class LangFilesTest {
         samples.put("message.worldwideblocks.network.loop", List.of(name + " [" + X + ", " + Y + ", " + Z + "]"));
         samples.put("message.worldwideblocks.network.saturated", List.of());
         samples.put("message.worldwideblocks.network.dhcp_conflict", List.of(name + " [" + X + ", " + Y + ", " + Z + "]"));
-        samples.put("message.worldwideblocks.terminal.busy", List.of(name));
+        samples.put("message.worldwideblocks.terminal.busy", List.of(computer));
+        samples.put("hud.worldwideblocks.aim.free", List.of(PORT));
+        samples.put("hud.worldwideblocks.aim.connected", List.of(PORT));
+        samples.put("hud.worldwideblocks.aim.connected_to", List.of(PORT, name, PORT));
+        samples.put("hud.worldwideblocks.aim.connected_to_unseen", List.of(PORT, PORT));
         samples.put("hud.worldwideblocks.port.connected", List.of(PORT));
         samples.put("hud.worldwideblocks.port.free", List.of(PORT));
         samples.put("hud.worldwideblocks.port.line", List.of(PORT));
@@ -149,7 +161,11 @@ class LangFilesTest {
                 .map(Map.Entry::getValue)
                 .max((a, b) -> Integer.compare(length(a), length(b)))
                 .orElseThrow();
-        Map<String, List<String>> samples = samples(longestName, longestState);
+        String longestComputer = COMPUTERS.stream()
+                .map(id -> texts.get("block.worldwideblocks." + id))
+                .max((a, b) -> Integer.compare(length(a), length(b)))
+                .orElseThrow();
+        Map<String, List<String>> samples = samples(longestName, longestComputer, longestState);
         List<String> problems = new ArrayList<>();
         texts.forEach((key, text) -> LIMITS.forEach((prefix, limit) -> {
             if (!key.startsWith(prefix)) {

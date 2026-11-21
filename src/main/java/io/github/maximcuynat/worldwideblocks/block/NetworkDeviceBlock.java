@@ -7,6 +7,7 @@ import io.github.maximcuynat.worldwideblocks.network.DeviceRole;
 import io.github.maximcuynat.worldwideblocks.network.NetworkDevice;
 import io.github.maximcuynat.worldwideblocks.network.NetworkDevices;
 import io.github.maximcuynat.worldwideblocks.network.PortKind;
+import io.github.maximcuynat.worldwideblocks.port.PortLayout;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
@@ -22,18 +23,26 @@ import net.minecraft.world.phys.BlockHitResult;
  * with its cables, when it leaves its position. It must refuse pistons ({@code PushReaction.IMMOVEABLE}),
  * because the engine identifies it by its position.
  *
- * <p>Sneaking + empty-hand right-click: the end of its cable is taken off the device and kept
- * in hand, the other end staying connected. A plain right-click is specific to each device
+ * <p>Sneaking + empty-hand right-click: the end of the cable of the aimed port (else of the first occupied port) is
+ * taken off the device and kept in hand, the other end staying connected. A plain right-click is specific to each device
  * ({@link #useDevice}).
  */
 public abstract class NetworkDeviceBlock extends HorizontalDirectionalBlock implements NetworkDevice {
     private final DeviceRole role;
+    private final PortLayout layout;
     private final List<PortKind> ports;
 
-    protected NetworkDeviceBlock(BlockBehaviour.Properties properties, DeviceRole role, List<PortKind> ports) {
+    /** @param layout its ports, for a front facing north: their kinds are the ports of the device in the engine */
+    protected NetworkDeviceBlock(BlockBehaviour.Properties properties, DeviceRole role, PortLayout layout) {
         super(properties);
         this.role = role;
-        this.ports = List.copyOf(ports);
+        this.layout = layout;
+        this.ports = layout.kinds();
+    }
+
+    /** Its port layout for a front facing north; {@link DevicePorts#layout} turns it by {@code FACING}. */
+    public PortLayout northLayout() {
+        return this.layout;
     }
 
     @Override
@@ -50,7 +59,8 @@ public abstract class NetworkDeviceBlock extends HorizontalDirectionalBlock impl
     protected final InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         if (player.isSecondaryUseActive()) {
             if (level instanceof ServerLevel serverLevel) {
-                EthernetCableItem.takeCableEnd(serverLevel, player, pos);
+                EthernetCableItem.takeCableEnd(serverLevel, player, pos,
+                        DevicePorts.aimed(state, pos, hitResult.getLocation(), hitResult.getDirection()).map(PortLayout.Port::index));
             }
             return InteractionResult.SUCCESS;
         }
