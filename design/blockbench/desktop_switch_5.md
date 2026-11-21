@@ -35,6 +35,18 @@ Front (north, z = 6.5): x = 10 - column / 4, y = 1 - row / 4. Top: x = 6 + colum
 
 **For lot 1d-1 (port layout, issue "Port layout of each device"):** ports 1 to 5 from the viewer's left are engine ports 0 to 4, on the front (north for a switch facing north), holes x 9.25 to 9.75, 8.5 to 9, 7.75 to 8.25, 7 to 7.5 and 6.25 to 6.75, y 0.25 to 0.75, 0.5 px deep, RJ45 (2 x 2 texels), mouths at z = 6.5, outward direction -z (north). Aim zones: 0.75 px wide (0.875 px at the ends, up to the edge) over the whole front and the whole depth of the top (`docs/cable-design.md`, section 3).
 
+## Port layout
+
+The layout used by the game since lot 1d-1 (`PortLayouts` in the Java code, `docs/cable-design.md`, section 3), for a front facing north, in model pixels; the game turns it with `FACING` as the blockstate turns the model. Printed by `python3 design/tools/port_layout.py desktop_switch_5`, which reads the holes from the drawing of the device: the hole, the mouth (where the plug goes in, on the face), the outward direction of the plug, and the aim zone (where a click with a cord chooses the port). `PortLayoutTest` (unit tests) and `PortLayoutTests` (game tests, against the real shape of the block) check these values.
+
+| Port | Engine index | Face | Connector | Hole (model px) | Mouth | Outward | Aim zone |
+|---|---|---|---|---|---|---|---|
+| 1 | 0 | north | RJ45 | x 9.25 to 9.75, y 0.25 to 0.75, z 6.5 to 7 | 9.5, 0.5, 6.5 | north | north: x 9.125 to 10, y 0 to 1, z 6.5 to 6.5; up: x 9.125 to 10, y 1 to 1, z 6.5 to 9.5 |
+| 2 | 1 | north | RJ45 | x 8.5 to 9, y 0.25 to 0.75, z 6.5 to 7 | 8.75, 0.5, 6.5 | north | north: x 8.375 to 9.125, y 0 to 1, z 6.5 to 6.5; up: x 8.375 to 9.125, y 1 to 1, z 6.5 to 9.5 |
+| 3 | 2 | north | RJ45 | x 7.75 to 8.25, y 0.25 to 0.75, z 6.5 to 7 | 8, 0.5, 6.5 | north | north: x 7.625 to 8.375, y 0 to 1, z 6.5 to 6.5; up: x 7.625 to 8.375, y 1 to 1, z 6.5 to 9.5 |
+| 4 | 3 | north | RJ45 | x 7 to 7.5, y 0.25 to 0.75, z 6.5 to 7 | 7.25, 0.5, 6.5 | north | north: x 6.875 to 7.625, y 0 to 1, z 6.5 to 6.5; up: x 6.875 to 7.625, y 1 to 1, z 6.5 to 9.5 |
+| 5 | 4 | north | RJ45 | x 6.25 to 6.75, y 0.25 to 0.75, z 6.5 to 7 | 6.5, 0.5, 6.5 | north | north: x 6 to 6.875, y 0 to 1, z 6.5 to 6.5; up: x 6 to 6.875, y 1 to 1, z 6.5 to 9.5 |
+
 ## Display
 
 w = 4, d = 3, h = 1 (guide, section 7), `wwb_design.display(4, 3, 1)`; to check in game at lot 1d-1.

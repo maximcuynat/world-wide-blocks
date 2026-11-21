@@ -12,6 +12,7 @@ Scripts that draw the equipment for Blockbench, following [`docs/design-guide.md
 - `<id>.py`: one script per device: `internet_box.py`, `pc_tower.py`, `laptop.py` (two models sharing one texture), `desktop_switches.py` (the family of desktop switches: 5 and 8 ports, blocks of lot 1d-1).
 - `cables.py`: design drafts of the cables (`docs/cable-design.md`): the RJ45 plug, cables on the ground with their crossings and lanes, the two-tone outline of the aimed port, the cord colours, the cord icon; drafts only, under `design/blockbench/drafts/`.
 - `rj45_plug.py`: the RJ45 plug of lot 1d-1, one project per cord colour sharing one texture; `--scene` prints the preview of a plug in every port of the devices.
+- `port_layout.py`: the port layout of a device (lot 1d-1, `docs/cable-design.md` section 3): holes read from the drawing of the device, mouths, outward directions and aim zones; the "Port layout" table of the device sheet, or `--java` the ports as the Java records of `PortLayouts` print them, to compare with the code.
 - `export.py`: exports an approved project to the assets.
 - `preview.py`: isometric preview of one or more projects, front and back, with the face shading of the game, to look at a drawing without Blockbench or to compare variants side by side; `--scene` with offsets for several projects together (`<id>@dx,dz`, or `<id>@dx,dy,dz,angle` to turn a project as the `y` of a blockstate), `--centre` and `--views` for a close-up.
 

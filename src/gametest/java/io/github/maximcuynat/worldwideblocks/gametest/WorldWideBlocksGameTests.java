@@ -105,7 +105,9 @@ public final class WorldWideBlocksGameTests {
                             scenario == TrialScenario.LOOP ? Batch.ENGINE_LIMITS : Batch.SHARED, 20,
                             helper -> SceneTests.buildsScenario(helper, scenario)))),
             // Shapes and placement of the devices, in the four orientations (DeviceShapeTests).
-            DeviceShapeTests.cases())
+            Stream.concat(DeviceShapeTests.cases(),
+                    // Port layouts against the real shapes (issue #61).
+                    PortLayoutTests.cases()))
             .toList();
 
     private WorldWideBlocksGameTests() {

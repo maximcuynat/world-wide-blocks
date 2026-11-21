@@ -7,6 +7,7 @@ import io.github.maximcuynat.worldwideblocks.network.DeviceRole;
 import io.github.maximcuynat.worldwideblocks.network.NetworkDevice;
 import io.github.maximcuynat.worldwideblocks.network.NetworkDevices;
 import io.github.maximcuynat.worldwideblocks.network.PortKind;
+import io.github.maximcuynat.worldwideblocks.port.PortLayout;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
@@ -28,12 +29,20 @@ import net.minecraft.world.phys.BlockHitResult;
  */
 public abstract class NetworkDeviceBlock extends HorizontalDirectionalBlock implements NetworkDevice {
     private final DeviceRole role;
+    private final PortLayout layout;
     private final List<PortKind> ports;
 
-    protected NetworkDeviceBlock(BlockBehaviour.Properties properties, DeviceRole role, List<PortKind> ports) {
+    /** @param layout its ports, for a front facing north: their kinds are the ports of the device in the engine */
+    protected NetworkDeviceBlock(BlockBehaviour.Properties properties, DeviceRole role, PortLayout layout) {
         super(properties);
         this.role = role;
-        this.ports = List.copyOf(ports);
+        this.layout = layout;
+        this.ports = layout.kinds();
+    }
+
+    /** Its port layout for a front facing north; {@link DevicePorts#layout} turns it by {@code FACING}. */
+    public PortLayout northLayout() {
+        return this.layout;
     }
 
     @Override

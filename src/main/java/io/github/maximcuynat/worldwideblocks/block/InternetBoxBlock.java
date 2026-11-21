@@ -5,6 +5,7 @@ import java.util.Map;
 
 import io.github.maximcuynat.worldwideblocks.network.DeviceRole;
 import io.github.maximcuynat.worldwideblocks.network.PortKind;
+import io.github.maximcuynat.worldwideblocks.port.PortLayouts;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -24,14 +25,13 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  */
 public class InternetBoxBlock extends NetworkDeviceBlock {
     /** Ports 1 to 4: local network. Port 5: line input, inactive until lot 3. */
-    public static final List<PortKind> PORTS = List.of(
-            PortKind.ETHERNET, PortKind.ETHERNET, PortKind.ETHERNET, PortKind.ETHERNET, PortKind.LINE);
+    public static final List<PortKind> PORTS = PortLayouts.INTERNET_BOX.kinds();
 
     // Shape of a box whose front faces north, turned for the other orientations (as the blockstate turns the model).
     private static final Map<Direction, VoxelShape> SHAPES = Shapes.rotateHorizontal(Block.box(4.5, 0.0, 6.5, 11.5, 7.0, 9.5));
 
     public InternetBoxBlock(BlockBehaviour.Properties properties) {
-        super(properties, DeviceRole.BOX, PORTS);
+        super(properties, DeviceRole.BOX, PortLayouts.INTERNET_BOX);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
 

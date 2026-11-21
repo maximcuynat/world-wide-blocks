@@ -5,6 +5,7 @@ import java.util.Map;
 
 import io.github.maximcuynat.worldwideblocks.network.DeviceRole;
 import io.github.maximcuynat.worldwideblocks.network.PortKind;
+import io.github.maximcuynat.worldwideblocks.port.PortLayouts;
 import io.github.maximcuynat.worldwideblocks.terminal.TerminalServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -31,13 +32,13 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  */
 public class PcTowerBlock extends NetworkDeviceBlock {
     /** One network card. */
-    public static final List<PortKind> PORTS = List.of(PortKind.ETHERNET);
+    public static final List<PortKind> PORTS = PortLayouts.PC_TOWER.kinds();
 
     // Shape for a tower aligned on the Z axis (front face north or south), rotated for the X axis.
     private static final Map<Direction.Axis, VoxelShape> SHAPES = Shapes.rotateHorizontalAxis(Block.boxZ(7.0, 0.0, 15.0, 0.5, 15.5));
 
     public PcTowerBlock(BlockBehaviour.Properties properties) {
-        super(properties, DeviceRole.HOST, PORTS);
+        super(properties, DeviceRole.HOST, PortLayouts.PC_TOWER);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
 
