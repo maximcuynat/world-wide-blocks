@@ -33,7 +33,7 @@ Minor versions follow the order of [`docs/lot-plan.md`](lot-plan.md). Each lot e
 | 0.8.0 Long-range wireless, tools, survival | 9a to 9d | Tools, mobile network, satellite and radio links, crafting in survival |
 | 1.0.0 | F | Finishing: lights, textures, sounds, polished models and HUD |
 
-Milestones exist on GitHub for the versions 0.1.0 and 0.2.0 and their lots; the next ones are added to `scripts/project/milestones.tsv` as versions come closer, then created by `scripts/dev project sync`.
+Milestones exist on GitHub for the versions 0.1.0 and 0.2.0 and their lots, and for 0.3.0 with its lot 3b only (added on 2026-11-21 for the test operator line block, #31); the next ones are added to `scripts/project/milestones.tsv` as versions come closer, then created by `scripts/dev project sync`.
 
 A change that breaks existing worlds is marked `!` in its commit and `breaking` on its pull request; it is listed first in the changelog, under "Breaks existing worlds". Only a minor version may break worlds, never a patch version.
 
