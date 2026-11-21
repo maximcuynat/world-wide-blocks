@@ -23,6 +23,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.permissions.LevelBasedPermissionSet;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * Game tests of the scenes of {@code /worldwideblocks test}: each scene is built with its devices
@@ -45,11 +46,14 @@ final class SceneTests {
         helper.assertTrue(result.refusal().isEmpty(), "Scene refused: " + result.refusal().orElse(""));
         helper.assertValueEqual(result.devices().size(), scenario.devices().size(), "devices placed");
         Set<Link> links = new HashSet<>();
-        for (BlockPos pos : result.devices()) {
+        for (int i = 0; i < result.devices().size(); i++) {
+            BlockPos pos = result.devices().get(i);
+            TrialScenario.Device device = scenario.devices().get(i);
             DeviceId id = NetworkDevices.idOf(helper.getLevel(), pos);
             helper.assertTrue(scene.network().node(id).isPresent(), "Device not registered: " + id);
-            helper.assertValueEqual(helper.getLevel().getBlockState(pos).getValue(HorizontalDirectionalBlock.FACING),
-                    forward.getOpposite(), "front of " + id);
+            BlockState expected = device.state().apply(device.block().get().defaultBlockState()
+                    .setValue(HorizontalDirectionalBlock.FACING, device.facing(forward)));
+            helper.assertValueEqual(helper.getLevel().getBlockState(pos), expected, "state of " + id);
             links.addAll(scene.network().linksOf(id));
         }
         helper.assertValueEqual(links.size(), scenario.cables().size(), "cables of the scene");

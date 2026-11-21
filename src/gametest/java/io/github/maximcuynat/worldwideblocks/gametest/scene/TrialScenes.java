@@ -50,7 +50,7 @@ public final class TrialScenes {
 
     /**
      * Builds the scene if its whole area is empty (two blocks high above the ground). Devices face
-     * the player.
+     * the player, turned by their {@link TrialScenario.Device#turn()}.
      */
     public static Result build(ServerLevel level, TrialScenario scenario, BlockPos origin, Direction forward) {
         Optional<BlockPos> obstacle = firstObstacle(level, scenario, origin, forward);
@@ -63,8 +63,8 @@ public final class TrialScenes {
         List<BlockPos> placed = new ArrayList<>();
         for (TrialScenario.Device device : scenario.devices()) {
             BlockPos pos = positionOf(device, origin, forward);
-            BlockState state = device.block().get().defaultBlockState()
-                    .setValue(HorizontalDirectionalBlock.FACING, forward.getOpposite());
+            BlockState state = device.state().apply(device.block().get().defaultBlockState()
+                    .setValue(HorizontalDirectionalBlock.FACING, device.facing(forward)));
             level.setBlockAndUpdate(pos, state);
             placed.add(pos);
         }
