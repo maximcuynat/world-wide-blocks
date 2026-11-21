@@ -106,7 +106,56 @@ public final class StatusPanel {
         }
     }
 
+    /**
+     * The port the player aims at with a cord in hand, or sneaking with an empty hand (issue #62).
+     *
+     * @param index    number of the port, starting at 0
+     * @param otherEnd the other end of its cable, when it has one and the client knows it
+     */
+    public record AimedPort(int index, Optional<OtherEnd> otherEnd) {
+    }
+
+    /**
+     * The other end of the cable of the aimed port.
+     *
+     * @param deviceKey language key of the name of the device there, empty when its chunk is not loaded on the client
+     * @param port      number of its port, starting at 0
+     */
+    public record OtherEnd(Optional<String> deviceKey, int port) {
+    }
+
     private StatusPanel() {
+    }
+
+    /**
+     * The lines of the panel, with a first line for the aimed port when there is one: compact "Port 3: free" or
+     * "Port 3: connected"; detailed (sneaking), the device and the port at the other end of its cable.
+     */
+    public static List<Line> lines(List<PortKind> ports, IntPredicate connected, DeviceStatus status, boolean detailed,
+            long gameTime, Optional<AimedPort> aimed) {
+        List<Line> lines = new ArrayList<>();
+        aimed.filter(port -> port.index() >= 0 && port.index() < ports.size())
+                .ifPresent(port -> lines.add(aimedLine(ports, connected, port, detailed)));
+        lines.addAll(lines(ports, connected, status, detailed, gameTime));
+        return lines;
+    }
+
+    private static Line aimedLine(List<PortKind> ports, IntPredicate connected, AimedPort port, boolean detailed) {
+        MessageArg number = MessageArg.number(port.index() + 1);
+        if (ports.get(port.index()) == PortKind.LINE) {
+            return Line.of(Light.INACTIVE, "hud.worldwideblocks.port.line", number);
+        }
+        if (!connected.test(port.index())) {
+            return Line.of(Light.FREE, "hud.worldwideblocks.aim.free", number);
+        }
+        if (detailed && port.otherEnd().isPresent()) {
+            OtherEnd end = port.otherEnd().get();
+            MessageArg other = MessageArg.number(end.port() + 1);
+            return end.deviceKey()
+                    .map(key -> Line.of(Light.CONNECTED, "hud.worldwideblocks.aim.connected_to", number, MessageArg.key(key), other))
+                    .orElseGet(() -> Line.of(Light.CONNECTED, "hud.worldwideblocks.aim.connected_to_unseen", number, other));
+        }
+        return Line.of(Light.CONNECTED, "hud.worldwideblocks.aim.connected", number);
     }
 
     /**

@@ -23,11 +23,14 @@ import org.slf4j.Logger;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.logging.LogUtils;
 
+import io.github.maximcuynat.worldwideblocks.block.DevicePorts;
 import io.github.maximcuynat.worldwideblocks.capture.CaptureScenario.Size;
 import io.github.maximcuynat.worldwideblocks.capture.CaptureScenario.Step;
 import io.github.maximcuynat.worldwideblocks.client.StatusPanelShownEvent;
 import io.github.maximcuynat.worldwideblocks.client.TerminalScreen;
 import io.github.maximcuynat.worldwideblocks.gametest.scene.TrialScenes;
+import io.github.maximcuynat.worldwideblocks.port.PortLayout;
+import io.github.maximcuynat.worldwideblocks.port.PortSide;
 import io.github.maximcuynat.worldwideblocks.network.DeviceId;
 import io.github.maximcuynat.worldwideblocks.network.Link;
 import io.github.maximcuynat.worldwideblocks.network.NetworkDevices;
@@ -167,6 +170,8 @@ final class CaptureRun {
     private boolean stepStarted;
     private boolean sneaking;
     private BlockPos aimed;
+    /** The port aimed at by the last {@link Step.AimPort}, whose line the panel must show first; -1 otherwise. */
+    private int aimedPort = -1;
     private int combination;
     private int stableTicks;
     private CompletableFuture<Void> reload;
@@ -445,6 +450,7 @@ final class CaptureRun {
             case Step.BuildScene build -> this.build(minecraft, build);
             case Step.ClearScene clear -> this.clear(minecraft);
             case Step.Aim aim -> this.aim(minecraft, aim);
+            case Step.AimPort aim -> this.aimPort(minecraft, aim);
             case Step.View view -> this.view(minecraft, view);
             case Step.Orbit orbit -> this.orbit(minecraft, orbit);
             case Step.HideHud hide -> this.hideHud(minecraft, hide);
@@ -503,6 +509,58 @@ final class CaptureRun {
         return result != null && this.stepTicks >= SETTLE_TICKS;
     }
 
+    private boolean aimPort(Minecraft minecraft, Step.AimPort aim) {
+        TrialScenes.Result result = this.scene.get();
+        if (result == null || aim.device() >= result.devices().size()) {
+            throw new IllegalStateException("no device " + aim.device() + " in the last scene");
+        }
+        BlockPos device = result.devices().get(aim.device());
+        if (!this.stepStarted) {
+            this.stepStarted = true;
+            this.giveReachBack(minecraft);
+            this.stableTicks = 0;
+            this.sneaking = aim.sneaking();
+            this.aimed = device;
+            this.aimedPort = aim.port();
+            this.orbitFeet.set(null);
+            IntegratedServer server = minecraft.getSingleplayerServer();
+            server.execute(() -> {
+                try {
+                    ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+                    PortLayout.Port port = DevicePorts.layout(player.level().getBlockState(device))
+                            .orElseThrow(() -> new IllegalStateException("not a network device at " + device.toShortString()))
+                            .ports().get(aim.port());
+                    PortLayout.Area area = port.zone().stream()
+                            .filter(zone -> (zone.side() == PortSide.UP) == aim.top())
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalStateException("port " + (aim.port() + 1) + " has no zone " + (aim.top() ? "on the top" : "on its face")));
+                    Vec3 target = DevicePorts.toWorld(device, area.box().centre());
+                    PortSide out = port.face();
+                    Vec3 feet = new Vec3(target.x + out.x() * aim.distance(), device.getY(), target.z + out.z() * aim.distance());
+                    player.getAbilities().flying = false;
+                    player.onUpdateAbilities();
+                    double eyeY = feet.y + player.getEyeHeight(aim.sneaking() ? Pose.CROUCHING : Pose.STANDING);
+                    Vec3 look = target.subtract(feet.x, eyeY, feet.z);
+                    float yaw = (float) (Mth.atan2(look.z, look.x) * Mth.RAD_TO_DEG) - 90f;
+                    float pitch = (float) -(Mth.atan2(look.y, Math.sqrt(look.x * look.x + look.z * look.z)) * Mth.RAD_TO_DEG);
+                    player.teleportTo(player.level(), feet.x, feet.y, feet.z, Set.<Relative>of(), yaw, pitch, true);
+                    this.orbitFeet.set(feet);
+                } catch (RuntimeException e) {
+                    this.serverError.set("aim at port " + (aim.port() + 1) + ": " + e);
+                }
+            });
+            return false;
+        }
+        Vec3 feet = this.orbitFeet.get();
+        boolean there = feet != null && minecraft.player != null
+                && Math.abs(minecraft.player.getX() - feet.x) < 0.01 && Math.abs(minecraft.player.getZ() - feet.z) < 0.01;
+        if (there) {
+            this.standing = minecraft.player.blockPosition();
+        }
+        this.stableTicks = there && this.aimHolds(minecraft) ? this.stableTicks + 1 : 0;
+        return this.stableTicks >= STABLE_TICKS;
+    }
+
     private boolean aim(Minecraft minecraft, Step.Aim aim) {
         TrialScenes.Result result = this.scene.get();
         if (result == null || aim.device() >= result.devices().size()) {
@@ -516,6 +574,7 @@ final class CaptureRun {
             this.stableTicks = 0;
             this.sneaking = aim.sneaking();
             this.aimed = device;
+            this.aimedPort = -1;
             this.standing = at;
             this.face(minecraft, at, device, aim.sneaking());
             return false;
@@ -1125,7 +1184,9 @@ final class CaptureRun {
             return true;
         }
         boolean posture = minecraft.player != null && minecraft.player.isShiftKeyDown() == this.sneaking;
-        boolean drawn = this.panel != null && this.panel.device().filter(this.aimed::equals).isPresent();
+        boolean drawn = this.panel != null && this.panel.device().filter(this.aimed::equals).isPresent()
+                && (this.aimedPort < 0 || !this.panel.lines().isEmpty()
+                        && Pattern.compile("^\\[[a-z]+\\] Port " + (this.aimedPort + 1) + "\\b").matcher(this.panel.lines().getFirst()).find());
         return this.aimedBlock(minecraft).filter(this.aimed::equals).isPresent() && posture && drawn;
     }
 

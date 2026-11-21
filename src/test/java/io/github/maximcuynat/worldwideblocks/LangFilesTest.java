@@ -90,6 +90,10 @@ class LangFilesTest {
         samples.put("message.worldwideblocks.network.saturated", List.of());
         samples.put("message.worldwideblocks.network.dhcp_conflict", List.of(name + " [" + X + ", " + Y + ", " + Z + "]"));
         samples.put("message.worldwideblocks.terminal.busy", List.of(computer));
+        samples.put("hud.worldwideblocks.aim.free", List.of(PORT));
+        samples.put("hud.worldwideblocks.aim.connected", List.of(PORT));
+        samples.put("hud.worldwideblocks.aim.connected_to", List.of(PORT, name, PORT));
+        samples.put("hud.worldwideblocks.aim.connected_to_unseen", List.of(PORT, PORT));
         samples.put("hud.worldwideblocks.port.connected", List.of(PORT));
         samples.put("hud.worldwideblocks.port.free", List.of(PORT));
         samples.put("hud.worldwideblocks.port.line", List.of(PORT));

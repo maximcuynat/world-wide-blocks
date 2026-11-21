@@ -422,6 +422,27 @@ public final class CaptureScenarios {
             new Step.Shot("ping_absent"),
             new Step.Press(Step.TerminalKey.ESCAPE));
 
+    /**
+     * Lot 1d-1, issue #62, scene {@code port_aim}: cord in hand, the aimed port of the box and of the switch, outlined and
+     * named first in the panel, from the front and from above: a free port ("Port 2: free"), a connected one, compact then
+     * detailed (sneaking: the device at the other end and its port); on the switch the zone on its top. Then with an empty
+     * hand, sneaking: the port whose end would be taken off. Each aim fails the run unless the panel names that port first.
+     */
+    static final CaptureScenario PORT_AIM = new CaptureScenario("port_aim", "aimed port: outline and panel line on a box and a switch",
+            List.of(new CaptureScenario.Size(1920, 1080)), List.of(AUTO_SCALE), CaptureScenario.BOTH_LANGUAGES, List.of(
+                    new Step.BuildScene(TrialScenario.PORT_AIM),
+                    new Step.Wait(SETTLE),
+                    new Step.Hold(ModItems.ETHERNET_CABLE),
+                    new Step.AimPort(0, 1, 2.5, false, false), new Step.Shot("box_port_2_front"),
+                    new Step.AimPort(0, 0, 2.5, false, false), new Step.Shot("box_port_1_connected"),
+                    new Step.AimPort(0, 0, 2.5, false, true), new Step.Shot("box_port_1_detailed"),
+                    new Step.AimPort(0, 3, 1.2, false, false), new Step.Shot("box_port_4_above"),
+                    new Step.AimPort(1, 2, 2.5, false, false), new Step.Shot("switch_port_3_front"),
+                    new Step.AimPort(1, 4, 1.0, true, false), new Step.Shot("switch_port_5_above"),
+                    new Step.AimPort(1, 0, 1.0, true, true), new Step.Shot("switch_port_1_detailed"),
+                    new Step.Hold(null),
+                    new Step.AimPort(0, 0, 2.5, false, true), new Step.Shot("box_take_end")));
+
     // ---- Devices (issue #68): close-up views, the four orientations, the item ----
 
     /** One size and one language for the devices: the models carry no text. */
@@ -504,7 +525,7 @@ public final class CaptureScenarios {
 
     private static final Map<String, CaptureScenario> BY_NAME = List.of(BOX, BOX_HOSTS, CHAIN, LOOP, FULL_PORTS, DISTANCE,
             TOOLTIP, TERMINAL, TERMINAL_SCREEN, TERMINAL_ADVICE, DHCP_ADDRESSES, DHCP_RENEWAL, DHCP_NO_BOX, DHCP_CONFLICT, DHCP_POOL_FULL, DHCP_SERVER_OFF, DHCP_RESTART,
-            DEVICE_BOX, DEVICE_TOWER, DEVICE_LAPTOP, DEVICE_SWITCH_5, DEVICE_SWITCH_8, FAILURE_CHECK).stream()
+            DEVICE_BOX, DEVICE_TOWER, DEVICE_LAPTOP, DEVICE_SWITCH_5, DEVICE_SWITCH_8, PORT_AIM, FAILURE_CHECK).stream()
             .collect(Collectors.toUnmodifiableMap(CaptureScenario::name, Function.identity()));
 
     private CaptureScenarios() {

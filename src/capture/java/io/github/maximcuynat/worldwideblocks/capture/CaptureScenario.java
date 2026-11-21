@@ -70,6 +70,17 @@ public record CaptureScenario(String name, String description, List<Size> sizes,
         }
 
         /**
+         * The player stands on the ground {@code distance} blocks in front of a port of a device of the last scene (along
+         * the outward direction of its face, at a fractional position), standing or sneaking, and looks at the middle of
+         * the aim zone of that port: on its face, or with {@code top} on the top face (a desktop switch). The closer, the
+         * steeper the view. The step ends when the client shows the crosshair on the device, the posture asked and the
+         * panel of the device with the line of that port first ("Port N", issue #62); the shots that follow check that
+         * this still holds.
+         */
+        record AimPort(int device, int port, double distance, boolean top, boolean sneaking) implements Step {
+        }
+
+        /**
          * The player flies at a place given from a device of the last scene ({@code east}, {@code up} and {@code south}
          * blocks from it) and looks at the centre of another device, without needing its panel: a view of the scene.
          */

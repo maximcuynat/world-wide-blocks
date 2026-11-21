@@ -78,6 +78,14 @@ public enum TrialScenario {
             List.of(cable(0, 1)),
             Dhcp.serverOff(0)),
     /**
+     * Port chosen by aiming (issue #62): a box on the left and a 5-port switch on the right, each with port 1 linked to a
+     * computer behind it, so that a free port and a connected port can be aimed at on both.
+     */
+    PORT_AIM("port_aim", "box and 5-port switch, port 1 of each linked to a computer",
+            List.of(device(-2, 0, ModBlocks.INTERNET_BOX::get), device(2, 0, ModBlocks.DESKTOP_SWITCH_5::get),
+                    device(-3, 3, ModBlocks.PC_TOWER::get), device(3, 3, ModBlocks.LAPTOP::get)),
+            List.of(cable(0, 2), cable(1, 3))),
+    /**
      * Internet box for its capture scenario (issue #68): one box alone in front of the player for the close-up views,
      * and four more in a row behind it, turned by 0, 90, 180 and 270 degrees.
      */
