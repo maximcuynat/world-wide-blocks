@@ -351,6 +351,13 @@ final class CaptureRun {
 
     private void setup(Minecraft minecraft) {
         if (this.phaseTicks == 1) {
+            // Every run first checks that the client draws each block and item of the mod with its own model and
+            // textures; in the world, where the components of the items are bound (an item stack needs them).
+            ModelCheck.Result models = ModelCheck.run(minecraft);
+            if (!models.problems().isEmpty()) {
+                throw new IllegalStateException("model check (" + models.summary() + "): " + String.join("; ", models.problems()));
+            }
+            LOGGER.info("Capture {}: model check passed ({})", this.scenarioName, models.summary());
             IntegratedServer server = minecraft.getSingleplayerServer();
             server.execute(() -> {
                 try {
