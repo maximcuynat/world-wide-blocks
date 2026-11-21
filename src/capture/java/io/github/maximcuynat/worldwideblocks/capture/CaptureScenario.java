@@ -75,6 +75,25 @@ public record CaptureScenario(String name, String description, List<Size> sizes,
         record View(int from, int east, int up, int south, int target) implements Step {
         }
 
+        /**
+         * A close-up view of a device of the last scene: the player's eye at {@code distance} blocks from the centre of
+         * its shape, {@code around} degrees clockwise (seen from above) from the side of the player who built the scene
+         * (0: from the south, the front of a device that faces the player; 180: from behind), {@code above} degrees
+         * above the horizontal, looking at that centre, moved {@code east} blocks toward the east (to centre a row of
+         * devices). Fractional positions; meant for a player in spectator mode ({@link GameMode}), who goes through
+         * blocks and is not pushed out of them. The reach of the player is 0 during the view, so that no block is
+         * aimed (no outline, no status panel); the next {@link Aim} or {@link OpenTerminal} gives it back.
+         */
+        record Orbit(int device, int around, int above, double distance, double east) implements Step {
+            public Orbit(int device, int around, int above, double distance) {
+                this(device, around, above, distance, 0);
+            }
+        }
+
+        /** Hides the HUD as F1 does (no crosshair, hand, hotbar or panel), or shows it again; shown again at the end of the run. */
+        record HideHud(boolean hidden) implements Step {
+        }
+
         /** Puts this item in the main hand (the selected slot of the hotbar), or empties it when the item is null. */
         record Hold(Supplier<? extends ItemLike> item) implements Step {
         }
