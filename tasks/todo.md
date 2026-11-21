@@ -454,3 +454,31 @@ Built on the capture runs of lot 1c-1 (`src/capture`, `TrialScenario` of `src/ga
 - [x] B. Cord icon (`ICON` of `design/tools/cables.py`) exported in blue by `cables.py --export-icon`; exception of `textures/item/ethernet_cable.png` removed (`exceptions` now empty); `./gradlew build test` green (383 unit tests); capture `tooltip` passed (4 screenshots), the new icon read in the hotbar and the inventory slot.
 - [ ] D. Handover to the main session (`netcraft`, `developement`), then a report to Max.
 - [x] Box of the switches moved from `issues/0.1.0/07` (#68, closed by the pull request) to `issues/1d/01` (Max, 2026-11-21). Max: this pull request is merged before `scripts/dev lot start 1d-1`; the display of the laptop and the box in hand is fine as it is.
+
+## Lot 1d-1: desktop switch, port chosen by aiming, cable attached to its port (session of 2026-11-21)
+
+Branch `lot/1d-1` (from `developement` 678f3b7). Issues #61, #17, #18, #62, #63, #19, #31 (definitions in `scripts/project/issues/1d/`). Max away: run in full autonomy, the assistant runs `./gradlew build test`, `./gradlew runGameTestServer` and the capture runs itself (Gradle works from the assistant's shell outside the sandbox), reads the screenshots, one commit per green step. Nothing pushed, nothing written on GitHub.
+
+API facts read in the 26.3 sources before coding (2026-11-21):
+
+- Standalone models: `ModelEvent.RegisterStandalone.register(StandaloneModelKey, UnbakedStandaloneModel)`, `SimpleUnbakedStandaloneModel.simpleModelWrapper(id)` gives a `BlockStateModelPart`, read back with `ModelManager.getStandaloneModel(key)`.
+- A baked block model part is drawn with `SubmitNodeCollector.submitBlockModel(poseStack, renderType, parts, tints, light, overlay, outlineColor)`, render type `Sheets.cutoutBlockItemSheet()` as `BlockModelRenderState` does; light from `LightCoordsUtil.getLightCoords(level, pos)`; `OverlayTexture.NO_OVERLAY`.
+- `RenderTypes.debugQuads()`: position and colour, no light, depth test without depth write, no culling: for the two-tone outline of the aimed port.
+- `RenderTypes.leash()` is a triangle strip (one strip per leash); the thick cable uses quads of `RenderTypes.entitySolid(texture)` instead (light of the world and face shading by normals), the colour taken from one texel of the plug texture.
+
+Plan (one commit per step, each after `./gradlew build test` and `./gradlew runGameTestServer` green, plus the captures named):
+
+- [ ] 0. This plan.
+- [ ] 1. #61 Port layout: `PortLayout` in plain Java (face, aim zone, hole, mouth and outward direction, connector, for a front facing north, turned by quarter turns), layouts of the tower, the laptop, the internet box and both desktop switches from their sheets; unit tests (port count against `PORTS`, zones inside the body and disjoint, each hole inside its zone, rotation in four orientations); a game test that each zone lies on the real shape of the block in the four orientations; "Port layout" table in each sheet; `design/tools/port_layout.py` prints a layout as Java.
+- [ ] 2. #17 5-port switch: export of its model, block, resources, `DeviceRole.SWITCH` and `SwitchLogic` (the switching of the box without its local point), unit test of a chain box, switch, computers; shape and placement game tests; scene and capture scenario `device_switch_5`.
+- [ ] 3. #18 8-port switch: the same; capture `device_switch_8`.
+- [ ] 4. #62 server: the aimed port resolved from the click point and face, the four gestures follow it, fallback as today; refusal "port N already in use"; game tests.
+- [ ] 5. #62 client: outline of the aimed port and panel line (`StatusPanel`, unit tests); capture scenario `port_aim` (box and switch, front and above).
+- [ ] 6. #63 plugs and thick cable: standalone plug models, plugs drawn from the cables known to the client, cable end at the mouth of its port, `ATTACH_HEIGHT` removed, held cable from the plug to the hand, cable 0.25 px square and lit; capture scenario `plugs` (box and switch, cables in the four orientations).
+- [ ] 7. #19 six computers on a box and a switch, all reachable by `ping`: game test, trial scene and capture, status of lot 1d-1 in `docs/lot-plan.md`.
+- [ ] 8. #31 test operator line block, if time allows (its connection to the line port is an open design question: see the decisions below).
+- [ ] 9. Report, issue comments in `build/issue-comments/`, commands for Max.
+
+### Decisions to validate by Max
+
+(Filled in as the steps go; each one easy to change, with its alternatives.)
