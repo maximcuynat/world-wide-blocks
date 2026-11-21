@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 import com.mojang.blaze3d.platform.InputConstants;
 
 import io.github.maximcuynat.worldwideblocks.gametest.scene.TrialScenario;
+import net.minecraft.client.CameraType;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.ItemLike;
 
@@ -92,6 +93,31 @@ public record CaptureScenario(String name, String description, List<Size> sizes,
 
         /** Hides the HUD as F1 does (no crosshair, hand, hotbar or panel), or shows it again; shown again at the end of the run. */
         record HideHud(boolean hidden) implements Step {
+        }
+
+        /**
+         * Opens a capture screen that draws this item as the inventory does, with its real {@code gui} display
+         * settings: large, then at its real size in a slot ({@link CaptureItemScreen}). {@link CloseScreen} closes it.
+         */
+        record ShowItem(Supplier<? extends ItemLike> item) implements Step {
+        }
+
+        /** The camera of the player: first person, third person from behind or from the front; put back at the end of the run. */
+        record Camera(CameraType type) implements Step {
+        }
+
+        /**
+         * The server drops this item on the ground, {@code east} blocks east of a device of the last scene, where nobody
+         * can pick it up: the item as it lies in the world.
+         */
+        record DropItem(Supplier<? extends ItemLike> item, int device, int east) implements Step {
+        }
+
+        /**
+         * The server places a stone block {@code east} blocks east of a device of the last scene and hangs an item frame
+         * holding this item on its south face, toward the player who built the scene.
+         */
+        record FrameItem(Supplier<? extends ItemLike> item, int device, int east) implements Step {
         }
 
         /** Puts this item in the main hand (the selected slot of the hotbar), or empties it when the item is null. */

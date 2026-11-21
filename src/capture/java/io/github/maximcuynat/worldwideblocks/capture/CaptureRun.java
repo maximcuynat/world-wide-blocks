@@ -34,6 +34,7 @@ import io.github.maximcuynat.worldwideblocks.network.NetworkDevices;
 import io.github.maximcuynat.worldwideblocks.network.NetworkManager;
 import io.github.maximcuynat.worldwideblocks.network.sim.HostLogic;
 import io.github.maximcuynat.worldwideblocks.terminal.TerminalLayout;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
@@ -58,8 +59,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.WorldDataConfiguration;
 import net.minecraft.world.level.levelgen.WorldOptions;
@@ -108,7 +112,7 @@ final class CaptureRun {
     private enum Phase { TITLE, CREATING, SETTLING, SETUP, STEPS, FAILING, FINISHED }
 
     /** The screen a step expects to be open: shots check it, and a pause screen is closed only when none is. */
-    private enum ExpectedScreen { NONE, INVENTORY, CHAT, TERMINAL }
+    private enum ExpectedScreen { NONE, INVENTORY, CHAT, TERMINAL, ITEM }
 
     /** Stages of a {@link Step.Restart}. */
     private enum Restarting { LOOKING_AWAY, REOPENING, ENTERING }
@@ -134,6 +138,10 @@ final class CaptureRun {
     private String originalLanguage;
     private boolean originalPauseOnLostFocus;
     private TutorialSteps originalTutorialStep;
+    /** The camera type of the game when the run began. */
+    private CameraType originalCamera;
+    /** Set on the server thread once a {@link Step.DropItem} or {@link Step.FrameItem} is in the world. */
+    private final AtomicBoolean itemPlaced = new AtomicBoolean();
     /** Whether the HUD was hidden (F1) when the run began. */
     private boolean originalHudHidden;
     /** Where the feet of the player go for the last {@link Step.Orbit}, set on the server thread. */
@@ -440,6 +448,10 @@ final class CaptureRun {
             case Step.View view -> this.view(minecraft, view);
             case Step.Orbit orbit -> this.orbit(minecraft, orbit);
             case Step.HideHud hide -> this.hideHud(minecraft, hide);
+            case Step.ShowItem show -> this.showItem(minecraft, show);
+            case Step.Camera camera -> this.camera(minecraft, camera);
+            case Step.DropItem drop -> this.dropItem(minecraft, drop);
+            case Step.FrameItem frame -> this.frameItem(minecraft, frame);
             case Step.Hold hold -> this.hold(minecraft, hold);
             case Step.Use use -> this.use(minecraft);
             case Step.HoverHeldItem hover -> this.hoverHeldItem(minecraft);
@@ -614,6 +626,69 @@ final class CaptureRun {
             server.execute(() -> server.getPlayerList().getPlayers().getFirst()
                     .getAttribute(Attributes.BLOCK_INTERACTION_RANGE).setBaseValue(reach));
         }
+    }
+
+    private boolean showItem(Minecraft minecraft, Step.ShowItem show) {
+        if (!this.stepStarted) {
+            this.stepStarted = true;
+            this.expectedScreen = ExpectedScreen.ITEM;
+            minecraft.gui.setScreen(new CaptureItemScreen(new ItemStack(show.item().get())));
+            return false;
+        }
+        return this.screenHolds(minecraft) && this.stepTicks >= STABLE_TICKS;
+    }
+
+    private boolean camera(Minecraft minecraft, Step.Camera camera) {
+        if (minecraft.options.getCameraType() != camera.type()) {
+            minecraft.options.setCameraType(camera.type());
+        }
+        return this.stepTicks >= STABLE_TICKS;
+    }
+
+    private boolean dropItem(Minecraft minecraft, Step.DropItem drop) {
+        BlockPos at = this.deviceOfScene(drop.device()).east(drop.east());
+        if (!this.stepStarted) {
+            this.stepStarted = true;
+            this.itemPlaced.set(false);
+            IntegratedServer server = minecraft.getSingleplayerServer();
+            server.execute(() -> {
+                ItemEntity item = new ItemEntity(server.overworld(), at.getX() + 0.5, at.getY() + 0.1, at.getZ() + 0.5,
+                        new ItemStack(drop.item().get()), 0, 0, 0);
+                item.setNeverPickUp();
+                item.setUnlimitedLifetime();
+                server.overworld().addFreshEntity(item);
+                this.itemPlaced.set(true);
+            });
+            return false;
+        }
+        return this.itemPlaced.get() && this.stepTicks >= SETTLE_TICKS;
+    }
+
+    private boolean frameItem(Minecraft minecraft, Step.FrameItem frame) {
+        BlockPos block = this.deviceOfScene(frame.device()).east(frame.east());
+        if (!this.stepStarted) {
+            this.stepStarted = true;
+            this.itemPlaced.set(false);
+            IntegratedServer server = minecraft.getSingleplayerServer();
+            server.execute(() -> {
+                server.overworld().setBlockAndUpdate(block, Blocks.STONE.defaultBlockState());
+                ItemFrame itemFrame = new ItemFrame(server.overworld(), block.south(), Direction.SOUTH);
+                itemFrame.setItem(new ItemStack(frame.item().get()));
+                server.overworld().addFreshEntity(itemFrame);
+                this.itemPlaced.set(true);
+            });
+            return false;
+        }
+        return this.itemPlaced.get() && this.stepTicks >= SETTLE_TICKS;
+    }
+
+    /** A device of the last scene, by its index. */
+    private BlockPos deviceOfScene(int device) {
+        TrialScenes.Result result = this.scene.get();
+        if (result == null || device >= result.devices().size()) {
+            throw new IllegalStateException("no device " + device + " in the last scene");
+        }
+        return result.devices().get(device);
     }
 
     private boolean hideHud(Minecraft minecraft, Step.HideHud hide) {
@@ -1061,6 +1136,7 @@ final class CaptureRun {
             case NONE -> screen == null && this.aimHolds(minecraft);
             case CHAT -> screen instanceof ChatScreen;
             case TERMINAL -> screen instanceof TerminalScreen;
+            case ITEM -> screen instanceof CaptureItemScreen;
             case INVENTORY -> screen == this.inventory && minecraft.player != null
                     && this.inventory.hovered().filter(slot -> slot == this.heldSlot(minecraft) && slot.hasItem()).isPresent();
         };
@@ -1255,6 +1331,7 @@ final class CaptureRun {
         this.originalPauseOnLostFocus = minecraft.options.pauseOnLostFocus;
         this.originalTutorialStep = minecraft.options.tutorialStep;
         this.originalHudHidden = minecraft.gui.hud.isHidden();
+        this.originalCamera = minecraft.options.getCameraType();
         Path modConfig = minecraft.gameDirectory.toPath().resolve(MOD_CLIENT_CONFIG);
         try {
             this.originalModConfig = Files.isRegularFile(modConfig) ? Files.readString(modConfig, StandardCharsets.UTF_8) : null;
@@ -1277,6 +1354,9 @@ final class CaptureRun {
             minecraft.options.keyShift.setDown(false);
             minecraft.options.pauseOnLostFocus = this.originalPauseOnLostFocus;
             minecraft.options.tutorialStep = this.originalTutorialStep;
+            if (this.originalCamera != null && minecraft.options.getCameraType() != this.originalCamera) {
+                minecraft.options.setCameraType(this.originalCamera);
+            }
             if (minecraft.gui.hud.isHidden() != this.originalHudHidden) {
                 minecraft.gui.hud.toggle();
             }
