@@ -34,6 +34,7 @@ import io.github.maximcuynat.worldwideblocks.network.NetworkDevices;
 import io.github.maximcuynat.worldwideblocks.network.NetworkManager;
 import io.github.maximcuynat.worldwideblocks.network.sim.HostLogic;
 import io.github.maximcuynat.worldwideblocks.terminal.TerminalLayout;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
@@ -56,8 +57,13 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.WorldDataConfiguration;
 import net.minecraft.world.level.levelgen.WorldOptions;
@@ -106,7 +112,7 @@ final class CaptureRun {
     private enum Phase { TITLE, CREATING, SETTLING, SETUP, STEPS, FAILING, FINISHED }
 
     /** The screen a step expects to be open: shots check it, and a pause screen is closed only when none is. */
-    private enum ExpectedScreen { NONE, INVENTORY, CHAT, TERMINAL }
+    private enum ExpectedScreen { NONE, INVENTORY, CHAT, TERMINAL, ITEM }
 
     /** Stages of a {@link Step.Restart}. */
     private enum Restarting { LOOKING_AWAY, REOPENING, ENTERING }
@@ -132,6 +138,16 @@ final class CaptureRun {
     private String originalLanguage;
     private boolean originalPauseOnLostFocus;
     private TutorialSteps originalTutorialStep;
+    /** The camera type of the game when the run began. */
+    private CameraType originalCamera;
+    /** Set on the server thread once a {@link Step.DropItem} or {@link Step.FrameItem} is in the world. */
+    private final AtomicBoolean itemPlaced = new AtomicBoolean();
+    /** Whether the HUD was hidden (F1) when the run began. */
+    private boolean originalHudHidden;
+    /** Where the feet of the player go for the last {@link Step.Orbit}, set on the server thread. */
+    private final AtomicReference<Vec3> orbitFeet = new AtomicReference<>();
+    /** The block reach of the player before the first {@link Step.Orbit} set it to 0, until it is given back. */
+    private final AtomicReference<Double> normalReach = new AtomicReference<>();
     /** Content of the client options file of the mod when the run began, put back at the end; null if it had none. */
     private String originalModConfig;
 
@@ -351,6 +367,13 @@ final class CaptureRun {
 
     private void setup(Minecraft minecraft) {
         if (this.phaseTicks == 1) {
+            // Every run first checks that the client draws each block and item of the mod with its own model and
+            // textures; in the world, where the components of the items are bound (an item stack needs them).
+            ModelCheck.Result models = ModelCheck.run(minecraft);
+            if (!models.problems().isEmpty()) {
+                throw new IllegalStateException("model check (" + models.summary() + "): " + String.join("; ", models.problems()));
+            }
+            LOGGER.info("Capture {}: model check passed ({})", this.scenarioName, models.summary());
             IntegratedServer server = minecraft.getSingleplayerServer();
             server.execute(() -> {
                 try {
@@ -423,6 +446,12 @@ final class CaptureRun {
             case Step.ClearScene clear -> this.clear(minecraft);
             case Step.Aim aim -> this.aim(minecraft, aim);
             case Step.View view -> this.view(minecraft, view);
+            case Step.Orbit orbit -> this.orbit(minecraft, orbit);
+            case Step.HideHud hide -> this.hideHud(minecraft, hide);
+            case Step.ShowItem show -> this.showItem(minecraft, show);
+            case Step.Camera camera -> this.camera(minecraft, camera);
+            case Step.DropItem drop -> this.dropItem(minecraft, drop);
+            case Step.FrameItem frame -> this.frameItem(minecraft, frame);
             case Step.Hold hold -> this.hold(minecraft, hold);
             case Step.Use use -> this.use(minecraft);
             case Step.HoverHeldItem hover -> this.hoverHeldItem(minecraft);
@@ -483,6 +512,7 @@ final class CaptureRun {
         BlockPos at = device.relative(Direction.SOUTH, 2);
         if (!this.stepStarted) {
             this.stepStarted = true;
+            this.giveReachBack(minecraft);
             this.stableTicks = 0;
             this.sneaking = aim.sneaking();
             this.aimed = device;
@@ -542,6 +572,130 @@ final class CaptureRun {
         }
         boolean there = minecraft.player != null && minecraft.player.blockPosition().equals(this.standing);
         return there && this.stepTicks >= STABLE_TICKS;
+    }
+
+    private boolean orbit(Minecraft minecraft, Step.Orbit orbit) {
+        TrialScenes.Result result = this.scene.get();
+        if (result == null || orbit.device() >= result.devices().size()) {
+            throw new IllegalStateException("no device " + orbit.device() + " in the last scene");
+        }
+        if (!this.stepStarted) {
+            this.stepStarted = true;
+            this.sneaking = false;
+            this.aimed = null;
+            this.orbitFeet.set(null);
+            BlockPos device = result.devices().get(orbit.device());
+            IntegratedServer server = minecraft.getSingleplayerServer();
+            server.execute(() -> {
+                ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+                VoxelShape shape = player.level().getBlockState(device).getShape(player.level(), device);
+                Vec3 centre = (shape.isEmpty() ? Vec3.atCenterOf(device) : shape.bounds().getCenter().add(Vec3.atLowerCornerOf(device)))
+                        .add(orbit.east(), 0, 0);
+                AttributeInstance reach = player.getAttribute(Attributes.BLOCK_INTERACTION_RANGE);
+                this.normalReach.compareAndSet(null, reach.getBaseValue());
+                reach.setBaseValue(0); // nothing aimed: no outline, no status panel over the view
+                // From the south (+z), turned clockwise seen from above: south, west, north, east for 0, 90, 180, 270.
+                double around = Math.toRadians(orbit.around());
+                double above = Math.toRadians(orbit.above());
+                double horizontal = orbit.distance() * Math.cos(above);
+                Vec3 eye = centre.add(-Math.sin(around) * horizontal, orbit.distance() * Math.sin(above), Math.cos(around) * horizontal);
+                Vec3 look = centre.subtract(eye);
+                float yaw = (float) (Mth.atan2(look.z, look.x) * Mth.RAD_TO_DEG) - 90f;
+                float pitch = (float) -(Mth.atan2(look.y, Math.sqrt(look.x * look.x + look.z * look.z)) * Mth.RAD_TO_DEG);
+                Vec3 feet = eye.subtract(0, player.getEyeHeight(Pose.STANDING), 0);
+                player.getAbilities().flying = true;
+                player.onUpdateAbilities();
+                player.teleportTo(player.level(), feet.x, feet.y, feet.z, Set.<Relative>of(), yaw, pitch, true);
+                this.orbitFeet.set(feet);
+            });
+            return false;
+        }
+        Vec3 feet = this.orbitFeet.get();
+        boolean there = feet != null && minecraft.player != null && minecraft.player.position().distanceTo(feet) < 0.01;
+        if (there) {
+            this.standing = minecraft.player.blockPosition();
+        }
+        return there && this.stepTicks >= STABLE_TICKS;
+    }
+
+    /** Gives the player back the block reach that a {@link Step.Orbit} set to 0, before an aim. */
+    private void giveReachBack(Minecraft minecraft) {
+        Double reach = this.normalReach.getAndSet(null);
+        if (reach != null) {
+            IntegratedServer server = minecraft.getSingleplayerServer();
+            server.execute(() -> server.getPlayerList().getPlayers().getFirst()
+                    .getAttribute(Attributes.BLOCK_INTERACTION_RANGE).setBaseValue(reach));
+        }
+    }
+
+    private boolean showItem(Minecraft minecraft, Step.ShowItem show) {
+        if (!this.stepStarted) {
+            this.stepStarted = true;
+            this.expectedScreen = ExpectedScreen.ITEM;
+            minecraft.gui.setScreen(new CaptureItemScreen(new ItemStack(show.item().get())));
+            return false;
+        }
+        return this.screenHolds(minecraft) && this.stepTicks >= STABLE_TICKS;
+    }
+
+    private boolean camera(Minecraft minecraft, Step.Camera camera) {
+        if (minecraft.options.getCameraType() != camera.type()) {
+            minecraft.options.setCameraType(camera.type());
+        }
+        return this.stepTicks >= STABLE_TICKS;
+    }
+
+    private boolean dropItem(Minecraft minecraft, Step.DropItem drop) {
+        BlockPos at = this.deviceOfScene(drop.device()).east(drop.east());
+        if (!this.stepStarted) {
+            this.stepStarted = true;
+            this.itemPlaced.set(false);
+            IntegratedServer server = minecraft.getSingleplayerServer();
+            server.execute(() -> {
+                ItemEntity item = new ItemEntity(server.overworld(), at.getX() + 0.5, at.getY() + 0.1, at.getZ() + 0.5,
+                        new ItemStack(drop.item().get()), 0, 0, 0);
+                item.setNeverPickUp();
+                item.setUnlimitedLifetime();
+                server.overworld().addFreshEntity(item);
+                this.itemPlaced.set(true);
+            });
+            return false;
+        }
+        return this.itemPlaced.get() && this.stepTicks >= SETTLE_TICKS;
+    }
+
+    private boolean frameItem(Minecraft minecraft, Step.FrameItem frame) {
+        BlockPos block = this.deviceOfScene(frame.device()).east(frame.east());
+        if (!this.stepStarted) {
+            this.stepStarted = true;
+            this.itemPlaced.set(false);
+            IntegratedServer server = minecraft.getSingleplayerServer();
+            server.execute(() -> {
+                server.overworld().setBlockAndUpdate(block, Blocks.STONE.defaultBlockState());
+                ItemFrame itemFrame = new ItemFrame(server.overworld(), block.south(), Direction.SOUTH);
+                itemFrame.setItem(new ItemStack(frame.item().get()));
+                server.overworld().addFreshEntity(itemFrame);
+                this.itemPlaced.set(true);
+            });
+            return false;
+        }
+        return this.itemPlaced.get() && this.stepTicks >= SETTLE_TICKS;
+    }
+
+    /** A device of the last scene, by its index. */
+    private BlockPos deviceOfScene(int device) {
+        TrialScenes.Result result = this.scene.get();
+        if (result == null || device >= result.devices().size()) {
+            throw new IllegalStateException("no device " + device + " in the last scene");
+        }
+        return result.devices().get(device);
+    }
+
+    private boolean hideHud(Minecraft minecraft, Step.HideHud hide) {
+        if (minecraft.gui.hud.isHidden() != hide.hidden()) {
+            minecraft.gui.hud.toggle();
+        }
+        return this.stepTicks >= STABLE_TICKS;
     }
 
     private boolean clear(Minecraft minecraft) {
@@ -688,6 +842,7 @@ final class CaptureRun {
         BlockPos at = device.relative(Direction.SOUTH, 2);
         if (!this.stepStarted) {
             this.stepStarted = true;
+            this.giveReachBack(minecraft);
             this.terminalClicked = false;
             this.stableTicks = 0;
             this.sneaking = false;
@@ -981,6 +1136,7 @@ final class CaptureRun {
             case NONE -> screen == null && this.aimHolds(minecraft);
             case CHAT -> screen instanceof ChatScreen;
             case TERMINAL -> screen instanceof TerminalScreen;
+            case ITEM -> screen instanceof CaptureItemScreen;
             case INVENTORY -> screen == this.inventory && minecraft.player != null
                     && this.inventory.hovered().filter(slot -> slot == this.heldSlot(minecraft) && slot.hasItem()).isPresent();
         };
@@ -1174,6 +1330,8 @@ final class CaptureRun {
         this.originalLanguage = minecraft.getLanguageManager().getSelected();
         this.originalPauseOnLostFocus = minecraft.options.pauseOnLostFocus;
         this.originalTutorialStep = minecraft.options.tutorialStep;
+        this.originalHudHidden = minecraft.gui.hud.isHidden();
+        this.originalCamera = minecraft.options.getCameraType();
         Path modConfig = minecraft.gameDirectory.toPath().resolve(MOD_CLIENT_CONFIG);
         try {
             this.originalModConfig = Files.isRegularFile(modConfig) ? Files.readString(modConfig, StandardCharsets.UTF_8) : null;
@@ -1196,6 +1354,12 @@ final class CaptureRun {
             minecraft.options.keyShift.setDown(false);
             minecraft.options.pauseOnLostFocus = this.originalPauseOnLostFocus;
             minecraft.options.tutorialStep = this.originalTutorialStep;
+            if (this.originalCamera != null && minecraft.options.getCameraType() != this.originalCamera) {
+                minecraft.options.setCameraType(this.originalCamera);
+            }
+            if (minecraft.gui.hud.isHidden() != this.originalHudHidden) {
+                minecraft.gui.hud.toggle();
+            }
             if (this.originalModConfig != null) {
                 Files.writeString(minecraft.gameDirectory.toPath().resolve(MOD_CLIENT_CONFIG), this.originalModConfig,
                         StandardCharsets.UTF_8);

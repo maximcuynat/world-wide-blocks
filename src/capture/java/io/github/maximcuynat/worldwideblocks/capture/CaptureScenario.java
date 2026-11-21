@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 import com.mojang.blaze3d.platform.InputConstants;
 
 import io.github.maximcuynat.worldwideblocks.gametest.scene.TrialScenario;
+import net.minecraft.client.CameraType;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.ItemLike;
 
@@ -73,6 +74,50 @@ public record CaptureScenario(String name, String description, List<Size> sizes,
          * blocks from it) and looks at the centre of another device, without needing its panel: a view of the scene.
          */
         record View(int from, int east, int up, int south, int target) implements Step {
+        }
+
+        /**
+         * A close-up view of a device of the last scene: the player's eye at {@code distance} blocks from the centre of
+         * its shape, {@code around} degrees clockwise (seen from above) from the side of the player who built the scene
+         * (0: from the south, the front of a device that faces the player; 180: from behind), {@code above} degrees
+         * above the horizontal, looking at that centre, moved {@code east} blocks toward the east (to centre a row of
+         * devices). Fractional positions; meant for a player in spectator mode ({@link GameMode}), who goes through
+         * blocks and is not pushed out of them. The reach of the player is 0 during the view, so that no block is
+         * aimed (no outline, no status panel); the next {@link Aim} or {@link OpenTerminal} gives it back.
+         */
+        record Orbit(int device, int around, int above, double distance, double east) implements Step {
+            public Orbit(int device, int around, int above, double distance) {
+                this(device, around, above, distance, 0);
+            }
+        }
+
+        /** Hides the HUD as F1 does (no crosshair, hand, hotbar or panel), or shows it again; shown again at the end of the run. */
+        record HideHud(boolean hidden) implements Step {
+        }
+
+        /**
+         * Opens a capture screen that draws this item as the inventory does, with its real {@code gui} display
+         * settings: large, then at its real size in a slot ({@link CaptureItemScreen}). {@link CloseScreen} closes it.
+         */
+        record ShowItem(Supplier<? extends ItemLike> item) implements Step {
+        }
+
+        /** The camera of the player: first person, third person from behind or from the front; put back at the end of the run. */
+        record Camera(CameraType type) implements Step {
+        }
+
+        /**
+         * The server drops this item on the ground, {@code east} blocks east of a device of the last scene, where nobody
+         * can pick it up: the item as it lies in the world.
+         */
+        record DropItem(Supplier<? extends ItemLike> item, int device, int east) implements Step {
+        }
+
+        /**
+         * The server places a stone block {@code east} blocks east of a device of the last scene and hangs an item frame
+         * holding this item on its south face, toward the player who built the scene.
+         */
+        record FrameItem(Supplier<? extends ItemLike> item, int device, int east) implements Step {
         }
 
         /** Puts this item in the main hand (the selected slot of the hotbar), or empties it when the item is null. */

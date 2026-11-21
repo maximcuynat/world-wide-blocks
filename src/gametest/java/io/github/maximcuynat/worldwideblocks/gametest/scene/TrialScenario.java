@@ -1,10 +1,15 @@
 package io.github.maximcuynat.worldwideblocks.gametest.scene;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
+import io.github.maximcuynat.worldwideblocks.block.LaptopBlock;
 import io.github.maximcuynat.worldwideblocks.registry.ModBlocks;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * Scenes of the checks by eye, built in front of the player by {@code /worldwideblocks test <scene>}.
@@ -71,10 +76,49 @@ public enum TrialScenario {
     DHCP_SERVER_OFF("dhcp_server_off", "box with its DHCP server off, one computer",
             List.of(device(0, 0, ModBlocks.INTERNET_BOX::get), device(0, 3, ModBlocks.PC_TOWER::get)),
             List.of(cable(0, 1)),
-            Dhcp.serverOff(0));
+            Dhcp.serverOff(0)),
+    /**
+     * Internet box for its capture scenario (issue #68): one box alone in front of the player for the close-up views,
+     * and four more in a row behind it, turned by 0, 90, 180 and 270 degrees.
+     */
+    DEVICE_BOX("device_box", "box alone, then four boxes in the four orientations",
+            turnedRow(ModBlocks.INTERNET_BOX::get, UnaryOperator.identity()),
+            List.of()),
+    /** PC tower for its capture scenario, as {@link #DEVICE_BOX}. */
+    DEVICE_TOWER("device_tower", "tower alone, then four towers in the four orientations",
+            turnedRow(ModBlocks.PC_TOWER::get, UnaryOperator.identity()),
+            List.of()),
+    /** Laptop for its capture scenario, as {@link #DEVICE_BOX}, with a closed laptop alone on the right (device 5). */
+    DEVICE_LAPTOP("device_laptop", "laptop alone, open then closed, then four laptops in the four orientations",
+            withClosedLaptop(turnedRow(ModBlocks.LAPTOP::get, UnaryOperator.identity())),
+            List.of());
 
-    /** A device of the scene. */
-    public record Device(int right, int forward, Supplier<Block> block) {
+    /**
+     * A device of the scene.
+     *
+     * @param turn  degrees clockwise, seen from above, from the front facing the player: 0, 90, 180 or 270
+     * @param state changes to the default state of the block, after its orientation (a closed laptop)
+     */
+    public record Device(int right, int forward, Supplier<Block> block, int turn, UnaryOperator<BlockState> state) {
+        public Device {
+            if (turn % 90 != 0 || turn < 0 || turn >= 360) {
+                throw new IllegalArgumentException("turn of a device: 0, 90, 180 or 270, not " + turn);
+            }
+        }
+
+        /** A device whose front faces the player, in its default state. */
+        public Device(int right, int forward, Supplier<Block> block) {
+            this(right, forward, block, 0, UnaryOperator.identity());
+        }
+
+        /** The direction its front faces, in a scene built in front of a player looking toward {@code forward}. */
+        public Direction facing(Direction forward) {
+            Direction facing = forward.getOpposite();
+            for (int quarter = 0; quarter < this.turn / 90; quarter++) {
+                facing = facing.getClockWise();
+            }
+            return facing;
+        }
     }
 
     /** A cable between two devices, given by their rank in the list. */
@@ -139,6 +183,26 @@ public enum TrialScenario {
 
     private static Device device(int right, int forward, Supplier<Block> block) {
         return new Device(right, forward, block);
+    }
+
+    /**
+     * Device 0 alone, front facing the player, for the close-up views; devices 1 to 4 in a row 4 blocks further, 2
+     * blocks apart, turned by 0, 90, 180 and 270 degrees from left to right.
+     */
+    private static List<Device> turnedRow(Supplier<Block> block, UnaryOperator<BlockState> state) {
+        List<Device> devices = new ArrayList<>();
+        devices.add(new Device(0, 0, block, 0, state));
+        for (int i = 0; i < 4; i++) {
+            devices.add(new Device(-3 + 2 * i, 4, block, 90 * i, state));
+        }
+        return List.copyOf(devices);
+    }
+
+    /** The same devices, and a closed laptop alone 4 blocks to the right of device 0. */
+    private static List<Device> withClosedLaptop(List<Device> devices) {
+        List<Device> all = new ArrayList<>(devices);
+        all.add(new Device(4, 0, ModBlocks.LAPTOP::get, 0, state -> state.setValue(LaptopBlock.OPEN, false)));
+        return List.copyOf(all);
     }
 
     private static Cable cable(int from, int to) {

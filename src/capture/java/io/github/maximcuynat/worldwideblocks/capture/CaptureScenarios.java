@@ -1,15 +1,19 @@
 package io.github.maximcuynat.worldwideblocks.capture;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import io.github.maximcuynat.worldwideblocks.capture.CaptureScenario.Step;
 import io.github.maximcuynat.worldwideblocks.gametest.scene.TrialScenario;
 import io.github.maximcuynat.worldwideblocks.registry.ModItems;
+import net.minecraft.client.CameraType;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.ItemLike;
 
 /**
  * The capture scenarios, by name ({@code ./gradlew runClientCapture -Pscenario=<name>}). Each one replaces a check by
@@ -418,9 +422,81 @@ public final class CaptureScenarios {
             new Step.Shot("ping_absent"),
             new Step.Press(Step.TerminalKey.ESCAPE));
 
+    // ---- Devices (issue #68): close-up views, the four orientations, the item ----
+
+    /** One size and one language for the devices: the models carry no text. */
+    private static final List<CaptureScenario.Size> DEVICE_SIZE = List.of(new CaptureScenario.Size(1920, 1080));
+
+    /** The internet box: 7 x 3 x 7 px, seen from 1.1 blocks. */
+    static final CaptureScenario DEVICE_BOX = device("device_box", "internet box: close-up views, four orientations",
+            TrialScenario.DEVICE_BOX, ModItems.INTERNET_BOX::get, 1.1, List.of());
+
+    /** The PC tower: 7 x 15 x 15 px, seen from 2 blocks. */
+    static final CaptureScenario DEVICE_TOWER = device("device_tower", "PC tower: close-up views, four orientations",
+            TrialScenario.DEVICE_TOWER, ModItems.PC_TOWER::get, 2.0, List.of());
+
+    /** The laptop: 14 x 9 px, open (device 0) then closed (device 5), seen from 1.6 blocks. */
+    static final CaptureScenario DEVICE_LAPTOP = device("device_laptop", "laptop: close-up views open and closed, four orientations",
+            TrialScenario.DEVICE_LAPTOP, ModItems.LAPTOP::get, 1.6, closeUps(5, "closed_", 1.6));
+
+    /**
+     * The views of a device: the close-ups of device 0 (and the extra steps, a second device), HUD hidden, in spectator
+     * mode; then the four orientations of devices 1 to 4 seen from above the row; then each of them aimed, HUD shown, as
+     * the game draws the selection outline only with the HUD and on the aimed block; then the item: large with its
+     * inventory settings, in hand in first and third person (from above, in creative mode), on the ground and in an
+     * item frame (in spectator mode, HUD hidden).
+     */
+    private static CaptureScenario device(String name, String description, TrialScenario scene,
+            Supplier<? extends ItemLike> item, double distance, List<Step> extra) {
+        List<Step> steps = new ArrayList<>();
+        steps.add(new Step.BuildScene(scene));
+        steps.add(new Step.GameMode(GameType.SPECTATOR));
+        steps.add(new Step.HideHud(true));
+        steps.addAll(closeUps(0, "", distance));
+        steps.addAll(extra);
+        steps.add(new Step.Orbit(2, 0, 40, 4.5, 1.0)); // devices 1 to 4 are 2 blocks apart: between devices 2 and 3
+        steps.add(new Step.Shot("orientations"));
+        steps.add(new Step.HideHud(false));
+        steps.add(new Step.GameMode(GameType.CREATIVE));
+        String[] turns = {"0", "90", "180", "270"};
+        for (int i = 0; i < 4; i++) {
+            steps.add(new Step.Aim(1 + i, false));
+            steps.add(new Step.Shot("outline_" + turns[i]));
+        }
+        steps.add(new Step.ShowItem(item));
+        steps.add(new Step.Shot("item_inventory"));
+        steps.add(new Step.CloseScreen());
+        steps.add(new Step.Hold(item));
+        steps.add(new Step.Orbit(0, 0, 35, 3.0)); // high enough for the feet of a creative player to stay above the ground
+        steps.add(new Step.Shot("item_first_person"));
+        steps.add(new Step.Camera(CameraType.THIRD_PERSON_FRONT));
+        steps.add(new Step.Shot("item_third_person"));
+        steps.add(new Step.Camera(CameraType.FIRST_PERSON));
+        steps.add(new Step.Hold(null));
+        steps.add(new Step.GameMode(GameType.SPECTATOR));
+        steps.add(new Step.HideHud(true));
+        steps.add(new Step.DropItem(item, 0, 2));
+        steps.add(new Step.Orbit(0, 0, 35, 2.0, 2.0));
+        steps.add(new Step.Shot("item_ground"));
+        steps.add(new Step.FrameItem(item, 0, -2));
+        steps.add(new Step.Orbit(0, 0, 10, 2.0, -2.0));
+        steps.add(new Step.Shot("item_frame"));
+        return new CaptureScenario(name, description, DEVICE_SIZE, List.of(AUTO_SCALE), List.of("en_us"), steps);
+    }
+
+    /** Front, back, three-quarter front and back, top of one device. */
+    private static List<Step> closeUps(int device, String prefix, double distance) {
+        return List.of(
+                new Step.Orbit(device, 0, 15, distance), new Step.Shot(prefix + "front"),
+                new Step.Orbit(device, 180, 15, distance), new Step.Shot(prefix + "back"),
+                new Step.Orbit(device, 40, 30, distance), new Step.Shot(prefix + "three_quarter_front"),
+                new Step.Orbit(device, 220, 30, distance), new Step.Shot(prefix + "three_quarter_back"),
+                new Step.Orbit(device, 0, 80, distance), new Step.Shot(prefix + "top"));
+    }
+
     private static final Map<String, CaptureScenario> BY_NAME = List.of(BOX, BOX_HOSTS, CHAIN, LOOP, FULL_PORTS, DISTANCE,
             TOOLTIP, TERMINAL, TERMINAL_SCREEN, TERMINAL_ADVICE, DHCP_ADDRESSES, DHCP_RENEWAL, DHCP_NO_BOX, DHCP_CONFLICT, DHCP_POOL_FULL, DHCP_SERVER_OFF, DHCP_RESTART,
-            FAILURE_CHECK).stream()
+            DEVICE_BOX, DEVICE_TOWER, DEVICE_LAPTOP, FAILURE_CHECK).stream()
             .collect(Collectors.toUnmodifiableMap(CaptureScenario::name, Function.identity()));
 
     private CaptureScenarios() {

@@ -1,5 +1,7 @@
 package io.github.maximcuynat.worldwideblocks;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.image.BufferedImage;
@@ -115,18 +117,22 @@ class BlockResourcesTest {
         assertNoError(errors);
     }
 
+    /**
+     * Every texture uses the roles of the palette alone, except the textures of {@code cord_textures} (the plugs and
+     * the cord item), which may also use the cord colours (design guide, section 4), and the {@code exceptions}.
+     */
     @Test
     void texturesUseOnlyThePaletteOfTheDesignGuide() throws IOException {
-        JsonObject palette = read(PALETTE);
-        Set<String> colours = new TreeSet<>();
-        for (Map.Entry<String, JsonElement> role : palette.getAsJsonObject("roles").entrySet()) {
-            role.getValue().getAsJsonObject().entrySet().forEach(tone -> colours.add(tone.getValue().getAsString().toLowerCase()));
-        }
-        Set<String> exceptions = palette.getAsJsonObject("exceptions").keySet();
+        Palette palette = Palette.read();
         List<String> errors = new ArrayList<>();
-        for (String exception : exceptions) {
-            if (!Files.isRegularFile(ASSETS.resolve(exception))) {
-                errors.add("design/palette.json: exception for a texture that does not exist: " + exception);
+        for (String texture : palette.exceptions()) {
+            if (!Files.isRegularFile(ASSETS.resolve(texture))) {
+                errors.add("design/palette.json: exception for a texture that does not exist: " + texture);
+            }
+        }
+        for (String texture : palette.cordTextures()) {
+            if (!Files.isRegularFile(ASSETS.resolve(texture))) {
+                errors.add("design/palette.json: cord_textures names a texture that does not exist: " + texture);
             }
         }
         List<Path> pngs;
@@ -135,28 +141,75 @@ class BlockResourcesTest {
         }
         for (Path png : pngs) {
             String name = ASSETS.relativize(png).toString().replace('\\', '/');
-            if (exceptions.contains(name)) {
+            if (palette.exceptions().contains(name)) {
                 continue;
             }
-            BufferedImage image = ImageIO.read(png.toFile());
-            Set<String> outside = new TreeSet<>();
-            for (int y = 0; y < image.getHeight(); y++) {
-                for (int x = 0; x < image.getWidth(); x++) {
-                    int argb = image.getRGB(x, y);
-                    if (argb >>> 24 == 0) {
-                        continue; // transparent: not drawn
-                    }
-                    String colour = String.format("#%06x", argb & 0xFFFFFF);
-                    if (!colours.contains(colour)) {
-                        outside.add(colour);
-                    }
-                }
-            }
+            Set<String> outside = palette.coloursRefusedIn(name, ImageIO.read(png.toFile()));
             if (!outside.isEmpty()) {
                 errors.add(name + ": colours outside the palette " + outside);
             }
         }
         assertNoError(errors);
+    }
+
+    /** A cord colour is refused in a texture of a device, accepted in the plug texture; a colour of no family is refused in both. */
+    @Test
+    void cordColoursAreRefusedOutsideTheCordTextures() throws IOException {
+        Palette palette = Palette.read();
+        String cord = palette.cords().iterator().next();
+        String foreign = "#123456";
+        assertFalse(palette.roles().contains(foreign) || palette.cords().contains(foreign), "test colour in the palette");
+        BufferedImage image = new BufferedImage(2, 1, BufferedImage.TYPE_INT_ARGB);
+        image.setRGB(0, 0, 0xFF000000 | Integer.parseInt(cord.substring(1), 16));
+        image.setRGB(1, 0, 0xFF000000 | Integer.parseInt(foreign.substring(1), 16));
+
+        assertEquals(Set.of(cord, foreign), palette.coloursRefusedIn("textures/block/internet_box.png", image));
+        assertTrue(palette.cordTextures().contains("textures/block/rj45_plug.png"), "the plug texture may use the cord colours");
+        assertEquals(Set.of(foreign), palette.coloursRefusedIn("textures/block/rj45_plug.png", image));
+    }
+
+    /**
+     * The palette of {@code design/palette.json}: tones of the roles, tones of the cords, the textures that may use the
+     * cords, the textures left out of the check.
+     */
+    private record Palette(Set<String> roles, Set<String> cords, Set<String> cordTextures, Set<String> exceptions) {
+        static Palette read() throws IOException {
+            JsonObject palette = BlockResourcesTest.read(PALETTE);
+            Set<String> cordTextures = new TreeSet<>();
+            palette.getAsJsonObject("cord_textures").getAsJsonArray("textures").forEach(texture -> cordTextures.add(texture.getAsString()));
+            return new Palette(tones(palette.getAsJsonObject("roles")), tones(palette.getAsJsonObject("cords")), cordTextures,
+                    new TreeSet<>(palette.getAsJsonObject("exceptions").keySet()));
+        }
+
+        /** The tones of each family of a group (its {@code description} left out), lower case. */
+        private static Set<String> tones(JsonObject group) {
+            Set<String> colours = new TreeSet<>();
+            for (Map.Entry<String, JsonElement> family : group.entrySet()) {
+                if (family.getValue().isJsonObject()) {
+                    family.getValue().getAsJsonObject().entrySet().forEach(tone -> colours.add(tone.getValue().getAsString().toLowerCase()));
+                }
+            }
+            return colours;
+        }
+
+        /** The colours of this image that the texture of this name may not use; transparent pixels are not drawn. */
+        Set<String> coloursRefusedIn(String texture, BufferedImage image) {
+            boolean cordsAllowed = this.cordTextures.contains(texture);
+            Set<String> outside = new TreeSet<>();
+            for (int y = 0; y < image.getHeight(); y++) {
+                for (int x = 0; x < image.getWidth(); x++) {
+                    int argb = image.getRGB(x, y);
+                    if (argb >>> 24 == 0) {
+                        continue;
+                    }
+                    String colour = String.format("#%06x", argb & 0xFFFFFF);
+                    if (!this.roles.contains(colour) && !(cordsAllowed && this.cords.contains(colour))) {
+                        outside.add(colour);
+                    }
+                }
+            }
+            return outside;
+        }
     }
 
     @Test

@@ -60,7 +60,7 @@ The current textures do not follow one density: tower 2 texels per px, box 4, la
 
 Eight base colours, with a highlight and a shadow for the materials. Values taken from the textures of the time, except the light plastic highlight.
 
-**Single source: `design/palette.json`**, read by the design tools (`design/tools/wwb_design.py`) and checked by `BlockResourcesTest` (`./gradlew build test`): every colour of every texture of the mod must be one of its tones, except the textures listed in its `exceptions`, each with its reason. A new colour means changing `design/palette.json` and this table together.
+**Single source: `design/palette.json`**, read by the design tools (`design/tools/wwb_design.py`) and checked by `BlockResourcesTest` (`./gradlew build test`): every colour of every texture of the mod must be one of the tones of its roles; the textures listed in its `cord_textures` (the plugs, `textures/block/rj45_plug.png`, and the cord item, `textures/item/ethernet_cable.png`) may also use the cord colours, and no other texture may (`cordColoursAreRefusedOutsideTheCordTextures`); the textures listed in its `exceptions`, each with its reason, are left out. A new colour means changing `design/palette.json` and this table together.
 
 | Role | Base | Highlight | Shadow | Used for |
 |---|---|---|---|---|
@@ -73,7 +73,7 @@ Eight base colours, with a highlight and a shadow for the materials. Values take
 | Orange LED | `#f0aa3c` | | | Activity, warning |
 | Screen, off | `#0d1b2a` | | | Screens and glass |
 
-**Cord colours** (chosen by Max on 2026-11-20; key `cords` of `design/palette.json`): a family of their own, for the cable, the boot of the plugs and the cord item, never in the textures of the devices. Blue, the colour of every cord today (`CableRenderer`, `#2f6fd6`), is the default; the blues of the current cord icon go with its rework. Grey is a dark blue-grey, apart from the metal; white is a warm off-white, apart from the clear body of the plugs and from light plastic. A colour carries no rule of the game (`docs/cable-design.md`, section 7).
+**Cord colours** (chosen by Max on 2026-11-20; key `cords` of `design/palette.json`): a family of their own, for the cable, the boot of the plugs and the cord item, never in the textures of the devices. Blue, the colour of every cord today (`CableRenderer`, `#2f6fd6`), is the default, and the colour of the cord icon (`textures/item/ethernet_cable.png`, the variant with the taller plug, exported on 2026-11-20 by `design/tools/cables.py --export-icon`). Grey is a dark blue-grey, apart from the metal; white is a warm off-white, apart from the clear body of the plugs and from light plastic. A colour carries no rule of the game (`docs/cable-design.md`, section 7).
 
 | Cord | Base | Highlight | Shadow |
 |---|---|---|---|
@@ -148,4 +148,4 @@ Limits read in the sources: scale at most 4, translation at most 80 px.
   1. The `.bbmodel` is written, with its texture.
   2. The choices are described in a few lines (dimensions, elements, texture details), and written in the device sheet.
   3. Max opens it in Blockbench and approves it or gives feedback.
-  4. Only after approval: export of `models/block/<id>.json` and `textures/block/<id>.png` into `assets/worldwideblocks/`, check of the blockstate (four orientations, and the states of the device), of the item model and of the Java shape. The result is checked in game by a capture run when they exist (lot 1c-1, issue "Permanent capture runs"), by Max's build until then.
+  4. Only after approval: export of `models/block/<id>.json` and `textures/block/<id>.png` into `assets/worldwideblocks/`, check of the blockstate (four orientations, and the states of the device), of the item model and of the Java shape. The result is checked in game by the capture scenario of the device (`./gradlew runClientCapture -Pscenario=device_<id>`, issue #68): close-up views (front, back, three-quarter front and back, top), the four orientations and the selection outline, the item in the inventory, in hand, on the ground and in an item frame; a new device gets its scene in `TrialScenario` and its scenario in `CaptureScenarios`. Every capture run also fails when a block state or an item of the mod uses the missing model or texture.
