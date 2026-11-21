@@ -471,9 +471,9 @@ public final class CaptureScenarios {
      * Lot 1d-1, issue #63, scene {@code plugs}: the RJ45 plug in each port that has a cable and the thick cable leaving
      * from it: the box and the 5-port switch from the front, three-quarter and above; each turned device seen from the
      * side of its port (tower turned by 90 and 270 degrees, laptop by 180, 8-port switch by 90, box by 270); the whole
-     * scene from above; the box again at night (cables and plugs darken with the world); then a cord started on port 4 of
-     * the switch, the cable going from its plug to the hand, in first
-     * and third person.
+     * scene from above and from 30 blocks (the cables never thinner than a pixel); the box again at night (cables and
+     * plugs darken with the world); then a cord started on port 4 of the switch, the cable going from its plug to the
+     * hand, in first and third person.
      */
     static final CaptureScenario PLUGS = new CaptureScenario("plugs", "plugs in their ports, thick cables, turned devices, held cable",
             List.of(new CaptureScenario.Size(1920, 1080)), List.of(AUTO_SCALE), List.of("en_us"), List.of(
@@ -491,6 +491,8 @@ public final class CaptureScenarios {
                     new Step.Orbit(5, 90, 30, 1.0), new Step.Shot("switch8_90_port"),
                     new Step.Orbit(6, 270, 25, 1.2), new Step.Shot("box_270_port"),
                     new Step.Orbit(0, 0, 55, 9.0, 3.0), new Step.Shot("scene"),
+                    // From 30 blocks: the cables stay at least one pixel wide (Max, 2026-11-21).
+                    new Step.Orbit(0, 0, 25, 30.0, 3.0), new Step.Shot("scene_far"),
                     // At night the cables and the plugs darken with the world: they are lit by its light.
                     new Step.Command("time set midnight"),
                     new Step.Wait(20),

@@ -192,15 +192,32 @@ final class CableRenderer {
         if (frame.cables().isEmpty()) {
             return;
         }
+        double pixel = pixelPerBlockOfDistance(event.getLevelRenderState().cameraRenderState.projectionMatrix.m11());
         event.getSubmitNodeCollector().submitCustomGeometry(poseStack, RenderTypes.entitySolid(PLUG_TEXTURE), (pose, buffer) -> {
             for (Cable cable : frame.cables()) {
-                drawCable(pose, buffer, cable, camera);
+                drawCable(pose, buffer, cable, camera, pixel);
             }
         });
     }
 
-    /** Four faces along each segment, a square section of 0.25 px around the line of the cable. */
-    private static void drawCable(PoseStack.Pose pose, VertexConsumer buffer, Cable cable, Vec3 camera) {
+    /**
+     * The size of one pixel of the screen, in blocks, for each block of distance from the camera: the projection gives
+     * {@code 1 / tan(fov / 2)} as its {@code m11}, and the screen is {@code height} pixels for {@code 2 tan(fov / 2)}
+     * blocks at a distance of one block.
+     */
+    private static double pixelPerBlockOfDistance(float m11) {
+        int height = Math.max(1, Minecraft.getInstance().getWindow().getHeight());
+        return m11 > 0 ? 2.0 / (m11 * height) : 0.0;
+    }
+
+    /**
+     * Four faces along each segment, a square section of 0.25 px around the line of the cable, widened far from the
+     * camera so that the cable is never less than one pixel of the screen wide (Max, 2026-11-21: a 0.25 px cable is
+     * thinner than a pixel beyond about 12 blocks at 1920 x 1080).
+     *
+     * @param pixel size of a pixel of the screen, in blocks, per block of distance from the camera
+     */
+    private static void drawCable(PoseStack.Pose pose, VertexConsumer buffer, Cable cable, Vec3 camera, double pixel) {
         List<Vec3> points = cable.points();
         int n = points.size();
         Vec3[][] corners = new Vec3[n][4];
@@ -220,7 +237,7 @@ final class CableRenderer {
             Vec3 p = points.get(i).subtract(camera);
             Vec3[] offsets = {up.add(side), up.subtract(side), up.scale(-1).subtract(side), up.scale(-1).add(side)};
             for (int k = 0; k < 4; k++) {
-                corners[i][k] = p.add(offsets[k].scale(HALF));
+                corners[i][k] = p.add(offsets[k].scale(halfWidth(p.length(), pixel)));
             }
             normals[i] = new Vec3[] {up, side.scale(-1), up.scale(-1), side};
         }
@@ -246,6 +263,11 @@ final class CableRenderer {
                 }
             }
         }
+    }
+
+    /** Half the side of the section at this distance from the camera: 0.25 px, or one pixel of the screen if that is wider. */
+    static double halfWidth(double distance, double pixel) {
+        return Math.max(HALF, distance * pixel / 2.0);
     }
 
     private static Vec3 pointAt(Vec3 a, Vec3 b, double sag, double t) {
